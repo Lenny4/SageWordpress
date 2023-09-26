@@ -18,7 +18,7 @@ before_install:
   - if [[ "$SNIFF" == "1" ]]; then export PHPCS_DIR=$PWD/vendor/bin; fi
   - if [[ "$SNIFF" == "1" ]]; then export SNIFFS_DIR=$PWD/vendor/wp-coding-standards/wpcs; fi
   - composer install
-  - composer update 
+  - composer update
   - ./vendor/bin/phpcs --config-set installed_paths $SNIFFS_DIR
   - ./vendor/bin/phpcs -i
   - if [[ "$SNIFF" == "1" ]]; then ./vendor/bin/phpcs --config-set installed_paths $SNIFFS_DIR; fi

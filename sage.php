@@ -17,33 +17,34 @@
  * @since 1.0.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+if (!defined('ABSPATH')) {
+    exit;
 }
 
 // Load plugin class files.
-require_once 'includes/class-sage.php';
-require_once 'includes/class-sage-settings.php';
+require_once __DIR__ . '/includes/class-sage.php';
+require_once __DIR__ . '/includes/class-sage-settings.php';
 
 // Load plugin libraries.
-require_once 'includes/lib/class-sage-admin-api.php';
-require_once 'includes/lib/class-sage-post-type.php';
-require_once 'includes/lib/class-sage-taxonomy.php';
+require_once __DIR__ . '/includes/lib/class-sage-admin-api.php';
+require_once __DIR__ . '/includes/lib/class-sage-post-type.php';
+require_once __DIR__ . '/includes/lib/class-sage-taxonomy.php';
 
 /**
  * Returns the main instance of sage to prevent the need to use globals.
  *
- * @since  1.0.0
  * @return object sage
+ * @since  1.0.0
  */
-function sage() {
-	$instance = sage::instance( __FILE__, '1.0.0' );
+function sage()
+{
+    $instance = sage::instance(__FILE__, '1.0.0');
 
-	if ( is_null( $instance->settings ) ) {
-		$instance->settings = sage_Settings::instance( $instance );
-	}
+    if (is_null($instance->settings)) {
+        $instance->settings = sage_Settings::instance($instance);
+    }
 
-	return $instance;
+    return $instance;
 }
 
 sage();
