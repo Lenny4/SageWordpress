@@ -40,3 +40,20 @@ vendor/bin/rector process
 ```
 
 https://github.com/hlashbrooke/WordPress-Plugin-Template
+
+```
+C:\xampp\htdocs\wordplate\public\plugins\sage>grunt
+Running "less:compile" (less) task
+>> 2 stylesheets created.
+
+Running "cssmin:minify" (cssmin) task
+>> Destination not written because minified CSS was empty.
+>> Destination not written because minified CSS was empty.
+
+Running "uglify:jsfiles" (uglify) task
+File assets/js/admin.min.js created: 143 B → 38 B
+File assets/js/frontend.min.js created: 146 B → 38 B
+File assets/js/settings.min.js created: 2.42 kB → 1.15 kB
+
+Done.
+```
