@@ -12,53 +12,48 @@ if (!defined('ABSPATH')) {
 /**
  * Taxonomy functions class.
  */
-class sage_Taxonomy
+final class SageTaxonomy
 {
 
     /**
      * The name for the taxonomy.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $taxonomy;
+    public ?string $taxonomy = null;
 
     /**
      * The plural name for the taxonomy terms.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $plural;
+    public ?string $plural = null;
 
     /**
      * The singular name for the taxonomy terms.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $single;
+    public ?string $single = null;
 
     /**
      * The array of post types to which this taxonomy applies.
      *
-     * @var     array
      * @access  public
      * @since   1.0.0
      */
-    public $post_types;
+    public ?array $post_types = null;
 
     /**
      * The array of taxonomy arguments
      *
-     * @var     array
      * @access  public
      * @since   1.0.0
      */
-    public $taxonomy_args;
+    public ?array $taxonomy_args = null;
 
     /**
      * Taxonomy constructor.
@@ -69,10 +64,16 @@ class sage_Taxonomy
      * @param array $post_types Affected post types.
      * @param array $tax_args Taxonomy additional args.
      */
-    public function __construct($taxonomy = '', $plural = '', $single = '', $post_types = array(), $tax_args = array())
+    public function __construct(
+        string $taxonomy = '',
+        string $plural = '',
+        string $single = '',
+        array  $post_types = [],
+        array  $tax_args = []
+    )
     {
 
-        if (!$taxonomy || !$plural || !$single) {
+        if ($taxonomy === '' || $plural === '' || $single === '') {
             return;
         }
 
@@ -83,6 +84,7 @@ class sage_Taxonomy
         if (!is_array($post_types)) {
             $post_types = array($post_types);
         }
+
         $this->post_types = $post_types;
         $this->taxonomy_args = $tax_args;
 
@@ -94,10 +96,8 @@ class sage_Taxonomy
 
     /**
      * Register new taxonomy
-     *
-     * @return void
      */
-    public function register_taxonomy()
+    public function register_taxonomy(): void
     {
         //phpcs:disable
         $labels = array(

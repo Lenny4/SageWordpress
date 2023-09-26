@@ -12,53 +12,48 @@ if (!defined('ABSPATH')) {
 /**
  * Post type declaration class.
  */
-class sage_Post_Type
+final class SagePostType
 {
 
     /**
      * The name for the custom post type.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $post_type;
+    public ?string $post_type = null;
 
     /**
      * The plural name for the custom post type posts.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $plural;
+    public ?string $plural = null;
 
     /**
      * The singular name for the custom post type posts.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $single;
+    public ?string $single = null;
 
     /**
      * The description of the custom post type.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $description;
+    public ?string $description = null;
 
     /**
      * The options of the custom post type.
      *
-     * @var     array
      * @access  public
      * @since   1.0.0
      */
-    public $options;
+    public ?array $options = null;
 
     /**
      * Constructor
@@ -69,10 +64,16 @@ class sage_Post_Type
      * @param string $description Post type description.
      * @param array $options Post type options.
      */
-    public function __construct($post_type = '', $plural = '', $single = '', $description = '', $options = array())
+    public function __construct(
+        string $post_type = '',
+        string $plural = '',
+        string $single = '',
+        string $description = '',
+        array  $options = [],
+    )
     {
 
-        if (!$post_type || !$plural || !$single) {
+        if ($post_type === '' || $plural === '' || $single === '') {
             return;
         }
 
@@ -89,20 +90,18 @@ class sage_Post_Type
         });
 
         // Display custom update messages for posts edits.
-        add_filter('post_updated_messages', function (array $messages = array()): array {
+        add_filter('post_updated_messages', function (array $messages = []): array {
             return $this->updated_messages($messages);
         });
-        add_filter('bulk_post_updated_messages', function (array $bulk_messages = array(), array $bulk_counts = array()): array {
+        add_filter('bulk_post_updated_messages', function (array $bulk_messages = [], array $bulk_counts = []): array {
             return $this->bulk_updated_messages($bulk_messages, $bulk_counts);
         }, 10, 2);
     }
 
     /**
      * Register new post type
-     *
-     * @return void
      */
-    public function register_post_type()
+    public function register_post_type(): void
     {
         //phpcs:disable
         $labels = array(
@@ -157,7 +156,7 @@ class sage_Post_Type
      * @param array $messages Default message.
      * @return array           Modified messages.
      */
-    public function updated_messages($messages = array())
+    public function updated_messages(array $messages = []): array
     {
         global $post, $post_ID;
         //phpcs:disable
@@ -186,7 +185,7 @@ class sage_Post_Type
      * @param array $bulk_counts Counts of selected posts in each status.
      * @return array                Modified messages.
      */
-    public function bulk_updated_messages($bulk_messages = array(), $bulk_counts = array())
+    public function bulk_updated_messages(array $bulk_messages = [], array $bulk_counts = []): array
     {
 
         //phpcs:disable

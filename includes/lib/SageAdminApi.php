@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 /**
  * Admin API class.
  */
-class sage_Admin_API
+final class SageAdminApi
 {
 
     /**
@@ -29,9 +29,8 @@ class sage_Admin_API
      * Save metabox fields.
      *
      * @param integer $post_id Post ID.
-     * @return void
      */
-    public function save_meta_boxes($post_id = 0)
+    public function save_meta_boxes(int $post_id = 0): void
     {
 
         if ($post_id === 0) {
@@ -40,7 +39,7 @@ class sage_Admin_API
 
         $post_type = get_post_type($post_id);
 
-        $fields = apply_filters($post_type . '_custom_fields', array(), $post_type);
+        $fields = apply_filters($post_type . '_custom_fields', [], $post_type);
 
         if (!is_array($fields) || [] === $fields) {
             return;
@@ -62,7 +61,7 @@ class sage_Admin_API
      * @param string $type Type of field to validate.
      * @return string       Validated value
      */
-    public function validate_field($data = '', $type = 'text')
+    public function validate_field(string $data = '', string $type = 'text'): string
     {
 
         switch ($type) {
@@ -88,10 +87,16 @@ class sage_Admin_API
      * @param array $post_types Post types to which this metabox applies.
      * @param string $context Context in which to display this metabox ('advanced' or 'side').
      * @param string $priority Priority of this metabox ('default', 'low' or 'high').
-     * @param array $callback_args Any axtra arguments that will be passed to the display function for this metabox.
-     * @return void
+     * @param array|null $callback_args Any axtra arguments that will be passed to the display function for this metabox.
      */
-    public function add_meta_box($id = '', $title = '', $post_types = array(), $context = 'advanced', $priority = 'default', $callback_args = null)
+    public function add_meta_box(
+        string $id = '',
+        string $title = '',
+        array  $post_types = [],
+        string $context = 'advanced',
+        string $priority = 'default',
+        array  $callback_args = null,
+    ): void
     {
 
         // Get post type(s).
@@ -112,12 +117,11 @@ class sage_Admin_API
      *
      * @param object $post Post object.
      * @param array $args Arguments unique to this metabox.
-     * @return void
      */
-    public function meta_box_content($post, $args)
+    public function meta_box_content(object $post, array $args): void
     {
 
-        $fields = apply_filters($post->post_type . '_custom_fields', array(), $post->post_type);
+        $fields = apply_filters($post->post_type . '_custom_fields', [], $post->post_type);
 
         if (!is_array($fields) || [] === $fields) {
             return;
@@ -148,10 +152,9 @@ class sage_Admin_API
      * Dispay field in metabox
      *
      * @param array $field Field data.
-     * @param object $post Post object.
-     * @return void
+     * @param object|null $post Post object.
      */
-    public function display_meta_box_field($field = array(), $post = null)
+    public function display_meta_box_field(array $field = [], object $post = null): void
     {
 
         if (!is_array($field) || [] === $field) {
@@ -167,15 +170,14 @@ class sage_Admin_API
      * Generate HTML for displaying fields.
      *
      * @param array $data Data array.
-     * @param object $post Post object.
+     * @param object|null $post Post object.
      * @param boolean $echo Whether to echo the field HTML or return it.
-     * @return string
      */
-    public function display_field($data = array(), $post = null, $echo = true)
+    public function display_field(array $data = [], object $post = null, bool $echo = true): string
     {
 
         // Get field info.
-        $field = isset($data['field']) ? $data['field'] : $data;
+        $field = $data['field'] ?? $data;
 
         // Check for prefix on option name.
         $option_name = '';
@@ -185,26 +187,23 @@ class sage_Admin_API
 
         // Get saved data.
         $data = '';
-        if ($post) {
+        $option_name .= $field['id'];
+        if ($post !== null) {
 
             // Get saved field data.
-            $option_name .= $field['id'];
             $option = get_post_meta($post->ID, $field['id'], true);
 
             // Get data to display in field.
-            if (isset($option)) {
-                $data = $option;
-            }
         } else {
 
             // Get saved option.
-            $option_name .= $field['id'];
             $option = get_option($option_name);
 
             // Get data to display in field.
-            if (isset($option)) {
-                $data = $option;
-            }
+        }
+
+        if (isset($option)) {
+            $data = $option;
         }
 
         // Show default data if no option saved and default is supplied.
@@ -236,7 +235,8 @@ class sage_Admin_API
                 if (isset($field['max'])) {
                     $max = ' max="' . esc_attr($field['max']) . '"';
                 }
-                $html .= '<input id="' . esc_attr($field['id']) . '" type="' . esc_attr($field['type']) . '" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" value="' . esc_attr($data) . '"' . $min . '' . $max . '/>' . "\n";
+
+                $html .= '<input id="' . esc_attr($field['id']) . '" type="' . esc_attr($field['type']) . '" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" value="' . esc_attr($data) . '"' . $min . $max . '/>' . "\n";
                 break;
 
             case 'text_secret':
@@ -249,9 +249,10 @@ class sage_Admin_API
 
             case 'checkbox':
                 $checked = '';
-                if ($data && 'on' === $data) {
+                if ('on' === $data) {
                     $checked = 'checked="checked"';
                 }
+
                 $html .= '<input id="' . esc_attr($field['id']) . '" type="' . esc_attr($field['type']) . '" name="' . esc_attr($option_name) . '" ' . $checked . '/>' . "\n";
                 break;
 
@@ -261,8 +262,10 @@ class sage_Admin_API
                     if (in_array($k, (array)$data, true)) {
                         $checked = true;
                     }
+
                     $html .= '<p><label for="' . esc_attr($field['id'] . '_' . $k) . '" class="checkbox_multi"><input type="checkbox" ' . checked($checked, true, false) . ' name="' . esc_attr($option_name) . '[]" value="' . esc_attr($k) . '" id="' . esc_attr($field['id'] . '_' . $k) . '" /> ' . $v . '</label></p> ';
                 }
+
                 break;
 
             case 'radio':
@@ -271,8 +274,10 @@ class sage_Admin_API
                     if ($k === $data) {
                         $checked = true;
                     }
+
                     $html .= '<label for="' . esc_attr($field['id'] . '_' . $k) . '"><input type="radio" ' . checked($checked, true, false) . ' name="' . esc_attr($option_name) . '" value="' . esc_attr($k) . '" id="' . esc_attr($field['id'] . '_' . $k) . '" /> ' . $v . '</label> ';
                 }
+
                 break;
 
             case 'select':
@@ -282,8 +287,10 @@ class sage_Admin_API
                     if ($k === $data) {
                         $selected = true;
                     }
+
                     $html .= '<option ' . selected($selected, true, false) . ' value="' . esc_attr($k) . '">' . $v . '</option>';
                 }
+
                 $html .= '</select> ';
                 break;
 
@@ -294,8 +301,10 @@ class sage_Admin_API
                     if (in_array($k, (array)$data, true)) {
                         $selected = true;
                     }
+
                     $html .= '<option ' . selected($selected, true, false) . ' value="' . esc_attr($k) . '">' . $v . '</option>';
                 }
+
                 $html .= '</select> ';
                 break;
 
@@ -304,6 +313,7 @@ class sage_Admin_API
                 if ($data) {
                     $image_thumb = wp_get_attachment_thumb_url($data);
                 }
+
                 $html .= '<img id="' . $option_name . '_preview" class="image_preview" src="' . $image_thumb . '" /><br/>' . "\n";
                 $html .= '<input id="' . $option_name . '_button" type="button" data-uploader_title="' . __('Upload an image', 'sage') . '" data-uploader_button_text="' . __('Use image', 'sage') . '" class="image_upload_button button" value="' . __('Upload new image', 'sage') . '" />' . "\n";
                 $html .= '<input id="' . $option_name . '_delete" type="button" class="image_delete_button button" value="' . __('Remove image', 'sage') . '" />' . "\n";
@@ -314,9 +324,10 @@ class sage_Admin_API
                 //phpcs:disable
                 ?>
                 <div class="color-picker" style="position:relative;">
-                <input type="text" name="<?php esc_attr_e($option_name); ?>" class="color"
-                       value="<?php esc_attr_e($data); ?>"/>
-                <div style="position:absolute;background:#FFF;z-index:99;border-radius:100%;" class="colorpicker"></div>
+                    <input type="text" name="<?php esc_attr_e($option_name); ?>" class="color"
+                           value="<?php esc_attr_e($data); ?>"/>
+                    <div style="position:absolute;background:#FFF;z-index:99;border-radius:100%;"
+                         class="colorpicker"></div>
                 </div>
                 <?php
                 //phpcs:enable
@@ -343,15 +354,16 @@ class sage_Admin_API
                 break;
 
             default:
-                if (!$post) {
+                if ($post === null) {
                     $html .= '<label for="' . esc_attr($field['id']) . '">' . "\n";
                 }
 
                 $html .= '<span class="description">' . $field['description'] . '</span>' . "\n";
 
-                if (!$post) {
+                if ($post === null) {
                     $html .= '</label>' . "\n";
                 }
+
                 break;
         }
 
@@ -360,7 +372,7 @@ class sage_Admin_API
         }
 
         echo $html; //phpcs:ignore
-
+        return '';
     }
 
 }

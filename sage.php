@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: sage
+ * Plugin Name: Sage
  * Version: 1.0.0
  * Plugin URI: http://www.hughlashbrooke.com/
  * Description: This is your starter template for your next WordPress plugin.
@@ -22,26 +22,26 @@ if (!defined('ABSPATH')) {
 }
 
 // Load plugin class files.
-require_once __DIR__ . '/includes/class-sage.php';
-require_once __DIR__ . '/includes/class-sage-settings.php';
+require_once __DIR__ . '/includes/Sage.php';
+require_once __DIR__ . '/includes/SageSettings.php';
 
 // Load plugin libraries.
-require_once __DIR__ . '/includes/lib/class-sage-admin-api.php';
-require_once __DIR__ . '/includes/lib/class-sage-post-type.php';
-require_once __DIR__ . '/includes/lib/class-sage-taxonomy.php';
+require_once __DIR__ . '/includes/lib/SageAdminApi.php';
+require_once __DIR__ . '/includes/lib/SagePostType.php';
+require_once __DIR__ . '/includes/lib/SageTaxonomy.php';
 
 /**
  * Returns the main instance of sage to prevent the need to use globals.
  *
- * @return object sage
+ * @return object Sage
  * @since  1.0.0
  */
-function sage()
+function sage(): object
 {
-    $instance = sage::instance(__FILE__, '1.0.0');
+    $instance = Sage::instance(__FILE__, '1.0.0');
 
     if (is_null($instance->settings)) {
-        $instance->settings = sage_Settings::instance($instance);
+        $instance->settings = SageSettings::instance($instance);
     }
 
     return $instance;

@@ -12,51 +12,46 @@ if (!defined('ABSPATH')) {
 /**
  * Settings class.
  */
-class sage_Settings
+final class SageSettings
 {
 
     /**
-     * The single instance of sage_Settings.
+     * The single instance of SageSettings.
      *
-     * @var     object
      * @access  private
      * @since   1.0.0
      */
-    private static $_instance = null; //phpcs:ignore
-
+    private static ?self $_instance = null; //phpcs:ignore
     /**
      * The main plugin object.
      *
-     * @var     object
      * @access  public
      * @since   1.0.0
      */
-    public $parent = null;
+    public ?object $parent = null;
 
     /**
      * Prefix for plugin settings.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $base = 'wpt_';
+    public string $base = 'wpt_';
 
     /**
      * Available settings for plugin.
      *
-     * @var     array
      * @access  public
      * @since   1.0.0
      */
-    public $settings = array();
+    public array $settings = [];
 
     /**
      * Constructor function.
      *
      * @param object $parent Parent object.
      */
-    public function __construct($parent)
+    public function __construct(object $parent)
     {
         $this->parent = $parent;
 
@@ -84,17 +79,15 @@ class sage_Settings
         );
 
         // Configure placement of plugin settings page. See readme for implementation.
-        add_filter($this->base . 'menu_settings', function (array $settings = array()): array {
+        add_filter($this->base . 'menu_settings', function (array $settings = []): array {
             return $this->configure_settings($settings);
         });
     }
 
     /**
      * Initialise settings
-     *
-     * @return void
      */
-    public function init_settings()
+    public function init_settings(): void
     {
         $this->settings = $this->settings_fields();
     }
@@ -104,7 +97,7 @@ class sage_Settings
      *
      * @return array Fields to be displayed on settings page
      */
-    private function settings_fields()
+    private function settings_fields(): array
     {
 
         $settings['standard'] = array(
@@ -146,7 +139,7 @@ class sage_Settings
                 array(
                     'id' => 'single_checkbox',
                     'label' => __('An Option', 'sage'),
-                    'description' => __('A standard checkbox - if you save this option as checked then it will store the option as \'on\', otherwise it will be an empty string.', 'sage'),
+                    'description' => __("A standard checkbox - if you save this option as checked then it will store the option as 'on', otherwise it will be an empty string.", 'sage'),
                     'type' => 'checkbox',
                     'default' => '',
                 ),
@@ -192,7 +185,7 @@ class sage_Settings
 
         $settings['extra'] = array(
             'title' => __('Extra', 'sage'),
-            'description' => __('These are some extra input fields that maybe aren\'t as common as the others.', 'sage'),
+            'description' => __("These are some extra input fields that maybe aren't as common as the others.", 'sage'),
             'fields' => array(
                 array(
                     'id' => 'number_field',
@@ -205,7 +198,7 @@ class sage_Settings
                 array(
                     'id' => 'colour_picker',
                     'label' => __('Pick a colour', 'sage'),
-                    'description' => __('This uses WordPress\' built-in colour picker - the option is stored as the colour\'s hex code.', 'sage'),
+                    'description' => __("This uses WordPress' built-in colour picker - the option is stored as the colour's hex code.", 'sage'),
                     'type' => 'color',
                     'default' => '#21759B',
                 ),
@@ -237,63 +230,59 @@ class sage_Settings
 
     /**
      * Register plugin settings
-     *
-     * @return void
      */
-    public function register_settings()
+    public function register_settings(): void
     {
-        if (is_array($this->settings)) {
+        // Check posted/selected tab.
+        //phpcs:disable
+        $current_section = '';
+        if (isset($_POST['tab']) && $_POST['tab']) {
+            $current_section = $_POST['tab'];
+        } elseif (isset($_GET['tab']) && $_GET['tab']) {
+            $current_section = $_GET['tab'];
+        }
 
-            // Check posted/selected tab.
-            //phpcs:disable
-            $current_section = '';
-            if (isset($_POST['tab']) && $_POST['tab']) {
-                $current_section = $_POST['tab'];
-            } elseif (isset($_GET['tab']) && $_GET['tab']) {
-                $current_section = $_GET['tab'];
+        //phpcs:enable
+
+        foreach ($this->settings as $section => $data) {
+
+            if ($current_section && $current_section !== $section) {
+                continue;
             }
-            //phpcs:enable
 
-            foreach ($this->settings as $section => $data) {
+            // Add section to page.
+            add_settings_section($section, $data['title'], function (array $section): void {
+                $this->settings_section($section);
+            }, $this->parent->_token . '_settings');
 
-                if ($current_section && $current_section !== $section) {
-                    continue;
+            foreach ($data['fields'] as $field) {
+
+                // Validation callback for field.
+                $validation = '';
+                if (isset($field['callback'])) {
+                    $validation = $field['callback'];
                 }
 
-                // Add section to page.
-                add_settings_section($section, $data['title'], function (array $section): void {
-                    $this->settings_section($section);
-                }, $this->parent->_token . '_settings');
+                // Register field.
+                $option_name = $this->base . $field['id'];
+                register_setting($this->parent->_token . '_settings', $option_name, $validation);
 
-                foreach ($data['fields'] as $field) {
+                // Add field to page.
+                add_settings_field(
+                    $field['id'],
+                    $field['label'],
+                    array($this->parent->admin, 'display_field'),
+                    $this->parent->_token . '_settings',
+                    $section,
+                    array(
+                        'field' => $field,
+                        'prefix' => $this->base,
+                    )
+                );
+            }
 
-                    // Validation callback for field.
-                    $validation = '';
-                    if (isset($field['callback'])) {
-                        $validation = $field['callback'];
-                    }
-
-                    // Register field.
-                    $option_name = $this->base . $field['id'];
-                    register_setting($this->parent->_token . '_settings', $option_name, $validation);
-
-                    // Add field to page.
-                    add_settings_field(
-                        $field['id'],
-                        $field['label'],
-                        array($this->parent->admin, 'display_field'),
-                        $this->parent->_token . '_settings',
-                        $section,
-                        array(
-                            'field' => $field,
-                            'prefix' => $this->base,
-                        )
-                    );
-                }
-
-                if (!$current_section) {
-                    break;
-                }
+            if (!$current_section) {
+                break;
             }
         }
     }
@@ -302,9 +291,8 @@ class sage_Settings
      * Settings section.
      *
      * @param array $section Array of section ids.
-     * @return void
      */
-    public function settings_section($section)
+    public function settings_section(array $section): void
     {
         $html = '<p> ' . $this->settings[$section['id']]['description'] . '</p>' . "\n";
         echo $html; //phpcs:ignore
@@ -312,10 +300,8 @@ class sage_Settings
 
     /**
      * Add settings page to admin menu
-     *
-     * @return void
      */
-    public function add_menu_item()
+    public function add_menu_item(): void
     {
 
         $args = $this->menu_settings();
@@ -333,6 +319,7 @@ class sage_Settings
                 default:
                     return;
             }
+
             add_action('admin_print_styles-' . $page, function (): void {
                 $this->settings_assets();
             });
@@ -351,8 +338,8 @@ class sage_Settings
             array(
                 'location' => 'options', // Possible settings: options, menu, submenu.
                 'parent_slug' => 'options-general.php',
-                'page_title' => __('Plugin Settings', 'sage'),
-                'menu_title' => __('Plugin Settings', 'sage'),
+                'page_title' => __('Sage Settings', 'sage'),
+                'menu_title' => __('Sage Settings', 'sage'),
                 'capability' => 'manage_options',
                 'menu_slug' => $this->parent->_token . '_settings',
                 'function' => function (): void {
@@ -366,25 +353,24 @@ class sage_Settings
 
     /**
      * Load settings page content.
-     *
-     * @return void
      */
-    public function settings_page()
+    public function settings_page(): void
     {
 
         // Build page HTML.
         $html = '<div class="wrap" id="' . $this->parent->_token . '_settings">' . "\n";
-        $html .= '<h2>' . __('Plugin Settings', 'sage') . '</h2>' . "\n";
+        $html .= '<h2>' . __('Sage Settings', 'sage') . '</h2>' . "\n";
 
         $tab = '';
         //phpcs:disable
         if (isset($_GET['tab']) && $_GET['tab']) {
             $tab .= $_GET['tab'];
         }
+
         //phpcs:enable
 
         // Show page tabs.
-        if (is_array($this->settings) && 1 < count($this->settings)) {
+        if (1 < count($this->settings)) {
 
             $html .= '<h2 class="nav-tab-wrapper">' . "\n";
 
@@ -398,7 +384,7 @@ class sage_Settings
                     if (0 === $c) {
                         $class .= ' nav-tab-active';
                     }
-                } elseif (isset($_GET['tab']) && $section == $_GET['tab']) {
+                } elseif ($section == $_GET['tab']) {
                     //phpcs:ignore
                     $class .= ' nav-tab-active';
                 }
@@ -438,10 +424,8 @@ class sage_Settings
 
     /**
      * Load settings JS & CSS
-     *
-     * @return void
      */
-    public function settings_assets()
+    public function settings_assets(): void
     {
 
         // We're including the farbtastic script & styles here because they're needed for the colour picker
@@ -463,7 +447,7 @@ class sage_Settings
      * @param array $links Existing links.
      * @return array        Modified links.
      */
-    public function add_settings_link($links)
+    public function add_settings_link(array $links): array
     {
         $settings_link = '<a href="options-general.php?page=' . $this->parent->_token . '_settings">' . __('Settings', 'sage') . '</a>';
         $links[] = $settings_link;
@@ -474,30 +458,29 @@ class sage_Settings
      * Container for settings page arguments
      *
      * @param array $settings Settings array.
-     *
-     * @return array
      */
-    public function configure_settings($settings = array())
+    public function configure_settings(array $settings = []): array
     {
         return $settings;
     }
 
     /**
-     * Main sage_Settings Instance
+     * Main SageSettings Instance
      *
-     * Ensures only one instance of sage_Settings is loaded or can be loaded.
+     * Ensures only one instance of SageSettings is loaded or can be loaded.
      *
      * @param object $parent Object instance.
-     * @return object sage_Settings instance
+     * @return self|null SageSettings instance
      * @since 1.0.0
      * @static
      * @see sage()
      */
-    public static function instance($parent)
+    public static function instance(object $parent): ?self
     {
         if (is_null(self::$_instance)) {
             self::$_instance = new self($parent);
         }
+
         return self::$_instance;
     } // End instance()
 

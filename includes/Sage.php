@@ -12,96 +12,82 @@ if (!defined('ABSPATH')) {
 /**
  * Main plugin class.
  */
-class sage
+final class Sage
 {
 
     /**
      * The single instance of sage.
      *
-     * @var     object
      * @access  private
      * @since   1.0.0
      */
-    private static $_instance = null; //phpcs:ignore
-
+    private static ?self $_instance = null; //phpcs:ignore
     /**
-     * Local instance of sage_Admin_API
-     *
-     * @var sage_Admin_API|null
+     * Local instance of SageAdminApi
      */
-    public $admin = null;
+    public ?SageAdminApi $admin = null;
 
     /**
      * Settings class object
      *
-     * @var     object
      * @access  public
      * @since   1.0.0
      */
-    public $settings = null;
+    public object|null $settings = null;
 
     /**
      * The version number.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $_version; //phpcs:ignore
-
+    public ?string $_version = null; //phpcs:ignore
     /**
      * The token.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $_token = 'sage'; //phpcs:ignore
-
+    public string $_token = 'sage'; //phpcs:ignore
     /**
      * The main plugin file.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $file;
+    public ?string $file = null;
 
     /**
      * The main plugin directory.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $dir;
+    public ?string $dir = null;
 
     /**
      * The plugin assets directory.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $assets_dir;
+    public ?string $assets_dir = null;
 
     /**
      * The plugin assets URL.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $assets_url;
+    public ?string $assets_url = null;
 
     /**
      * Suffix for JavaScripts.
      *
-     * @var     string
      * @access  public
      * @since   1.0.0
      */
-    public $script_suffix;
+    public ?string $script_suffix = null;
 
     /**
      * Constructor funtion.
@@ -109,7 +95,7 @@ class sage
      * @param string $file File constructor.
      * @param string $version Plugin version.
      */
-    public function __construct($file = '', $version = '1.0.0')
+    public function __construct(string $file = '', string $version = '1.0.0')
     {
         $this->_version = $version;
 
@@ -143,7 +129,7 @@ class sage
 
         // Load API for generic admin functions.
         if (is_admin()) {
-            $this->admin = new sage_Admin_API();
+            $this->admin = new SageAdminApi();
         }
 
         // Handle localisation.
@@ -153,26 +139,24 @@ class sage
         }, 0);
     } // End __construct ()
 
-/**
+    /**
      * Installation. Runs on activation.
      *
      * @access  public
-     * @return  void
      * @since   1.0.0
      */
-    public function install()
+    public function install(): void
     {
         $this->_log_version_number();
     }
 
-/**
+    /**
      * Log the plugin version number.
      *
      * @access  public
-     * @return  void
      * @since   1.0.0
      */
-    private function _log_version_number()
+    private function _log_version_number(): void
     { //phpcs:ignore
         update_option($this->_token . '_version', $this->_version);
     }
@@ -181,12 +165,11 @@ class sage
      * Load frontend CSS.
      *
      * @access  public
-     * @return void
      * @since   1.0.0
      */
-    public function enqueue_styles()
+    public function enqueue_styles(): void
     {
-        wp_register_style($this->_token . '-frontend', esc_url($this->assets_url) . 'css/frontend.css', array(), $this->_version);
+        wp_register_style($this->_token . '-frontend', esc_url($this->assets_url) . 'css/frontend.css', [], $this->_version);
         wp_enqueue_style($this->_token . '-frontend');
     } // End enqueue_styles ()
 
@@ -194,10 +177,9 @@ class sage
      * Load frontend Javascript.
      *
      * @access  public
-     * @return  void
      * @since   1.0.0
      */
-    public function enqueue_scripts()
+    public function enqueue_scripts(): void
     {
         wp_register_script($this->_token . '-frontend', esc_url($this->assets_url) . 'js/frontend' . $this->script_suffix . '.js', array('jquery'), $this->_version, true);
         wp_enqueue_script($this->_token . '-frontend');
@@ -210,10 +192,9 @@ class sage
      *
      * @param string $hook Hook parameter.
      *
-     * @return  void
      * @since   1.0.0
      */
-    public function admin_enqueue_scripts($hook = '')
+    public function admin_enqueue_scripts(string $hook = ''): void
     {
         wp_register_script($this->_token . '-admin', esc_url($this->assets_url) . 'js/admin' . $this->script_suffix . '.js', array('jquery'), $this->_version, true);
         wp_enqueue_script($this->_token . '-admin');
@@ -223,12 +204,10 @@ class sage
      * Admin enqueue style.
      *
      * @param string $hook Hook parameter.
-     *
-     * @return void
      */
-    public function admin_enqueue_styles($hook = '')
+    public function admin_enqueue_styles(string $hook = ''): void
     {
-        wp_register_style($this->_token . '-admin', esc_url($this->assets_url) . 'css/admin.css', array(), $this->_version);
+        wp_register_style($this->_token . '-admin', esc_url($this->assets_url) . 'css/admin.css', [], $this->_version);
         wp_enqueue_style($this->_token . '-admin');
     } // End admin_enqueue_scripts ()
 
@@ -236,10 +215,9 @@ class sage
      * Load plugin textdomain
      *
      * @access  public
-     * @return  void
      * @since   1.0.0
      */
-    public function load_plugin_textdomain()
+    public function load_plugin_textdomain(): void
     {
         $domain = 'sage';
 
@@ -253,10 +231,9 @@ class sage
      * Load plugin localisation
      *
      * @access  public
-     * @return  void
      * @since   1.0.0
      */
-    public function load_localisation()
+    public function load_localisation(): void
     {
         load_plugin_textdomain('sage', false, dirname(plugin_basename($this->file)) . '/lang/');
     } // End load_plugin_textdomain ()
@@ -269,12 +246,12 @@ class sage
      * @param string $file File instance.
      * @param string $version Version parameter.
      *
-     * @return Object sage instance
+     * @return Sage|null sage instance
      * @see sage()
      * @since 1.0.0
      * @static
      */
-    public static function instance($file = '', $version = '1.0.0')
+    public static function instance(string $file = '', string $version = '1.0.0'): ?self
     {
         if (is_null(self::$_instance)) {
             self::$_instance = new self($file, $version);
@@ -283,7 +260,7 @@ class sage
         return self::$_instance;
     } // End instance ()
 
-        /**
+    /**
      * Register post type function.
      *
      * @param string $post_type Post Type.
@@ -291,20 +268,24 @@ class sage
      * @param string $single Single Label.
      * @param string $description Description.
      * @param array $options Options array.
-     *
-     * @return bool|string|sage_Post_Type
      */
-    public function register_post_type($post_type = '', $plural = '', $single = '', $description = '', $options = array())
+    public function register_post_type(
+        string $post_type = '',
+        string $plural = '',
+        string $single = '',
+        string $description = '',
+        array  $options = [],
+    ): bool|SagePostType
     {
 
-        if (!$post_type || !$plural || !$single) {
+        if ($post_type === '' || $plural === '' || $single === '') {
             return false;
         }
 
-        return new sage_Post_Type($post_type, $plural, $single, $description, $options);
+        return new SagePostType($post_type, $plural, $single, $description, $options);
     } // End __clone ()
 
-        /**
+    /**
      * Wrapper function to register a new taxonomy.
      *
      * @param string $taxonomy Taxonomy.
@@ -312,17 +293,21 @@ class sage
      * @param string $single Single Label.
      * @param array $post_types Post types to register this taxonomy for.
      * @param array $taxonomy_args Taxonomy arguments.
-     *
-     * @return bool|string|sage_Taxonomy
      */
-    public function register_taxonomy($taxonomy = '', $plural = '', $single = '', $post_types = array(), $taxonomy_args = array())
+    public function register_taxonomy(
+        string $taxonomy = '',
+        string $plural = '',
+        string $single = '',
+        array  $post_types = [],
+        array  $taxonomy_args = [],
+    ): bool|SageTaxonomy
     {
 
-        if (!$taxonomy || !$plural || !$single) {
+        if ($taxonomy === '' || $plural === '' || $single === '') {
             return false;
         }
 
-        return new sage_Taxonomy($taxonomy, $plural, $single, $post_types, $taxonomy_args);
+        return new SageTaxonomy($taxonomy, $plural, $single, $post_types, $taxonomy_args);
     } // End __wakeup ()
 
     /**
