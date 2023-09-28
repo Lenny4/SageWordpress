@@ -33,9 +33,9 @@ final class SageSettings
     /**
      * Constructor function.
      *
-     * @param object $parent Parent object.
+     * @param Sage|null $parent Parent object.
      */
-    public function __construct(public ?object $parent)
+    public function __construct(public ?Sage $parent)
     {
         // Initialise settings.
         add_action('init', function (): void {
@@ -421,13 +421,13 @@ final class SageSettings
      *
      * Ensures only one instance of SageSettings is loaded or can be loaded.
      *
-     * @param object $parent Object instance.
+     * @param Sage $parent Object instance.
      * @return self|null SageSettings instance
      * @since 1.0.0
      * @static
      * @see sage()
      */
-    public static function instance(object $parent): ?self
+    public static function instance(Sage $parent): ?self
     {
         if (is_null(self::$_instance)) {
             self::$_instance = new self($parent);

@@ -36,8 +36,8 @@ final class SagePostType
      * @param string $post_type Post type.
      * @param string $plural Post type plural name.
      * @param string $single Post type singular name.
-     * @param string $description Post type description.
-     * @param array $options Post type options.
+     * @param string|null $description Post type description.
+     * @param array|null $options Post type options.
      */
     public function __construct(
         string         $post_type = '',

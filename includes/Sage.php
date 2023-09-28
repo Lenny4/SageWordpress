@@ -25,9 +25,9 @@ final class Sage
     public ?SageAdminApi $admin = null;
 
     /**
-     * Settings class object
+     * Settings class SageSettings
      */
-    public object|null $settings = null;
+    public SageSettings|null $settings = null;
     /**
      * The token.
      */
