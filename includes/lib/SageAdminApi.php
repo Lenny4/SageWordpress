@@ -46,8 +46,8 @@ final class SageAdminApi
         }
 
         foreach ($fields as $field) {
-            if (isset($_REQUEST[$field['id']])) { //phpcs:ignore
-                update_post_meta($post_id, $field['id'], $this->validate_field($_REQUEST[$field['id']], $field['type'])); //phpcs:ignore
+            if (isset($_REQUEST[$field['id']])) {
+                update_post_meta($post_id, $field['id'], $this->validate_field($_REQUEST[$field['id']], $field['type']));
             } else {
                 update_post_meta($post_id, $field['id'], '');
             }
@@ -156,7 +156,7 @@ final class SageAdminApi
 
         $field = '<p class="form-field"><label for="' . $field['id'] . '">' . $field['label'] . '</label>' . $this->display_field($field, $post, false) . '</p>' . "\n";
 
-        echo $field; //phpcs:ignore
+        echo $field;
     }
 
     /**
@@ -314,7 +314,6 @@ final class SageAdminApi
                 break;
 
             case 'color':
-                //phpcs:disable
                 ?>
                 <div class="color-picker" style="position:relative;">
                     <input type="text" name="<?php esc_attr_e($option_name); ?>" class="color"
@@ -323,7 +322,6 @@ final class SageAdminApi
                          class="colorpicker"></div>
                 </div>
                 <?php
-                //phpcs:enable
                 break;
 
             case 'editor':
@@ -362,7 +360,7 @@ final class SageAdminApi
             return $html;
         }
 
-        echo $html; //phpcs:ignore
+        echo $html;
         return '';
     }
 

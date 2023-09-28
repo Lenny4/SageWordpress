@@ -86,7 +86,6 @@ final class SageTaxonomy
      */
     public function register_taxonomy(): void
     {
-        //phpcs:disable
         $labels = [
             'name' => $this->plural,
             'singular_name' => $this->single,
@@ -105,7 +104,6 @@ final class SageTaxonomy
             'add_or_remove_items' => sprintf(__('Add or remove %s', 'sage'), $this->plural),
             'choose_from_most_used' => sprintf(__('Choose from the most used %s', 'sage'), $this->plural),
             'not_found' => sprintf(__('No %s found', 'sage'), $this->plural)];
-        //phpcs:enable
         $args = ['label' => $this->plural, 'labels' => apply_filters($this->taxonomy . '_labels', $labels), 'hierarchical' => true, 'public' => true, 'show_ui' => true, 'show_in_nav_menus' => true, 'show_tagcloud' => true, 'meta_box_cb' => null, 'show_admin_column' => true, 'show_in_quick_edit' => true, 'update_count_callback' => '', 'show_in_rest' => true, 'rest_base' => $this->taxonomy, 'rest_controller_class' => 'WP_REST_Terms_Controller', 'query_var' => $this->taxonomy, 'rewrite' => true, 'sort' => ''];
 
         $args = array_merge($args, $this->taxonomy_args);

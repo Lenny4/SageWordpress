@@ -78,7 +78,6 @@ final class SagePostType
      */
     public function register_post_type(): void
     {
-        //phpcs:disable
         $labels = [
             'name' => $this->plural,
             'singular_name' => $this->single,
@@ -95,7 +94,6 @@ final class SagePostType
             'parent_item_colon' => sprintf(__('Parent %s'), $this->single),
             'menu_name' => $this->plural,
         ];
-        //phpcs:enable
 
         $args = [
             'labels' => apply_filters($this->post_type . '_labels', $labels),
@@ -134,7 +132,6 @@ final class SagePostType
     public function updated_messages(array $messages = []): array
     {
         global $post, $post_ID;
-        //phpcs:disable
         $messages[$this->post_type] = [
             0 => '',
             1 => sprintf(__('%1$s updated. %2$sView %3$s%4$s.', 'sage'), $this->single, '<a href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
@@ -148,7 +145,6 @@ final class SagePostType
             9 => sprintf(__('%1$s scheduled for: %2$s. %3$sPreview %4$s%5$s.', 'sage'), $this->single, '<strong>' . date_i18n(__('M j, Y @ G:i', 'sage'), strtotime((string)$post->post_date)) . '</strong>', '<a target="_blank" href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
             10 => sprintf(__('%1$s draft updated. %2$sPreview %3$s%4$s.', 'sage'), $this->single, '<a target="_blank" href="' . esc_url(add_query_arg('preview', 'true', get_permalink($post_ID))) . '">', $this->single, '</a>')
         ];
-        //phpcs:enable
 
         return $messages;
     }
@@ -163,7 +159,6 @@ final class SagePostType
     public function bulk_updated_messages(array $bulk_messages = [], array $bulk_counts = []): array
     {
 
-        //phpcs:disable
         $bulk_messages[$this->post_type] = [
             'updated' => sprintf(_n('%1$s %2$s updated.', '%1$s %3$s updated.', $bulk_counts['updated'], 'sage'), $bulk_counts['updated'], $this->single, $this->plural),
             'locked' => sprintf(_n('%1$s %2$s not updated, somebody is editing it.', '%1$s %3$s not updated, somebody is editing them.', $bulk_counts['locked'], 'sage'), $bulk_counts['locked'], $this->single, $this->plural),
@@ -171,7 +166,6 @@ final class SagePostType
             'trashed' => sprintf(_n('%1$s %2$s moved to the Trash.', '%1$s %3$s moved to the Trash.', $bulk_counts['trashed'], 'sage'), $bulk_counts['trashed'], $this->single, $this->plural),
             'untrashed' => sprintf(_n('%1$s %2$s restored from the Trash.', '%1$s %3$s restored from the Trash.', $bulk_counts['untrashed'], 'sage'), $bulk_counts['untrashed'], $this->single, $this->plural)
         ];
-        //phpcs:enable
 
         return $bulk_messages;
     }

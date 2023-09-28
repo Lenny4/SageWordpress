@@ -202,15 +202,12 @@ final class SageSettings
     public function register_settings(): void
     {
         // Check posted/selected tab.
-        //phpcs:disable
         $current_section = '';
         if (isset($_POST['tab']) && $_POST['tab']) {
             $current_section = $_POST['tab'];
         } elseif (isset($_GET['tab']) && $_GET['tab']) {
             $current_section = $_GET['tab'];
         }
-
-        //phpcs:enable
 
         foreach ($this->settings as $section => $data) {
 
@@ -260,7 +257,7 @@ final class SageSettings
     public function settings_section(array $section): void
     {
         $html = '<p> ' . $this->settings[$section['id']]['description'] . '</p>' . "\n";
-        echo $html; //phpcs:ignore
+        echo $html;
     }
 
     /**
@@ -328,12 +325,9 @@ final class SageSettings
         $html .= '<h2>' . __('Sage Settings', 'sage') . '</h2>' . "\n";
 
         $tab = '';
-        //phpcs:disable
         if (isset($_GET['tab']) && $_GET['tab']) {
             $tab .= $_GET['tab'];
         }
-
-        //phpcs:enable
 
         // Show page tabs.
         if (1 < count($this->settings)) {
@@ -346,18 +340,16 @@ final class SageSettings
                 // Set tab class.
                 $class = 'nav-tab';
                 if (!isset($_GET['tab'])) {
-                    //phpcs:ignore
                     if (0 === $c) {
                         $class .= ' nav-tab-active';
                     }
                 } elseif ($section == $_GET['tab']) {
-                    //phpcs:ignore
                     $class .= ' nav-tab-active';
                 }
 
                 // Set tab link.
                 $tab_link = add_query_arg(['tab' => $section]);
-                if (isset($_GET['settings-updated'])) { //phpcs:ignore
+                if (isset($_GET['settings-updated'])) {
                     $tab_link = remove_query_arg('settings-updated', $tab_link);
                 }
 
@@ -385,7 +377,7 @@ final class SageSettings
         $html .= '</form>' . "\n";
         $html .= '</div>' . "\n";
 
-        echo $html; //phpcs:ignore
+        echo $html;
     }
 
     /**

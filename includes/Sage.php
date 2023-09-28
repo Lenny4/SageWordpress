@@ -20,7 +20,7 @@ final class Sage
      *
      * @since   1.0.0
      */
-    private static ?self $_instance = null; //phpcs:ignore
+    private static ?self $_instance = null;
     /**
      * Local instance of SageAdminApi
      */
@@ -31,7 +31,7 @@ final class Sage
      *
      * @since   1.0.0
      */
-    public object|null $settings = null; //phpcs:ignore
+    public object|null $settings = null;
     /**
      * The token.
      *
@@ -129,7 +129,7 @@ final class Sage
      * @since   1.0.0
      */
     private function _log_version_number(): void
-    { //phpcs:ignore
+    {
         update_option($this->_token . '_version', $this->_version);
     }
 
