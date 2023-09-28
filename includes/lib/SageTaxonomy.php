@@ -17,29 +17,21 @@ final class SageTaxonomy
 
     /**
      * The name for the taxonomy.
-     *
-     * @since   1.0.0
      */
     public ?string $taxonomy = null;
 
     /**
      * The plural name for the taxonomy terms.
-     *
-     * @since   1.0.0
      */
     public ?string $plural = null;
 
     /**
      * The singular name for the taxonomy terms.
-     *
-     * @since   1.0.0
      */
     public ?string $single = null;
 
     /**
      * The array of post types to which this taxonomy applies.
-     *
-     * @since   1.0.0
      */
     public ?array $post_types = null;
 

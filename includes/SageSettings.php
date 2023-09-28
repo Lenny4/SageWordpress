@@ -17,22 +17,16 @@ final class SageSettings
 
     /**
      * The single instance of SageSettings.
-     *
-     * @since   1.0.0
      */
     private static ?self $_instance = null;
 
     /**
      * Prefix for plugin settings.
-     *
-     * @since   1.0.0
      */
     public string $base = 'sage_';
 
     /**
      * Available settings for plugin.
-     *
-     * @since   1.0.0
      */
     public array $settings = [];
 

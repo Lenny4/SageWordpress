@@ -32,11 +32,8 @@ require_once __DIR__ . '/includes/lib/SageTaxonomy.php';
 
 /**
  * Returns the main instance of sage to prevent the need to use globals.
- *
- * @return object Sage
- * @since  1.0.0
  */
-function sage(): object
+function sage(): Sage
 {
     $instance = Sage::instance(__FILE__, '1.0.0');
 

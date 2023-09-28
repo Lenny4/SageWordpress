@@ -17,8 +17,6 @@ final class Sage
 
     /**
      * The single instance of sage.
-     *
-     * @since   1.0.0
      */
     private static ?self $_instance = null;
     /**
@@ -28,42 +26,30 @@ final class Sage
 
     /**
      * Settings class object
-     *
-     * @since   1.0.0
      */
     public object|null $settings = null;
     /**
      * The token.
-     *
-     * @since   1.0.0
      */
     public string $_token = 'sage';
 
     /**
      * The main plugin directory.
-     *
-     * @since   1.0.0
      */
     public ?string $dir = null;
 
     /**
      * The plugin assets directory.
-     *
-     * @since   1.0.0
      */
     public ?string $assets_dir = null;
 
     /**
      * The plugin assets URL.
-     *
-     * @since   1.0.0
      */
     public ?string $assets_url = null;
 
     /**
      * Suffix for JavaScripts.
-     *
-     * @since   1.0.0
      */
     public ?string $script_suffix = null;
 
@@ -115,8 +101,6 @@ final class Sage
 
     /**
      * Installation. Runs on activation.
-     *
-     * @since   1.0.0
      */
     public function install(): void
     {
@@ -125,8 +109,6 @@ final class Sage
 
     /**
      * Log the plugin version number.
-     *
-     * @since   1.0.0
      */
     private function _log_version_number(): void
     {
@@ -135,8 +117,6 @@ final class Sage
 
     /**
      * Load frontend CSS.
-     *
-     * @since   1.0.0
      */
     public function enqueue_styles(): void
     {
@@ -146,8 +126,6 @@ final class Sage
 
     /**
      * Load frontend Javascript.
-     *
-     * @since   1.0.0
      */
     public function enqueue_scripts(): void
     {
@@ -160,8 +138,6 @@ final class Sage
      *
      *
      * @param string $hook Hook parameter.
-     *
-     * @since   1.0.0
      */
     public function admin_enqueue_scripts(string $hook = ''): void
     {
@@ -182,8 +158,6 @@ final class Sage
 
     /**
      * Load plugin textdomain
-     *
-     * @since   1.0.0
      */
     public function load_plugin_textdomain(): void
     {
@@ -197,8 +171,6 @@ final class Sage
 
     /**
      * Load plugin localisation
-     *
-     * @since   1.0.0
      */
     public function load_localisation(): void
     {

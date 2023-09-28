@@ -17,22 +17,16 @@ final class SagePostType
 
     /**
      * The name for the custom post type.
-     *
-     * @since   1.0.0
      */
     public ?string $post_type = null;
 
     /**
      * The plural name for the custom post type posts.
-     *
-     * @since   1.0.0
      */
     public ?string $plural = null;
 
     /**
      * The singular name for the custom post type posts.
-     *
-     * @since   1.0.0
      */
     public ?string $single = null;
 
