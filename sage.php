@@ -2,18 +2,18 @@
 /**
  * Plugin Name: Sage
  * Version: 1.0.0
- * Plugin URI: http://www.hughlashbrooke.com/
- * Description: This is your starter template for your next WordPress plugin.
- * Author: Hugh Lashbrooke
- * Author URI: http://www.hughlashbrooke.com/
- * Requires at least: 4.0
- * Tested up to: 4.0
+ * Plugin URI: https://github.com/Lenny4/SageWordpress
+ * Description: A plugin to use Sage on your wordpress website.
+ * Author: Alexandre Beaujour
+ * Author URI: https://lenny4.github.io/
+ * Requires at least: 6.3
+ * Tested up to: 6.3
  *
  * Text Domain: sage
  * Domain Path: /lang/
  *
  * @package WordPress
- * @author Hugh Lashbrooke
+ * @author Alexandre Beaujour
  * @since 1.0.0
  */
 

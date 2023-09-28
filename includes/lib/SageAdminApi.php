@@ -64,19 +64,12 @@ final class SageAdminApi
     public function validate_field(string $data = '', string $type = 'text'): string
     {
 
-        switch ($type) {
-            case 'text':
-                $data = esc_attr($data);
-                break;
-            case 'url':
-                $data = esc_url($data);
-                break;
-            case 'email':
-                $data = is_email($data);
-                break;
-        }
-
-        return $data;
+        return match ($type) {
+            'text' => esc_attr($data),
+            'url' => esc_url($data),
+            'email' => is_email($data),
+            default => $data,
+        };
     }
 
     /**
@@ -101,7 +94,7 @@ final class SageAdminApi
 
         // Get post type(s).
         if (!is_array($post_types)) {
-            $post_types = array($post_types);
+            $post_types = [$post_types];
         }
 
         // Generate each metabox.
@@ -136,7 +129,7 @@ final class SageAdminApi
             }
 
             if (!is_array($field['metabox'])) {
-                $field['metabox'] = array($field['metabox']);
+                $field['metabox'] = [$field['metabox']];
             }
 
             if (in_array($args['id'], $field['metabox'], true)) {
@@ -337,9 +330,7 @@ final class SageAdminApi
                 wp_editor(
                     $data,
                     $option_name,
-                    array(
-                        'textarea_name' => $option_name,
-                    )
+                    ['textarea_name' => $option_name]
                 );
                 break;
 

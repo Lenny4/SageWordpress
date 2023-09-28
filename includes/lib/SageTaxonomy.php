@@ -18,7 +18,6 @@ final class SageTaxonomy
     /**
      * The name for the taxonomy.
      *
-     * @access  public
      * @since   1.0.0
      */
     public ?string $taxonomy = null;
@@ -26,7 +25,6 @@ final class SageTaxonomy
     /**
      * The plural name for the taxonomy terms.
      *
-     * @access  public
      * @since   1.0.0
      */
     public ?string $plural = null;
@@ -34,7 +32,6 @@ final class SageTaxonomy
     /**
      * The singular name for the taxonomy terms.
      *
-     * @access  public
      * @since   1.0.0
      */
     public ?string $single = null;
@@ -42,18 +39,9 @@ final class SageTaxonomy
     /**
      * The array of post types to which this taxonomy applies.
      *
-     * @access  public
      * @since   1.0.0
      */
     public ?array $post_types = null;
-
-    /**
-     * The array of taxonomy arguments
-     *
-     * @access  public
-     * @since   1.0.0
-     */
-    public ?array $taxonomy_args = null;
 
     /**
      * Taxonomy constructor.
@@ -62,14 +50,14 @@ final class SageTaxonomy
      * @param string $plural Taxonomy plural name.
      * @param string $single Taxonomy singular name.
      * @param array $post_types Affected post types.
-     * @param array $tax_args Taxonomy additional args.
+     * @param array|null $taxonomy_args Taxonomy additional args.
      */
     public function __construct(
-        string $taxonomy = '',
-        string $plural = '',
-        string $single = '',
-        array  $post_types = [],
-        array  $tax_args = []
+        string        $taxonomy = '',
+        string        $plural = '',
+        string        $single = '',
+        array         $post_types = [],
+        public ?array $taxonomy_args = []
     )
     {
 
@@ -82,11 +70,10 @@ final class SageTaxonomy
         $this->plural = $plural;
         $this->single = $single;
         if (!is_array($post_types)) {
-            $post_types = array($post_types);
+            $post_types = [$post_types];
         }
 
         $this->post_types = $post_types;
-        $this->taxonomy_args = $tax_args;
 
         // Register taxonomy.
         add_action('init', function (): void {
@@ -100,7 +87,7 @@ final class SageTaxonomy
     public function register_taxonomy(): void
     {
         //phpcs:disable
-        $labels = array(
+        $labels = [
             'name' => $this->plural,
             'singular_name' => $this->single,
             'menu_name' => $this->plural,
@@ -117,28 +104,9 @@ final class SageTaxonomy
             'separate_items_with_commas' => sprintf(__('Separate %s with commas', 'sage'), $this->plural),
             'add_or_remove_items' => sprintf(__('Add or remove %s', 'sage'), $this->plural),
             'choose_from_most_used' => sprintf(__('Choose from the most used %s', 'sage'), $this->plural),
-            'not_found' => sprintf(__('No %s found', 'sage'), $this->plural),
-        );
+            'not_found' => sprintf(__('No %s found', 'sage'), $this->plural)];
         //phpcs:enable
-        $args = array(
-            'label' => $this->plural,
-            'labels' => apply_filters($this->taxonomy . '_labels', $labels),
-            'hierarchical' => true,
-            'public' => true,
-            'show_ui' => true,
-            'show_in_nav_menus' => true,
-            'show_tagcloud' => true,
-            'meta_box_cb' => null,
-            'show_admin_column' => true,
-            'show_in_quick_edit' => true,
-            'update_count_callback' => '',
-            'show_in_rest' => true,
-            'rest_base' => $this->taxonomy,
-            'rest_controller_class' => 'WP_REST_Terms_Controller',
-            'query_var' => $this->taxonomy,
-            'rewrite' => true,
-            'sort' => '',
-        );
+        $args = ['label' => $this->plural, 'labels' => apply_filters($this->taxonomy . '_labels', $labels), 'hierarchical' => true, 'public' => true, 'show_ui' => true, 'show_in_nav_menus' => true, 'show_tagcloud' => true, 'meta_box_cb' => null, 'show_admin_column' => true, 'show_in_quick_edit' => true, 'update_count_callback' => '', 'show_in_rest' => true, 'rest_base' => $this->taxonomy, 'rest_controller_class' => 'WP_REST_Terms_Controller', 'query_var' => $this->taxonomy, 'rewrite' => true, 'sort' => ''];
 
         $args = array_merge($args, $this->taxonomy_args);
 

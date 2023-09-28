@@ -18,30 +18,20 @@ final class SageSettings
     /**
      * The single instance of SageSettings.
      *
-     * @access  private
      * @since   1.0.0
      */
-    private static ?self $_instance = null; //phpcs:ignore
-    /**
-     * The main plugin object.
-     *
-     * @access  public
-     * @since   1.0.0
-     */
-    public ?object $parent = null;
+    private static ?self $_instance = null;
 
     /**
      * Prefix for plugin settings.
      *
-     * @access  public
      * @since   1.0.0
      */
-    public string $base = 'wpt_';
+    public string $base = 'sage_';
 
     /**
      * Available settings for plugin.
      *
-     * @access  public
      * @since   1.0.0
      */
     public array $settings = [];
@@ -51,10 +41,8 @@ final class SageSettings
      *
      * @param object $parent Parent object.
      */
-    public function __construct(object $parent)
+    public function __construct(public ?object $parent)
     {
-        $this->parent = $parent;
-
         // Initialise settings.
         add_action('init', function (): void {
             $this->init_settings();
@@ -73,15 +61,11 @@ final class SageSettings
         // Add settings link to plugins page.
         add_filter(
             'plugin_action_links_' . plugin_basename($this->parent->file),
-            function (array $links): array {
-                return $this->add_settings_link($links);
-            }
+            fn(array $links): array => $this->add_settings_link($links)
         );
 
         // Configure placement of plugin settings page. See readme for implementation.
-        add_filter($this->base . 'menu_settings', function (array $settings = []): array {
-            return $this->configure_settings($settings);
-        });
+        add_filter($this->base . 'menu_settings', fn(array $settings = []): array => $this->configure_settings($settings));
     }
 
     /**
@@ -100,130 +84,114 @@ final class SageSettings
     private function settings_fields(): array
     {
 
-        $settings['standard'] = array(
+        $settings['standard'] = [
             'title' => __('Standard', 'sage'),
             'description' => __('These are fairly standard form input fields.', 'sage'),
-            'fields' => array(
-                array(
+            'fields' => [
+                [
                     'id' => 'text_field',
                     'label' => __('Some Text', 'sage'),
                     'description' => __('This is a standard text field.', 'sage'),
                     'type' => 'text',
                     'default' => '',
-                    'placeholder' => __('Placeholder text', 'sage'),
-                ),
-                array(
+                    'placeholder' => __('Placeholder text', 'sage')
+                ],
+                [
                     'id' => 'password_field',
                     'label' => __('A Password', 'sage'),
                     'description' => __('This is a standard password field.', 'sage'),
                     'type' => 'password',
                     'default' => '',
-                    'placeholder' => __('Placeholder text', 'sage'),
-                ),
-                array(
+                    'placeholder' => __('Placeholder text', 'sage')
+                ],
+                [
                     'id' => 'secret_text_field',
                     'label' => __('Some Secret Text', 'sage'),
                     'description' => __('This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved.', 'sage'),
                     'type' => 'text_secret',
                     'default' => '',
-                    'placeholder' => __('Placeholder text', 'sage'),
-                ),
-                array(
+                    'placeholder' => __('Placeholder text', 'sage')
+                ],
+                [
                     'id' => 'text_block',
                     'label' => __('A Text Block', 'sage'),
                     'description' => __('This is a standard text area.', 'sage'),
                     'type' => 'textarea',
                     'default' => '',
-                    'placeholder' => __('Placeholder text for this textarea', 'sage'),
-                ),
-                array(
+                    'placeholder' => __('Placeholder text for this textarea', 'sage')
+                ],
+                [
                     'id' => 'single_checkbox',
                     'label' => __('An Option', 'sage'),
                     'description' => __("A standard checkbox - if you save this option as checked then it will store the option as 'on', otherwise it will be an empty string.", 'sage'),
                     'type' => 'checkbox',
-                    'default' => '',
-                ),
-                array(
+                    'default' => ''
+                ],
+                [
                     'id' => 'select_box',
                     'label' => __('A Select Box', 'sage'),
                     'description' => __('A standard select box.', 'sage'),
                     'type' => 'select',
-                    'options' => array(
-                        'drupal' => 'Drupal',
-                        'joomla' => 'Joomla',
-                        'wordpress' => 'WordPress',
-                    ),
-                    'default' => 'wordpress',
-                ),
-                array(
+                    'options' => ['drupal' => 'Drupal', 'joomla' => 'Joomla', 'wordpress' => 'WordPress'],
+                    'default' => 'wordpress'
+                ],
+                [
                     'id' => 'radio_buttons',
                     'label' => __('Some Options', 'sage'),
                     'description' => __('A standard set of radio buttons.', 'sage'),
                     'type' => 'radio',
-                    'options' => array(
-                        'superman' => 'Superman',
-                        'batman' => 'Batman',
-                        'ironman' => 'Iron Man',
-                    ),
-                    'default' => 'batman',
-                ),
-                array(
+                    'options' => ['superman' => 'Superman', 'batman' => 'Batman', 'ironman' => 'Iron Man'],
+                    'default' => 'batman'
+                ],
+                [
                     'id' => 'multiple_checkboxes',
                     'label' => __('Some Items', 'sage'),
                     'description' => __('You can select multiple items and they will be stored as an array.', 'sage'),
                     'type' => 'checkbox_multi',
-                    'options' => array(
-                        'square' => 'Square',
-                        'circle' => 'Circle',
-                        'rectangle' => 'Rectangle',
-                        'triangle' => 'Triangle',
-                    ),
-                    'default' => array('circle', 'triangle'),
-                ),
-            ),
-        );
+                    'options' =>
+                        ['square' => 'Square', 'circle' => 'Circle', 'rectangle' => 'Rectangle', 'triangle' => 'Triangle'],
+                    'default' => ['circle', 'triangle']
+                ]
+            ]
+        ];
 
-        $settings['extra'] = array(
+        $settings['extra'] = [
             'title' => __('Extra', 'sage'),
             'description' => __("These are some extra input fields that maybe aren't as common as the others.", 'sage'),
-            'fields' => array(
-                array(
+            'fields' => [
+                [
                     'id' => 'number_field',
                     'label' => __('A Number', 'sage'),
                     'description' => __('This is a standard number field - if this field contains anything other than numbers then the form will not be submitted.', 'sage'),
                     'type' => 'number',
                     'default' => '',
-                    'placeholder' => __('42', 'sage'),
-                ),
-                array(
+                    'placeholder' => __('42', 'sage')
+                ],
+                [
                     'id' => 'colour_picker',
                     'label' => __('Pick a colour', 'sage'),
                     'description' => __("This uses WordPress' built-in colour picker - the option is stored as the colour's hex code.", 'sage'),
                     'type' => 'color',
-                    'default' => '#21759B',
-                ),
-                array(
+                    'default' => '#21759B'
+                ],
+                [
                     'id' => 'an_image',
                     'label' => __('An Image', 'sage'),
                     'description' => __('This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons.', 'sage'),
                     'type' => 'image',
                     'default' => '',
-                    'placeholder' => '',
-                ),
-                array(
+                    'placeholder' => ''
+                ],
+                [
                     'id' => 'multi_select_box',
                     'label' => __('A Multi-Select Box', 'sage'),
                     'description' => __('A standard multi-select box - the saved data is stored as an array.', 'sage'),
                     'type' => 'select_multi',
-                    'options' => array(
-                        'linux' => 'Linux',
-                        'mac' => 'Mac',
-                        'windows' => 'Windows',
-                    ),
-                    'default' => array('linux'),
-                ),
-            ),
-        );
+                    'options' => ['linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows'],
+                    'default' => ['linux']
+                ]
+            ]
+        ];
 
         return apply_filters($this->parent->_token . '_settings_fields', $settings);
     }
@@ -271,13 +239,10 @@ final class SageSettings
                 add_settings_field(
                     $field['id'],
                     $field['label'],
-                    array($this->parent->admin, 'display_field'),
+                    [$this->parent->admin, 'display_field'],
                     $this->parent->_token . '_settings',
                     $section,
-                    array(
-                        'field' => $field,
-                        'prefix' => $this->base,
-                    )
+                    ['field' => $field, 'prefix' => $this->base]
                 );
             }
 
@@ -335,8 +300,9 @@ final class SageSettings
     {
         return apply_filters(
             $this->base . 'menu_settings',
-            array(
-                'location' => 'options', // Possible settings: options, menu, submenu.
+            [
+                'location' => 'options',
+                // Possible settings: options, menu, submenu.
                 'parent_slug' => 'options-general.php',
                 'page_title' => __('Sage Settings', 'sage'),
                 'menu_title' => __('Sage Settings', 'sage'),
@@ -347,7 +313,7 @@ final class SageSettings
                 },
                 'icon_url' => '',
                 'position' => null,
-            )
+            ]
         );
     }
 
@@ -390,7 +356,7 @@ final class SageSettings
                 }
 
                 // Set tab link.
-                $tab_link = add_query_arg(array('tab' => $section));
+                $tab_link = add_query_arg(['tab' => $section]);
                 if (isset($_GET['settings-updated'])) { //phpcs:ignore
                     $tab_link = remove_query_arg('settings-updated', $tab_link);
                 }
@@ -437,7 +403,7 @@ final class SageSettings
         // If you're not including an image upload then you can leave this function call out.
         wp_enqueue_media();
 
-        wp_register_script($this->parent->_token . '-settings-js', $this->parent->assets_url . 'js/settings' . $this->parent->script_suffix . '.js', array('farbtastic', 'jquery'), '1.0.0', true);
+        wp_register_script($this->parent->_token . '-settings-js', $this->parent->assets_url . 'js/settings' . $this->parent->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
         wp_enqueue_script($this->parent->_token . '-settings-js');
     }
 

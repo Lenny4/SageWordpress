@@ -18,7 +18,6 @@ final class SagePostType
     /**
      * The name for the custom post type.
      *
-     * @access  public
      * @since   1.0.0
      */
     public ?string $post_type = null;
@@ -26,7 +25,6 @@ final class SagePostType
     /**
      * The plural name for the custom post type posts.
      *
-     * @access  public
      * @since   1.0.0
      */
     public ?string $plural = null;
@@ -34,26 +32,9 @@ final class SagePostType
     /**
      * The singular name for the custom post type posts.
      *
-     * @access  public
      * @since   1.0.0
      */
     public ?string $single = null;
-
-    /**
-     * The description of the custom post type.
-     *
-     * @access  public
-     * @since   1.0.0
-     */
-    public ?string $description = null;
-
-    /**
-     * The options of the custom post type.
-     *
-     * @access  public
-     * @since   1.0.0
-     */
-    public ?array $options = null;
 
     /**
      * Constructor
@@ -65,11 +46,11 @@ final class SagePostType
      * @param array $options Post type options.
      */
     public function __construct(
-        string $post_type = '',
-        string $plural = '',
-        string $single = '',
-        string $description = '',
-        array  $options = [],
+        string         $post_type = '',
+        string         $plural = '',
+        string         $single = '',
+        public ?string $description = '',
+        public ?array  $options = [],
     )
     {
 
@@ -81,8 +62,6 @@ final class SagePostType
         $this->post_type = $post_type;
         $this->plural = $plural;
         $this->single = $single;
-        $this->description = $description;
-        $this->options = $options;
 
         // Regsiter post type.
         add_action('init', function (): void {
@@ -90,12 +69,8 @@ final class SagePostType
         });
 
         // Display custom update messages for posts edits.
-        add_filter('post_updated_messages', function (array $messages = []): array {
-            return $this->updated_messages($messages);
-        });
-        add_filter('bulk_post_updated_messages', function (array $bulk_messages = [], array $bulk_counts = []): array {
-            return $this->bulk_updated_messages($bulk_messages, $bulk_counts);
-        }, 10, 2);
+        add_filter('post_updated_messages', fn(array $messages = []): array => $this->updated_messages($messages));
+        add_filter('bulk_post_updated_messages', fn(array $bulk_messages = [], array $bulk_counts = []): array => $this->bulk_updated_messages($bulk_messages, $bulk_counts), 10, 2);
     }
 
     /**
@@ -104,7 +79,7 @@ final class SagePostType
     public function register_post_type(): void
     {
         //phpcs:disable
-        $labels = array(
+        $labels = [
             'name' => $this->plural,
             'singular_name' => $this->single,
             'name_admin_bar' => $this->single,
@@ -119,10 +94,10 @@ final class SagePostType
             'not_found_in_trash' => sprintf(__('No %s Found In Trash', 'sage'), $this->plural),
             'parent_item_colon' => sprintf(__('Parent %s'), $this->single),
             'menu_name' => $this->plural,
-        );
+        ];
         //phpcs:enable
 
-        $args = array(
+        $args = [
             'labels' => apply_filters($this->post_type . '_labels', $labels),
             'description' => $this->description,
             'public' => true,
@@ -140,10 +115,10 @@ final class SagePostType
             'show_in_rest' => true,
             'rest_base' => $this->post_type,
             'rest_controller_class' => 'WP_REST_Posts_Controller',
-            'supports' => array('title', 'editor', 'excerpt', 'comments', 'thumbnail'),
+            'supports' => ['title', 'editor', 'excerpt', 'comments', 'thumbnail'],
             'menu_position' => 5,
-            'menu_icon' => 'dashicons-admin-post',
-        );
+            'menu_icon' => 'dashicons-admin-post'
+        ];
 
         $args = array_merge($args, $this->options);
 
@@ -160,7 +135,7 @@ final class SagePostType
     {
         global $post, $post_ID;
         //phpcs:disable
-        $messages[$this->post_type] = array(
+        $messages[$this->post_type] = [
             0 => '',
             1 => sprintf(__('%1$s updated. %2$sView %3$s%4$s.', 'sage'), $this->single, '<a href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
             2 => __('Custom field updated.', 'sage'),
@@ -170,9 +145,9 @@ final class SagePostType
             6 => sprintf(__('%1$s published. %2$sView %3$s%4s.', 'sage'), $this->single, '<a href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
             7 => sprintf(__('%1$s saved.', 'sage'), $this->single),
             8 => sprintf(__('%1$s submitted. %2$sPreview post%3$s%4$s.', 'sage'), $this->single, '<a target="_blank" href="' . esc_url(add_query_arg('preview', 'true', get_permalink($post_ID))) . '">', $this->single, '</a>'),
-            9 => sprintf(__('%1$s scheduled for: %2$s. %3$sPreview %4$s%5$s.', 'sage'), $this->single, '<strong>' . date_i18n(__('M j, Y @ G:i', 'sage'), strtotime($post->post_date)) . '</strong>', '<a target="_blank" href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
-            10 => sprintf(__('%1$s draft updated. %2$sPreview %3$s%4$s.', 'sage'), $this->single, '<a target="_blank" href="' . esc_url(add_query_arg('preview', 'true', get_permalink($post_ID))) . '">', $this->single, '</a>'),
-        );
+            9 => sprintf(__('%1$s scheduled for: %2$s. %3$sPreview %4$s%5$s.', 'sage'), $this->single, '<strong>' . date_i18n(__('M j, Y @ G:i', 'sage'), strtotime((string)$post->post_date)) . '</strong>', '<a target="_blank" href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
+            10 => sprintf(__('%1$s draft updated. %2$sPreview %3$s%4$s.', 'sage'), $this->single, '<a target="_blank" href="' . esc_url(add_query_arg('preview', 'true', get_permalink($post_ID))) . '">', $this->single, '</a>')
+        ];
         //phpcs:enable
 
         return $messages;
@@ -189,13 +164,13 @@ final class SagePostType
     {
 
         //phpcs:disable
-        $bulk_messages[$this->post_type] = array(
+        $bulk_messages[$this->post_type] = [
             'updated' => sprintf(_n('%1$s %2$s updated.', '%1$s %3$s updated.', $bulk_counts['updated'], 'sage'), $bulk_counts['updated'], $this->single, $this->plural),
             'locked' => sprintf(_n('%1$s %2$s not updated, somebody is editing it.', '%1$s %3$s not updated, somebody is editing them.', $bulk_counts['locked'], 'sage'), $bulk_counts['locked'], $this->single, $this->plural),
             'deleted' => sprintf(_n('%1$s %2$s permanently deleted.', '%1$s %3$s permanently deleted.', $bulk_counts['deleted'], 'sage'), $bulk_counts['deleted'], $this->single, $this->plural),
             'trashed' => sprintf(_n('%1$s %2$s moved to the Trash.', '%1$s %3$s moved to the Trash.', $bulk_counts['trashed'], 'sage'), $bulk_counts['trashed'], $this->single, $this->plural),
-            'untrashed' => sprintf(_n('%1$s %2$s restored from the Trash.', '%1$s %3$s restored from the Trash.', $bulk_counts['untrashed'], 'sage'), $bulk_counts['untrashed'], $this->single, $this->plural),
-        );
+            'untrashed' => sprintf(_n('%1$s %2$s restored from the Trash.', '%1$s %3$s restored from the Trash.', $bulk_counts['untrashed'], 'sage'), $bulk_counts['untrashed'], $this->single, $this->plural)
+        ];
         //phpcs:enable
 
         return $bulk_messages;

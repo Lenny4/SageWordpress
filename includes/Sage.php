@@ -18,7 +18,6 @@ final class Sage
     /**
      * The single instance of sage.
      *
-     * @access  private
      * @since   1.0.0
      */
     private static ?self $_instance = null; //phpcs:ignore
@@ -30,37 +29,19 @@ final class Sage
     /**
      * Settings class object
      *
-     * @access  public
      * @since   1.0.0
      */
-    public object|null $settings = null;
-
-    /**
-     * The version number.
-     *
-     * @access  public
-     * @since   1.0.0
-     */
-    public ?string $_version = null; //phpcs:ignore
+    public object|null $settings = null; //phpcs:ignore
     /**
      * The token.
      *
-     * @access  public
      * @since   1.0.0
      */
-    public string $_token = 'sage'; //phpcs:ignore
-    /**
-     * The main plugin file.
-     *
-     * @access  public
-     * @since   1.0.0
-     */
-    public ?string $file = null;
+    public string $_token = 'sage';
 
     /**
      * The main plugin directory.
      *
-     * @access  public
      * @since   1.0.0
      */
     public ?string $dir = null;
@@ -68,7 +49,6 @@ final class Sage
     /**
      * The plugin assets directory.
      *
-     * @access  public
      * @since   1.0.0
      */
     public ?string $assets_dir = null;
@@ -76,7 +56,6 @@ final class Sage
     /**
      * The plugin assets URL.
      *
-     * @access  public
      * @since   1.0.0
      */
     public ?string $assets_url = null;
@@ -84,7 +63,6 @@ final class Sage
     /**
      * Suffix for JavaScripts.
      *
-     * @access  public
      * @since   1.0.0
      */
     public ?string $script_suffix = null;
@@ -92,15 +70,11 @@ final class Sage
     /**
      * Constructor funtion.
      *
-     * @param string $file File constructor.
-     * @param string $version Plugin version.
+     * @param string|null $file File constructor.
+     * @param string|null $_version Plugin version.
      */
-    public function __construct(string $file = '', string $version = '1.0.0')
+    public function __construct(public ?string $file = '', public ?string $_version = '1.0.0')
     {
-        $this->_version = $version;
-
-        // Load plugin environment variables.
-        $this->file = $file;
         $this->dir = dirname($this->file);
         $this->assets_dir = trailingslashit($this->dir) . 'assets';
         $this->assets_url = esc_url(trailingslashit(plugins_url('/assets/', $this->file)));
@@ -142,7 +116,6 @@ final class Sage
     /**
      * Installation. Runs on activation.
      *
-     * @access  public
      * @since   1.0.0
      */
     public function install(): void
@@ -153,7 +126,6 @@ final class Sage
     /**
      * Log the plugin version number.
      *
-     * @access  public
      * @since   1.0.0
      */
     private function _log_version_number(): void
@@ -164,7 +136,6 @@ final class Sage
     /**
      * Load frontend CSS.
      *
-     * @access  public
      * @since   1.0.0
      */
     public function enqueue_styles(): void
@@ -176,19 +147,17 @@ final class Sage
     /**
      * Load frontend Javascript.
      *
-     * @access  public
      * @since   1.0.0
      */
     public function enqueue_scripts(): void
     {
-        wp_register_script($this->_token . '-frontend', esc_url($this->assets_url) . 'js/frontend' . $this->script_suffix . '.js', array('jquery'), $this->_version, true);
+        wp_register_script($this->_token . '-frontend', esc_url($this->assets_url) . 'js/frontend' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
         wp_enqueue_script($this->_token . '-frontend');
     } // End enqueue_scripts ()
 
     /**
      * Load admin Javascript.
      *
-     * @access  public
      *
      * @param string $hook Hook parameter.
      *
@@ -196,7 +165,7 @@ final class Sage
      */
     public function admin_enqueue_scripts(string $hook = ''): void
     {
-        wp_register_script($this->_token . '-admin', esc_url($this->assets_url) . 'js/admin' . $this->script_suffix . '.js', array('jquery'), $this->_version, true);
+        wp_register_script($this->_token . '-admin', esc_url($this->assets_url) . 'js/admin' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
         wp_enqueue_script($this->_token . '-admin');
     } // End admin_enqueue_styles ()
 
@@ -214,7 +183,6 @@ final class Sage
     /**
      * Load plugin textdomain
      *
-     * @access  public
      * @since   1.0.0
      */
     public function load_plugin_textdomain(): void
@@ -230,7 +198,6 @@ final class Sage
     /**
      * Load plugin localisation
      *
-     * @access  public
      * @since   1.0.0
      */
     public function load_localisation(): void
