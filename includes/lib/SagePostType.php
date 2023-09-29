@@ -1,9 +1,6 @@
 <?php
-/**
- * Post type declaration file.
- *
- * @package WordPress Plugin Template/Includes
- */
+
+namespace App\lib;
 
 if (!defined('ABSPATH')) {
     exit;

@@ -11,10 +11,15 @@
         "issues": "https://github.com/hlashbrooke/WordPress-Plugin-Template"
     },
     "require": {
-        "php": ">=8.2",
-        "squizlabs/php_codesniffer": "^3.3.1"
+        "php": ">=8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "includes/"
+        }
     },
     "require-dev": {
-        "wp-coding-standards/wpcs": "2.1.*"
+        "wp-coding-standards/wpcs": "2.1.*",
+        "squizlabs/php_codesniffer": "^3.3.1"
     }
 }

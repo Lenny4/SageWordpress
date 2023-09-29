@@ -1,3 +1,7 @@
+https://developer.wordpress.org/rest-api/extending-the-rest-api/adding-custom-endpoints/
+
+https://www.elegantthemes.com/blog/tips-tricks/how-to-add-cron-jobs-to-wordpress
+
 ```
 <?php
 use Rector\Config\RectorConfig;

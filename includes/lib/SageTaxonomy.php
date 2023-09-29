@@ -1,9 +1,6 @@
 <?php
-/**
- * Taxonomy functions file.
- *
- * @package WordPress Plugin Template/Includes
- */
+
+namespace App\lib;
 
 if (!defined('ABSPATH')) {
     exit;

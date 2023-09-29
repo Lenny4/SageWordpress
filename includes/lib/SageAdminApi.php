@@ -1,9 +1,6 @@
 <?php
-/**
- * Post type Admin API file.
- *
- * @package WordPress Plugin Template/Includes
- */
+
+namespace App\lib;
 
 if (!defined('ABSPATH')) {
     exit;

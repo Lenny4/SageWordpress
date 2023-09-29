@@ -1,9 +1,10 @@
 <?php
-/**
- * Main plugin class file.
- *
- * @package WordPress Plugin Template/Includes
- */
+
+namespace App;
+
+use App\lib\SageAdminApi;
+use App\lib\SagePostType;
+use App\lib\SageTaxonomy;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -19,6 +20,7 @@ final class Sage
      * The single instance of sage.
      */
     private static ?self $_instance = null;
+
     /**
      * Local instance of SageAdminApi
      */
@@ -28,6 +30,7 @@ final class Sage
      * Settings class SageSettings
      */
     public SageSettings|null $settings = null;
+
     /**
      * The token.
      */
@@ -69,8 +72,16 @@ final class Sage
 
         register_activation_hook($this->file, function (): void {
             $this->install();
+            // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
+            $this->init();
+            flush_rewrite_rules();
         });
 
+        register_deactivation_hook($this->file, static function (): void {
+            flush_rewrite_rules();
+        });
+
+        // region enqueue js && css
         // Load frontend JS & CSS.
         add_action('wp_enqueue_scripts', function (): void {
             $this->enqueue_styles();
@@ -86,6 +97,7 @@ final class Sage
         add_action('admin_enqueue_scripts', function (string $hook = ''): void {
             $this->admin_enqueue_styles($hook);
         }, 10, 1);
+        // endregion
 
         // Load API for generic admin functions.
         if (is_admin()) {
@@ -95,9 +107,10 @@ final class Sage
         // Handle localisation.
         $this->load_plugin_textdomain();
         add_action('init', function (): void {
-            $this->load_localisation();
+            // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
+            $this->init();
         }, 0);
-    } // End __construct ()
+    }
 
     /**
      * Installation. Runs on activation.
@@ -115,6 +128,20 @@ final class Sage
         update_option($this->_token . '_version', $this->_version);
     }
 
+    public function init(): void
+    {
+        $this->load_localisation();
+        // todo register_post_type here
+    }
+
+    /**
+     * Load plugin localisation
+     */
+    public function load_localisation(): void
+    {
+        load_plugin_textdomain('sage', false, dirname(plugin_basename($this->file)) . '/lang/');
+    }
+
     /**
      * Load frontend CSS.
      */
@@ -122,7 +149,7 @@ final class Sage
     {
         wp_register_style($this->_token . '-frontend', esc_url($this->assets_url) . 'css/frontend.css', [], $this->_version);
         wp_enqueue_style($this->_token . '-frontend');
-    } // End enqueue_styles ()
+    }
 
     /**
      * Load frontend Javascript.
@@ -131,7 +158,7 @@ final class Sage
     {
         wp_register_script($this->_token . '-frontend', esc_url($this->assets_url) . 'js/frontend' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
         wp_enqueue_script($this->_token . '-frontend');
-    } // End enqueue_scripts ()
+    }
 
     /**
      * Load admin Javascript.
@@ -143,7 +170,7 @@ final class Sage
     {
         wp_register_script($this->_token . '-admin', esc_url($this->assets_url) . 'js/admin' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
         wp_enqueue_script($this->_token . '-admin');
-    } // End admin_enqueue_styles ()
+    }
 
     /**
      * Admin enqueue style.
@@ -154,7 +181,7 @@ final class Sage
     {
         wp_register_style($this->_token . '-admin', esc_url($this->assets_url) . 'css/admin.css', [], $this->_version);
         wp_enqueue_style($this->_token . '-admin');
-    } // End admin_enqueue_scripts ()
+    }
 
     /**
      * Load plugin textdomain
@@ -167,15 +194,7 @@ final class Sage
 
         load_textdomain($domain, WP_LANG_DIR . '/' . $domain . '/' . $domain . '-' . $locale . '.mo');
         load_plugin_textdomain($domain, false, dirname(plugin_basename($this->file)) . '/lang/');
-    } // End load_localisation ()
-
-    /**
-     * Load plugin localisation
-     */
-    public function load_localisation(): void
-    {
-        load_plugin_textdomain('sage', false, dirname(plugin_basename($this->file)) . '/lang/');
-    } // End load_plugin_textdomain ()
+    }
 
     /**
      * Main sage Instance
@@ -187,8 +206,6 @@ final class Sage
      *
      * @return Sage|null sage instance
      * @see sage()
-     * @since 1.0.0
-     * @static
      */
     public static function instance(string $file = '', string $version = '1.0.0'): ?self
     {
@@ -197,10 +214,12 @@ final class Sage
         }
 
         return self::$_instance;
-    } // End instance ()
+    }
 
     /**
      * Register post type function.
+     * https://developer.wordpress.org/plugins/post-types/registering-custom-post-types/
+     * You must call register_post_type() before the admin_init hook and after the after_setup_theme hook. A good hook to use is the init action hook.
      *
      * @param string $post_type Post Type.
      * @param string $plural Plural Label.
@@ -222,7 +241,7 @@ final class Sage
         }
 
         return new SagePostType($post_type, $plural, $single, $description, $options);
-    } // End __clone ()
+    }
 
     /**
      * Wrapper function to register a new taxonomy.
@@ -247,27 +266,23 @@ final class Sage
         }
 
         return new SageTaxonomy($taxonomy, $plural, $single, $post_types, $taxonomy_args);
-    } // End __wakeup ()
+    }
 
     /**
      * Cloning is forbidden.
-     *
-     * @since 1.0.0
      */
     public function __clone()
     {
         _doing_it_wrong(__FUNCTION__, esc_html(__('Cloning of sage is forbidden')), esc_attr($this->_version));
 
-    } // End install ()
+    }
 
     /**
      * Unserializing instances of this class is forbidden.
-     *
-     * @since 1.0.0
      */
     public function __wakeup()
     {
         _doing_it_wrong(__FUNCTION__, esc_html(__('Unserializing instances of sage is forbidden')), esc_attr($this->_version));
-    } // End _log_version_number ()
+    }
 
 }

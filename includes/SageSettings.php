@@ -1,9 +1,6 @@
 <?php
-/**
- * Settings class file.
- *
- * @package WordPress Plugin Template/Settings
- */
+
+namespace App;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -292,7 +289,7 @@ final class SageSettings
         return apply_filters(
             $this->base . 'menu_settings',
             [
-                'location' => 'options',
+                'location' => 'menu',
                 // Possible settings: options, menu, submenu.
                 'parent_slug' => 'options-general.php',
                 'page_title' => __('Sage Settings', 'sage'),
@@ -423,8 +420,6 @@ final class SageSettings
      *
      * @param Sage $parent Object instance.
      * @return self|null SageSettings instance
-     * @since 1.0.0
-     * @static
      * @see sage()
      */
     public static function instance(Sage $parent): ?self
@@ -434,26 +429,22 @@ final class SageSettings
         }
 
         return self::$_instance;
-    } // End instance()
+    }
 
     /**
      * Cloning is forbidden.
-     *
-     * @since 1.0.0
      */
     public function __clone()
     {
         _doing_it_wrong(__FUNCTION__, esc_html(__('Cloning of sage_API is forbidden.')), esc_attr($this->parent->_version));
-    } // End __clone()
+    }
 
     /**
      * Unserializing instances of this class is forbidden.
-     *
-     * @since 1.0.0
      */
     public function __wakeup()
     {
         _doing_it_wrong(__FUNCTION__, esc_html(__('Unserializing instances of sage_API is forbidden.')), esc_attr($this->parent->_version));
-    } // End __wakeup()
+    }
 
 }

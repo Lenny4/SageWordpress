@@ -11,24 +11,20 @@
  *
  * Text Domain: sage
  * Domain Path: /lang/
- *
  * @package WordPress
  * @author Alexandre Beaujour
- * @since 1.0.0
  */
+
+use App\Sage;
+use App\SageSettings;
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-// Load plugin class files.
-require_once __DIR__ . '/includes/Sage.php';
-require_once __DIR__ . '/includes/SageSettings.php';
-
-// Load plugin libraries.
-require_once __DIR__ . '/includes/lib/SageAdminApi.php';
-require_once __DIR__ . '/includes/lib/SagePostType.php';
-require_once __DIR__ . '/includes/lib/SageTaxonomy.php';
+if (file_exists(dirname(__FILE__) . '/vendor/autoload.php')) {
+    require_once dirname(__FILE__) . '/vendor/autoload.php';
+}
 
 /**
  * Returns the main instance of sage to prevent the need to use globals.

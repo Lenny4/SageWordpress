@@ -14,3 +14,20 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 }
 
 // Do something here if plugin is being uninstalled.
+
+// region delete custom post type
+
+//$customPosts = get_posts([
+//    'post_type' => 'sage',
+//    'numberposts' => -1,
+//]);
+//foreach ($customPosts as $customPost) {
+//    wp_delete_post($customPost->ID, true);
+//}
+
+//global $wpdb;
+//$wpdb->query("DELETE FROM wp_posts WHERE post_type = 'sage'");
+//$wpdb->query("DELETE FROM wp_postmeta WHERE post_id NOT IN (SELECT id FROM wp_posts)");
+//$wpdb->query("DELETE FROM wp_term_relationships WHERE post_id NOT IN (SELECT id FROM wp_posts)");
+
+// endregion
