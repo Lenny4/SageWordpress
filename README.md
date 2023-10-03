@@ -1,3 +1,9 @@
+https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password
+
+https://wordpress.stackexchange.com/questions/149212/how-to-create-pot-files-with-poedit
+
+vendor/wp-cli/wp-cli/bin/wp i18n make-pot . lang/sage.pot
+
 https://developer.wordpress.org/rest-api/extending-the-rest-api/adding-custom-endpoints/
 
 https://www.elegantthemes.com/blog/tips-tricks/how-to-add-cron-jobs-to-wordpress

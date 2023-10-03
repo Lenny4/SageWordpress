@@ -110,6 +110,26 @@ final class Sage
             // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
             $this->init();
         }, 0);
+
+        add_action('admin_init', function (): void {
+            if (is_admin() && current_user_can('activate_plugins')) {
+                $allPlugins = get_plugins();
+                $pluginId = 'woocommerce/woocommerce.php';
+                if (!array_key_exists($pluginId, $allPlugins)) {
+                    add_action('admin_notices', function () {
+                        ?>
+                        <div class="error"><p><?= __('Sage plugin require WooCommerce to be installed.', 'sage') ?></p>
+                        </div><?php
+                    });
+                } else if (!is_plugin_active($pluginId)) {
+                    add_action('admin_notices', function () {
+                        ?>
+                        <div class="error"><p><?= __('Sage plugin require WooCommerce to be activated.', 'sage') ?></p>
+                        </div><?php
+                    });
+                }
+            }
+        });
     }
 
     /**

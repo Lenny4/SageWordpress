@@ -75,10 +75,40 @@ final class SageSettings
     private function settings_fields(): array
     {
 
-        $settings['standard'] = [
-            'title' => __('Standard', 'sage'),
+        $settings['settings'] = [
+            'title' => __('Settings', 'sage'),
             'description' => __('These are fairly standard form input fields.', 'sage'),
             'fields' => [
+                [
+                    'id' => 'api_host_url',
+                    'label' => __('Api host url', 'sage'),
+                    'description' => __('Can be found here.', 'sage'),
+                    'type' => 'text',
+                    'default' => '',
+                    'placeholder' => __('192.168.0.1', 'sage')
+                ],
+                [
+                    'id' => 'api_key',
+                    'label' => __('Api key', 'sage'),
+                    'description' => __('Can be found here.', 'sage'),
+                    'type' => 'text',
+                    'default' => '',
+                    'placeholder' => __('Placeholder text', 'sage')
+                ],
+                [
+                    'id' => 'sync_products',
+                    'label' => __('Synchronize products', 'sage'),
+                    'description' => __("All products created with Sage will be automatically create in Wordpress and vice versa", 'sage'),
+                    'type' => 'checkbox',
+                    'default' => ''
+                ],
+                [
+                    'id' => 'sync_sales_document',
+                    'label' => __('Synchronize Sales documents', 'sage'),
+                    'description' => __("All sales documents created with Sage will be automatically create in Wordpress and vice versa", 'sage'),
+                    'type' => 'checkbox',
+                    'default' => ''
+                ],
                 [
                     'id' => 'text_field',
                     'label' => __('Some Text', 'sage'),
@@ -247,7 +277,7 @@ final class SageSettings
      */
     public function settings_section(array $section): void
     {
-        $html = '<p> ' . $this->settings[$section['id']]['description'] . '</p>' . "\n";
+        $html = '<p>' . $this->settings[$section['id']]['description'] . '</p>' . "\n";
         echo $html;
     }
 
@@ -259,23 +289,40 @@ final class SageSettings
 
         $args = $this->menu_settings();
 
-        // Do nothing if wrong location key is set.
-        if (is_array($args) && isset($args['location']) && function_exists('add_' . $args['location'] . '_page')) {
-            switch ($args['location']) {
-                case 'options':
-                case 'submenu':
-                    $page = add_submenu_page($args['parent_slug'], $args['page_title'], $args['menu_title'], $args['capability'], $args['menu_slug'], $args['function']);
-                    break;
-                case 'menu':
-                    $page = add_menu_page($args['page_title'], $args['menu_title'], $args['capability'], $args['menu_slug'], $args['function'], $args['icon_url'], $args['position']);
-                    break;
-                default:
-                    return;
-            }
+        foreach ($args as $arg) {
+            // Do nothing if wrong location key is set.
+            if (is_array($arg) && isset($arg['location']) && function_exists('add_' . $arg['location'] . '_page')) {
+                switch ($arg['location']) {
+                    case 'options':
+                    case 'submenu':
+                        $page = add_submenu_page(
+                            $arg['parent_slug'],
+                            $arg['page_title'],
+                            $arg['menu_title'],
+                            $arg['capability'],
+                            $arg['menu_slug'],
+                            $arg['function'],
+                        );
+                        break;
+                    case 'menu':
+                        $page = add_menu_page(
+                            $arg['page_title'],
+                            $arg['menu_title'],
+                            $arg['capability'],
+                            $arg['menu_slug'],
+                            $arg['function'],
+                            $arg['icon_url'],
+                            $arg['position'],
+                        );
+                        break;
+                    default:
+                        return;
+                }
 
-            add_action('admin_print_styles-' . $page, function (): void {
-                $this->settings_assets();
-            });
+                add_action('admin_print_styles-' . $page, function (): void {
+                    $this->settings_assets();
+                });
+            }
         }
     }
 
@@ -289,18 +336,43 @@ final class SageSettings
         return apply_filters(
             $this->base . 'menu_settings',
             [
-                'location' => 'menu',
-                // Possible settings: options, menu, submenu.
-                'parent_slug' => 'options-general.php',
-                'page_title' => __('Sage Settings', 'sage'),
-                'menu_title' => __('Sage Settings', 'sage'),
-                'capability' => 'manage_options',
-                'menu_slug' => $this->parent->_token . '_settings',
-                'function' => function (): void {
-                    $this->settings_page();
-                },
-                'icon_url' => '',
-                'position' => null,
+                [
+                    'location' => 'menu',
+                    // Possible settings: options, menu, submenu.
+                    'page_title' => __('Sage', 'sage'),
+                    'menu_title' => __('Sage', 'sage'),
+                    'capability' => 'manage_options',
+                    'menu_slug' => $this->parent->_token . '_settings',
+                    'function' => null,
+                    'icon_url' => 'dashicons-rest-api',
+                    'position' => 55.5,
+                ],
+                [
+                    'location' => 'submenu',
+                    // Possible settings: options, menu, submenu.
+                    'parent_slug' => $this->parent->_token . '_settings',
+                    'page_title' => __('Settings', 'sage'),
+                    'menu_title' => __('Settings', 'sage'),
+                    'capability' => 'manage_options',
+                    'menu_slug' => $this->parent->_token . '_settings',
+                    'function' => function (): void {
+                        $this->settings_page();
+                    },
+                    'position' => null,
+                ],
+                [
+                    'location' => 'submenu',
+                    // Possible settings: options, menu, submenu.
+                    'parent_slug' => $this->parent->_token . '_settings',
+                    'page_title' => __('About', 'sage'),
+                    'menu_title' => __('About', 'sage'),
+                    'capability' => 'manage_options',
+                    'menu_slug' => $this->parent->_token . '_about',
+                    'function' => function (): void {
+                        echo 'about page';
+                    },
+                    'position' => null,
+                ],
             ]
         );
     }
@@ -313,7 +385,7 @@ final class SageSettings
 
         // Build page HTML.
         $html = '<div class="wrap" id="' . $this->parent->_token . '_settings">' . "\n";
-        $html .= '<h2>' . __('Sage Settings', 'sage') . '</h2>' . "\n";
+        $html .= '<h2>' . __('Sage', 'sage') . '</h2>' . "\n";
 
         $tab = '';
         if (isset($_GET['tab']) && $_GET['tab']) {
