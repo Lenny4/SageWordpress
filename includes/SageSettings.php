@@ -20,7 +20,7 @@ final class SageSettings
     /**
      * Prefix for plugin settings.
      */
-    public string $base = 'sage_';
+    public static string $base = 'sage_';
 
     /**
      * Available settings for plugin.
@@ -36,7 +36,7 @@ final class SageSettings
     {
         // Initialise settings.
         add_action('init', function (): void {
-            $this->init_settings();
+            $this->init();
         }, 11);
 
         // Register plugin settings.
@@ -56,15 +56,52 @@ final class SageSettings
         );
 
         // Configure placement of plugin settings page. See readme for implementation.
-        add_filter($this->base . 'menu_settings', fn(array $settings = []): array => $this->configure_settings($settings));
+        add_filter(self::$base . 'menu_settings', fn(array $settings = []): array => $this->configure_settings($settings));
     }
 
     /**
      * Initialise settings
      */
-    public function init_settings(): void
+    public function init(): void
     {
         $this->settings = $this->settings_fields();
+        $this->add_website_sage_api();
+    }
+
+    private function add_website_sage_api()
+    {
+        if (
+            !(array_key_exists('settings-updated', $_GET) &&
+                $_GET["settings-updated"] === 'true' &&
+                $_GET["page"] === self::$base . 'settings')
+        ) {
+            return;
+        }
+
+        $user_id = get_current_user_id(); // todo use get_super_admins(), if $user_id not in get_super_admins -> return
+        // todo change capability' => 'manage_options to super admin
+        $name = self::$base . 'application-passwords';
+        // todo if option sage_application_password with userId and name already exists AND the application password exits do nothing
+        // else either create or delete the application password
+        // https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password
+        $newApplicationPassword = (new \WP_Http)->request(
+            wp_nonce_url(
+                $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . '/wp-json/wp/v2/users/' . $user_id . '/application-passwords'
+                , 'wp_rest')
+            , [
+            'methos' => 'POST',
+            'timeout' => 30,
+            'cookies' => $_COOKIE,
+            'body' => [
+                'name' => $name,
+            ],
+        ]);
+        // todo save in option sage_application_password the name of the application password
+
+        // send to sage api the creation of website with https://developer.wordpress.org/reference/classes/wp_http/request/
+        // once received in sage api try the connection to wordpress et return in response if OK
+        // if not display error message with add_action('admin_notices
+        $a = 0;
     }
 
     /**
@@ -250,17 +287,19 @@ final class SageSettings
                 }
 
                 // Register field.
-                $option_name = $this->base . $field['id'];
+                $option_name = self::$base . $field['id'];
                 register_setting($this->parent->_token . '_settings', $option_name, $validation);
 
                 // Add field to page.
                 add_settings_field(
                     $field['id'],
                     $field['label'],
-                    [$this->parent->admin, 'display_field'],
+                    function (...$args): void {
+                        $this->parent->admin->display_field(...$args);
+                    },
                     $this->parent->_token . '_settings',
                     $section,
-                    ['field' => $field, 'prefix' => $this->base]
+                    ['field' => $field, 'prefix' => self::$base]
                 );
             }
 
@@ -334,7 +373,7 @@ final class SageSettings
     private function menu_settings()
     {
         return apply_filters(
-            $this->base . 'menu_settings',
+            self::$base . 'menu_settings',
             [
                 [
                     'location' => 'menu',
