@@ -1,17 +1,15 @@
 {
+    "type": "project",
     "name": "lenny4/sage",
     "license": "GPL-2.0-or-later",
-    "description": "A robust code template for creating a standards-compliant WordPress plugin.",
+    "description": "Use Sage with your Wordpress website.",
     "keywords": [
-        "wordpress",
-        "wp",
-        "plugin template"
+        "sage"
     ],
-    "support": {
-        "issues": "https://github.com/hlashbrooke/WordPress-Plugin-Template"
-    },
     "require": {
-        "php": ">=8.2"
+        "php": ">=8.2",
+        "gmostafa/php-graphql-client": "^1.13",
+        "ext-curl": "*"
     },
     "autoload": {
         "psr-4": {

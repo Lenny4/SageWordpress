@@ -2,6 +2,11 @@
 
 namespace App;
 
+use App\enum\WebsiteEnum;
+use App\lib\SageGraphQl;
+use App\lib\SageRequest;
+use WP_Application_Passwords;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -13,15 +18,14 @@ final class SageSettings
 {
 
     /**
-     * The single instance of SageSettings.
-     */
-    private static ?self $_instance = null;
-
-    /**
      * Prefix for plugin settings.
      */
     public static string $base = 'sage_';
-
+    public static string $capability = 'manage_options';
+    /**
+     * The single instance of SageSettings.
+     */
+    private static ?self $_instance = null;
     /**
      * Available settings for plugin.
      */
@@ -66,42 +70,6 @@ final class SageSettings
     {
         $this->settings = $this->settings_fields();
         $this->add_website_sage_api();
-    }
-
-    private function add_website_sage_api()
-    {
-        if (
-            !(array_key_exists('settings-updated', $_GET) &&
-                $_GET["settings-updated"] === 'true' &&
-                $_GET["page"] === self::$base . 'settings')
-        ) {
-            return;
-        }
-
-        $user_id = get_current_user_id(); // todo use get_super_admins(), if $user_id not in get_super_admins -> return
-        // todo change capability' => 'manage_options to super admin
-        $name = self::$base . 'application-passwords';
-        // todo if option sage_application_password with userId and name already exists AND the application password exits do nothing
-        // else either create or delete the application password
-        // https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password
-        $newApplicationPassword = (new \WP_Http)->request(
-            wp_nonce_url(
-                $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . '/wp-json/wp/v2/users/' . $user_id . '/application-passwords'
-                , 'wp_rest')
-            , [
-            'methos' => 'POST',
-            'timeout' => 30,
-            'cookies' => $_COOKIE,
-            'body' => [
-                'name' => $name,
-            ],
-        ]);
-        // todo save in option sage_application_password the name of the application password
-
-        // send to sage api the creation of website with https://developer.wordpress.org/reference/classes/wp_http/request/
-        // once received in sage api try the connection to wordpress et return in response if OK
-        // if not display error message with add_action('admin_notices
-        $a = 0;
     }
 
     /**
@@ -254,6 +222,94 @@ final class SageSettings
         return apply_filters($this->parent->_token . '_settings_fields', $settings);
     }
 
+    private function add_website_sage_api()
+    {
+        if (
+            !(array_key_exists('settings-updated', $_GET) &&
+                $_GET["settings-updated"] === 'true' &&
+                $_GET["page"] === self::$base . 'settings') ||
+            !current_user_can(self::$capability)
+        ) {
+            return;
+        }
+        $applicationPasswordOption = self::$base . 'application-passwords';
+        $userApplicationPassword = get_option($applicationPasswordOption, null);
+        $user_id = get_current_user_id();
+        $optionHasPassword = false;
+        if (!is_null($userApplicationPassword)) {
+            $passwords = WP_Application_Passwords::get_user_application_passwords($userApplicationPassword);
+            $optionHasPassword = current(array_filter($passwords, static function (array $password) use ($applicationPasswordOption) {
+                    return $password['name'] === $applicationPasswordOption;
+                })) !== false;
+        }
+        if (
+            !$optionHasPassword ||
+            !$this->is_api_authenticated()
+        ) {
+            $newPassword = $this->create_application_password($user_id, $applicationPasswordOption);
+        }
+    }
+
+    private function is_api_authenticated(): bool
+    {
+        $response = SageRequest::apiRequest('/Website/' . $_SERVER['HTTP_HOST'] . '/Authorization');
+        return $response === 'true';
+    }
+
+    /**
+     * https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password
+     * todo create TU to check if this work with every wordpress version
+     */
+    private function create_application_password(string $user_id, string $applicationPasswordOption): string
+    {
+        $passwords = WP_Application_Passwords::get_user_application_passwords($user_id);
+        $currentPassword = current(array_filter($passwords, static function (array $password) use ($applicationPasswordOption) {
+            return $password['name'] === $applicationPasswordOption;
+        }));
+        if ($currentPassword !== false) {
+            WP_Application_Passwords::delete_application_password($user_id, $currentPassword["uuid"]);
+        }
+        $response = SageRequest::selfRequest('/wp-json/wp/v2/users/' . $user_id . '/application-passwords', [
+            'headers' => [
+                'Content-Length' => (string)strlen('name=' . $applicationPasswordOption),
+                'Content-Type' => 'application/x-www-form-urlencoded; charset=UTF-8',
+            ],
+            'method' => 'POST',
+            'body' => [
+                'name' => $applicationPasswordOption,
+            ],
+        ]);
+        $newPassword = json_decode($response["body"], true)['password'];
+        update_option($applicationPasswordOption, $user_id);
+        $this->create_update_website($user_id, $newPassword);
+        return $newPassword;
+    }
+
+    private function create_update_website(string $user_id, string $password): bool
+    {
+        $user = get_user_by('id', $user_id);
+        $url = parse_url(get_site_url());
+        $result = SageGraphQl::addUpdateWebsite(
+            name: get_bloginfo(),
+            username: $user->data->user_login,
+            password: $password,
+            type: WebsiteEnum::Wordpress,
+            host: $url["host"],
+            protocol: $url["scheme"],
+        );
+        if (!is_null($result)) {
+            add_action('admin_notices', function () {
+                ?>
+                <div class="notice notice-success is-dismissible"><p><?=
+                        __('Successfully connected to API', 'sage')
+                        ?></p></div>
+                <?php
+            });
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Register plugin settings
      */
@@ -380,7 +436,7 @@ final class SageSettings
                     // Possible settings: options, menu, submenu.
                     'page_title' => __('Sage', 'sage'),
                     'menu_title' => __('Sage', 'sage'),
-                    'capability' => 'manage_options',
+                    'capability' => self::$capability,
                     'menu_slug' => $this->parent->_token . '_settings',
                     'function' => null,
                     'icon_url' => 'dashicons-rest-api',
@@ -392,7 +448,7 @@ final class SageSettings
                     'parent_slug' => $this->parent->_token . '_settings',
                     'page_title' => __('Settings', 'sage'),
                     'menu_title' => __('Settings', 'sage'),
-                    'capability' => 'manage_options',
+                    'capability' => self::$capability,
                     'menu_slug' => $this->parent->_token . '_settings',
                     'function' => function (): void {
                         $this->settings_page();
@@ -405,7 +461,7 @@ final class SageSettings
                     'parent_slug' => $this->parent->_token . '_settings',
                     'page_title' => __('About', 'sage'),
                     'menu_title' => __('About', 'sage'),
-                    'capability' => 'manage_options',
+                    'capability' => self::$capability,
                     'menu_slug' => $this->parent->_token . '_about',
                     'function' => function (): void {
                         echo 'about page';
