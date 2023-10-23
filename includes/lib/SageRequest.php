@@ -31,27 +31,26 @@ final class SageRequest
     {
         $host = get_option(SageSettings::$base . 'api_host_url', null);
         $apiKey = get_option(SageSettings::$base . 'api_key', null);
-        $curl = curl_init();
+        $curlHandle = curl_init();
 
-        curl_setopt_array($curl, array(
+        curl_setopt_array($curlHandle, [
             CURLOPT_URL => $host . $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
             CURLOPT_TIMEOUT => 30,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_SSL_VERIFYPEER => false, // todo SSL certificate problem: self-signed certificate, remove in prod
+            CURLOPT_SSL_VERIFYPEER => !WP_DEBUG,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
+            CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
-                'Api-Key: ' . $apiKey
-            ),
-        ));
+                'Api-Key: ' . $apiKey,
+            ]]);
 
-        $response = curl_exec($curl);
+        $response = curl_exec($curlHandle);
 
-        curl_close($curl);
+        curl_close($curlHandle);
         return $response;
     }
 }

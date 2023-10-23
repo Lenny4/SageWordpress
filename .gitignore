@@ -4,3 +4,4 @@ vendor*
 .DS_Store
 .idea
 composer.lock
+templates/cache

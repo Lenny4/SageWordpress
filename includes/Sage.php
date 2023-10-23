@@ -5,6 +5,10 @@ namespace App;
 use App\lib\SageAdminApi;
 use App\lib\SagePostType;
 use App\lib\SageTaxonomy;
+use Twig\Environment;
+use Twig\Extension\DebugExtension;
+use Twig\Loader\FilesystemLoader;
+use Twig\TwigFilter;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -17,25 +21,21 @@ final class Sage
 {
 
     /**
+     * The token.
+     */
+    public static string $_token = 'sage';
+    /**
      * The single instance of sage.
      */
     private static ?self $_instance = null;
-
     /**
      * Local instance of SageAdminApi
      */
     public ?SageAdminApi $admin = null;
-
     /**
      * Settings class SageSettings
      */
     public SageSettings|null $settings = null;
-
-    /**
-     * The token.
-     */
-    public string $_token = 'sage';
-
     /**
      * The main plugin directory.
      */
@@ -56,6 +56,8 @@ final class Sage
      */
     public ?string $script_suffix = null;
 
+    public ?Environment $twig = null;
+
     /**
      * Constructor funtion.
      *
@@ -69,6 +71,36 @@ final class Sage
         $this->assets_url = esc_url(trailingslashit(plugins_url('/assets/', $this->file)));
 
         $this->script_suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
+
+        // region twig
+        $templatesDir = __DIR__ . '/../templates';
+        $filesystemLoader = new FilesystemLoader($templatesDir);
+        $twigOptions = [
+            'debug' => WP_DEBUG,
+        ];
+        if (!WP_DEBUG) {
+            $twigOptions['cache'] = $templatesDir . '/cache';
+        }
+
+        $this->twig = new Environment($filesystemLoader, $twigOptions);
+        if (WP_DEBUG) {
+            // https://twig.symfony.com/doc/3.x/functions/dump.html
+            $this->twig->addExtension(new DebugExtension());
+            $this->twig->addFilter(new TwigFilter('trans', static function (string $string) {
+                return __($string, self::$_token);
+            }));
+            $this->twig->addFilter(new TwigFilter('esc_attr', static function (string $string) {
+                return esc_attr($string);
+            }));
+            $this->twig->addFilter(new TwigFilter('selected', static function (bool $selected) {
+                return selected($selected, true, false);
+            }));
+            $this->twig->addFilter(new TwigFilter('disabled', static function (bool $disabled) {
+                return disabled($disabled, true, false);
+            }));
+        }
+
+        // endregion
 
         register_activation_hook($this->file, function (): void {
             $this->install();
@@ -101,7 +133,7 @@ final class Sage
 
         // Load API for generic admin functions.
         if (is_admin()) {
-            $this->admin = new SageAdminApi();
+            $this->admin = new SageAdminApi($this);
         }
 
         // Handle localisation.
@@ -111,20 +143,24 @@ final class Sage
             $this->init();
         }, 0);
 
-        add_action('admin_init', function (): void {
+        add_action('admin_init', static function (): void {
             if (is_admin() && current_user_can('activate_plugins')) {
                 $allPlugins = get_plugins();
                 $pluginId = 'woocommerce/woocommerce.php';
                 if (!array_key_exists($pluginId, $allPlugins)) {
-                    add_action('admin_notices', function () {
+                    add_action('admin_notices', static function (): void {
                         ?>
-                        <div class="error"><p><?= __('Sage plugin require WooCommerce to be installed.', 'sage') ?></p>
+                        <div class="error"><p>
+                            <?= __('Sage plugin require WooCommerce to be installed.', 'sage') ?>
+                        </p>
                         </div><?php
                     });
-                } else if (!is_plugin_active($pluginId)) {
-                    add_action('admin_notices', function () {
+                } elseif (!is_plugin_active($pluginId)) {
+                    add_action('admin_notices', static function (): void {
                         ?>
-                        <div class="error"><p><?= __('Sage plugin require WooCommerce to be activated.', 'sage') ?></p>
+                        <div class="error"><p>
+                            <?= __('Sage plugin require WooCommerce to be activated.', 'sage') ?>
+                        </p>
                         </div><?php
                     });
                 }
@@ -145,7 +181,7 @@ final class Sage
      */
     private function _log_version_number(): void
     {
-        update_option($this->_token . '_version', $this->_version);
+        update_option(self::$_token . '_version', $this->_version);
     }
 
     public function init(): void
@@ -167,8 +203,8 @@ final class Sage
      */
     public function enqueue_styles(): void
     {
-        wp_register_style($this->_token . '-frontend', esc_url($this->assets_url) . 'css/frontend.css', [], $this->_version);
-        wp_enqueue_style($this->_token . '-frontend');
+        wp_register_style(self::$_token . '-frontend', esc_url($this->assets_url) . 'css/frontend.css', [], $this->_version);
+        wp_enqueue_style(self::$_token . '-frontend');
     }
 
     /**
@@ -176,8 +212,8 @@ final class Sage
      */
     public function enqueue_scripts(): void
     {
-        wp_register_script($this->_token . '-frontend', esc_url($this->assets_url) . 'js/frontend' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
-        wp_enqueue_script($this->_token . '-frontend');
+        wp_register_script(self::$_token . '-frontend', esc_url($this->assets_url) . 'js/frontend' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
+        wp_enqueue_script(self::$_token . '-frontend');
     }
 
     /**
@@ -188,8 +224,8 @@ final class Sage
      */
     public function admin_enqueue_scripts(string $hook = ''): void
     {
-        wp_register_script($this->_token . '-admin', esc_url($this->assets_url) . 'js/admin' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
-        wp_enqueue_script($this->_token . '-admin');
+        wp_register_script(self::$_token . '-admin', esc_url($this->assets_url) . 'js/admin' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
+        wp_enqueue_script(self::$_token . '-admin');
     }
 
     /**
@@ -199,8 +235,8 @@ final class Sage
      */
     public function admin_enqueue_styles(string $hook = ''): void
     {
-        wp_register_style($this->_token . '-admin', esc_url($this->assets_url) . 'css/admin.css', [], $this->_version);
-        wp_enqueue_style($this->_token . '-admin');
+        wp_register_style(self::$_token . '-admin', esc_url($this->assets_url) . 'css/admin.css', [], $this->_version);
+        wp_enqueue_style(self::$_token . '-admin');
     }
 
     /**

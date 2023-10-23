@@ -2,6 +2,8 @@
 
 namespace App\lib;
 
+use App\Sage;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -15,7 +17,7 @@ final class SageAdminApi
     /**
      * Constructor function
      */
-    public function __construct()
+    public function __construct(public ?Sage $parent)
     {
         add_action('save_post', function (int $post_id = 0): void {
             $this->save_meta_boxes($post_id);
@@ -328,6 +330,13 @@ final class SageAdminApi
                     ['textarea_name' => $option_name]
                 );
                 break;
+            case '2_select_multi':
+                $html .= $this->parent->twig->render('fields/2_select_multi.html.twig', [
+                    'optionName' => $option_name,
+                    'field' => $field,
+                    'data' => $data,
+                ]);
+                break;
 
         }
 
@@ -336,6 +345,7 @@ final class SageAdminApi
             case 'checkbox_multi':
             case 'radio':
             case 'select_multi':
+            case '2_select_multi':
                 $html .= '<br/><span class="description">' . $field['description'] . '</span>';
                 break;
 

@@ -5,6 +5,7 @@ namespace App;
 use App\enum\WebsiteEnum;
 use App\lib\SageGraphQl;
 use App\lib\SageRequest;
+use stdClass;
 use WP_Application_Passwords;
 
 if (!defined('ABSPATH')) {
@@ -22,6 +23,12 @@ final class SageSettings
      */
     public static string $base = 'sage_';
     public static string $capability = 'manage_options';
+    public static array $defaultClientFields = [
+        'ctNum',
+        'ctIntitule',
+        'ctContact',
+        'ctEmail',
+    ];
     /**
      * The single instance of SageSettings.
      */
@@ -79,147 +86,163 @@ final class SageSettings
      */
     private function settings_fields(): array
     {
-
-        $settings['settings'] = [
-            'title' => __('Settings', 'sage'),
-            'description' => __('These are fairly standard form input fields.', 'sage'),
-            'fields' => [
-                [
-                    'id' => 'api_host_url',
-                    'label' => __('Api host url', 'sage'),
-                    'description' => __('Can be found here.', 'sage'),
-                    'type' => 'text',
-                    'default' => '',
-                    'placeholder' => __('192.168.0.1', 'sage')
-                ],
-                [
-                    'id' => 'api_key',
-                    'label' => __('Api key', 'sage'),
-                    'description' => __('Can be found here.', 'sage'),
-                    'type' => 'text',
-                    'default' => '',
-                    'placeholder' => __('Placeholder text', 'sage')
-                ],
-                [
-                    'id' => 'sync_products',
-                    'label' => __('Synchronize products', 'sage'),
-                    'description' => __("All products created with Sage will be automatically create in Wordpress and vice versa", 'sage'),
-                    'type' => 'checkbox',
-                    'default' => ''
-                ],
-                [
-                    'id' => 'sync_sales_document',
-                    'label' => __('Synchronize Sales documents', 'sage'),
-                    'description' => __("All sales documents created with Sage will be automatically create in Wordpress and vice versa", 'sage'),
-                    'type' => 'checkbox',
-                    'default' => ''
-                ],
-                [
-                    'id' => 'text_field',
-                    'label' => __('Some Text', 'sage'),
-                    'description' => __('This is a standard text field.', 'sage'),
-                    'type' => 'text',
-                    'default' => '',
-                    'placeholder' => __('Placeholder text', 'sage')
-                ],
-                [
-                    'id' => 'password_field',
-                    'label' => __('A Password', 'sage'),
-                    'description' => __('This is a standard password field.', 'sage'),
-                    'type' => 'password',
-                    'default' => '',
-                    'placeholder' => __('Placeholder text', 'sage')
-                ],
-                [
-                    'id' => 'secret_text_field',
-                    'label' => __('Some Secret Text', 'sage'),
-                    'description' => __('This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved.', 'sage'),
-                    'type' => 'text_secret',
-                    'default' => '',
-                    'placeholder' => __('Placeholder text', 'sage')
-                ],
-                [
-                    'id' => 'text_block',
-                    'label' => __('A Text Block', 'sage'),
-                    'description' => __('This is a standard text area.', 'sage'),
-                    'type' => 'textarea',
-                    'default' => '',
-                    'placeholder' => __('Placeholder text for this textarea', 'sage')
-                ],
-                [
-                    'id' => 'single_checkbox',
-                    'label' => __('An Option', 'sage'),
-                    'description' => __("A standard checkbox - if you save this option as checked then it will store the option as 'on', otherwise it will be an empty string.", 'sage'),
-                    'type' => 'checkbox',
-                    'default' => ''
-                ],
-                [
-                    'id' => 'select_box',
-                    'label' => __('A Select Box', 'sage'),
-                    'description' => __('A standard select box.', 'sage'),
-                    'type' => 'select',
-                    'options' => ['drupal' => 'Drupal', 'joomla' => 'Joomla', 'wordpress' => 'WordPress'],
-                    'default' => 'wordpress'
-                ],
-                [
-                    'id' => 'radio_buttons',
-                    'label' => __('Some Options', 'sage'),
-                    'description' => __('A standard set of radio buttons.', 'sage'),
-                    'type' => 'radio',
-                    'options' => ['superman' => 'Superman', 'batman' => 'Batman', 'ironman' => 'Iron Man'],
-                    'default' => 'batman'
-                ],
-                [
-                    'id' => 'multiple_checkboxes',
-                    'label' => __('Some Items', 'sage'),
-                    'description' => __('You can select multiple items and they will be stored as an array.', 'sage'),
-                    'type' => 'checkbox_multi',
-                    'options' =>
-                        ['square' => 'Square', 'circle' => 'Circle', 'rectangle' => 'Rectangle', 'triangle' => 'Triangle'],
-                    'default' => ['circle', 'triangle']
+        $fieldsFComptet = array_filter(SageGraphQl::getType('FComptet')->data->__type->fields, static function (stdClass $fComptet) {
+            return
+                $fComptet->type->kind !== 'OBJECT' &&
+                $fComptet->type->ofType?->kind !== 'LIST';
+        });
+        $clientFields = [];
+        foreach ($fieldsFComptet as $fieldFComptet) {
+            $clientFields[$fieldFComptet->name] = 'field_' . $fieldFComptet->name;
+        }
+        $settings = [
+            'api' => [
+                'title' => __('Api', 'sage'),
+                'description' => __('These are fairly standard form input fields.', 'sage'),
+                'fields' => [
+                    [
+                        'id' => 'api_host_url',
+                        'label' => __('Api host url', 'sage'),
+                        'description' => __('Can be found here.', 'sage'),
+                        'type' => 'text',
+                        'default' => '',
+                        'placeholder' => __('192.168.0.1', 'sage')
+                    ],
+                    [
+                        'id' => 'api_key',
+                        'label' => __('Api key', 'sage'),
+                        'description' => __('Can be found here.', 'sage'),
+                        'type' => 'text',
+                        'default' => '',
+                        'placeholder' => __('Placeholder text', 'sage')
+                    ],
+                    [
+                        'id' => 'sync_products',
+                        'label' => __('Synchronize products', 'sage'),
+                        'description' => __("All products created with Sage will be automatically create in Wordpress and vice versa", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => ''
+                    ],
+                    [
+                        'id' => 'sync_sales_document',
+                        'label' => __('Synchronize Sales documents', 'sage'),
+                        'description' => __("All sales documents created with Sage will be automatically create in Wordpress and vice versa", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => ''
+                    ],
+                    [
+                        'id' => 'text_field',
+                        'label' => __('Some Text', 'sage'),
+                        'description' => __('This is a standard text field.', 'sage'),
+                        'type' => 'text',
+                        'default' => '',
+                        'placeholder' => __('Placeholder text', 'sage')
+                    ],
+                    [
+                        'id' => 'password_field',
+                        'label' => __('A Password', 'sage'),
+                        'description' => __('This is a standard password field.', 'sage'),
+                        'type' => 'password',
+                        'default' => '',
+                        'placeholder' => __('Placeholder text', 'sage')
+                    ],
+                    [
+                        'id' => 'secret_text_field',
+                        'label' => __('Some Secret Text', 'sage'),
+                        'description' => __('This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved.', 'sage'),
+                        'type' => 'text_secret',
+                        'default' => '',
+                        'placeholder' => __('Placeholder text', 'sage')
+                    ],
+                    [
+                        'id' => 'text_block',
+                        'label' => __('A Text Block', 'sage'),
+                        'description' => __('This is a standard text area.', 'sage'),
+                        'type' => 'textarea',
+                        'default' => '',
+                        'placeholder' => __('Placeholder text for this textarea', 'sage')
+                    ],
+                    [
+                        'id' => 'single_checkbox',
+                        'label' => __('An Option', 'sage'),
+                        'description' => __("A standard checkbox - if you save this option as checked then it will store the option as 'on', otherwise it will be an empty string.", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => ''
+                    ],
+                    [
+                        'id' => 'select_box',
+                        'label' => __('A Select Box', 'sage'),
+                        'description' => __('A standard select box.', 'sage'),
+                        'type' => 'select',
+                        'options' => ['drupal' => 'Drupal', 'joomla' => 'Joomla', 'wordpress' => 'WordPress'],
+                        'default' => 'wordpress'
+                    ],
+                    [
+                        'id' => 'radio_buttons',
+                        'label' => __('Some Options', 'sage'),
+                        'description' => __('A standard set of radio buttons.', 'sage'),
+                        'type' => 'radio',
+                        'options' => ['superman' => 'Superman', 'batman' => 'Batman', 'ironman' => 'Iron Man'],
+                        'default' => 'batman'
+                    ],
+                    [
+                        'id' => 'multiple_checkboxes',
+                        'label' => __('Some Items', 'sage'),
+                        'description' => __('You can select multiple items and they will be stored as an array.', 'sage'),
+                        'type' => 'checkbox_multi',
+                        'options' =>
+                            ['square' => 'Square', 'circle' => 'Circle', 'rectangle' => 'Rectangle', 'triangle' => 'Triangle'],
+                        'default' => ['circle', 'triangle']
+                    ],
                 ]
-            ]
-        ];
-
-        $settings['extra'] = [
-            'title' => __('Extra', 'sage'),
-            'description' => __("These are some extra input fields that maybe aren't as common as the others.", 'sage'),
-            'fields' => [
-                [
-                    'id' => 'number_field',
-                    'label' => __('A Number', 'sage'),
-                    'description' => __('This is a standard number field - if this field contains anything other than numbers then the form will not be submitted.', 'sage'),
-                    'type' => 'number',
-                    'default' => '',
-                    'placeholder' => __('42', 'sage')
-                ],
-                [
-                    'id' => 'colour_picker',
-                    'label' => __('Pick a colour', 'sage'),
-                    'description' => __("This uses WordPress' built-in colour picker - the option is stored as the colour's hex code.", 'sage'),
-                    'type' => 'color',
-                    'default' => '#21759B'
-                ],
-                [
-                    'id' => 'an_image',
-                    'label' => __('An Image', 'sage'),
-                    'description' => __('This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons.', 'sage'),
-                    'type' => 'image',
-                    'default' => '',
-                    'placeholder' => ''
-                ],
-                [
-                    'id' => 'multi_select_box',
-                    'label' => __('A Multi-Select Box', 'sage'),
-                    'description' => __('A standard multi-select box - the saved data is stored as an array.', 'sage'),
-                    'type' => 'select_multi',
-                    'options' => ['linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows'],
-                    'default' => ['linux']
+            ],
+            'clients' => [
+                'title' => __('Clients', 'sage'),
+                'description' => __("These are some extra input fields that maybe aren't as common as the others.", 'sage'),
+                'fields' => [
+                    [
+                        'id' => 'client_fields',
+                        'label' => __('Fields to show', 'sage'),
+                        'description' => __('Please select the fields to show on the table.', 'sage'),
+                        'type' => '2_select_multi',
+                        'options' => $clientFields,
+                        'default' => self::$defaultClientFields,
+                    ],
+                    [
+                        'id' => 'number_field',
+                        'label' => __('A Number', 'sage'),
+                        'description' => __('This is a standard number field - if this field contains anything other than numbers then the form will not be submitted.', 'sage'),
+                        'type' => 'number',
+                        'default' => '',
+                        'placeholder' => __('42', 'sage')
+                    ],
+                    [
+                        'id' => 'colour_picker',
+                        'label' => __('Pick a colour', 'sage'),
+                        'description' => __("This uses WordPress' built-in colour picker - the option is stored as the colour's hex code.", 'sage'),
+                        'type' => 'color',
+                        'default' => '#21759B'
+                    ],
+                    [
+                        'id' => 'an_image',
+                        'label' => __('An Image', 'sage'),
+                        'description' => __('This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons.', 'sage'),
+                        'type' => 'image',
+                        'default' => '',
+                        'placeholder' => ''
+                    ],
+                    [
+                        'id' => 'multi_select_box',
+                        'label' => __('A Multi-Select Box', 'sage'),
+                        'description' => __('A standard multi-select box - the saved data is stored as an array.', 'sage'),
+                        'type' => 'select_multi',
+                        'options' => ['linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows'],
+                        'default' => ['linux']
+                    ],
                 ]
-            ]
+            ],
         ];
-
-        return apply_filters($this->parent->_token . '_settings_fields', $settings);
+        return apply_filters(Sage::$_token . '_settings_fields', $settings);
     }
 
     private function add_website_sage_api()
@@ -293,7 +316,7 @@ final class SageSettings
             name: get_bloginfo(),
             username: $user->data->user_login,
             password: $password,
-            type: WebsiteEnum::Wordpress,
+            websiteEnum: WebsiteEnum::Wordpress,
             host: $url["host"],
             protocol: $url["scheme"],
         );
@@ -332,7 +355,7 @@ final class SageSettings
             // Add section to page.
             add_settings_section($section, $data['title'], function (array $section): void {
                 $this->settings_section($section);
-            }, $this->parent->_token . '_settings');
+            }, Sage::$_token . '_settings');
 
             foreach ($data['fields'] as $field) {
 
@@ -344,7 +367,7 @@ final class SageSettings
 
                 // Register field.
                 $option_name = self::$base . $field['id'];
-                register_setting($this->parent->_token . '_settings', $option_name, $validation);
+                register_setting(Sage::$_token . '_settings', $option_name, $validation);
 
                 // Add field to page.
                 add_settings_field(
@@ -353,7 +376,7 @@ final class SageSettings
                     function (...$args): void {
                         $this->parent->admin->display_field(...$args);
                     },
-                    $this->parent->_token . '_settings',
+                    Sage::$_token . '_settings',
                     $section,
                     ['field' => $field, 'prefix' => self::$base]
                 );
@@ -437,7 +460,7 @@ final class SageSettings
                     'page_title' => __('Sage', 'sage'),
                     'menu_title' => __('Sage', 'sage'),
                     'capability' => self::$capability,
-                    'menu_slug' => $this->parent->_token . '_settings',
+                    'menu_slug' => Sage::$_token . '_settings',
                     'function' => null,
                     'icon_url' => 'dashicons-rest-api',
                     'position' => 55.5,
@@ -445,11 +468,11 @@ final class SageSettings
                 [
                     'location' => 'submenu',
                     // Possible settings: options, menu, submenu.
-                    'parent_slug' => $this->parent->_token . '_settings',
+                    'parent_slug' => Sage::$_token . '_settings',
                     'page_title' => __('Settings', 'sage'),
                     'menu_title' => __('Settings', 'sage'),
                     'capability' => self::$capability,
-                    'menu_slug' => $this->parent->_token . '_settings',
+                    'menu_slug' => Sage::$_token . '_settings',
                     'function' => function (): void {
                         $this->settings_page();
                     },
@@ -458,11 +481,29 @@ final class SageSettings
                 [
                     'location' => 'submenu',
                     // Possible settings: options, menu, submenu.
-                    'parent_slug' => $this->parent->_token . '_settings',
+                    'parent_slug' => Sage::$_token . '_settings',
+                    'page_title' => __('Clients', 'sage'),
+                    'menu_title' => __('Clients', 'sage'),
+                    'capability' => self::$capability,
+                    'menu_slug' => Sage::$_token . '_fcomptet',
+                    'function' => function (): void {
+                        $fields = get_option(SageSettings::$base . 'client_fields') ?? self::$defaultClientFields;
+                        echo $this->parent->twig->render('clients/index.html.twig', [
+                            'queryParams' => $_GET,
+                            'users' => SageGraphQl::fComptets($_GET, $fields),
+                            'fields' => $fields,
+                        ]);
+                    },
+                    'position' => null,
+                ],
+                [
+                    'location' => 'submenu',
+                    // Possible settings: options, menu, submenu.
+                    'parent_slug' => Sage::$_token . '_settings',
                     'page_title' => __('About', 'sage'),
                     'menu_title' => __('About', 'sage'),
                     'capability' => self::$capability,
-                    'menu_slug' => $this->parent->_token . '_about',
+                    'menu_slug' => Sage::$_token . '_about',
                     'function' => function (): void {
                         echo 'about page';
                     },
@@ -475,11 +516,11 @@ final class SageSettings
     /**
      * Load settings page content.
      */
-    public function settings_page(): void
+    private function settings_page(): void
     {
 
         // Build page HTML.
-        $html = '<div class="wrap" id="' . $this->parent->_token . '_settings">' . "\n";
+        $html = '<div class="wrap" id="' . Sage::$_token . '_settings">' . "\n";
         $html .= '<h2>' . __('Sage', 'sage') . '</h2>' . "\n";
 
         $tab = '';
@@ -520,12 +561,12 @@ final class SageSettings
             $html .= '</h2>' . "\n";
         }
 
-        $html .= '<form method="post" action="options.php" enctype="multipart/form-data">' . "\n";
+        $html .= '<form method="post" id="form_settings_sage" action="options.php" enctype="multipart/form-data">';
 
         // Get settings fields.
         ob_start();
-        settings_fields($this->parent->_token . '_settings');
-        do_settings_sections($this->parent->_token . '_settings');
+        settings_fields(Sage::$_token . '_settings');
+        do_settings_sections(Sage::$_token . '_settings');
         $html .= ob_get_clean();
 
         $html .= '<p class="submit">' . "\n";
@@ -553,8 +594,8 @@ final class SageSettings
         // If you're not including an image upload then you can leave this function call out.
         wp_enqueue_media();
 
-        wp_register_script($this->parent->_token . '-settings-js', $this->parent->assets_url . 'js/settings' . $this->parent->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
-        wp_enqueue_script($this->parent->_token . '-settings-js');
+        wp_register_script(Sage::$_token . '-settings-js', $this->parent->assets_url . 'js/settings' . $this->parent->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
+        wp_enqueue_script(Sage::$_token . '-settings-js');
     }
 
     /**
@@ -565,7 +606,7 @@ final class SageSettings
      */
     public function add_settings_link(array $links): array
     {
-        $settings_link = '<a href="options-general.php?page=' . $this->parent->_token . '_settings">' . __('Settings', 'sage') . '</a>';
+        $settings_link = '<a href="options-general.php?page=' . Sage::$_token . '_settings">' . __('Settings', 'sage') . '</a>';
         $links[] = $settings_link;
         return $links;
     }

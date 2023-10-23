@@ -1,0 +1,100 @@
+{# todo https://turbo.hotwired.dev/ #}
+<table class="wp-list-table widefat fixed striped table-view-list users">
+  <thead>
+  <tr>
+    <td id="cb" class="manage-column column-cb check-column">
+      <label class="label-covers-full-cell" for="cb-select-all-1">
+        <span class="screen-reader-text">{{ 'Select All.'|trans }}</span>
+      </label>
+      <input id="cb-select-all-1" type="checkbox">
+    </td>
+    {% for field in fields %}
+      <th scope="col" id="ctNum" class="manage-column column-name">{{ ('field_' ~ field)|trans }}</th>
+    {% endfor %}
+  </tr>
+  </thead>
+  <tbody id="the-list" data-wp-lists="list:user">
+
+  <tr id="user-1">
+    <th scope="row" class="check-column">
+      <label class="label-covers-full-cell" for="user_1">
+        <span class="screen-reader-text">Select admin</span>
+      </label><input type="checkbox" name="users[]" id="user_1" class="administrator" value="1">
+    </th>
+    <td class="username column-username has-row-actions column-primary" data-colname="Username">
+      <img alt=""
+           src="http://0.gravatar.com/avatar/64e1b8d34f425d19e1ee2ea7236d3028?s=32&amp;d=mm&amp;r=g"
+           srcset="http://0.gravatar.com/avatar/64e1b8d34f425d19e1ee2ea7236d3028?s=64&amp;d=mm&amp;r=g 2x"
+           class="avatar avatar-32 photo"
+           height="32"
+           width="32"
+           loading="lazy"
+           decoding="async">
+      <strong>
+        <a
+          href="http://sageapi.local/wordpress/wp-admin/profile.php?wp_http_referer=%2Fwordpress%2Fwp-admin%2Fusers.php">admin</a>
+      </strong>
+      <br>
+      <div class="row-actions">
+        <span class="edit">
+          <a
+            href="http://sageapi.local/wordpress/wp-admin/profile.php?wp_http_referer=%2Fwordpress%2Fwp-admin%2Fusers.php">Edit</a> |
+        </span>
+        <span class="view">
+          <a href="http://sageapi.local/author/admin/" aria-label="View posts by admin">View</a>
+        </span>
+      </div>
+      <button type="button" class="toggle-row">
+        <span class="screen-reader-text">Show more details</span>
+      </button>
+    </td>
+    <td class="name column-name" data-colname="Name">
+      <span aria-hidden="true">—</span>
+      <span class="screen-reader-text">Unknown</span>
+    </td>
+    <td class="email column-email" data-colname="Email">
+      <a href="mailto:admin@admin.com">admin@admin.com</a>
+    </td>
+    <td class="role column-role" data-colname="Role">Administrator</td>
+    <td class="posts column-posts num" data-colname="Posts">
+      <a href="edit.php?author=1" class="edit">
+        <span aria-hidden="true">1</span>
+        <span class="screen-reader-text">1 post by this author</span>
+      </a>
+    </td>
+  </tr>
+  </tbody>
+  <tfoot>
+  <tr>
+    <td class="manage-column column-cb check-column">
+      <label class="label-covers-full-cell" for="cb-select-all-2">
+        <span class="screen-reader-text">Select All</span>
+      </label>
+      <input id="cb-select-all-2" type="checkbox">
+    </td>
+    <th scope="col" class="manage-column column-username column-primary sorted asc" aria-sort="ascending"
+        abbr="Username">
+      <a href="http://sageapi.local/wordpress/wp-admin/users.php?orderby=login&amp;order=desc">
+        <span>Username</span>
+        <span class="sorting-indicators">
+          <span class="sorting-indicator asc" aria-hidden="true"></span>
+          <span class="sorting-indicator desc" aria-hidden="true"></span>
+        </span>
+      </a>
+    </th>
+    <th scope="col" class="manage-column column-name">Name</th>
+    <th scope="col" class="manage-column column-email sortable desc" abbr="E-mail">
+      <a href="http://sageapi.local/wordpress/wp-admin/users.php?orderby=email&amp;order=asc">
+        <span>Email</span>
+        <span class="sorting-indicators">
+          <span class="sorting-indicator asc" aria-hidden="true"></span>
+          <span class="sorting-indicator desc" aria-hidden="true"></span>
+        </span>
+        <span class="screen-reader-text">Sort ascending.</span>
+      </a>
+    </th>
+    <th scope="col" class="manage-column column-role">Role</th>
+    <th scope="col" class="manage-column column-posts num">Posts</th>
+  </tr>
+  </tfoot>
+</table>

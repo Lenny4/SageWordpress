@@ -9,7 +9,8 @@
     "require": {
         "php": ">=8.2",
         "gmostafa/php-graphql-client": "^1.13",
-        "ext-curl": "*"
+        "ext-curl": "*",
+        "twig/twig": "^3.7"
     },
     "autoload": {
         "psr-4": {
