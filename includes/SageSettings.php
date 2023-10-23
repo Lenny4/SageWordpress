@@ -487,11 +487,17 @@ final class SageSettings
                     'capability' => self::$capability,
                     'menu_slug' => Sage::$_token . '_fcomptet',
                     'function' => function (): void {
+                        $mandatoryField = 'ctNum';
                         $fields = get_option(SageSettings::$base . 'client_fields') ?? self::$defaultClientFields;
+                        $showCtNumField = in_array($mandatoryField, $fields);
+                        if (!$showCtNumField) {
+                            $fields[] = $mandatoryField;
+                        }
                         echo $this->parent->twig->render('clients/index.html.twig', [
                             'queryParams' => $_GET,
-                            'users' => SageGraphQl::fComptets($_GET, $fields),
+                            'users' => json_decode(json_encode(SageGraphQl::fComptets($_GET, $fields)), true),
                             'fields' => $fields,
+                            'showCtNumField' => $showCtNumField,
                         ]);
                     },
                     'position' => null,

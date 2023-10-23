@@ -1,0 +1,13 @@
+<tr>
+  <td id="cb" class="manage-column column-cb check-column">
+    <label class="label-covers-full-cell" for="cb-select-all-{{ name }}">
+      <span class="screen-reader-text">{{ 'Select All.'|trans }}</span>
+    </label>
+    <input id="cb-select-all-{{ name }}" type="checkbox">
+  </td>
+  {% for field in fields %}
+    {% if not (showCtNumField == false and field == 'ctNum') %}
+      <th scope="col" id="{{ field }}" class="manage-column">{{ ('field_' ~ field)|trans }}</th>
+    {% endif %}
+  {% endfor %}
+</tr>
