@@ -73,19 +73,30 @@ final class SageGraphQl
 
     public static function fComptets(array $queryParams, array $fields): StdClass|null
     {
+        $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
+        $page = (int)($queryParams["paged"] ?? 1);
+        $where = [];
+        if (array_key_exists('filter_field', $queryParams)) {
+            foreach ($queryParams["filter_field"] as $k => $v) {
+                $where[] = $queryParams["filter_field"][$k] . ': { ' . $queryParams["filter_type"][$k] . ': "' . $queryParams["filter_value"][$k] . '" }';
+            }
+        }
+        $arguments = [
+            'skip' => $nbPerPage * ($page - 1),
+            'take' => $nbPerPage,
+            'order' => new RawObject('{ ctNum: ASC }'),
+        ];
+        if($where !== []) {
+            $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': {' . implode(',', $where) . '}}');
+        }
         $query = (new Query('fComptets'))
-            ->setArguments(['first' => 3])
+            ->setArguments($arguments)
             ->setSelectionSet(
                 [
                     'totalCount',
-                    (new Query('edges'))
+                    (new Query('items'))
                         ->setSelectionSet(
-                            [
-                                (new Query('node'))
-                                    ->setSelectionSet(
-                                        $fields
-                                    ),
-                            ],
+                            $fields
                         ),
                 ]
             );
@@ -93,7 +104,7 @@ final class SageGraphQl
     }
 
     // https://graphql.org/learn/introspection/
-    public static function getType(string $object): StdClass|null
+    public static function getTypeModel(string $object): StdClass|null
     {
         $query = (new Query('__type'))
             ->setArguments(['name' => $object])
@@ -117,6 +128,30 @@ final class SageGraphQl
                                                         'kind',
                                                     ]
                                                 ),
+                                        ]
+                                    ),
+                            ],
+                        ),
+                ]
+            );
+        return self::runQuery($query)?->getResults();
+    }
+
+    public static function getTypeFilter(string $object): StdClass|null
+    {
+        $query = (new Query('__type'))
+            ->setArguments(['name' => $object])
+            ->setSelectionSet(
+                [
+                    'name',
+                    (new Query('inputFields'))
+                        ->setSelectionSet(
+                            [
+                                'name',
+                                (new Query('type'))
+                                    ->setSelectionSet(
+                                        [
+                                            'name',
                                         ]
                                     ),
                             ],

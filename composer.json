@@ -10,7 +10,8 @@
         "php": ">=8.2",
         "gmostafa/php-graphql-client": "^1.13",
         "ext-curl": "*",
-        "twig/twig": "^3.7"
+        "twig/twig": "^3.7",
+        "crysalead/dir": "^2.0"
     },
     "autoload": {
         "psr-4": {

@@ -5,10 +5,13 @@ namespace App;
 use App\lib\SageAdminApi;
 use App\lib\SagePostType;
 use App\lib\SageTaxonomy;
+use Lead\Dir\Dir;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
+use Twig\TwigFunction;
+use WP_Upgrader;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -98,6 +101,64 @@ final class Sage
             $this->twig->addFilter(new TwigFilter('disabled', static function (bool $disabled) {
                 return disabled($disabled, true, false);
             }));
+            $this->twig->addFilter(new TwigFilter('wp_nonce_field', static function (string $action) {
+                return wp_nonce_field($action);
+            }));
+            $this->twig->addFunction(new TwigFunction('getAllFilterType', static function () {
+                return [
+                    'StringOperationFilterInput' => [
+                        'contains',
+                        'endsWith',
+                        'eq',
+                        'in',
+                        'ncontains',
+                        'nendsWith',
+                        'neq',
+                        'nin',
+                        'nstartsWith',
+                        'startsWith',
+                    ],
+                    'IntOperationFilterInput' => [
+                        'eq',
+                        'gt',
+                        'gte',
+                        'in',
+                        'lt',
+                        'lte',
+                        'neq',
+                        'ngt',
+                        'ngte',
+                        'nin',
+                        'nlt',
+                        'nlte',
+                    ],
+                ];
+            }));
+            $this->twig->addFilter(new TwigFilter('sortByFields', static function (array $item, array $fields) {
+                uksort($item, static function (string $a, string $b) use ($fields) {
+                    $fieldsOrder = [];
+                    foreach ($fields as $i => $f) {
+                        $fieldsOrder[$f['name']] = $i;
+                    }
+                    return $fieldsOrder[$a] <=> $fieldsOrder[$b];
+                });
+                return $item;
+            }));
+            $this->twig->addFunction(new TwigFunction('getPaginationRange', static function () {
+                return SageSettings::$paginationRange;
+            }));
+            $this->twig->addFunction(new TwigFunction('get_site_url', static function () {
+                return get_site_url();
+            }));
+            $this->twig->addFunction(new TwigFunction('getUrlWithParam', static function (string $paramName, int|string $v) {
+                $url = $_SERVER['REQUEST_URI'];
+                if (str_contains($url, $paramName)) {
+                    $url = preg_replace('/' . $paramName . '=\d+/', $paramName . '=' . $v, $url);
+                } else {
+                    $url .= '&' . $paramName . '=' . $v;
+                }
+                return $url;
+            }));
         }
 
         // endregion
@@ -112,6 +173,19 @@ final class Sage
         register_deactivation_hook($this->file, static function (): void {
             flush_rewrite_rules();
         });
+
+        add_action('upgrader_process_complete', function (WP_Upgrader $upgrader, array $hook_extra): void {
+            // https://developer.wordpress.org/reference/hooks/upgrader_process_complete/#parameters
+            if (
+                array_key_exists('plugins', $hook_extra) &&
+                in_array('sage/sage.php', $hook_extra['plugins'])
+            ) {
+                $dir = str_replace('sage.php', 'templates/cache', $this->file);
+                if (is_dir($dir)) {
+                    Dir::remove($dir, ['recursive' => true]);
+                }
+            }
+        }, 10, 2);
 
         // region enqueue js && css
         // Load frontend JS & CSS.

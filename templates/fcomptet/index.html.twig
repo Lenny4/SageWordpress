@@ -1,0 +1,11 @@
+<div class="wrap">
+  <h1 class="wp-heading-inline">
+    {{ 'Clients' | trans }}
+  </h1>
+  <a href="{{ getUrlWithParam('tab', 'new') }}" class="page-title-action">{{ 'Add New'|trans }}</a>
+  <hr class="wp-header-end">
+  <h2 class="screen-reader-text">{{ 'Filter clients list'|trans }}</h2>
+  {% include 'fcomptet/filters.html.twig' %}
+  {% include 'fcomptet/lists.html.twig' %}
+  <div class="clear"></div>
+</div>

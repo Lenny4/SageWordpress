@@ -29,6 +29,8 @@ final class SageSettings
         'ctContact',
         'ctEmail',
     ];
+    public static array $paginationRange = [20, 50, 100];
+    public static int $defaultPagination = 20;
     /**
      * The single instance of SageSettings.
      */
@@ -86,7 +88,7 @@ final class SageSettings
      */
     private function settings_fields(): array
     {
-        $fieldsFComptet = array_filter(SageGraphQl::getType('FComptet')->data->__type->fields, static function (stdClass $fComptet) {
+        $fieldsFComptet = array_filter(SageGraphQl::getTypeModel('FComptet')->data->__type->fields, static function (stdClass $fComptet) {
             return
                 $fComptet->type->kind !== 'OBJECT' &&
                 $fComptet->type->ofType?->kind !== 'LIST';
@@ -196,7 +198,7 @@ final class SageSettings
                     ],
                 ]
             ],
-            'clients' => [
+            'fcomptet' => [
                 'title' => __('Clients', 'sage'),
                 'description' => __("These are some extra input fields that maybe aren't as common as the others.", 'sage'),
                 'fields' => [
@@ -488,14 +490,23 @@ final class SageSettings
                     'menu_slug' => Sage::$_token . '_fcomptet',
                     'function' => function (): void {
                         $mandatoryField = 'ctNum';
-                        $fields = get_option(SageSettings::$base . 'client_fields') ?? self::$defaultClientFields;
-                        $showCtNumField = in_array($mandatoryField, $fields);
+                        $rawFields = get_option(SageSettings::$base . 'client_fields') ?? self::$defaultClientFields;
+                        $showCtNumField = in_array($mandatoryField, $rawFields);
                         if (!$showCtNumField) {
-                            $fields[] = $mandatoryField;
+                            $rawFields[] = $mandatoryField;
                         }
-                        echo $this->parent->twig->render('clients/index.html.twig', [
+                        $fields = [];
+                        foreach (SageGraphQl::getTypeFilter('FComptetFilterInput')->data->__type->inputFields as $inputField) {
+                            if (in_array($inputField->name, $rawFields)) {
+                                $fields[] = [
+                                    'name' => $inputField->name,
+                                    'type' => $inputField->type->name,
+                                ];
+                            }
+                        }
+                        echo $this->parent->twig->render('fcomptet/index.html.twig', [
                             'queryParams' => $_GET,
-                            'users' => json_decode(json_encode(SageGraphQl::fComptets($_GET, $fields)), true),
+                            'fComptets' => json_decode(json_encode(SageGraphQl::fComptets($_GET, $rawFields)), true),
                             'fields' => $fields,
                             'showCtNumField' => $showCtNumField,
                         ]);

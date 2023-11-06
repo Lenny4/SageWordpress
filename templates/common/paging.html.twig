@@ -1,0 +1,54 @@
+{% set totalCount = fComptets['data']['fComptets']['totalCount'] %}
+{% set allPerPage = getPaginationRange() %}
+{% set perPage = queryParams.per_page ?? allPerPage[0] %}
+{% set maxPage = (totalCount/perPage)|round(0, 'ceil') %}
+{% set currentPage = (queryParams.paged ?? 1) + 0 %}
+{% set canGoBack = currentPage != 1 %}
+{% set canGoNext = currentPage != maxPage %}
+<div class="tablenav-pages {% if totalCount <= perPage %} one-page {% endif %}">
+  <span class="displaying-num">{{ totalCount|number_format }} {{ 'items'|trans }}</span>
+  <span class="pagination-links">
+    {% for i, page in [1, currentPage - 1] %}
+      {% if canGoBack %}
+        <a class="{% if i == 0 %} first-page {% else %} previous-page {% endif %} button" href="{{ getUrlWithParam('paged', page) }}">
+        {% set label = 'Previous page' %}
+        {% if i == 0 %} {% set label = 'First page' %} {% endif %}
+        <span class="screen-reader-text">{{ label|trans }}</span>
+      {% endif %}
+      <span {% if canGoBack == false %} class="tablenav-pages-navspan button disabled" {% endif %} aria-hidden="true">
+        {% if i == 0 %} « {% else %} ‹ {% endif %}
+      </span>
+      {% if canGoBack %}
+        </a>
+      {% endif %}
+    {% endfor %}
+
+    <span class="paging-input">
+      <label for="current-page-selector" class="screen-reader-text">{{ 'Current page'|trans }}</label>
+      <input class="current-page" id="current-page-selector" type="text" name="paged" value="{{ currentPage }}" size="4"
+             aria-describedby="table-paging">
+      <span class="tablenav-paging-text"> {{ 'out of'|trans }} <span class="total-pages">{{ maxPage }}</span></span>
+    </span>
+
+    {% for i, page in [currentPage + 1, maxPage] %}
+      {% if canGoNext %}
+        <a class="{% if i == 0 %} next-page {% else %} last-page {% endif %} button" href="{{ getUrlWithParam('paged', page) }}">
+        {% set label = 'Last page' %}
+        {% if i == 0 %} {% set label = 'Next page' %} {% endif %}
+        <span class="screen-reader-text">{{ label|trans }}</span>
+      {% endif %}
+      <span {% if canGoNext == false %} class="tablenav-pages-navspan button disabled" {% endif %} aria-hidden="true">
+        {% if i == 0 %} › {% else %} » {% endif %}
+      </span>
+      {% if canGoNext %}
+        </a>
+      {% endif %}
+    {% endfor %}
+  </span>
+  <label class="screen-reader-text" for="per_page">{{ 'Per page'|trans }}</label>
+  <select name="per_page" id="per_page">
+    {% for nb in allPerPage %}
+      <option {% if perPage == nb %} selected {% endif %} value="{{ nb }}">{{ nb }}</option>
+    {% endfor %}
+  </select>
+</div>

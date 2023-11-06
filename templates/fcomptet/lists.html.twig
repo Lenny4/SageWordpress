@@ -5,16 +5,15 @@
   {% include 'common/wp_list_header_footer.html.twig' with {'name': 'header'} %}
   </thead>
   <tbody id="client-list">
-  {% for edge in users['data']['fComptets']['edges'] %}
-    {% set ctNum = edge['node']['ctNum'] %}
-    <tr id="client-{{ ctNum }}">
+  {% for item in fComptets['data']['fComptets']['items'] %}
+    <tr id="client-{{ item.ctNum }}">
       <th scope="row" class="check-column">
-        <label class="label-covers-full-cell" for="client_{{ ctNum }}">
-          <span class="screen-reader-text">{{ 'Select'|trans }}{{ ctNum }}</span>
+        <label class="label-covers-full-cell" for="client_{{ item.ctNum }}">
+          <span class="screen-reader-text">{{ 'Select'|trans }}{{ item.ctNum }}</span>
         </label>
-        <input type="checkbox" name="clients[]" id="client_{{ ctNum }}" value="{{ ctNum }}">
+        <input type="checkbox" name="clients[]" id="client_{{ item.ctNum }}" value="{{ item.ctNum }}">
       </th>
-      {% for prop, value in edge['node'] %}
+      {% for prop, value in item|sortByFields(fields) %}
         {% if not (showCtNumField == false and prop == 'ctNum') %}
           <td data-colname="{{ prop }}">{{ value }}</td>
         {% endif %}
