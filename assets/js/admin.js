@@ -9,21 +9,24 @@ jQuery(document).ready(function () {
   function addFilter() {
     var allFields = JSON.parse(jQuery('[data-all-fields]').attr("data-all-fields"));
 
-    var newFilterContainer = jQuery('<div class="filter-container" style="margin-bottom: 5px"></div>').appendTo(allFilterContainer);
+    var newFilterContainer = jQuery('<div class="filter-container" style="margin-bottom: 5px;display: flex;flex-wrap: wrap;"></div>').appendTo(allFilterContainer);
 
-    var chooseFieldLabel = jQuery('<label class="screen-reader-text" for="filter_field[' + index + ']">filter_field[index]</label>').appendTo(newFilterContainer);
-    var chooseFieldSelect = jQuery('<select name="filter_field[' + index + ']" id="filter_field[' + index + ']"></select>').appendTo(newFilterContainer);
+    var chooseFieldContainer = jQuery('<div></div>').appendTo(newFilterContainer);
+    var chooseFieldLabel = jQuery('<label class="screen-reader-text" for="filter_field[' + index + ']">filter_field[index]</label>').appendTo(chooseFieldContainer);
+    var chooseFieldSelect = jQuery('<select name="filter_field[' + index + ']" id="filter_field[' + index + ']"></select>').appendTo(chooseFieldContainer);
     var chooseFieldOptionDefault = jQuery('<option disabled selected value> -- select a field -- </option>').appendTo(chooseFieldSelect);
     for (var field of allFields) {
       var chooseFieldOption = jQuery('<option value="' + field.name + '">field_' + field.name + '</option>').appendTo(chooseFieldSelect);
     }
 
-    var chooseFilterTypeLabel = jQuery('<label class="screen-reader-text" for="filter_type[' + index + ']">filter_type[index]</label>').appendTo(newFilterContainer);
-    var chooseFilterTypeSelect = jQuery('<select disabled name="filter_type[' + index + ']" id="filter_type[' + index + ']"></select>').appendTo(newFilterContainer);
+    var chooseFilterTypeContainer = jQuery('<div></div>').appendTo(newFilterContainer);
+    var chooseFilterTypeLabel = jQuery('<label class="screen-reader-text" for="filter_type[' + index + ']">filter_type[index]</label>').appendTo(chooseFilterTypeContainer);
+    var chooseFilterTypeSelect = jQuery('<select disabled name="filter_type[' + index + ']" id="filter_type[' + index + ']"></select>').appendTo(chooseFilterTypeContainer);
     var chooseFilterTypeOptionDefault = jQuery('<option disabled selected value></option>').appendTo(chooseFilterTypeSelect);
 
-    var chooseValueLabel = jQuery('<label class="screen-reader-text" for="filter_value[' + index + ']">filter_value[index]</label>').appendTo(newFilterContainer);
-    var chooseValueInput = jQuery('<input disabled type="search" id="filter_value[' + index + ']" name="filter_value[' + index + ']" value="">').appendTo(newFilterContainer);
+    var chooseValueContainer = jQuery('<div></div>').appendTo(newFilterContainer);
+    var chooseValueLabel = jQuery('<label class="screen-reader-text" for="filter_value[' + index + ']">filter_value[index]</label>').appendTo(chooseValueContainer);
+    var chooseValueInput = jQuery('<input disabled type="search" id="filter_value[' + index + ']" name="filter_value[' + index + ']" value="">').appendTo(chooseValueContainer);
 
     var deleteField = jQuery('<span data-delete-filter class="dashicons dashicons-trash button" style="padding-right: 22px"></span>').appendTo(newFilterContainer);
     index++;
@@ -35,6 +38,30 @@ jQuery(document).ready(function () {
     }
 
     return newFilterContainer;
+  }
+
+  function validateForm() {
+    jQuery('#filter-sage').find('.error-message').remove();
+    jQuery('.filter-container').each((function (index, filterContainer) {
+      var chooseFieldSelect = jQuery(filterContainer).find('select[name^="filter_field["]');
+      var chooseFilterTypeSelect = jQuery(filterContainer).find('select[name^="filter_type["]');
+      var chooseValueInput = jQuery(filterContainer).find('input[name^="filter_value["]');
+
+      var chooseFieldSelectVal = jQuery(chooseFieldSelect).val();
+      var chooseFilterTypeSelectVal = jQuery(chooseFilterTypeSelect).val();
+      var chooseValueInputVal = jQuery(chooseValueInput).val().trim();
+
+      var chooseFieldContainer = jQuery(chooseFieldSelect).parent();
+      var chooseFilterTypeContainer = jQuery(chooseFilterTypeSelect).parent();
+      var chooseValueContainer = jQuery(chooseValueInput).parent();
+
+      if (chooseFieldSelectVal == null) {
+        jQuery(chooseFieldContainer).append('<p class="error-message">Please select a value</p>');
+      } else if (chooseValueInputVal === '') {
+        jQuery(chooseValueContainer).append('<p class="error-message">This field must not be empty</p>');
+      }
+    }));
+    return jQuery('#filter-sage').find('.error-message').length === 0;
   }
 
   function removeFilter(e) {
@@ -142,6 +169,16 @@ jQuery(document).ready(function () {
 
   jQuery(document).on('click', '[data-delete-filter]', function (e) {
     removeFilter(e);
+  });
+
+  jQuery(document).on('input', '#filter-sage *', function (e) {
+    jQuery(jQuery(e.target).parent()).find('.error-message').remove();
+  });
+
+  jQuery(document).on('submit', '#filter-sage', function (e) {
+    if (!validateForm()) {
+      e.preventDefault();
+    }
   });
 
   initFiltersWithQueryParams();

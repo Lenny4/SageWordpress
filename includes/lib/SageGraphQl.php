@@ -86,7 +86,7 @@ final class SageGraphQl
             'take' => $nbPerPage,
             'order' => new RawObject('{ ctNum: ASC }'),
         ];
-        if($where !== []) {
+        if ($where !== []) {
             $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': {' . implode(',', $where) . '}}');
         }
         $query = (new Query('fComptets'))
