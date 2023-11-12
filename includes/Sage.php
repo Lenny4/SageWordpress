@@ -101,38 +101,60 @@ final class Sage
             $this->twig->addFilter(new TwigFilter('disabled', static function (bool $disabled) {
                 return disabled($disabled, true, false);
             }));
+            $this->twig->addFilter(new TwigFilter('bytesToString', static function (array $bytes) {
+                return implode(array_map("chr", $bytes));
+            }));
             $this->twig->addFilter(new TwigFilter('wp_nonce_field', static function (string $action) {
                 return wp_nonce_field($action);
             }));
             $this->twig->addFunction(new TwigFunction('getAllFilterType', static function () {
-                return [
-                    'StringOperationFilterInput' => [
-                        'contains',
-                        'endsWith',
-                        'eq',
-                        'in',
-                        'ncontains',
-                        'nendsWith',
-                        'neq',
-                        'nin',
-                        'nstartsWith',
-                        'startsWith',
-                    ],
-                    'IntOperationFilterInput' => [
-                        'eq',
-                        'gt',
-                        'gte',
-                        'in',
-                        'lt',
-                        'lte',
-                        'neq',
-                        'ngt',
-                        'ngte',
-                        'nin',
-                        'nlt',
-                        'nlte',
-                    ],
-                ];
+                $r = [];
+                foreach ([
+                             'StringOperationFilterInput',
+                             'IntOperationFilterInput',
+                             'ShortOperationFilterInput',
+                             'DecimalOperationFilterInput',
+                             'DateTimeOperationFilterInput',
+                             'UuidOperationFilterInput',
+                         ] as $f) {
+                    switch ($f) {
+                        case 'StringOperationFilterInput':
+                            $r[$f] = [
+                                'contains',
+                                'endsWith',
+                                'eq',
+                                'in',
+                                'ncontains',
+                                'nendsWith',
+                                'neq',
+                                'nin',
+                                'nstartsWith',
+                                'startsWith',
+                            ];
+                            break;
+                        case 'IntOperationFilterInput':
+                        case 'ShortOperationFilterInput':
+                        case 'DecimalOperationFilterInput':
+                        case 'DateTimeOperationFilterInput':
+                        case 'UuidOperationFilterInput':
+                            $r[$f] = [
+                                'eq',
+                                'gt',
+                                'gte',
+                                'in',
+                                'lt',
+                                'lte',
+                                'neq',
+                                'ngt',
+                                'ngte',
+                                'nin',
+                                'nlt',
+                                'nlte',
+                            ];
+                            break;
+                    }
+                }
+                return $r;
             }));
             $this->twig->addFilter(new TwigFilter('sortByFields', static function (array $item, array $fields) {
                 uksort($item, static function (string $a, string $b) use ($fields) {
@@ -158,6 +180,14 @@ final class Sage
                     $url .= '&' . $paramName . '=' . $v;
                 }
                 return $url;
+            }));
+            $this->twig->addFilter(new TwigFilter('removeField', static function (array $fields, ?string $hideField) {
+                if (!empty($hideField)) {
+                    return array_values(array_filter($fields, static function (array $field) use ($hideField) {
+                        return $field["name"] !== $hideField;
+                    }));
+                }
+                return $fields;
             }));
         }
 

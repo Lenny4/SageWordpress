@@ -1,9 +1,8 @@
 {# todo https://turbo.hotwired.dev/ #}
 
-{#todo#}
-{#faire order by#}
-{#tester tous les types pour voir si ça marche correctement#}
-{#pouvoir select per page sur la page de config#}
+{# todo faire order by #}
+{# todo pouvoir select per page sur la page de config #}
+{# todo faire translate #}
 
 <table class="wp-list-table widefat fixed striped table-view-list users">
   <thead>
@@ -19,8 +18,14 @@
         <input type="checkbox" name="clients[]" id="client_{{ item.ctNum }}" value="{{ item.ctNum }}">
       </th>
       {% for prop, value in item|sortByFields(fields) %}
-        {% if not (showCtNumField == false and prop == 'ctNum') %}
-          <td data-colname="{{ prop }}">{{ value }}</td>
+        {% if hideField != prop %}
+          <td data-colname="{{ prop }}">
+            {% if value is iterable %}
+              {{ value|bytesToString }}
+            {% else %}
+              {{ value }}
+            {% endif %}
+          </td>
         {% endif %}
       {% endfor %}
     </tr>

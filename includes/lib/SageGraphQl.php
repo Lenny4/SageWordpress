@@ -71,14 +71,30 @@ final class SageGraphQl
         );
     }
 
-    public static function fComptets(array $queryParams, array $fields): StdClass|null
+    public static function searchEntities(string $entityName, array $queryParams, array $fields): StdClass|null
     {
+        $rawFields = array_map(static function (array $field) {
+            return $field['name'];
+        }, $fields);
         $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
         $page = (int)($queryParams["paged"] ?? 1);
         $where = [];
         if (array_key_exists('filter_field', $queryParams)) {
             foreach ($queryParams["filter_field"] as $k => $v) {
-                $where[] = $queryParams["filter_field"][$k] . ': { ' . $queryParams["filter_type"][$k] . ': "' . $queryParams["filter_value"][$k] . '" }';
+                $fieldType = current(array_filter($fields, static function (array $field) use ($v) {
+                    return $field['name'] === $v;
+                }))['type'];
+                if (in_array($fieldType, [
+                    'StringOperationFilterInput',
+                    'DateTimeOperationFilterInput',
+                    'UuidOperationFilterInput',
+                ])) {
+                    $queryParams["filter_value"][$k] = '"' . $queryParams["filter_value"][$k] . '"';
+                }
+                if (!isset($where[$queryParams["filter_field"][$k]])) {
+                    $where[$queryParams["filter_field"][$k]] = [];
+                }
+                $where[$queryParams["filter_field"][$k]][] = $queryParams["filter_type"][$k] . ': ' . $queryParams["filter_value"][$k];
             }
         }
         $arguments = [
@@ -87,16 +103,20 @@ final class SageGraphQl
             'order' => new RawObject('{ ctNum: ASC }'),
         ];
         if ($where !== []) {
-            $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': {' . implode(',', $where) . '}}');
+            $stringWhere = [];
+            foreach ($where as $f => $w) {
+                $stringWhere[] = $f . ': { ' . implode(',', $w) . ' }';
+            }
+            $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': {' . implode(',', $stringWhere) . '}}');
         }
-        $query = (new Query('fComptets'))
+        $query = (new Query($entityName))
             ->setArguments($arguments)
             ->setSelectionSet(
                 [
                     'totalCount',
                     (new Query('items'))
                         ->setSelectionSet(
-                            $fields
+                            $rawFields
                         ),
                 ]
             );

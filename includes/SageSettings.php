@@ -91,6 +91,7 @@ final class SageSettings
         $fieldsFComptet = array_filter(SageGraphQl::getTypeModel('FComptet')->data->__type->fields, static function (stdClass $fComptet) {
             return
                 $fComptet->type->kind !== 'OBJECT' &&
+                $fComptet->type->kind !== 'LIST' &&
                 $fComptet->type->ofType?->kind !== 'LIST';
         });
         $clientFields = [];
@@ -506,9 +507,9 @@ final class SageSettings
                         }
                         echo $this->parent->twig->render('fcomptet/index.html.twig', [
                             'queryParams' => $_GET,
-                            'fComptets' => json_decode(json_encode(SageGraphQl::fComptets($_GET, $rawFields)), true),
+                            'fComptets' => json_decode(json_encode(SageGraphQl::searchEntities('fComptets', $_GET, $fields)), true),
                             'fields' => $fields,
-                            'showCtNumField' => $showCtNumField,
+                            'hideField' => $showCtNumField ? null : $mandatoryField,
                         ]);
                     },
                     'position' => null,

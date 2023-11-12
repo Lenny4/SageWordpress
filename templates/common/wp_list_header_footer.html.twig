@@ -6,7 +6,7 @@
     <input id="cb-select-all-{{ name }}" type="checkbox">
   </td>
   {% for field in fields %}
-    {% if not (showCtNumField == false and field['name'] == 'ctNum') %}
+    {% if hideField != field['name'] %}
       <th scope="col" id="{{ field['name'] }}" class="manage-column">{{ ('field_' ~ field['name'])|trans }}</th>
     {% endif %}
   {% endfor %}
