@@ -3,6 +3,9 @@
 {#  {{ 'filter-clients'|wp_nonce_field|raw }} #}
 <form method="get" id="filter-sage">
   <input type="hidden" name="page" value="{{ queryParams['page'] }}">
+  {% if queryParams['sort'] is defined %}
+    <input type="hidden" name="sort" value="{{ queryParams['sort']|raw|json_decode|json_encode }}">
+  {% endif %}
   <div class="tablenav top">
     <div class="alignleft actions">
       <input style="margin-bottom: 0.5rem" type="button" id="add_filter" class="button"

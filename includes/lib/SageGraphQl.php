@@ -97,10 +97,16 @@ final class SageGraphQl
                 $where[$queryParams["filter_field"][$k]][] = $queryParams["filter_type"][$k] . ': ' . $queryParams["filter_value"][$k];
             }
         }
+        $order = '{ ctNum: ASC }';
+        if (array_key_exists('sort', $queryParams)) {
+            $json = json_decode(stripslashes($queryParams['sort']), true);
+            $sortField = array_key_first($json);
+            $order = '{ ' . $sortField . ': ' . strtoupper($json[$sortField]) . ' }';
+        }
         $arguments = [
             'skip' => $nbPerPage * ($page - 1),
             'take' => $nbPerPage,
-            'order' => new RawObject('{ ctNum: ASC }'),
+            'order' => new RawObject($order),
         ];
         if ($where !== []) {
             $stringWhere = [];

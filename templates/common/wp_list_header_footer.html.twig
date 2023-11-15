@@ -1,3 +1,8 @@
+{% set sortData = getSortData(queryParams) %}
+
+{% set currentSort = sortData.currentSort %}
+{% set sortField = sortData.sortField %}
+{% set otherSort = sortData.otherSort %}
 <tr>
   <td id="cb" class="manage-column column-cb check-column">
     <label class="label-covers-full-cell" for="cb-select-all-{{ name }}">
@@ -7,7 +12,22 @@
   </td>
   {% for field in fields %}
     {% if hideField != field['name'] %}
-      <th scope="col" id="{{ field['name'] }}" class="manage-column">{{ ('field_' ~ field['name'])|trans }}</th>
+      <th scope="col" id="{{ field['name'] }}"
+          class="manage-column column-{{ field['name'] }} sortable {% if sortField == field['name'] %} sorted {% endif %} {{ currentSort }}"
+          abbr="{{ field['name'] }}">
+        {% if sortField == field['name'] %}
+        <a href="{{ getUrlWithParam('sort', '{"'~field['name']~'":"'~otherSort~'"}') }}">
+          {% else %}
+          <a href="{{ getUrlWithParam('sort', '{"'~field['name']~'":"asc"}') }}">
+            {% endif %}
+            <span>{{ ('field_' ~ field['name'])|trans }}</span>
+            <span class="sorting-indicators">
+              <span class="sorting-indicator asc" aria-hidden="true"></span>
+              <span class="sorting-indicator desc" aria-hidden="true"></span>
+            </span>
+            <span class="screen-reader-text">{{ ('Sort ' ~ currentSort)|trans }}.</span>
+          </a>
+      </th>
     {% endif %}
   {% endfor %}
 </tr>

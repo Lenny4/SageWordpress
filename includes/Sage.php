@@ -175,11 +175,14 @@ final class Sage
             $this->twig->addFunction(new TwigFunction('getUrlWithParam', static function (string $paramName, int|string $v) {
                 $url = $_SERVER['REQUEST_URI'];
                 if (str_contains($url, $paramName)) {
-                    $url = preg_replace('/' . $paramName . '=\d+/', $paramName . '=' . $v, $url);
+                    $url = preg_replace('/' . $paramName . '=([^&]*)/', $paramName . '=' . $v, $url);
                 } else {
                     $url .= '&' . $paramName . '=' . $v;
                 }
                 return $url;
+            }));
+            $this->twig->addFilter(new TwigFilter('json_decode', static function (string $string) {
+                return json_decode(stripslashes($string), true);
             }));
             $this->twig->addFilter(new TwigFilter('removeField', static function (array $fields, ?string $hideField) {
                 if (!empty($hideField)) {
@@ -188,6 +191,29 @@ final class Sage
                     }));
                 }
                 return $fields;
+            }));
+            $this->twig->addFunction(new TwigFunction('getSortData', static function (array $queryParams) {
+                $currentSort = 'asc';
+                $sortField = 'ctNum';
+
+                // todo
+                if (array_key_exists('sort', $queryParams)) {
+                    $json = json_decode(stripslashes($queryParams['sort']), true);
+                    $sortField = array_key_first($json);
+                    $currentSort = $json[$sortField];
+                }
+
+                if ($currentSort === 'asc') {
+                    $otherSort = 'desc';
+                } else {
+                    $currentSort = 'desc';
+                    $otherSort = 'asc';
+                }
+                return [
+                    'currentSort' => $currentSort,
+                    'otherSort' => $otherSort,
+                    'sortField' => $sortField,
+                ];
             }));
         }
 
