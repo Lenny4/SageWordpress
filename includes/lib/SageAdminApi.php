@@ -276,7 +276,7 @@ final class SageAdminApi
                 $html .= '<select name="' . esc_attr($option_name) . '" id="' . esc_attr($field['id']) . '">';
                 foreach ($field['options'] as $k => $v) {
                     $selected = false;
-                    if ($k === $data) {
+                    if ((string)$k === (string)$data) {
                         $selected = true;
                     }
 

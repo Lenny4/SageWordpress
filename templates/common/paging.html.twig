@@ -1,6 +1,6 @@
 {% set totalCount = fComptets['data']['fComptets']['totalCount'] %}
 {% set allPerPage = getPaginationRange() %}
-{% set perPage = queryParams.per_page ?? allPerPage[0] %}
+{% set perPage = queryParams.per_page %}
 {% set maxPage = (totalCount/perPage)|round(0, 'ceil') %}
 {% set currentPage = (queryParams.paged ?? 1) + 0 %}
 {% set canGoBack = currentPage != 1 %}

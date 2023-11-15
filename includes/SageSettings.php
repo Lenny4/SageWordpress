@@ -23,7 +23,7 @@ final class SageSettings
      */
     public static string $base = 'sage_';
     public static string $capability = 'manage_options';
-    public static array $defaultClientFields = [
+    public static array $defaultFComptetFields = [
         'ctNum',
         'ctIntitule',
         'ctContact',
@@ -88,15 +88,15 @@ final class SageSettings
      */
     private function settings_fields(): array
     {
-        $fieldsFComptet = array_filter(SageGraphQl::getTypeModel('FComptet')->data->__type->fields, static function (stdClass $fComptet) {
+        $fieldsFComptet = array_filter(SageGraphQl::getTypeModel('FComptet')?->data?->__type?->fields ?? [], static function (stdClass $fComptet) {
             return
                 $fComptet->type->kind !== 'OBJECT' &&
                 $fComptet->type->kind !== 'LIST' &&
                 $fComptet->type->ofType?->kind !== 'LIST';
         });
-        $clientFields = [];
+        $fComptetFields = [];
         foreach ($fieldsFComptet as $fieldFComptet) {
-            $clientFields[$fieldFComptet->name] = 'field_' . $fieldFComptet->name;
+            $fComptetFields[$fieldFComptet->name] = 'field_' . $fieldFComptet->name;
         }
         $settings = [
             'api' => [
@@ -204,12 +204,20 @@ final class SageSettings
                 'description' => __("These are some extra input fields that maybe aren't as common as the others.", 'sage'),
                 'fields' => [
                     [
-                        'id' => 'client_fields',
+                        'id' => 'fComptet_fields',
                         'label' => __('Fields to show', 'sage'),
                         'description' => __('Please select the fields to show on the table.', 'sage'),
                         'type' => '2_select_multi',
-                        'options' => $clientFields,
-                        'default' => self::$defaultClientFields,
+                        'options' => $fComptetFields,
+                        'default' => self::$defaultFComptetFields,
+                    ],
+                    [
+                        'id' => 'fComptet_perPage',
+                        'label' => __('Default per page', 'sage'),
+                        'description' => __('Please select the number of clients to show on the table.', 'sage'),
+                        'type' => 'select',
+                        'options' => self::put_values_in_keys(self::$paginationRange),
+                        'default' => (string)self::$defaultPagination
                     ],
                     [
                         'id' => 'number_field',
@@ -485,13 +493,13 @@ final class SageSettings
                     'location' => 'submenu',
                     // Possible settings: options, menu, submenu.
                     'parent_slug' => Sage::$_token . '_settings',
-                    'page_title' => __('Clients', 'sage'),
-                    'menu_title' => __('Clients', 'sage'),
+                    'page_title' => __('FComptets', 'sage'),
+                    'menu_title' => __('FComptets', 'sage'),
                     'capability' => self::$capability,
                     'menu_slug' => Sage::$_token . '_fcomptet',
                     'function' => function (): void {
                         $mandatoryField = 'ctNum';
-                        $rawFields = get_option(SageSettings::$base . 'client_fields') ?? self::$defaultClientFields;
+                        $rawFields = get_option(SageSettings::$base . 'fComptet_fields') ?? self::$defaultFComptetFields;
                         $showCtNumField = in_array($mandatoryField, $rawFields);
                         if (!$showCtNumField) {
                             $rawFields[] = $mandatoryField;
@@ -505,9 +513,13 @@ final class SageSettings
                                 ];
                             }
                         }
+                        $queryParams = $_GET;
+                        if (!isset($queryParams['per_page'])) {
+                            $queryParams['per_page'] = get_option(SageSettings::$base . 'fComptet_perPage') ?? (string)self::$defaultPagination;
+                        }
                         echo $this->parent->twig->render('fcomptet/index.html.twig', [
-                            'queryParams' => $_GET,
-                            'fComptets' => json_decode(json_encode(SageGraphQl::searchEntities('fComptets', $_GET, $fields)), true),
+                            'queryParams' => $queryParams,
+                            'fComptets' => json_decode(json_encode(SageGraphQl::searchEntities('fComptets', $queryParams, $fields)), true),
                             'fields' => $fields,
                             'hideField' => $showCtNumField ? null : $mandatoryField,
                         ]);
@@ -673,4 +685,12 @@ final class SageSettings
         _doing_it_wrong(__FUNCTION__, esc_html(__('Unserializing instances of sage_API is forbidden.')), esc_attr($this->parent->_version));
     }
 
+    public static function put_values_in_keys(array $array): array
+    {
+        $r = [];
+        foreach ($array as $v) {
+            $r[$v] = $v;
+        }
+        return $r;
+    }
 }
