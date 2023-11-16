@@ -5,6 +5,7 @@ namespace App;
 use App\lib\SageAdminApi;
 use App\lib\SagePostType;
 use App\lib\SageTaxonomy;
+use App\Utils\SageTranslationUtils;
 use Lead\Dir\Dir;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
@@ -106,6 +107,9 @@ final class Sage
             }));
             $this->twig->addFilter(new TwigFilter('wp_nonce_field', static function (string $action) {
                 return wp_nonce_field($action);
+            }));
+            $this->twig->addFunction(new TwigFunction('getTranslations', static function () {
+                return SageTranslationUtils::getTranslations();
             }));
             $this->twig->addFunction(new TwigFunction('getAllFilterType', static function () {
                 $r = [];

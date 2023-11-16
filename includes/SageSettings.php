@@ -88,16 +88,7 @@ final class SageSettings
      */
     private function settings_fields(): array
     {
-        $fieldsFComptet = array_filter(SageGraphQl::getTypeModel('FComptet')?->data?->__type?->fields ?? [], static function (stdClass $fComptet) {
-            return
-                $fComptet->type->kind !== 'OBJECT' &&
-                $fComptet->type->kind !== 'LIST' &&
-                $fComptet->type->ofType?->kind !== 'LIST';
-        });
-        $fComptetFields = [];
-        foreach ($fieldsFComptet as $fieldFComptet) {
-            $fComptetFields[$fieldFComptet->name] = 'field_' . $fieldFComptet->name;
-        }
+        $fComptetFields = $this->getFieldsForEntity('FComptet');
         $settings = [
             'api' => [
                 'title' => __('Api', 'sage'),
@@ -254,6 +245,30 @@ final class SageSettings
             ],
         ];
         return apply_filters(Sage::$_token . '_settings_fields', $settings);
+    }
+
+    private function getFieldsForEntity(string $object): array
+    {
+        $fieldsObject = array_filter(SageGraphQl::getTypeModel($object)?->data?->__type?->fields ?? [], static function (stdClass $fComptet) {
+            return
+                $fComptet->type->kind !== 'OBJECT' &&
+                $fComptet->type->kind !== 'LIST' &&
+                $fComptet->type->ofType?->kind !== 'LIST';
+        });
+        $objectFields = [];
+        foreach ($fieldsObject as $fieldFComptet) {
+            $objectFields[$fieldFComptet->name] = 'field_' . $fieldFComptet->name;
+        }
+        return $objectFields;
+    }
+
+    public static function put_values_in_keys(array $array): array
+    {
+        $r = [];
+        foreach ($array as $v) {
+            $r[$v] = $v;
+        }
+        return $r;
     }
 
     private function add_website_sage_api()
@@ -493,8 +508,8 @@ final class SageSettings
                     'location' => 'submenu',
                     // Possible settings: options, menu, submenu.
                     'parent_slug' => Sage::$_token . '_settings',
-                    'page_title' => __('FComptets', 'sage'),
-                    'menu_title' => __('FComptets', 'sage'),
+                    'page_title' => __('Clients', 'sage'),
+                    'menu_title' => __('Clients', 'sage'),
                     'capability' => self::$capability,
                     'menu_slug' => Sage::$_token . '_fcomptet',
                     'function' => function (): void {
@@ -505,7 +520,7 @@ final class SageSettings
                             $rawFields[] = $mandatoryField;
                         }
                         $fields = [];
-                        foreach (SageGraphQl::getTypeFilter('FComptetFilterInput')->data->__type->inputFields as $inputField) {
+                        foreach (SageGraphQl::getTypeFilter('FComptetFilterInput')?->data?->__type?->inputFields as $inputField) {
                             if (in_array($inputField->name, $rawFields)) {
                                 $fields[] = [
                                     'name' => $inputField->name,
@@ -683,14 +698,5 @@ final class SageSettings
     public function __wakeup()
     {
         _doing_it_wrong(__FUNCTION__, esc_html(__('Unserializing instances of sage_API is forbidden.')), esc_attr($this->parent->_version));
-    }
-
-    public static function put_values_in_keys(array $array): array
-    {
-        $r = [];
-        foreach ($array as $v) {
-            $r[$v] = $v;
-        }
-        return $r;
     }
 }

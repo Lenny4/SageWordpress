@@ -1,5 +1,6 @@
 jQuery(document).ready(function () {
   var allFilterContainer = jQuery("#filters_container");
+  var translations = JSON.parse(jQuery("[data-sage-translation]").attr('data-sage-translation'));
   var index = 0;
 
   function getNumberFilter() {
@@ -16,7 +17,11 @@ jQuery(document).ready(function () {
     var chooseFieldSelect = jQuery('<select name="filter_field[' + index + ']" id="filter_field[' + index + ']"></select>').appendTo(chooseFieldContainer);
     var chooseFieldOptionDefault = jQuery('<option disabled selected value> -- select a field -- </option>').appendTo(chooseFieldSelect);
     for (var field of allFields) {
-      var chooseFieldOption = jQuery('<option value="' + field.name + '">field_' + field.name + '</option>').appendTo(chooseFieldSelect);
+      let fieldName = field.name;
+      if (translations.hasOwnProperty('field_' + field.name)) {
+        fieldName = translations['field_' + field.name];
+      }
+      var chooseFieldOption = jQuery('<option value="' + field.name + '">' + fieldName + '</option>').appendTo(chooseFieldSelect);
     }
 
     var chooseFilterTypeContainer = jQuery('<div></div>').appendTo(newFilterContainer);
@@ -88,7 +93,11 @@ jQuery(document).ready(function () {
     if (JSON.stringify(oldOptions) !== JSON.stringify(newOptions)) {
       jQuery(chooseFilterTypeSelect).html('');
       for (var option of newOptions) {
-        var chooseTypeOption = jQuery('<option value="' + option + '">' + option + '</option>').appendTo(chooseFilterTypeSelect);
+        let typeName = option;
+        if (translations.hasOwnProperty('type_' + option)) {
+          typeName = translations['type_' + option];
+        }
+        var chooseTypeOption = jQuery('<option value="' + option + '">' + typeName + '</option>').appendTo(chooseFilterTypeSelect);
       }
     }
   }

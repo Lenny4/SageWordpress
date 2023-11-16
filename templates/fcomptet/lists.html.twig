@@ -6,14 +6,14 @@
   <thead>
   {% include 'common/wp_list_header_footer.html.twig' with {'name': 'header'} %}
   </thead>
-  <tbody id="client-list">
+  <tbody id="fComptet-list">
   {% for item in fComptets['data']['fComptets']['items'] %}
-    <tr id="client-{{ item.ctNum }}">
+    <tr id="fComptet-{{ item.ctNum }}">
       <th scope="row" class="check-column">
-        <label class="label-covers-full-cell" for="client_{{ item.ctNum }}">
+        <label class="label-covers-full-cell" for="fComptet_{{ item.ctNum }}">
           <span class="screen-reader-text">{{ 'Select'|trans }}{{ item.ctNum }}</span>
         </label>
-        <input type="checkbox" name="clients[]" id="client_{{ item.ctNum }}" value="{{ item.ctNum }}">
+        <input type="checkbox" name="fComptets[]" id="fComptet_{{ item.ctNum }}" value="{{ item.ctNum }}">
       </th>
       {% for prop, value in item|sortByFields(fields) %}
         {% if hideField != prop %}
