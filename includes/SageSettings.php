@@ -89,7 +89,7 @@ final class SageSettings
      */
     private function settings_fields(): array
     {
-        $fComptetFields = $this->getFieldsForEntity('FComptet');
+        $fComptetFields = $this->getFieldsForEntity('FComptet', SageTranslationUtils::TRANS_FCOMPTETS);
         $settings = [
             'api' => [
                 'title' => __('Api', 'sage'),
@@ -248,7 +248,7 @@ final class SageSettings
         return apply_filters(Sage::$_token . '_settings_fields', $settings);
     }
 
-    private function getFieldsForEntity(string $object): array
+    private function getFieldsForEntity(string $object, string $transDomain): array
     {
         $fieldsObject = array_filter(SageGraphQl::getTypeModel($object)?->data?->__type?->fields ?? [], static function (stdClass $fComptet) {
             return
@@ -256,9 +256,10 @@ final class SageSettings
                 $fComptet->type->kind !== 'LIST' &&
                 $fComptet->type->ofType?->kind !== 'LIST';
         });
+        $trans = SageTranslationUtils::getTranslations();
         $objectFields = [];
         foreach ($fieldsObject as $fieldFComptet) {
-            $objectFields[$fieldFComptet->name] = 'field_' . $fieldFComptet->name;
+            $objectFields[$fieldFComptet->name] = $trans[$transDomain][$fieldFComptet->name];
         }
         return $objectFields;
     }
@@ -567,7 +568,8 @@ final class SageSettings
     {
 
         // Build page HTML.
-        $html = '<div class="wrap" id="' . Sage::$_token . '_settings">' . "\n";
+        $html = $this->parent->twig->render('common/translations.html.twig');
+        $html .= '<div class="wrap" id="' . Sage::$_token . '_settings">' . "\n";
         $html .= '<h2>' . __('Sage', 'sage') . '</h2>' . "\n";
 
         $tab = '';
