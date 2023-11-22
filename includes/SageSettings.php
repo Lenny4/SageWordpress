@@ -5,6 +5,7 @@ namespace App;
 use App\enum\WebsiteEnum;
 use App\lib\SageGraphQl;
 use App\lib\SageRequest;
+use App\Utils\SageTranslationUtils;
 use stdClass;
 use WP_Application_Passwords;
 
@@ -525,6 +526,7 @@ final class SageSettings
                                 $fields[] = [
                                     'name' => $inputField->name,
                                     'type' => $inputField->type->name,
+                                    'transDomain' => SageTranslationUtils::TRANS_FCOMPTETS,
                                 ];
                             }
                         }

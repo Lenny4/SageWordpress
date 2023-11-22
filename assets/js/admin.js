@@ -18,8 +18,8 @@ jQuery(document).ready(function () {
     var chooseFieldOptionDefault = jQuery('<option disabled selected value> -- select a field -- </option>').appendTo(chooseFieldSelect);
     for (var field of allFields) {
       let fieldName = field.name;
-      if (translations.hasOwnProperty('field_' + field.name)) {
-        fieldName = translations['field_' + field.name];
+      if (translations[field.transDomain].hasOwnProperty(field.name)) {
+        fieldName = translations[field.transDomain][field.name];
       }
       var chooseFieldOption = jQuery('<option value="' + field.name + '">' + fieldName + '</option>').appendTo(chooseFieldSelect);
     }
@@ -94,8 +94,8 @@ jQuery(document).ready(function () {
       jQuery(chooseFilterTypeSelect).html('');
       for (var option of newOptions) {
         let typeName = option;
-        if (translations.hasOwnProperty('type_' + option)) {
-          typeName = translations['type_' + option];
+        if (translations.words.hasOwnProperty(option)) {
+          typeName = translations.words[option];
         }
         var chooseTypeOption = jQuery('<option value="' + option + '">' + typeName + '</option>').appendTo(chooseFilterTypeSelect);
       }
