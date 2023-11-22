@@ -73,17 +73,13 @@ final class SageGraphQl
 
     public static function searchEntities(string $entityName, array $queryParams, array $fields): StdClass|null
     {
-        $rawFields = array_map(static function (array $field) {
-            return $field['name'];
-        }, $fields);
+        $rawFields = array_map(static fn(array $field) => $field['name'], $fields);
         $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
         $page = (int)($queryParams["paged"] ?? 1);
         $where = [];
         if (array_key_exists('filter_field', $queryParams)) {
             foreach ($queryParams["filter_field"] as $k => $v) {
-                $fieldType = current(array_filter($fields, static function (array $field) use ($v) {
-                    return $field['name'] === $v;
-                }))['type'];
+                $fieldType = current(array_filter($fields, static fn(array $field): bool => $field['name'] === $v))['type'];
                 if (in_array($fieldType, [
                     'StringOperationFilterInput',
                     'DateTimeOperationFilterInput',
@@ -91,18 +87,22 @@ final class SageGraphQl
                 ])) {
                     $queryParams["filter_value"][$k] = '"' . $queryParams["filter_value"][$k] . '"';
                 }
+
                 if (!isset($where[$queryParams["filter_field"][$k]])) {
                     $where[$queryParams["filter_field"][$k]] = [];
                 }
+
                 $where[$queryParams["filter_field"][$k]][] = $queryParams["filter_type"][$k] . ': ' . $queryParams["filter_value"][$k];
             }
         }
+
         $order = '{ ctNum: ASC }';
         if (array_key_exists('sort', $queryParams)) {
-            $json = json_decode(stripslashes($queryParams['sort']), true);
+            $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_THROW_ON_ERROR);
             $sortField = array_key_first($json);
-            $order = '{ ' . $sortField . ': ' . strtoupper($json[$sortField]) . ' }';
+            $order = '{ ' . $sortField . ': ' . strtoupper((string)$json[$sortField]) . ' }';
         }
+
         $arguments = [
             'skip' => $nbPerPage * ($page - 1),
             'take' => $nbPerPage,
@@ -113,8 +113,10 @@ final class SageGraphQl
             foreach ($where as $f => $w) {
                 $stringWhere[] = $f . ': { ' . implode(',', $w) . ' }';
             }
+
             $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': {' . implode(',', $stringWhere) . '}}');
         }
+
         $query = (new Query($entityName))
             ->setArguments($arguments)
             ->setSelectionSet(

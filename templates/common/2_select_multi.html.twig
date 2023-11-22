@@ -15,7 +15,7 @@
       style="min-width: 200px;min-height: 200px;"
       data-2-select-target="all"
     >
-      {% for k,v in field['options']|sort %}
+      {% for k,v in field['options']|sortInsensitive %}
         {% if k not in data %}
           <option value="{{ k|esc_attr }}">{{ v }}</option>
         {% endif %}

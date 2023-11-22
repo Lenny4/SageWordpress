@@ -1,3 +1,4 @@
-{% include 'common/translations.html.twig' %}
+{% set allTranslations = getTranslations() %}
+<div data-sage-translation="{{ allTranslations|json_encode }}"></div>
 {% block body %}
 {% endblock %}

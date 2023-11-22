@@ -17,7 +17,7 @@ final class SageAdminApi
     /**
      * Constructor function
      */
-    public function __construct(public ?Sage $parent)
+    public function __construct(public ?Sage $sage)
     {
         add_action('save_post', function (int $post_id = 0): void {
             $this->save_meta_boxes($post_id);
@@ -331,7 +331,7 @@ final class SageAdminApi
                 );
                 break;
             case '2_select_multi':
-                $html .= $this->parent->twig->render('common/2_select_multi.html.twig', [
+                $html .= $this->sage->twig->render('common/2_select_multi.html.twig', [
                     'optionName' => $option_name,
                     'field' => $field,
                     'data' => $data,

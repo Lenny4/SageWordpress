@@ -23,19 +23,25 @@ final class SageSettings
      * Prefix for plugin settings.
      */
     public static string $base = 'sage_';
+
     public static string $capability = 'manage_options';
+
     public static array $defaultFComptetFields = [
         'ctNum',
         'ctIntitule',
         'ctContact',
         'ctEmail',
     ];
+
     public static array $paginationRange = [20, 50, 100];
+
     public static int $defaultPagination = 20;
+
     /**
      * The single instance of SageSettings.
      */
     private static ?self $_instance = null;
+
     /**
      * Available settings for plugin.
      */
@@ -44,9 +50,9 @@ final class SageSettings
     /**
      * Constructor function.
      *
-     * @param Sage|null $parent Parent object.
+     * @param Sage|null $sage Parent object.
      */
-    public function __construct(public ?Sage $parent)
+    public function __construct(public ?Sage $sage)
     {
         // Initialise settings.
         add_action('init', function (): void {
@@ -65,7 +71,7 @@ final class SageSettings
 
         // Add settings link to plugins page.
         add_filter(
-            'plugin_action_links_' . plugin_basename($this->parent->file),
+            'plugin_action_links_' . plugin_basename($this->sage->file),
             fn(array $links): array => $this->add_settings_link($links)
         );
 
@@ -250,17 +256,15 @@ final class SageSettings
 
     private function getFieldsForEntity(string $object, string $transDomain): array
     {
-        $fieldsObject = array_filter(SageGraphQl::getTypeModel($object)?->data?->__type?->fields ?? [], static function (stdClass $fComptet) {
-            return
-                $fComptet->type->kind !== 'OBJECT' &&
-                $fComptet->type->kind !== 'LIST' &&
-                $fComptet->type->ofType?->kind !== 'LIST';
-        });
+        $fieldsObject = array_filter(SageGraphQl::getTypeModel($object)?->data?->__type?->fields ?? [], static fn(stdClass $fComptet): bool => $fComptet->type->kind !== 'OBJECT' &&
+            $fComptet->type->kind !== 'LIST' &&
+            $fComptet->type->ofType?->kind !== 'LIST');
         $trans = SageTranslationUtils::getTranslations();
         $objectFields = [];
-        foreach ($fieldsObject as $fieldFComptet) {
-            $objectFields[$fieldFComptet->name] = $trans[$transDomain][$fieldFComptet->name];
+        foreach ($fieldsObject as $fieldObject) {
+            $objectFields[$fieldObject->name] = $trans[$transDomain][$fieldObject->name];
         }
+
         return $objectFields;
     }
 
@@ -270,10 +274,11 @@ final class SageSettings
         foreach ($array as $v) {
             $r[$v] = $v;
         }
+
         return $r;
     }
 
-    private function add_website_sage_api()
+    private function add_website_sage_api(): void
     {
         if (
             !(array_key_exists('settings-updated', $_GET) &&
@@ -283,16 +288,16 @@ final class SageSettings
         ) {
             return;
         }
+
         $applicationPasswordOption = self::$base . 'application-passwords';
         $userApplicationPassword = get_option($applicationPasswordOption, null);
         $user_id = get_current_user_id();
         $optionHasPassword = false;
         if (!is_null($userApplicationPassword)) {
             $passwords = WP_Application_Passwords::get_user_application_passwords($userApplicationPassword);
-            $optionHasPassword = current(array_filter($passwords, static function (array $password) use ($applicationPasswordOption) {
-                    return $password['name'] === $applicationPasswordOption;
-                })) !== false;
+            $optionHasPassword = current(array_filter($passwords, static fn(array $password): bool => $password['name'] === $applicationPasswordOption)) !== false;
         }
+
         if (
             !$optionHasPassword ||
             !$this->is_api_authenticated()
@@ -314,12 +319,11 @@ final class SageSettings
     private function create_application_password(string $user_id, string $applicationPasswordOption): string
     {
         $passwords = WP_Application_Passwords::get_user_application_passwords($user_id);
-        $currentPassword = current(array_filter($passwords, static function (array $password) use ($applicationPasswordOption) {
-            return $password['name'] === $applicationPasswordOption;
-        }));
+        $currentPassword = current(array_filter($passwords, static fn(array $password): bool => $password['name'] === $applicationPasswordOption));
         if ($currentPassword !== false) {
             WP_Application_Passwords::delete_application_password($user_id, $currentPassword["uuid"]);
         }
+
         $response = SageRequest::selfRequest('/wp-json/wp/v2/users/' . $user_id . '/application-passwords', [
             'headers' => [
                 'Content-Length' => (string)strlen('name=' . $applicationPasswordOption),
@@ -330,7 +334,7 @@ final class SageSettings
                 'name' => $applicationPasswordOption,
             ],
         ]);
-        $newPassword = json_decode($response["body"], true)['password'];
+        $newPassword = json_decode((string)$response["body"], true, 512, JSON_THROW_ON_ERROR)['password'];
         update_option($applicationPasswordOption, $user_id);
         $this->create_update_website($user_id, $newPassword);
         return $newPassword;
@@ -340,7 +344,7 @@ final class SageSettings
     {
         $user = get_user_by('id', $user_id);
         $url = parse_url(get_site_url());
-        $result = SageGraphQl::addUpdateWebsite(
+        $stdClass = SageGraphQl::addUpdateWebsite(
             name: get_bloginfo(),
             username: $user->data->user_login,
             password: $password,
@@ -348,8 +352,8 @@ final class SageSettings
             host: $url["host"],
             protocol: $url["scheme"],
         );
-        if (!is_null($result)) {
-            add_action('admin_notices', function () {
+        if (!is_null($stdClass)) {
+            add_action('admin_notices', static function (): void {
                 ?>
                 <div class="notice notice-success is-dismissible"><p><?=
                         __('Successfully connected to API', 'sage')
@@ -358,6 +362,7 @@ final class SageSettings
             });
             return true;
         }
+
         return false;
     }
 
@@ -402,7 +407,7 @@ final class SageSettings
                     $field['id'],
                     $field['label'],
                     function (...$args): void {
-                        $this->parent->admin->display_field(...$args);
+                        $this->sage->admin->display_field(...$args);
                     },
                     Sage::$_token . '_settings',
                     $section,
@@ -643,7 +648,7 @@ final class SageSettings
         // If you're not including an image upload then you can leave this function call out.
         wp_enqueue_media();
 
-        wp_register_script(Sage::$_token . '-settings-js', $this->parent->assets_url . 'js/settings' . $this->parent->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
+        wp_register_script(Sage::$_token . '-settings-js', $this->sage->assets_url . 'js/settings' . $this->sage->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
         wp_enqueue_script(Sage::$_token . '-settings-js');
     }
 
@@ -675,14 +680,14 @@ final class SageSettings
      *
      * Ensures only one instance of SageSettings is loaded or can be loaded.
      *
-     * @param Sage $parent Object instance.
+     * @param Sage $sage Object instance.
      * @return self|null SageSettings instance
      * @see sage()
      */
-    public static function instance(Sage $parent): ?self
+    public static function instance(Sage $sage): ?self
     {
         if (is_null(self::$_instance)) {
-            self::$_instance = new self($parent);
+            self::$_instance = new self($sage);
         }
 
         return self::$_instance;
@@ -693,7 +698,7 @@ final class SageSettings
      */
     public function __clone()
     {
-        _doing_it_wrong(__FUNCTION__, esc_html(__('Cloning of sage_API is forbidden.')), esc_attr($this->parent->_version));
+        _doing_it_wrong(__FUNCTION__, esc_html(__('Cloning of sage_API is forbidden.')), esc_attr($this->sage->_version));
     }
 
     /**
@@ -701,6 +706,6 @@ final class SageSettings
      */
     public function __wakeup()
     {
-        _doing_it_wrong(__FUNCTION__, esc_html(__('Unserializing instances of sage_API is forbidden.')), esc_attr($this->parent->_version));
+        _doing_it_wrong(__FUNCTION__, esc_html(__('Unserializing instances of sage_API is forbidden.')), esc_attr($this->sage->_version));
     }
 }

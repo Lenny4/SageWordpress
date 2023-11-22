@@ -28,18 +28,22 @@ final class Sage
      * The token.
      */
     public static string $_token = 'sage';
+
     /**
      * The single instance of sage.
      */
     private static ?self $_instance = null;
+
     /**
      * Local instance of SageAdminApi
      */
     public ?SageAdminApi $admin = null;
+
     /**
      * Settings class SageSettings
      */
     public SageSettings|null $settings = null;
+
     /**
      * The main plugin directory.
      */
@@ -90,28 +94,14 @@ final class Sage
         if (WP_DEBUG) {
             // https://twig.symfony.com/doc/3.x/functions/dump.html
             $this->twig->addExtension(new DebugExtension());
-            $this->twig->addFilter(new TwigFilter('trans', static function (string $string) {
-                return __($string, self::$_token);
-            }));
-            $this->twig->addFilter(new TwigFilter('esc_attr', static function (string $string) {
-                return esc_attr($string);
-            }));
-            $this->twig->addFilter(new TwigFilter('selected', static function (bool $selected) {
-                return selected($selected, true, false);
-            }));
-            $this->twig->addFilter(new TwigFilter('disabled', static function (bool $disabled) {
-                return disabled($disabled, true, false);
-            }));
-            $this->twig->addFilter(new TwigFilter('bytesToString', static function (array $bytes) {
-                return implode(array_map("chr", $bytes));
-            }));
-            $this->twig->addFilter(new TwigFilter('wp_nonce_field', static function (string $action) {
-                return wp_nonce_field($action);
-            }));
-            $this->twig->addFunction(new TwigFunction('getTranslations', static function () {
-                return SageTranslationUtils::getTranslations();
-            }));
-            $this->twig->addFunction(new TwigFunction('getAllFilterType', static function () {
+            $this->twig->addFilter(new TwigFilter('trans', static fn(string $string) => __($string, self::$_token)));
+            $this->twig->addFilter(new TwigFilter('esc_attr', static fn(string $string) => esc_attr($string)));
+            $this->twig->addFilter(new TwigFilter('selected', static fn(bool $selected) => selected($selected, true, false)));
+            $this->twig->addFilter(new TwigFilter('disabled', static fn(bool $disabled) => disabled($disabled, true, false)));
+            $this->twig->addFilter(new TwigFilter('bytesToString', static fn(array $bytes): string => implode('', array_map("chr", $bytes))));
+            $this->twig->addFilter(new TwigFilter('wp_nonce_field', static fn(string $action) => wp_nonce_field($action)));
+            $this->twig->addFunction(new TwigFunction('getTranslations', static fn(): array => SageTranslationUtils::getTranslations()));
+            $this->twig->addFunction(new TwigFunction('getAllFilterType', static function (): array {
                 $r = [];
                 foreach ([
                              'StringOperationFilterInput',
@@ -158,51 +148,47 @@ final class Sage
                             break;
                     }
                 }
+
                 return $r;
             }));
-            $this->twig->addFilter(new TwigFilter('sortByFields', static function (array $item, array $fields) {
-                uksort($item, static function (string $a, string $b) use ($fields) {
+            $this->twig->addFilter(new TwigFilter('sortByFields', static function (array $item, array $fields): array {
+                uksort($item, static function (string $a, string $b) use ($fields): int {
                     $fieldsOrder = [];
                     foreach ($fields as $i => $f) {
                         $fieldsOrder[$f['name']] = $i;
                     }
+
                     return $fieldsOrder[$a] <=> $fieldsOrder[$b];
                 });
                 return $item;
             }));
-            $this->twig->addFunction(new TwigFunction('getPaginationRange', static function () {
-                return SageSettings::$paginationRange;
-            }));
-            $this->twig->addFunction(new TwigFunction('get_site_url', static function () {
-                return get_site_url();
-            }));
-            $this->twig->addFunction(new TwigFunction('getUrlWithParam', static function (string $paramName, int|string $v) {
+            $this->twig->addFunction(new TwigFunction('getPaginationRange', static fn(): array => SageSettings::$paginationRange));
+            $this->twig->addFunction(new TwigFunction('get_site_url', static fn() => get_site_url()));
+            $this->twig->addFunction(new TwigFunction('getUrlWithParam', static function (string $paramName, int|string $v): string|array|null {
                 $url = $_SERVER['REQUEST_URI'];
                 if (str_contains($url, $paramName)) {
                     $url = preg_replace('/' . $paramName . '=([^&]*)/', $paramName . '=' . $v, $url);
                 } else {
                     $url .= '&' . $paramName . '=' . $v;
                 }
+
                 return $url;
             }));
-            $this->twig->addFilter(new TwigFilter('json_decode', static function (string $string) {
-                return json_decode(stripslashes($string), true);
-            }));
-            $this->twig->addFilter(new TwigFilter('removeField', static function (array $fields, ?string $hideField) {
-                if (!empty($hideField)) {
-                    return array_values(array_filter($fields, static function (array $field) use ($hideField) {
-                        return $field["name"] !== $hideField;
-                    }));
+            $this->twig->addFilter(new TwigFilter('json_decode', static fn(string $string): mixed => json_decode(stripslashes($string), true, 512, JSON_THROW_ON_ERROR)));
+            $this->twig->addFilter(new TwigFilter('removeField', static function (array $fields, ?string $hideField): array {
+                if ($hideField !== null && $hideField !== '') {
+                    return array_values(array_filter($fields, static fn(array $field): bool => $field["name"] !== $hideField));
                 }
+
                 return $fields;
             }));
-            $this->twig->addFunction(new TwigFunction('getSortData', static function (array $queryParams) {
+            $this->twig->addFunction(new TwigFunction('getSortData', static function (array $queryParams): array {
                 $currentSort = 'asc';
                 $sortField = 'ctNum';
 
                 // todo
                 if (array_key_exists('sort', $queryParams)) {
-                    $json = json_decode(stripslashes($queryParams['sort']), true);
+                    $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_THROW_ON_ERROR);
                     $sortField = array_key_first($json);
                     $currentSort = $json[$sortField];
                 }
@@ -213,11 +199,16 @@ final class Sage
                     $currentSort = 'desc';
                     $otherSort = 'asc';
                 }
+
                 return [
                     'currentSort' => $currentSort,
                     'otherSort' => $otherSort,
                     'sortField' => $sortField,
                 ];
+            }));
+            $this->twig->addFilter(new TwigFilter('sortInsensitive', static function (array $array): array {
+                uasort($array, 'strnatcasecmp');
+                return $array;
             }));
         }
 
@@ -234,7 +225,7 @@ final class Sage
             flush_rewrite_rules();
         });
 
-        add_action('upgrader_process_complete', function (WP_Upgrader $upgrader, array $hook_extra): void {
+        add_action('upgrader_process_complete', function (WP_Upgrader $wpUpgrader, array $hook_extra): void {
             // https://developer.wordpress.org/reference/hooks/upgrader_process_complete/#parameters
             if (
                 array_key_exists('plugins', $hook_extra) &&
@@ -329,7 +320,7 @@ final class Sage
      */
     public function load_localisation(): void
     {
-        load_plugin_textdomain('sage', false, dirname(plugin_basename($this->file)) . '/lang/');
+        load_plugin_textdomain('sage', false, dirname((string)plugin_basename($this->file)) . '/lang/');
     }
 
     /**
@@ -383,7 +374,7 @@ final class Sage
         $locale = apply_filters('plugin_locale', get_locale(), $domain);
 
         load_textdomain($domain, WP_LANG_DIR . '/' . $domain . '/' . $domain . '-' . $locale . '.mo');
-        load_plugin_textdomain($domain, false, dirname(plugin_basename($this->file)) . '/lang/');
+        load_plugin_textdomain($domain, false, dirname((string)plugin_basename($this->file)) . '/lang/');
     }
 
     /**
