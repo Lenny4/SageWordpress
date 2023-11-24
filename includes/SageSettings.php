@@ -540,7 +540,7 @@ final class SageSettings
                         if (!isset($queryParams['per_page'])) {
                             $queryParams['per_page'] = get_option(SageSettings::$base . 'fComptet_perPage') ?? (string)self::$defaultPagination;
                         }
-                        echo $this->parent->twig->render('fcomptet/index.html.twig', [
+                        echo $this->sage->twig->render('fcomptet/index.html.twig', [
                             'queryParams' => $queryParams,
                             'fComptets' => json_decode(json_encode(SageGraphQl::searchEntities('fComptets', $queryParams, $fields)), true),
                             'fields' => $fields,
@@ -573,7 +573,7 @@ final class SageSettings
     {
 
         // Build page HTML.
-        $html = $this->parent->twig->render('common/translations.html.twig');
+        $html = $this->sage->twig->render('common/translations.html.twig');
         $html .= '<div class="wrap" id="' . Sage::$_token . '_settings">' . "\n";
         $html .= '<h2>' . __('Sage', 'sage') . '</h2>' . "\n";
 
