@@ -33,6 +33,12 @@ final class SageSettings
         'ctEmail',
     ];
 
+    public static array $defaultFDocenteteFields = [
+        'doPiece',
+        'doType',
+        'doDate',
+    ];
+
     public static array $paginationRange = [20, 50, 100];
 
     public static int $defaultPagination = 20;
@@ -95,7 +101,6 @@ final class SageSettings
      */
     private function settings_fields(): array
     {
-        $fComptetFields = $this->getFieldsForEntity('FComptet', SageTranslationUtils::TRANS_FCOMPTETS);
         $settings = [
             'api' => [
                 'title' => __('Api', 'sage'),
@@ -197,7 +202,7 @@ final class SageSettings
                     ],
                 ]
             ],
-            'fcomptet' => [
+            'fComptet' => [
                 'title' => __('Clients', 'sage'),
                 'description' => __("These are some extra input fields that maybe aren't as common as the others.", 'sage'),
                 'fields' => [
@@ -206,7 +211,7 @@ final class SageSettings
                         'label' => __('Fields to show', 'sage'),
                         'description' => __('Please select the fields to show on the table.', 'sage'),
                         'type' => '2_select_multi',
-                        'options' => $fComptetFields,
+                        'options' => $this->getFieldsForEntity('FComptet', SageTranslationUtils::TRANS_FCOMPTETS),
                         'default' => self::$defaultFComptetFields,
                     ],
                     [
@@ -247,6 +252,28 @@ final class SageSettings
                         'type' => 'select_multi',
                         'options' => ['linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows'],
                         'default' => ['linux']
+                    ],
+                ]
+            ],
+            'fDocentete' => [
+                'title' => __('Documents', 'sage'),
+                'description' => __("Gestion Commerciale / Menu Traitement / Documents des ventes, des achats, des stocks et internes / Fenêtre Document", 'sage'),
+                'fields' => [
+                    [
+                        'id' => 'fDocentete_fields',
+                        'label' => __('Fields to show', 'sage'),
+                        'description' => __('Please select the fields to show on the table.', 'sage'),
+                        'type' => '2_select_multi',
+                        'options' => $this->getFieldsForEntity('FDocentete', SageTranslationUtils::TRANS_FDOCENTETES),
+                        'default' => self::$defaultFDocenteteFields,
+                    ],
+                    [
+                        'id' => 'fDocentete_perPage',
+                        'label' => __('Default per page', 'sage'),
+                        'description' => __('Please select the number of clients to show on the table.', 'sage'),
+                        'type' => 'select',
+                        'options' => self::put_values_in_keys(self::$paginationRange),
+                        'default' => (string)self::$defaultPagination
                     ],
                 ]
             ],
@@ -518,7 +545,7 @@ final class SageSettings
                     'page_title' => __('Clients', 'sage'),
                     'menu_title' => __('Clients', 'sage'),
                     'capability' => self::$capability,
-                    'menu_slug' => Sage::$_token . '_fcomptet',
+                    'menu_slug' => Sage::$_token . '_fComptet',
                     'function' => function (): void {
                         $mandatoryField = 'ctNum';
                         $rawFields = get_option(SageSettings::$base . 'fComptet_fields') ?? self::$defaultFComptetFields;
@@ -540,7 +567,7 @@ final class SageSettings
                         if (!isset($queryParams['per_page'])) {
                             $queryParams['per_page'] = get_option(SageSettings::$base . 'fComptet_perPage') ?? (string)self::$defaultPagination;
                         }
-                        echo $this->sage->twig->render('fcomptet/index.html.twig', [
+                        echo $this->sage->twig->render('fComptet/index.html.twig', [
                             'queryParams' => $queryParams,
                             'fComptets' => json_decode(json_encode(SageGraphQl::searchEntities('fComptets', $queryParams, $fields)), true),
                             'fields' => $fields,
