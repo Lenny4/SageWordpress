@@ -20,7 +20,11 @@
           {% else %}
           <a href="{{ getUrlWithParam('sort', '{"'~field['name']~'":"asc"}') }}">
             {% endif %}
-            <span>{{ allTranslations[field['transDomain']][field['name']] }}</span>
+            {% set transField = allTranslations[field['transDomain']][field['name']] %}
+            {% if transField|gettype != 'string' %}
+              {% set transField = transField['label'] %}
+            {% endif %}
+            <span>{{ transField }}</span>
             <span class="sorting-indicators">
               <span class="sorting-indicator asc" aria-hidden="true"></span>
               <span class="sorting-indicator desc" aria-hidden="true"></span>

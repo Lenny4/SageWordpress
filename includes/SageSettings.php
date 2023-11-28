@@ -289,7 +289,8 @@ final class SageSettings
         $trans = SageTranslationUtils::getTranslations();
         $objectFields = [];
         foreach ($fieldsObject as $fieldObject) {
-            $objectFields[$fieldObject->name] = $trans[$transDomain][$fieldObject->name];
+            $v = $trans[$transDomain][$fieldObject->name];
+            $objectFields[$fieldObject->name] = $v['label'] ?? $v;
         }
 
         return $objectFields;

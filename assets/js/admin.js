@@ -20,6 +20,9 @@ jQuery(document).ready(function () {
       let fieldName = field.name;
       if (translations[field.transDomain].hasOwnProperty(field.name)) {
         fieldName = translations[field.transDomain][field.name];
+        if(typeof fieldName !== "string") {
+          fieldName = fieldName.label;
+        }
       }
       var chooseFieldOption = jQuery('<option value="' + field.name + '">' + fieldName + '</option>').appendTo(chooseFieldSelect);
     }

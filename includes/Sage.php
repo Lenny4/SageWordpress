@@ -175,6 +175,7 @@ final class Sage
                 return $url;
             }));
             $this->twig->addFilter(new TwigFilter('json_decode', static fn(string $string): mixed => json_decode(stripslashes($string), true, 512, JSON_THROW_ON_ERROR)));
+            $this->twig->addFilter(new TwigFilter('gettype', static fn(mixed $value): string => gettype($value)));
             $this->twig->addFilter(new TwigFilter('removeFields', static function (array $fields, array $hideFields): array {
                 return array_values(array_filter($fields, static fn(array $field): bool => !in_array($field["name"], $hideFields)));
             }));

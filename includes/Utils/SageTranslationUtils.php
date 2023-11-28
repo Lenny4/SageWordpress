@@ -159,7 +159,12 @@ final class SageTranslationUtils
             ],
             self::TRANS_FDOCENTETES => [
                 "doDomaine" => __("Domaine (cf. énumérateur DomaineType).", 'sage'),
-                "doType" => __("Type du document (cf. énumérateur DocumentType)", 'sage'),
+                "doType" => [
+                    'label' => __("Type du document (cf. énumérateur DocumentType)", 'sage'),
+                    'values' => [
+                        '0' => __("Devis", 'sage'),
+                    ]
+                ],
                 "doPiece" => __("N° de pièce", 'sage'),
                 "doDate" => __("Date", 'sage'),
                 "doRef" => __("Référence", 'sage'),
