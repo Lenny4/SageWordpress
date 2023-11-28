@@ -1,0 +1,35 @@
+{# todo https://turbo.hotwired.dev/ #}
+
+{# todo faire translate #}
+
+<table class="wp-list-table widefat fixed striped table-view-list users">
+  <thead>
+  {% include 'common/wp_list_header_footer.html.twig' with {'name': 'header'} %}
+  </thead>
+  <tbody id="fDocentete-list">
+  {% for item in fDocentetes['data']['fDocentetes']['items'] %}
+    <tr id="fDocentete-{{ item.ctNum }}">
+      <th scope="row" class="check-column">
+        <label class="label-covers-full-cell" for="fDocentete_{{ item.ctNum }}">
+          <span class="screen-reader-text">{{ 'Select'|trans }}{{ item.ctNum }}</span>
+        </label>
+        <input type="checkbox" name="fDocentetes[]" id="fDocentete_{{ item.ctNum }}" value="{{ item.ctNum }}">
+      </th>
+      {% for prop, value in item|sortByFields(fields) %}
+        {% if hideField != prop %}
+          <td data-colname="{{ prop }}">
+            {% if value is iterable %}
+              {{ value|bytesToString }}
+            {% else %}
+              {{ value }}
+            {% endif %}
+          </td>
+        {% endif %}
+      {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+  {% include 'common/wp_list_header_footer.html.twig' with {'name': 'footer'} %}
+  </tfoot>
+</table>

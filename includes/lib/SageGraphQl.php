@@ -96,7 +96,7 @@ final class SageGraphQl
             }
         }
 
-        $order = '{ ctNum: ASC }';
+        $order = null;
         if (array_key_exists('sort', $queryParams)) {
             $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_THROW_ON_ERROR);
             $sortField = array_key_first($json);
@@ -106,8 +106,10 @@ final class SageGraphQl
         $arguments = [
             'skip' => $nbPerPage * ($page - 1),
             'take' => $nbPerPage,
-            'order' => new RawObject($order),
         ];
+        if (!is_null($order)) {
+            $arguments['order'] = new RawObject($order);
+        }
         if ($where !== []) {
             $stringWhere = [];
             foreach ($where as $f => $w) {

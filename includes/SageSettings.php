@@ -547,12 +547,13 @@ final class SageSettings
                     'capability' => self::$capability,
                     'menu_slug' => Sage::$_token . '_fComptet',
                     'function' => function (): void {
-                        $mandatoryField = 'ctNum';
-                        $rawFields = get_option(SageSettings::$base . 'fComptet_fields') ?? self::$defaultFComptetFields;
-                        $showCtNumField = in_array($mandatoryField, $rawFields);
-                        if (!$showCtNumField) {
-                            $rawFields[] = $mandatoryField;
+                        $mandatoryFields = ['ctNum'];
+                        $rawFields = get_option(SageSettings::$base . 'fComptet_fields');
+                        if ($rawFields === false) {
+                            $rawFields = self::$defaultFComptetFields;
                         }
+                        $hideFields = array_diff($mandatoryFields, $rawFields);
+                        $rawFields = array_unique([...$rawFields, ...$hideFields]);
                         $fields = [];
                         foreach (SageGraphQl::getTypeFilter('FComptetFilterInput')?->data?->__type?->inputFields as $inputField) {
                             if (in_array($inputField->name, $rawFields)) {
@@ -571,7 +572,46 @@ final class SageSettings
                             'queryParams' => $queryParams,
                             'fComptets' => json_decode(json_encode(SageGraphQl::searchEntities('fComptets', $queryParams, $fields)), true),
                             'fields' => $fields,
-                            'hideField' => $showCtNumField ? null : $mandatoryField,
+                            'hideFields' => $hideFields,
+                        ]);
+                    },
+                    'position' => null,
+                ],
+                [
+                    'location' => 'submenu',
+                    // Possible settings: options, menu, submenu.
+                    'parent_slug' => Sage::$_token . '_settings',
+                    'page_title' => __('Documents', 'sage'),
+                    'menu_title' => __('Documents', 'sage'),
+                    'capability' => self::$capability,
+                    'menu_slug' => Sage::$_token . '_fDocentete',
+                    'function' => function (): void {
+                        $mandatoryFields = ['doPiece', 'doType'];
+                        $rawFields = get_option(SageSettings::$base . 'fDocentete_fields');
+                        if ($rawFields === false) {
+                            $rawFields = self::$defaultFDocenteteFields;
+                        }
+                        $hideFields = array_diff($mandatoryFields, $rawFields);
+                        $rawFields = array_unique([...$rawFields, ...$hideFields]);
+                        $fields = [];
+                        foreach (SageGraphQl::getTypeFilter('FDocenteteFilterInput')?->data?->__type?->inputFields as $inputField) {
+                            if (in_array($inputField->name, $rawFields)) {
+                                $fields[] = [
+                                    'name' => $inputField->name,
+                                    'type' => $inputField->type->name,
+                                    'transDomain' => SageTranslationUtils::TRANS_FDOCENTETES,
+                                ];
+                            }
+                        }
+                        $queryParams = $_GET;
+                        if (!isset($queryParams['per_page'])) {
+                            $queryParams['per_page'] = get_option(SageSettings::$base . 'fDocentete_perPage') ?? (string)self::$defaultPagination;
+                        }
+                        echo $this->sage->twig->render('fDocentete/index.html.twig', [
+                            'queryParams' => $queryParams,
+                            'fDocentetes' => json_decode(json_encode(SageGraphQl::searchEntities('fDocentetes', $queryParams, $fields)), true),
+                            'fields' => $fields,
+                            'hideFields' => $hideFields,
                         ]);
                     },
                     'position' => null,

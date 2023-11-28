@@ -175,12 +175,8 @@ final class Sage
                 return $url;
             }));
             $this->twig->addFilter(new TwigFilter('json_decode', static fn(string $string): mixed => json_decode(stripslashes($string), true, 512, JSON_THROW_ON_ERROR)));
-            $this->twig->addFilter(new TwigFilter('removeField', static function (array $fields, ?string $hideField): array {
-                if ($hideField !== null && $hideField !== '') {
-                    return array_values(array_filter($fields, static fn(array $field): bool => $field["name"] !== $hideField));
-                }
-
-                return $fields;
+            $this->twig->addFilter(new TwigFilter('removeFields', static function (array $fields, array $hideFields): array {
+                return array_values(array_filter($fields, static fn(array $field): bool => !in_array($field["name"], $hideFields)));
             }));
             $this->twig->addFunction(new TwigFunction('getSortData', static function (array $queryParams): array {
                 $currentSort = 'asc';
