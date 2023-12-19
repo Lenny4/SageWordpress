@@ -25,3 +25,29 @@
   margin-bottom: 0.5rem;
   border-radius: 0.25rem;
 }
+
+/* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+
+  .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: black;
+    color: #fff;
+    padding: 5px;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 1;
+
+    * {
+      color: #fff;
+    }
+  }
+
+  &:hover .tooltiptext {
+    visibility: visible;
+  }
+}

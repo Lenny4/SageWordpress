@@ -1,6 +1,6 @@
 {% set sortData = getSortData(queryParams) %}
 
-{% set currentSort = sortData.currentSort %}
+{% set sortValue = sortData.sortValue %}
 {% set sortField = sortData.sortField %}
 {% set otherSort = sortData.otherSort %}
 <tr>
@@ -13,24 +13,42 @@
   {% for field in fields %}
     {% if hideField != field['name'] %}
       <th scope="col" id="{{ field['name'] }}"
-          class="manage-column column-{{ field['name'] }} sortable {% if sortField == field['name'] %} sorted {% endif %} {{ currentSort }}"
-          abbr="{{ field['name'] }}">
-        {% if sortField == field['name'] %}
-        <a href="{{ getUrlWithParam('sort', '{"'~field['name']~'":"'~otherSort~'"}') }}">
-          {% else %}
-          <a href="{{ getUrlWithParam('sort', '{"'~field['name']~'":"asc"}') }}">
-            {% endif %}
-            {% set transField = allTranslations[field['transDomain']][field['name']] %}
+          class="manage-column column-{{ field['name'] }} sortable {% if sortField == field['name'] %} sorted {% endif %} {{ sortValue }}"
+          abbr="{{ field['name'] }}"
+      >
+        <div style="display: flex;align-items: center;">
+          {% if sortField == field['name'] %}
+          <a href="{{ getUrlWithParam('sort', '{"'~field['name']~'":"'~otherSort~'"}') }}">
+            {% else %}
+            <a href="{{ getUrlWithParam('sort', '{"'~field['name']~'":"asc"}') }}">
+              {% endif %}
+              {% set transField = allTranslations[field['transDomain']][field['name']] %}
+              {% set transFieldHasValues = transField|gettype != 'string' %}
+              {% if transField|gettype != 'string' %}
+                {% set transFieldLabel = transField['label'] %}
+              {% else %}
+                {% set transFieldLabel = transField %}
+              {% endif %}
+              <span>{{ transFieldLabel }}</span>
+              <span class="sorting-indicators">
+            <span class="sorting-indicator asc" aria-hidden="true"></span>
+            <span class="sorting-indicator desc" aria-hidden="true"></span>
+          </span>
+              <span class="screen-reader-text">{{ ('Sort ' ~ sortValue)|trans }}.</span>
+            </a>
             {% if transField|gettype != 'string' %}
-              {% set transField = transField['label'] %}
+              <div class="tooltip">
+                <span class="dashicons dashicons-info" aria-label="The street address for your business location."></span>
+                <div class="tooltiptext">
+                  <ul style="margin: 0">
+                    {% for index, value in transField['values'] %}
+                      <li>{{ index }}: {{ value }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
             {% endif %}
-            <span>{{ transField }}</span>
-            <span class="sorting-indicators">
-              <span class="sorting-indicator asc" aria-hidden="true"></span>
-              <span class="sorting-indicator desc" aria-hidden="true"></span>
-            </span>
-            <span class="screen-reader-text">{{ ('Sort ' ~ currentSort)|trans }}.</span>
-          </a>
+        </div>
       </th>
     {% endif %}
   {% endfor %}

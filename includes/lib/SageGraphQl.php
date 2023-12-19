@@ -3,6 +3,7 @@
 namespace App\lib;
 
 use App\enum\WebsiteEnum;
+use App\Sage;
 use App\SageSettings;
 use GraphQL\Client;
 use GraphQL\Mutation;
@@ -71,6 +72,24 @@ final class SageGraphQl
         );
     }
 
+    public static function getSortField(array $queryParams): array
+    {
+        $defaultSortValue = 'asc';
+        if (array_key_exists('sort', $queryParams)) {
+            $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_THROW_ON_ERROR);
+            $sortField = array_key_first($json);
+            return [$sortField, (string)$json[$sortField]];
+        }
+        if (array_key_exists('page', $queryParams)) {
+            if ($queryParams['page'] === Sage::$_token . '_fDocentete') {
+                return ['doPiece', $defaultSortValue];
+            } else if ($queryParams['page'] === Sage::$_token . '_fComptet') {
+                return ['ctNum', $defaultSortValue];
+            }
+        }
+        return [null, $defaultSortValue];
+    }
+
     public static function searchEntities(string $entityName, array $queryParams, array $fields): StdClass|null
     {
         $rawFields = array_map(static fn(array $field) => $field['name'], $fields);
@@ -97,10 +116,9 @@ final class SageGraphQl
         }
 
         $order = null;
-        if (array_key_exists('sort', $queryParams)) {
-            $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_THROW_ON_ERROR);
-            $sortField = array_key_first($json);
-            $order = '{ ' . $sortField . ': ' . strtoupper((string)$json[$sortField]) . ' }';
+        [$sortField, $sortValue] = self::getSortField($queryParams);
+        if (!is_null($sortField)) {
+            $order = '{ ' . $sortField . ': ' . strtoupper($sortValue) . ' }';
         }
 
         $arguments = [

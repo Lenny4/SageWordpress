@@ -21,7 +21,12 @@
             {% if value is iterable %}
               {{ value|bytesToString }}
             {% else %}
-              {{ value }}
+              {% set transField = allTranslations['fDocentetes'][prop] %}
+              {% if transField|gettype != 'string' and transField['values'][value] is not null %}
+                {{ transField['values'][value] }}
+              {% else %}
+                {{ value }}
+              {% endif %}
             {% endif %}
           </td>
         {% endif %}

@@ -3,6 +3,7 @@
 namespace App;
 
 use App\lib\SageAdminApi;
+use App\lib\SageGraphQl;
 use App\lib\SagePostType;
 use App\lib\SageTaxonomy;
 use App\Utils\SageTranslationUtils;
@@ -180,25 +181,17 @@ final class Sage
                 return array_values(array_filter($fields, static fn(array $field): bool => !in_array($field["name"], $hideFields)));
             }));
             $this->twig->addFunction(new TwigFunction('getSortData', static function (array $queryParams): array {
-                $currentSort = 'asc';
-                $sortField = 'ctNum';
+                [$sortField, $sortValue] = SageGraphQl::getSortField($queryParams);
 
-                // todo
-                if (array_key_exists('sort', $queryParams)) {
-                    $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_THROW_ON_ERROR);
-                    $sortField = array_key_first($json);
-                    $currentSort = $json[$sortField];
-                }
-
-                if ($currentSort === 'asc') {
+                if ($sortValue === 'asc') {
                     $otherSort = 'desc';
                 } else {
-                    $currentSort = 'desc';
+                    $sortValue = 'desc';
                     $otherSort = 'asc';
                 }
 
                 return [
-                    'currentSort' => $currentSort,
+                    'sortValue' => $sortValue,
                     'otherSort' => $otherSort,
                     'sortField' => $sortField,
                 ];
