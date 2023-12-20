@@ -5,7 +5,9 @@ namespace App\class;
 class SageEntityMenu
 {
     public const FCOMPTET_ENTITY_NAME = 'fComptets';
-    public const DEFAULT_FCOMPTET_FIELDS = [
+    public const FCOMPTET_TYPE_MODEL = 'FComptet';
+    public const FCOMPTET_FILTER_TYPE = 'FComptetFilterInput';
+    public const FCOMPTET_DEFAULT_FIELDS = [
         'ctNum',
         'ctIntitule',
         'ctContact',
@@ -13,7 +15,9 @@ class SageEntityMenu
     ];
 
     public const FDOCENTETE_ENTITY_NAME = 'fDocentetes';
-    public const DEFAULT_FDOCENTETE_FIELDS = [
+    public const FDOCENTETE_TYPE_MODEL = 'FDocentete';
+    public const FDOCENTETE_FILTER_TYPE = 'FDocenteteFilterInput';
+    public const FDOCENTETE_DEFAULT_FIELDS = [
         'doPiece',
         'doType',
         'doDate',
@@ -25,11 +29,14 @@ class SageEntityMenu
      */
     public function __construct(
         private string $title,
+        private string $description,
         private string $entityName,
+        private string $typeModel,
         private array $defaultFields,
         private array $mandatoryFields,
         private string $filterType,
         private string $transDomain,
+        private array $fields,
     )
     {
     }
@@ -42,6 +49,17 @@ class SageEntityMenu
     public function setTitle(string $title): self
     {
         $this->title = $title;
+        return $this;
+    }
+
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
         return $this;
     }
 
@@ -97,6 +115,28 @@ class SageEntityMenu
     public function setDefaultFields(array $defaultFields): self
     {
         $this->defaultFields = $defaultFields;
+        return $this;
+    }
+
+    public function getFields(): array
+    {
+        return $this->fields;
+    }
+
+    public function setFields(array $fields): self
+    {
+        $this->fields = $fields;
+        return $this;
+    }
+
+    public function getTypeModel(): string
+    {
+        return $this->typeModel;
+    }
+
+    public function setTypeModel(string $typeModel): self
+    {
+        $this->typeModel = $typeModel;
         return $this;
     }
 }

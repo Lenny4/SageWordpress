@@ -42,6 +42,11 @@ final class SageSettings
     public array $settings = [];
 
     /**
+     * @var SageEntityMenu[]
+     */
+    private array $sageEntityMenus;
+
+    /**
      * Constructor function.
      *
      * @param Sage|null $sage Parent object.
@@ -71,6 +76,31 @@ final class SageSettings
 
         // Configure placement of plugin settings page. See readme for implementation.
         add_filter(self::$base . 'menu_settings', fn(array $settings = []): array => $this->configure_settings($settings));
+
+        $this->sageEntityMenus = [
+            new SageEntityMenu(
+                title: 'Clients',
+                description: __("These are some extra input fields that maybe aren't as common as the others.", 'sage'),
+                entityName: SageEntityMenu::FCOMPTET_ENTITY_NAME,
+                typeModel: SageEntityMenu::FCOMPTET_TYPE_MODEL,
+                defaultFields: SageEntityMenu::FCOMPTET_DEFAULT_FIELDS,
+                mandatoryFields: ['ctNum'],
+                filterType: SageEntityMenu::FCOMPTET_FILTER_TYPE,
+                transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
+                fields: [],
+            ),
+            new SageEntityMenu(
+                title: 'Documents',
+                description: __("Gestion Commerciale / Menu Traitement / Documents des ventes, des achats, des stocks et internes / Fenêtre Document", 'sage'),
+                entityName: SageEntityMenu::FDOCENTETE_ENTITY_NAME,
+                typeModel: SageEntityMenu::FDOCENTETE_TYPE_MODEL,
+                defaultFields: SageEntityMenu::FDOCENTETE_DEFAULT_FIELDS,
+                mandatoryFields: ['doPiece', 'doType'],
+                filterType: SageEntityMenu::FDOCENTETE_FILTER_TYPE,
+                transDomain: SageTranslationUtils::TRANS_FDOCENTETES,
+                fields: [],
+            ),
+        ];
     }
 
     /**
@@ -188,28 +218,6 @@ final class SageSettings
                             ['square' => 'Square', 'circle' => 'Circle', 'rectangle' => 'Rectangle', 'triangle' => 'Triangle'],
                         'default' => ['circle', 'triangle']
                     ],
-                ]
-            ],
-            SageEntityMenu::FCOMPTET_ENTITY_NAME => [
-                'title' => __('Clients', 'sage'),
-                'description' => __("These are some extra input fields that maybe aren't as common as the others.", 'sage'),
-                'fields' => [
-                    [
-                        'id' => SageEntityMenu::FCOMPTET_ENTITY_NAME . '_fields',
-                        'label' => __('Fields to show', 'sage'),
-                        'description' => __('Please select the fields to show on the table.', 'sage'),
-                        'type' => '2_select_multi',
-                        'options' => $this->getFieldsForEntity('FComptet', SageTranslationUtils::TRANS_FCOMPTETS),
-                        'default' => SageEntityMenu::DEFAULT_FCOMPTET_FIELDS,
-                    ],
-                    [
-                        'id' => SageEntityMenu::FCOMPTET_ENTITY_NAME . '_perPage',
-                        'label' => __('Default per page', 'sage'),
-                        'description' => __('Please select the number of clients to show on the table.', 'sage'),
-                        'type' => 'select',
-                        'options' => self::put_values_in_keys(self::$paginationRange),
-                        'default' => (string)self::$defaultPagination
-                    ],
                     [
                         'id' => 'number_field',
                         'label' => __('A Number', 'sage'),
@@ -243,36 +251,45 @@ final class SageSettings
                     ],
                 ]
             ],
-            SageEntityMenu::FDOCENTETE_ENTITY_NAME => [
-                'title' => __('Documents', 'sage'),
-                'description' => __("Gestion Commerciale / Menu Traitement / Documents des ventes, des achats, des stocks et internes / Fenêtre Document", 'sage'),
+        ];
+        foreach ($this->sageEntityMenus as $sageEntityMenu) {
+            $settings[$sageEntityMenu->getEntityName()] = [
+                'title' => __($sageEntityMenu->getTitle(), 'sage'),
+                'description' => $sageEntityMenu->getDescription(),
                 'fields' => [
-                    [
-                        'id' => SageEntityMenu::FDOCENTETE_ENTITY_NAME . '_fields',
-                        'label' => __('Fields to show', 'sage'),
-                        'description' => __('Please select the fields to show on the table.', 'sage'),
-                        'type' => '2_select_multi',
-                        'options' => $this->getFieldsForEntity('FDocentete', SageTranslationUtils::TRANS_FDOCENTETES),
-                        'default' => SageEntityMenu::DEFAULT_FDOCENTETE_FIELDS,
-                    ],
-                    [
-                        'id' => SageEntityMenu::FDOCENTETE_ENTITY_NAME . '_perPage',
-                        'label' => __('Default per page', 'sage'),
-                        'description' => __('Please select the number of clients to show on the table.', 'sage'),
-                        'type' => 'select',
-                        'options' => self::put_values_in_keys(self::$paginationRange),
-                        'default' => (string)self::$defaultPagination
-                    ],
-                ]
+                    ...$this->getDefaultField($sageEntityMenu),
+                    ...$sageEntityMenu->getFields(),
+                ],
+            ];
+        }
+        return apply_filters(Sage::$_token . '_settings_fields', $settings);
+    }
+
+    private function getDefaultField(SageEntityMenu $sageEntityMenu): array
+    {
+        return [
+            [
+                'id' => $sageEntityMenu->getEntityName() . '_fields',
+                'label' => __('Fields to show', 'sage'),
+                'description' => __('Please select the fields to show on the table.', 'sage'),
+                'type' => '2_select_multi',
+                'options' => $this->getFieldsForEntity($sageEntityMenu->getTypeModel(), $sageEntityMenu->getTransDomain()),
+                'default' => $sageEntityMenu->getDefaultFields(),
+            ],
+            [
+                'id' => $sageEntityMenu->getEntityName() . '_perPage',
+                'label' => __('Default per page', 'sage'),
+                'description' => __('Please select the number of rows to show on the table.', 'sage'),
+                'type' => 'select',
+                'options' => array_combine(self::$paginationRange, self::$paginationRange),
+                'default' => (string)self::$defaultPagination
             ],
         ];
-        return apply_filters(Sage::$_token . '_settings_fields', $settings);
     }
 
     private function getFieldsForEntity(string $object, string $transDomain): array
     {
-        $fieldsObject = array_filter(SageGraphQl::getTypeModel($object)?->data?->__type?->fields ?? [], static fn(stdClass $entity): bool =>
-            $entity->type->kind !== 'OBJECT' &&
+        $fieldsObject = array_filter(SageGraphQl::getTypeModel($object)?->data?->__type?->fields ?? [], static fn(stdClass $entity): bool => $entity->type->kind !== 'OBJECT' &&
             $entity->type->kind !== 'LIST' &&
             $entity->type->ofType?->kind !== 'LIST');
         $trans = SageTranslationUtils::getTranslations();
@@ -283,16 +300,6 @@ final class SageSettings
         }
 
         return $objectFields;
-    }
-
-    public static function put_values_in_keys(array $array): array
-    {
-        $r = [];
-        foreach ($array as $v) {
-            $r[$v] = $v;
-        }
-
-        return $r;
     }
 
     private function add_website_sage_api(): void
@@ -573,24 +580,8 @@ final class SageSettings
                         },
                         'position' => null,
                     ];
-                }, [
-                    new SageEntityMenu(
-                        title: 'Clients',
-                        entityName: SageEntityMenu::FCOMPTET_ENTITY_NAME,
-                        defaultFields: SageEntityMenu::DEFAULT_FCOMPTET_FIELDS,
-                        mandatoryFields: ['ctNum'],
-                        filterType: 'FComptetFilterInput',
-                        transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
-                    ),
-                    new SageEntityMenu(
-                        title: 'Documents',
-                        entityName: SageEntityMenu::FDOCENTETE_ENTITY_NAME,
-                        defaultFields: SageEntityMenu::DEFAULT_FDOCENTETE_FIELDS,
-                        mandatoryFields: ['doPiece', 'doType'],
-                        filterType: 'FDocenteteFilterInput',
-                        transDomain: SageTranslationUtils::TRANS_FDOCENTETES,
-                    ),
-                ]),
+                },
+                    $this->sageEntityMenus),
                 [
                     'location' => 'submenu',
                     // Possible settings: options, menu, submenu.
