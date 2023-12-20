@@ -27,19 +27,6 @@ final class SageSettings
 
     public static string $capability = 'manage_options';
 
-    public static array $defaultFComptetFields = [
-        'ctNum',
-        'ctIntitule',
-        'ctContact',
-        'ctEmail',
-    ];
-
-    public static array $defaultFDocenteteFields = [
-        'doPiece',
-        'doType',
-        'doDate',
-    ];
-
     public static array $paginationRange = [20, 50, 100];
 
     public static int $defaultPagination = 20;
@@ -213,7 +200,7 @@ final class SageSettings
                         'description' => __('Please select the fields to show on the table.', 'sage'),
                         'type' => '2_select_multi',
                         'options' => $this->getFieldsForEntity('FComptet', SageTranslationUtils::TRANS_FCOMPTETS),
-                        'default' => self::$defaultFComptetFields,
+                        'default' => SageEntityMenu::DEFAULT_FCOMPTET_FIELDS,
                     ],
                     [
                         'id' => SageEntityMenu::FCOMPTET_ENTITY_NAME . '_perPage',
@@ -266,7 +253,7 @@ final class SageSettings
                         'description' => __('Please select the fields to show on the table.', 'sage'),
                         'type' => '2_select_multi',
                         'options' => $this->getFieldsForEntity('FDocentete', SageTranslationUtils::TRANS_FDOCENTETES),
-                        'default' => self::$defaultFDocenteteFields,
+                        'default' => SageEntityMenu::DEFAULT_FDOCENTETE_FIELDS,
                     ],
                     [
                         'id' => SageEntityMenu::FDOCENTETE_ENTITY_NAME . '_perPage',
@@ -554,7 +541,7 @@ final class SageSettings
                         'function' => function () use ($sageSettings, $sageEntityMenu): void {
                             $rawFields = get_option(SageSettings::$base . $sageEntityMenu->getEntityName() . '_fields');
                             if ($rawFields === false) {
-                                $rawFields = self::$defaultFComptetFields;
+                                $rawFields = $sageEntityMenu->getDefaultFields();
                             }
                             $hideFields = array_diff($sageEntityMenu->getMandatoryFields(), $rawFields);
                             $rawFields = array_unique([...$rawFields, ...$hideFields]);
@@ -590,6 +577,7 @@ final class SageSettings
                     new SageEntityMenu(
                         title: 'Clients',
                         entityName: SageEntityMenu::FCOMPTET_ENTITY_NAME,
+                        defaultFields: SageEntityMenu::DEFAULT_FCOMPTET_FIELDS,
                         mandatoryFields: ['ctNum'],
                         filterType: 'FComptetFilterInput',
                         transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
@@ -597,6 +585,7 @@ final class SageSettings
                     new SageEntityMenu(
                         title: 'Documents',
                         entityName: SageEntityMenu::FDOCENTETE_ENTITY_NAME,
+                        defaultFields: SageEntityMenu::DEFAULT_FDOCENTETE_FIELDS,
                         mandatoryFields: ['doPiece', 'doType'],
                         filterType: 'FDocenteteFilterInput',
                         transDomain: SageTranslationUtils::TRANS_FDOCENTETES,

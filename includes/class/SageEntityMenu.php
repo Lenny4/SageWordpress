@@ -5,27 +5,33 @@ namespace App\class;
 class SageEntityMenu
 {
     public const FCOMPTET_ENTITY_NAME = 'fComptets';
-    public const FDOCENTETE_ENTITY_NAME = 'fDocentetes';
+    public const DEFAULT_FCOMPTET_FIELDS = [
+        'ctNum',
+        'ctIntitule',
+        'ctContact',
+        'ctEmail',
+    ];
 
-    private string $title;
-    private string $entityName;
-    /**
-     * @var string[]
-     */
-    private array $mandatoryFields;
-    private string $filterType;
-    private string $transDomain;
+    public const FDOCENTETE_ENTITY_NAME = 'fDocentetes';
+    public const DEFAULT_FDOCENTETE_FIELDS = [
+        'doPiece',
+        'doType',
+        'doDate',
+    ];
 
     /**
      * @param string[] $mandatoryFields
+     * @param string[] $defaultFields
      */
-    public function __construct(string $title, string $entityName, array $mandatoryFields, string $filterType, string $transDomain)
+    public function __construct(
+        private string $title,
+        private string $entityName,
+        private array $defaultFields,
+        private array $mandatoryFields,
+        private string $filterType,
+        private string $transDomain,
+    )
     {
-        $this->title = $title;
-        $this->entityName = $entityName;
-        $this->mandatoryFields = $mandatoryFields;
-        $this->filterType = $filterType;
-        $this->transDomain = $transDomain;
     }
 
     public function getTitle(): string
@@ -80,6 +86,17 @@ class SageEntityMenu
     public function setTransDomain(string $transDomain): self
     {
         $this->transDomain = $transDomain;
+        return $this;
+    }
+
+    public function getDefaultFields(): array
+    {
+        return $this->defaultFields;
+    }
+
+    public function setDefaultFields(array $defaultFields): self
+    {
+        $this->defaultFields = $defaultFields;
         return $this;
     }
 }
