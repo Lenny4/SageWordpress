@@ -8,6 +8,8 @@ https://developer.wordpress.org/rest-api/extending-the-rest-api/adding-custom-en
 
 https://www.elegantthemes.com/blog/tips-tricks/how-to-add-cron-jobs-to-wordpress
 
+When add a new entity use function `private function settings_fields` with debugger to get all fields to translate.
+
 ```
 <?php
 use Rector\Config\RectorConfig;

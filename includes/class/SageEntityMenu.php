@@ -6,6 +6,7 @@ class SageEntityMenu
 {
     public const FCOMPTET_ENTITY_NAME = 'fComptets';
     public const FCOMPTET_TYPE_MODEL = 'FComptet';
+    public const FCOMPTET_DEFAULT_SORT = 'ctNum';
     public const FCOMPTET_FILTER_TYPE = 'FComptetFilterInput';
     public const FCOMPTET_DEFAULT_FIELDS = [
         'ctNum',
@@ -16,11 +17,21 @@ class SageEntityMenu
 
     public const FDOCENTETE_ENTITY_NAME = 'fDocentetes';
     public const FDOCENTETE_TYPE_MODEL = 'FDocentete';
+    public const FDOCENTETE_DEFAULT_SORT = 'doPiece';
     public const FDOCENTETE_FILTER_TYPE = 'FDocenteteFilterInput';
     public const FDOCENTETE_DEFAULT_FIELDS = [
         'doPiece',
         'doType',
         'doDate',
+    ];
+
+    public const FARTICLE_ENTITY_NAME = 'fArticles';
+    public const FARTICLE_TYPE_MODEL = 'FArticle';
+    public const FARTICLE_DEFAULT_SORT = 'arRef';
+    public const FARTICLE_FILTER_TYPE = 'FArticleFilterInput';
+    public const FARTICLE_DEFAULT_FIELDS = [
+        'arRef',
+        'arDesign',
     ];
 
     /**
@@ -32,11 +43,12 @@ class SageEntityMenu
         private string $description,
         private string $entityName,
         private string $typeModel,
-        private array $defaultFields,
-        private array $mandatoryFields,
+        private string $defaultSortField,
+        private array  $defaultFields,
+        private array  $mandatoryFields,
         private string $filterType,
         private string $transDomain,
-        private array $fields,
+        private array  $fields,
     )
     {
     }
@@ -137,6 +149,17 @@ class SageEntityMenu
     public function setTypeModel(string $typeModel): self
     {
         $this->typeModel = $typeModel;
+        return $this;
+    }
+
+    public function getDefaultSortField(): string
+    {
+        return $this->defaultSortField;
+    }
+
+    public function setDefaultSortField(string $defaultSortField): self
+    {
+        $this->defaultSortField = $defaultSortField;
         return $this;
     }
 }

@@ -2,9 +2,11 @@
 
 namespace App\lib;
 
+use App\class\SageEntityMenu;
 use App\enum\WebsiteEnum;
 use App\Sage;
 use App\SageSettings;
+use Exception;
 use GraphQL\Client;
 use GraphQL\Mutation;
 use GraphQL\Query;
@@ -72,24 +74,6 @@ final class SageGraphQl
         );
     }
 
-    public static function getSortField(array $queryParams): array
-    {
-        $defaultSortValue = 'asc';
-        if (array_key_exists('sort', $queryParams)) {
-            $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_THROW_ON_ERROR);
-            $sortField = array_key_first($json);
-            return [$sortField, (string)$json[$sortField]];
-        }
-        if (array_key_exists('page', $queryParams)) {
-            if ($queryParams['page'] === Sage::$_token . '_fDocentete') {
-                return ['doPiece', $defaultSortValue];
-            } else if ($queryParams['page'] === Sage::$_token . '_fComptet') {
-                return ['ctNum', $defaultSortValue];
-            }
-        }
-        return [null, $defaultSortValue];
-    }
-
     public static function searchEntities(string $entityName, array $queryParams, array $fields): StdClass|null
     {
         $rawFields = array_map(static fn(array $field) => $field['name'], $fields);
@@ -151,9 +135,32 @@ final class SageGraphQl
         return self::runQuery($query)?->getResults();
     }
 
-    // https://graphql.org/learn/introspection/
+    public static function getSortField(array $queryParams): array
+    {
+        $defaultSortValue = 'asc';
+        if (array_key_exists('sort', $queryParams)) {
+            $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_THROW_ON_ERROR);
+            $sortField = array_key_first($json);
+            return [$sortField, (string)$json[$sortField]];
+        }
+        if (array_key_exists('page', $queryParams)) {
+            if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FDOCENTETE_ENTITY_NAME) {
+                return [SageEntityMenu::FDOCENTETE_DEFAULT_SORT, $defaultSortValue];
+            } else if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FCOMPTET_ENTITY_NAME) {
+                return [SageEntityMenu::FCOMPTET_DEFAULT_SORT, $defaultSortValue];
+            } else if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FARTICLE_ENTITY_NAME) {
+                return [SageEntityMenu::FARTICLE_DEFAULT_SORT, $defaultSortValue];
+            } else {
+                throw new Exception("Unknown page " . $queryParams['page']);
+            }
+        }
+        return [null, $defaultSortValue];
+    }
+
+
     public static function getTypeModel(string $object): StdClass|null
     {
+        // https://graphql.org/learn/introspection/
         $query = (new Query('__type'))
             ->setArguments(['name' => $object])
             ->setSelectionSet(

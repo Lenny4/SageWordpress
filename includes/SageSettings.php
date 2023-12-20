@@ -7,6 +7,7 @@ use App\enum\WebsiteEnum;
 use App\lib\SageGraphQl;
 use App\lib\SageRequest;
 use App\Utils\SageTranslationUtils;
+use Exception;
 use stdClass;
 use WP_Application_Passwords;
 
@@ -80,9 +81,10 @@ final class SageSettings
         $this->sageEntityMenus = [
             new SageEntityMenu(
                 title: 'Clients',
-                description: __("These are some extra input fields that maybe aren't as common as the others.", 'sage'),
+                description: __("Gestion des clients.", 'sage'),
                 entityName: SageEntityMenu::FCOMPTET_ENTITY_NAME,
                 typeModel: SageEntityMenu::FCOMPTET_TYPE_MODEL,
+                defaultSortField: 'ctNum',
                 defaultFields: SageEntityMenu::FCOMPTET_DEFAULT_FIELDS,
                 mandatoryFields: ['ctNum'],
                 filterType: SageEntityMenu::FCOMPTET_FILTER_TYPE,
@@ -94,10 +96,23 @@ final class SageSettings
                 description: __("Gestion Commerciale / Menu Traitement / Documents des ventes, des achats, des stocks et internes / Fenêtre Document", 'sage'),
                 entityName: SageEntityMenu::FDOCENTETE_ENTITY_NAME,
                 typeModel: SageEntityMenu::FDOCENTETE_TYPE_MODEL,
+                defaultSortField: 'doPiece',
                 defaultFields: SageEntityMenu::FDOCENTETE_DEFAULT_FIELDS,
                 mandatoryFields: ['doPiece', 'doType'],
                 filterType: SageEntityMenu::FDOCENTETE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FDOCENTETES,
+                fields: [],
+            ),
+            new SageEntityMenu(
+                title: 'Articles',
+                description: __("Gestion des articles", 'sage'),
+                entityName: SageEntityMenu::FARTICLE_ENTITY_NAME,
+                typeModel: SageEntityMenu::FARTICLE_TYPE_MODEL,
+                defaultSortField: 'arRef',
+                defaultFields: SageEntityMenu::FARTICLE_DEFAULT_FIELDS,
+                mandatoryFields: ['arRef'],
+                filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
+                transDomain: SageTranslationUtils::TRANS_FARTICLES,
                 fields: [],
             ),
         ];
@@ -253,13 +268,15 @@ final class SageSettings
             ],
         ];
         foreach ($this->sageEntityMenus as $sageEntityMenu) {
+            $fields = [
+                ...$this->getDefaultField($sageEntityMenu),
+                ...$sageEntityMenu->getFields(),
+            ];
+            $sageEntityMenu->setFields($fields);
             $settings[$sageEntityMenu->getEntityName()] = [
                 'title' => __($sageEntityMenu->getTitle(), 'sage'),
                 'description' => $sageEntityMenu->getDescription(),
-                'fields' => [
-                    ...$this->getDefaultField($sageEntityMenu),
-                    ...$sageEntityMenu->getFields(),
-                ],
+                'fields' => $fields,
             ];
         }
         return apply_filters(Sage::$_token . '_settings_fields', $settings);
@@ -570,6 +587,12 @@ final class SageSettings
                                 }
                             }
                             $data = json_decode(json_encode(SageGraphQl::searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields)), true);
+                            if (
+                                !empty($data["data"]["fArticles"]["items"]) &&
+                                array_diff($sageEntityMenu->getMandatoryFields(), array_keys($data["data"]["fArticles"]["items"][0])) !== []
+                            ) {
+                                throw new Exception("Mandatory fields are missing");
+                            }
                             echo $sageSettings->sage->twig->render($sageEntityMenu->getEntityName() . '/index.html.twig', [
                                 'queryParams' => $queryParams,
                                 'data' => $data,
