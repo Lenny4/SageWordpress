@@ -7,13 +7,13 @@
   {% include 'common/wp_list_header_footer.html.twig' with {'name': 'header'} %}
   </thead>
   <tbody id="fDocentete-list">
-  {% for item in fDocentetes['data']['fDocentetes']['items'] %}
+  {% for item in data['data'][sageEntityMenu.entityName]['items'] %}
     <tr id="fDocentete-{{ item.ctNum }}">
       <th scope="row" class="check-column">
         <label class="label-covers-full-cell" for="fDocentete_{{ item.ctNum }}">
           <span class="screen-reader-text">{{ 'Select'|trans }}{{ item.ctNum }}</span>
         </label>
-        <input type="checkbox" name="fDocentetes[]" id="fDocentete_{{ item.ctNum }}" value="{{ item.ctNum }}">
+        <input type="checkbox" name="{{ sageEntityMenu.entityName }}[]" id="fDocentete_{{ item.ctNum }}" value="{{ item.ctNum }}">
       </th>
       {% for prop, value in item|sortByFields(fields) %}
         {% if hideField != prop %}
@@ -21,7 +21,7 @@
             {% if value is iterable %}
               {{ value|bytesToString }}
             {% else %}
-              {% set transField = allTranslations['fDocentetes'][prop] %}
+              {% set transField = allTranslations[sageEntityMenu.transDomain][prop] %}
               {% if transField|gettype != 'string' and transField['values'][value] is not null %}
                 {{ transField['values'][value] }}
               {% else %}

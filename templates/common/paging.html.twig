@@ -1,4 +1,4 @@
-{% set totalCount = fComptets['data']['fComptets']['totalCount'] %}
+{% set totalCount = data['data'][sageEntityMenu.entityName]['totalCount'] %}
 {% set allPerPage = getPaginationRange() %}
 {% set perPage = queryParams.per_page %}
 {% set maxPage = (totalCount/perPage)|round(0, 'ceil') %}

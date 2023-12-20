@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\class\SageEntityMenu;
 use App\enum\WebsiteEnum;
 use App\lib\SageGraphQl;
 use App\lib\SageRequest;
@@ -202,12 +203,12 @@ final class SageSettings
                     ],
                 ]
             ],
-            'fComptet' => [
+            SageEntityMenu::FCOMPTET_ENTITY_NAME => [
                 'title' => __('Clients', 'sage'),
                 'description' => __("These are some extra input fields that maybe aren't as common as the others.", 'sage'),
                 'fields' => [
                     [
-                        'id' => 'fComptet_fields',
+                        'id' => SageEntityMenu::FCOMPTET_ENTITY_NAME . '_fields',
                         'label' => __('Fields to show', 'sage'),
                         'description' => __('Please select the fields to show on the table.', 'sage'),
                         'type' => '2_select_multi',
@@ -215,7 +216,7 @@ final class SageSettings
                         'default' => self::$defaultFComptetFields,
                     ],
                     [
-                        'id' => 'fComptet_perPage',
+                        'id' => SageEntityMenu::FCOMPTET_ENTITY_NAME . '_perPage',
                         'label' => __('Default per page', 'sage'),
                         'description' => __('Please select the number of clients to show on the table.', 'sage'),
                         'type' => 'select',
@@ -255,12 +256,12 @@ final class SageSettings
                     ],
                 ]
             ],
-            'fDocentete' => [
+            SageEntityMenu::FDOCENTETE_ENTITY_NAME => [
                 'title' => __('Documents', 'sage'),
                 'description' => __("Gestion Commerciale / Menu Traitement / Documents des ventes, des achats, des stocks et internes / Fenêtre Document", 'sage'),
                 'fields' => [
                     [
-                        'id' => 'fDocentete_fields',
+                        'id' => SageEntityMenu::FDOCENTETE_ENTITY_NAME . '_fields',
                         'label' => __('Fields to show', 'sage'),
                         'description' => __('Please select the fields to show on the table.', 'sage'),
                         'type' => '2_select_multi',
@@ -268,7 +269,7 @@ final class SageSettings
                         'default' => self::$defaultFDocenteteFields,
                     ],
                     [
-                        'id' => 'fDocentete_perPage',
+                        'id' => SageEntityMenu::FDOCENTETE_ENTITY_NAME . '_perPage',
                         'label' => __('Default per page', 'sage'),
                         'description' => __('Please select the number of clients to show on the table.', 'sage'),
                         'type' => 'select',
@@ -283,9 +284,10 @@ final class SageSettings
 
     private function getFieldsForEntity(string $object, string $transDomain): array
     {
-        $fieldsObject = array_filter(SageGraphQl::getTypeModel($object)?->data?->__type?->fields ?? [], static fn(stdClass $fComptet): bool => $fComptet->type->kind !== 'OBJECT' &&
-            $fComptet->type->kind !== 'LIST' &&
-            $fComptet->type->ofType?->kind !== 'LIST');
+        $fieldsObject = array_filter(SageGraphQl::getTypeModel($object)?->data?->__type?->fields ?? [], static fn(stdClass $entity): bool =>
+            $entity->type->kind !== 'OBJECT' &&
+            $entity->type->kind !== 'LIST' &&
+            $entity->type->ofType?->kind !== 'LIST');
         $trans = SageTranslationUtils::getTranslations();
         $objectFields = [];
         foreach ($fieldsObject as $fieldObject) {
@@ -512,6 +514,7 @@ final class SageSettings
      */
     private function menu_settings()
     {
+        $sageSettings = $this;
         return apply_filters(
             self::$base . 'menu_settings',
             [
@@ -539,84 +542,66 @@ final class SageSettings
                     },
                     'position' => null,
                 ],
-                [
-                    'location' => 'submenu',
-                    // Possible settings: options, menu, submenu.
-                    'parent_slug' => Sage::$_token . '_settings',
-                    'page_title' => __('Clients', 'sage'),
-                    'menu_title' => __('Clients', 'sage'),
-                    'capability' => self::$capability,
-                    'menu_slug' => Sage::$_token . '_fComptet',
-                    'function' => function (): void {
-                        $mandatoryFields = ['ctNum'];
-                        $rawFields = get_option(SageSettings::$base . 'fComptet_fields');
-                        if ($rawFields === false) {
-                            $rawFields = self::$defaultFComptetFields;
-                        }
-                        $hideFields = array_diff($mandatoryFields, $rawFields);
-                        $rawFields = array_unique([...$rawFields, ...$hideFields]);
-                        $fields = [];
-                        foreach (SageGraphQl::getTypeFilter('FComptetFilterInput')?->data?->__type?->inputFields as $inputField) {
-                            if (in_array($inputField->name, $rawFields)) {
-                                $fields[] = [
-                                    'name' => $inputField->name,
-                                    'type' => $inputField->type->name,
-                                    'transDomain' => SageTranslationUtils::TRANS_FCOMPTETS,
-                                ];
+                ...array_map(static function (SageEntityMenu $sageEntityMenu) use ($sageSettings) {
+                    return [
+                        'location' => 'submenu',
+                        // Possible settings: options, menu, submenu.
+                        'parent_slug' => Sage::$_token . '_settings',
+                        'page_title' => __($sageEntityMenu->getTitle(), 'sage'),
+                        'menu_title' => __($sageEntityMenu->getTitle(), 'sage'),
+                        'capability' => self::$capability,
+                        'menu_slug' => Sage::$_token . '_' . $sageEntityMenu->getEntityName(),
+                        'function' => function () use ($sageSettings, $sageEntityMenu): void {
+                            $rawFields = get_option(SageSettings::$base . $sageEntityMenu->getEntityName() . '_fields');
+                            if ($rawFields === false) {
+                                $rawFields = self::$defaultFComptetFields;
                             }
-                        }
-                        $queryParams = $_GET;
-                        if (!isset($queryParams['per_page'])) {
-                            $queryParams['per_page'] = get_option(SageSettings::$base . 'fComptet_perPage') ?? (string)self::$defaultPagination;
-                        }
-                        echo $this->sage->twig->render('fComptet/index.html.twig', [
-                            'queryParams' => $queryParams,
-                            'fComptets' => json_decode(json_encode(SageGraphQl::searchEntities('fComptets', $queryParams, $fields)), true),
-                            'fields' => $fields,
-                            'hideFields' => $hideFields,
-                        ]);
-                    },
-                    'position' => null,
-                ],
-                [
-                    'location' => 'submenu',
-                    // Possible settings: options, menu, submenu.
-                    'parent_slug' => Sage::$_token . '_settings',
-                    'page_title' => __('Documents', 'sage'),
-                    'menu_title' => __('Documents', 'sage'),
-                    'capability' => self::$capability,
-                    'menu_slug' => Sage::$_token . '_fDocentete',
-                    'function' => function (): void {
-                        $mandatoryFields = ['doPiece', 'doType'];
-                        $rawFields = get_option(SageSettings::$base . 'fDocentete_fields');
-                        if ($rawFields === false) {
-                            $rawFields = self::$defaultFDocenteteFields;
-                        }
-                        $hideFields = array_diff($mandatoryFields, $rawFields);
-                        $rawFields = array_unique([...$rawFields, ...$hideFields]);
-                        $fields = [];
-                        foreach (SageGraphQl::getTypeFilter('FDocenteteFilterInput')?->data?->__type?->inputFields as $inputField) {
-                            if (in_array($inputField->name, $rawFields)) {
-                                $fields[] = [
-                                    'name' => $inputField->name,
-                                    'type' => $inputField->type->name,
-                                    'transDomain' => SageTranslationUtils::TRANS_FDOCENTETES,
-                                ];
+                            $hideFields = array_diff($sageEntityMenu->getMandatoryFields(), $rawFields);
+                            $rawFields = array_unique([...$rawFields, ...$hideFields]);
+                            $fields = [];
+                            foreach (SageGraphQl::getTypeFilter($sageEntityMenu->getFilterType())?->data?->__type?->inputFields as $inputField) {
+                                if (in_array($inputField->name, $rawFields)) {
+                                    $fields[] = [
+                                        'name' => $inputField->name,
+                                        'type' => $inputField->type->name,
+                                        'transDomain' => $sageEntityMenu->getTransDomain(),
+                                    ];
+                                }
                             }
-                        }
-                        $queryParams = $_GET;
-                        if (!isset($queryParams['per_page'])) {
-                            $queryParams['per_page'] = get_option(SageSettings::$base . 'fDocentete_perPage') ?? (string)self::$defaultPagination;
-                        }
-                        echo $this->sage->twig->render('fDocentete/index.html.twig', [
-                            'queryParams' => $queryParams,
-                            'fDocentetes' => json_decode(json_encode(SageGraphQl::searchEntities('fDocentetes', $queryParams, $fields)), true),
-                            'fields' => $fields,
-                            'hideFields' => $hideFields,
-                        ]);
-                    },
-                    'position' => null,
-                ],
+                            $queryParams = $_GET;
+                            if (!isset($queryParams['per_page'])) {
+                                $queryParams['per_page'] = get_option(SageSettings::$base . $sageEntityMenu->getEntityName() . '_perPage');
+                                if ($queryParams['per_page'] === false) {
+                                    $queryParams['per_page'] = (string)self::$defaultPagination;
+                                }
+                            }
+                            $data = json_decode(json_encode(SageGraphQl::searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields)), true);
+                            echo $sageSettings->sage->twig->render($sageEntityMenu->getEntityName() . '/index.html.twig', [
+                                'queryParams' => $queryParams,
+                                'data' => $data,
+                                'fields' => $fields,
+                                'hideFields' => $hideFields,
+                                'sageEntityMenu' => $sageEntityMenu,
+                            ]);
+                        },
+                        'position' => null,
+                    ];
+                }, [
+                    new SageEntityMenu(
+                        title: 'Clients',
+                        entityName: SageEntityMenu::FCOMPTET_ENTITY_NAME,
+                        mandatoryFields: ['ctNum'],
+                        filterType: 'FComptetFilterInput',
+                        transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
+                    ),
+                    new SageEntityMenu(
+                        title: 'Documents',
+                        entityName: SageEntityMenu::FDOCENTETE_ENTITY_NAME,
+                        mandatoryFields: ['doPiece', 'doType'],
+                        filterType: 'FDocenteteFilterInput',
+                        transDomain: SageTranslationUtils::TRANS_FDOCENTETES,
+                    ),
+                ]),
                 [
                     'location' => 'submenu',
                     // Possible settings: options, menu, submenu.
