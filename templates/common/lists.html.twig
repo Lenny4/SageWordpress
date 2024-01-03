@@ -1,19 +1,20 @@
-{# todo https://turbo.hotwired.dev/ #}
-
 {# todo faire translate #}
+
+{% set hasActionColumn = file_exists('templates/'~sageEntityMenu.entityName~'/list_action.html.twig') %}
 
 <table class="wp-list-table widefat fixed striped table-view-list users">
   <thead>
   {% include 'common/wp_list_header_footer.html.twig' with {'name': 'header'} %}
   </thead>
-  <tbody id="fDocentete-list">
+  <tbody id="{{ sageEntityMenu.entityName }}-list">
   {% for item in data['data'][sageEntityMenu.entityName]['items'] %}
-    <tr id="fDocentete-{{ item.ctNum }}">
+    {% set entityIdentifier = item|getEntityIdentifier(sageEntityMenu.mandatoryFields) %}
+    <tr id="row_{{ sageEntityMenu.entityName }}_{{ entityIdentifier }}">
       <th scope="row" class="check-column">
-        <label class="label-covers-full-cell" for="fDocentete_{{ item.ctNum }}">
-          <span class="screen-reader-text">{{ 'Select'|trans }}{{ item.ctNum }}</span>
+        <label class="label-covers-full-cell" for="{{ sageEntityMenu.entityName }}_{{ entityIdentifier }}">
+          <span class="screen-reader-text">{{ 'Select'|trans }}{{ entityIdentifier }}</span>
         </label>
-        <input type="checkbox" name="{{ sageEntityMenu.entityName }}[]" id="fDocentete_{{ item.ctNum }}" value="{{ item.ctNum }}">
+        <input type="checkbox" name="{{ sageEntityMenu.entityName }}[]" id="{{ sageEntityMenu.entityName }}_{{ entityIdentifier }}" value="{{ entityIdentifier }}">
       </th>
       {% for prop, value in item|sortByFields(fields) %}
         {% if hideField != prop %}
@@ -31,6 +32,11 @@
           </td>
         {% endif %}
       {% endfor %}
+      {% if hasActionColumn %}
+        <td data-colname="actions">
+          {% include sageEntityMenu.entityName~'/list_action.html.twig' %}
+        </td>
+      {% endif %}
     </tr>
   {% endfor %}
   </tbody>

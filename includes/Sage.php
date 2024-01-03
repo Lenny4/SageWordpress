@@ -75,7 +75,8 @@ final class Sage
      */
     public function __construct(public ?string $file = '', public ?string $_version = '1.0.0')
     {
-        $this->dir = dirname($this->file);
+        $dir = dirname($this->file);
+        $this->dir = $dir;
         $this->assets_dir = trailingslashit($this->dir) . 'assets';
         $this->assets_url = esc_url(trailingslashit(plugins_url('/assets/', $this->file)));
 
@@ -199,6 +200,14 @@ final class Sage
             $this->twig->addFilter(new TwigFilter('sortInsensitive', static function (array $array): array {
                 uasort($array, 'strnatcasecmp');
                 return $array;
+            }));
+            $this->twig->addFunction(new TwigFunction('file_exists', static fn(string $path): bool => file_exists($dir . '/' . $path)));
+            $this->twig->addFilter(new TwigFilter('getEntityIdentifier', static function (array $obj, array $mandatoryFields): string {
+                $r = [];
+                foreach ($mandatoryFields as $field) {
+                    $r[] = $obj[$field];
+                }
+                return implode('|', $r);
             }));
         }
 

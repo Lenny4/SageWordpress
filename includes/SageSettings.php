@@ -113,7 +113,36 @@ final class SageSettings
                 mandatoryFields: ['arRef'],
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
-                fields: [],
+                fields: [
+                    [
+                        'id' => SageEntityMenu::FARTICLE_ENTITY_NAME . '_sync_creation_from_sage',
+                        'label' => __('Synchronise la création des articles de Sage', 'sage'),
+                        'description' => __('Lorsqu\'un article est crée dans Sage il est crée automatiquement dans WooCommerce.', 'sage'),
+                        'type' => 'checkbox',
+                        'default' => ''
+                    ],
+                    [
+                        'id' => SageEntityMenu::FARTICLE_ENTITY_NAME . '_sync_creation_to_sage',
+                        'label' => __('Synchronise la création des articles vers Sage', 'sage'),
+                        'description' => __('Lorsqu\'un article est crée dans WooCommerce il est crée automatiquement dans Sage.', 'sage'),
+                        'type' => 'checkbox',
+                        'default' => ''
+                    ],
+                    [
+                        'id' => SageEntityMenu::FARTICLE_ENTITY_NAME . '_sync_deletion_from_sage',
+                        'label' => __('Synchronise la suppression des articles de Sage', 'sage'),
+                        'description' => __('Lorsqu\'un article est supprimé dans Sage il est supprimé automatiquement dans WooCommerce.', 'sage'),
+                        'type' => 'checkbox',
+                        'default' => ''
+                    ],
+                    [
+                        'id' => SageEntityMenu::FARTICLE_ENTITY_NAME . '_sync_deletion_to_sage',
+                        'label' => __('Synchronise la suppression des articles vers Sage', 'sage'),
+                        'description' => __('Lorsqu\'un article est supprimé dans WooCommerce il est supprimé automatiquement dans Sage.', 'sage'),
+                        'type' => 'checkbox',
+                        'default' => ''
+                    ],
+                ],
             ),
         ];
     }
@@ -154,20 +183,6 @@ final class SageSettings
                         'type' => 'text',
                         'default' => '',
                         'placeholder' => __('Placeholder text', 'sage')
-                    ],
-                    [
-                        'id' => 'sync_products',
-                        'label' => __('Synchronize products', 'sage'),
-                        'description' => __("All products created with Sage will be automatically create in Wordpress and vice versa", 'sage'),
-                        'type' => 'checkbox',
-                        'default' => ''
-                    ],
-                    [
-                        'id' => 'sync_sales_document',
-                        'label' => __('Synchronize Sales documents', 'sage'),
-                        'description' => __("All sales documents created with Sage will be automatically create in Wordpress and vice versa", 'sage'),
-                        'type' => 'checkbox',
-                        'default' => ''
                     ],
                     [
                         'id' => 'text_field',
@@ -588,8 +603,8 @@ final class SageSettings
                             }
                             $data = json_decode(json_encode(SageGraphQl::searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields)), true);
                             if (
-                                !empty($data["data"]["fArticles"]["items"]) &&
-                                array_diff($sageEntityMenu->getMandatoryFields(), array_keys($data["data"]["fArticles"]["items"][0])) !== []
+                                !empty($data["data"][$sageEntityMenu->getEntityName()]["items"]) &&
+                                array_diff($sageEntityMenu->getMandatoryFields(), array_keys($data["data"][$sageEntityMenu->getEntityName()]["items"][0])) !== []
                             ) {
                                 throw new Exception("Mandatory fields are missing");
                             }
