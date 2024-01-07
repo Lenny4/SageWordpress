@@ -1,0 +1,13 @@
+<div class="tooltip">
+  <a href="{{ getUrlWithParam('action', {
+    'type': sageEntityMenu.entityName ~ '_import_from_sage',
+    'data': {
+      'ctNum': item.ctNum
+    }
+  }|json_encode()) }}">
+    <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
+  </a>
+  <div class="tooltiptext" style="right: 0">
+    {{ 'Importer/Mettre à jour le client'|trans }}
+  </div>
+</div>

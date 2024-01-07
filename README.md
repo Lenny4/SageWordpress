@@ -55,7 +55,7 @@ vendor/bin/rector process
 https://github.com/hlashbrooke/WordPress-Plugin-Template
 
 ```
-C:\xampp\htdocs\wordplate\public\plugins\sage>grunt
+C:\xampp\htdocs\wordplate\public\plugins\sage>grunt --force
 Running "less:compile" (less) task
 >> 2 stylesheets created.
 

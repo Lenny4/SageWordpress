@@ -30,17 +30,20 @@
 .tooltip {
   position: relative;
   display: inline-block;
-  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
 
   .tooltiptext {
     visibility: hidden;
-    width: 200px;
-    background-color: black;
-    color: #fff;
-    padding: 5px;
-    border-radius: 6px;
+    max-width: 200px;
     position: absolute;
     z-index: 1;
+    color: #fff;
+    font-size: .8em;
+    min-width: 150px;
+    background: #333;
+    text-align: left;
+    border-radius: 3px;
+    padding: 0.618em 1em;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
 
     * {
       color: #fff;

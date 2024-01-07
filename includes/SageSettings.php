@@ -90,6 +90,13 @@ final class SageSettings
                 filterType: SageEntityMenu::FCOMPTET_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
                 fields: [],
+                actions: [
+                    SageEntityMenu::FCOMPTET_ENTITY_NAME . '_import_from_sage' => function (array $data) {
+                        $ctNum = $data['ctNum'];
+                        // todo add user in wordpress
+                        $todo = 0;
+                    }
+                ],
             ),
             new SageEntityMenu(
                 title: 'Documents',
@@ -102,6 +109,7 @@ final class SageSettings
                 filterType: SageEntityMenu::FDOCENTETE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FDOCENTETES,
                 fields: [],
+                actions: [],
             ),
             new SageEntityMenu(
                 title: 'Articles',
@@ -143,6 +151,7 @@ final class SageSettings
                         'default' => ''
                     ],
                 ],
+                actions: [],
             ),
         ];
     }
@@ -578,6 +587,14 @@ final class SageSettings
                         'capability' => self::$capability,
                         'menu_slug' => Sage::$_token . '_' . $sageEntityMenu->getEntityName(),
                         'function' => function () use ($sageSettings, $sageEntityMenu): void {
+                            $queryParams = $_GET;
+                            if (array_key_exists('action', $queryParams)) {
+                                $action = json_decode(stripslashes((string)$queryParams['action']), true, 512, JSON_THROW_ON_ERROR);
+                                $sageEntityMenu->getActions()[$action["type"]]($action["data"]);
+                                $goback = remove_query_arg('action', wp_get_referer());
+                                wp_redirect($goback);
+                                exit;
+                            }
                             $rawFields = get_option(SageSettings::$base . $sageEntityMenu->getEntityName() . '_fields');
                             if ($rawFields === false) {
                                 $rawFields = $sageEntityMenu->getDefaultFields();
@@ -594,7 +611,6 @@ final class SageSettings
                                     ];
                                 }
                             }
-                            $queryParams = $_GET;
                             if (!isset($queryParams['per_page'])) {
                                 $queryParams['per_page'] = get_option(SageSettings::$base . $sageEntityMenu->getEntityName() . '_perPage');
                                 if ($queryParams['per_page'] === false) {
