@@ -660,7 +660,7 @@ final class SageSettings
     {
 
         // Build page HTML.
-        $html = $this->sage->twig->render('common/translations.html.twig');
+        $html = $this->sage->twig->render('base.html.twig');
         $html .= '<div class="wrap" id="' . Sage::$_token . '_settings">' . "\n";
         $html .= '<h2>' . __('Sage', 'sage') . '</h2>' . "\n";
 

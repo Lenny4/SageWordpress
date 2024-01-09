@@ -96,120 +96,121 @@ final class Sage
         if (WP_DEBUG) {
             // https://twig.symfony.com/doc/3.x/functions/dump.html
             $this->twig->addExtension(new DebugExtension());
-            $this->twig->addFilter(new TwigFilter('trans', static fn(string $string) => __($string, self::$_token)));
-            $this->twig->addFilter(new TwigFilter('esc_attr', static fn(string $string) => esc_attr($string)));
-            $this->twig->addFilter(new TwigFilter('selected', static fn(bool $selected) => selected($selected, true, false)));
-            $this->twig->addFilter(new TwigFilter('disabled', static fn(bool $disabled) => disabled($disabled, true, false)));
-            $this->twig->addFilter(new TwigFilter('bytesToString', static fn(array $bytes): string => implode('', array_map("chr", $bytes))));
-            $this->twig->addFilter(new TwigFilter('wp_nonce_field', static fn(string $action) => wp_nonce_field($action)));
-            $this->twig->addFunction(new TwigFunction('getTranslations', static fn(): array => SageTranslationUtils::getTranslations()));
-            $this->twig->addFunction(new TwigFunction('getAllFilterType', static function (): array {
-                $r = [];
-                foreach ([
-                             'StringOperationFilterInput',
-                             'IntOperationFilterInput',
-                             'ShortOperationFilterInput',
-                             'DecimalOperationFilterInput',
-                             'DateTimeOperationFilterInput',
-                             'UuidOperationFilterInput',
-                         ] as $f) {
-                    switch ($f) {
-                        case 'StringOperationFilterInput':
-                            $r[$f] = [
-                                'contains',
-                                'endsWith',
-                                'eq',
-                                'in',
-                                'ncontains',
-                                'nendsWith',
-                                'neq',
-                                'nin',
-                                'nstartsWith',
-                                'startsWith',
-                            ];
-                            break;
-                        case 'IntOperationFilterInput':
-                        case 'ShortOperationFilterInput':
-                        case 'DecimalOperationFilterInput':
-                        case 'DateTimeOperationFilterInput':
-                        case 'UuidOperationFilterInput':
-                            $r[$f] = [
-                                'eq',
-                                'gt',
-                                'gte',
-                                'in',
-                                'lt',
-                                'lte',
-                                'neq',
-                                'ngt',
-                                'ngte',
-                                'nin',
-                                'nlt',
-                                'nlte',
-                            ];
-                            break;
-                    }
-                }
-
-                return $r;
-            }));
-            $this->twig->addFilter(new TwigFilter('sortByFields', static function (array $item, array $fields): array {
-                uksort($item, static function (string $a, string $b) use ($fields): int {
-                    $fieldsOrder = [];
-                    foreach ($fields as $i => $f) {
-                        $fieldsOrder[$f['name']] = $i;
-                    }
-
-                    return $fieldsOrder[$a] <=> $fieldsOrder[$b];
-                });
-                return $item;
-            }));
-            $this->twig->addFunction(new TwigFunction('getPaginationRange', static fn(): array => SageSettings::$paginationRange));
-            $this->twig->addFunction(new TwigFunction('get_site_url', static fn() => get_site_url()));
-            $this->twig->addFunction(new TwigFunction('getUrlWithParam', static function (string $paramName, int|string $v): string|array|null {
-                $url = $_SERVER['REQUEST_URI'];
-                if (str_contains($url, $paramName)) {
-                    $url = preg_replace('/' . $paramName . '=([^&]*)/', $paramName . '=' . $v, $url);
-                } else {
-                    $url .= '&' . $paramName . '=' . $v;
-                }
-
-                return $url;
-            }));
-            $this->twig->addFilter(new TwigFilter('json_decode', static fn(string $string): mixed => json_decode(stripslashes($string), true, 512, JSON_THROW_ON_ERROR)));
-            $this->twig->addFilter(new TwigFilter('gettype', static fn(mixed $value): string => gettype($value)));
-            $this->twig->addFilter(new TwigFilter('removeFields', static function (array $fields, array $hideFields): array {
-                return array_values(array_filter($fields, static fn(array $field): bool => !in_array($field["name"], $hideFields)));
-            }));
-            $this->twig->addFunction(new TwigFunction('getSortData', static function (array $queryParams): array {
-                [$sortField, $sortValue] = SageGraphQl::getSortField($queryParams);
-
-                if ($sortValue === 'asc') {
-                    $otherSort = 'desc';
-                } else {
-                    $sortValue = 'desc';
-                    $otherSort = 'asc';
-                }
-
-                return [
-                    'sortValue' => $sortValue,
-                    'otherSort' => $otherSort,
-                    'sortField' => $sortField,
-                ];
-            }));
-            $this->twig->addFilter(new TwigFilter('sortInsensitive', static function (array $array): array {
-                uasort($array, 'strnatcasecmp');
-                return $array;
-            }));
-            $this->twig->addFunction(new TwigFunction('file_exists', static fn(string $path): bool => file_exists($dir . '/' . $path)));
-            $this->twig->addFilter(new TwigFilter('getEntityIdentifier', static function (array $obj, array $mandatoryFields): string {
-                $r = [];
-                foreach ($mandatoryFields as $field) {
-                    $r[] = $obj[$field];
-                }
-                return implode('|', $r);
-            }));
         }
+        $this->twig->addFilter(new TwigFilter('trans', static fn(string $string) => __($string, self::$_token)));
+        $this->twig->addFilter(new TwigFilter('esc_attr', static fn(string $string) => esc_attr($string)));
+        $this->twig->addFilter(new TwigFilter('selected', static fn(bool $selected) => selected($selected, true, false)));
+        $this->twig->addFilter(new TwigFilter('disabled', static fn(bool $disabled) => disabled($disabled, true, false)));
+        $this->twig->addFilter(new TwigFilter('bytesToString', static fn(array $bytes): string => implode('', array_map("chr", $bytes))));
+        $this->twig->addFilter(new TwigFilter('wp_nonce_field', static fn(string $action) => wp_nonce_field($action)));
+        $this->twig->addFunction(new TwigFunction('getTranslations', static fn(): array => SageTranslationUtils::getTranslations()));
+        $this->twig->addFunction(new TwigFunction('getAllFilterType', static function (): array {
+            $r = [];
+            foreach ([
+                         'StringOperationFilterInput',
+                         'IntOperationFilterInput',
+                         'ShortOperationFilterInput',
+                         'DecimalOperationFilterInput',
+                         'DateTimeOperationFilterInput',
+                         'UuidOperationFilterInput',
+                     ] as $f) {
+                switch ($f) {
+                    case 'StringOperationFilterInput':
+                        $r[$f] = [
+                            'contains',
+                            'endsWith',
+                            'eq',
+                            'in',
+                            'ncontains',
+                            'nendsWith',
+                            'neq',
+                            'nin',
+                            'nstartsWith',
+                            'startsWith',
+                        ];
+                        break;
+                    case 'IntOperationFilterInput':
+                    case 'ShortOperationFilterInput':
+                    case 'DecimalOperationFilterInput':
+                    case 'DateTimeOperationFilterInput':
+                    case 'UuidOperationFilterInput':
+                        $r[$f] = [
+                            'eq',
+                            'gt',
+                            'gte',
+                            'in',
+                            'lt',
+                            'lte',
+                            'neq',
+                            'ngt',
+                            'ngte',
+                            'nin',
+                            'nlt',
+                            'nlte',
+                        ];
+                        break;
+                }
+            }
+
+            return $r;
+        }));
+        $this->twig->addFilter(new TwigFilter('sortByFields', static function (array $item, array $fields): array {
+            uksort($item, static function (string $a, string $b) use ($fields): int {
+                $fieldsOrder = [];
+                foreach ($fields as $i => $f) {
+                    $fieldsOrder[$f['name']] = $i;
+                }
+
+                return $fieldsOrder[$a] <=> $fieldsOrder[$b];
+            });
+            return $item;
+        }));
+        $this->twig->addFunction(new TwigFunction('getPaginationRange', static fn(): array => SageSettings::$paginationRange));
+        $this->twig->addFunction(new TwigFunction('get_site_url', static fn() => get_site_url()));
+        $this->twig->addFunction(new TwigFunction('getUrlWithParam', static function (string $paramName, int|string $v): string|array|null {
+            $url = $_SERVER['REQUEST_URI'];
+            if (str_contains($url, $paramName)) {
+                $url = preg_replace('/' . $paramName . '=([^&]*)/', $paramName . '=' . $v, $url);
+            } else {
+                $url .= '&' . $paramName . '=' . $v;
+            }
+
+            return $url;
+        }));
+        $this->twig->addFilter(new TwigFilter('json_decode', static fn(string $string): mixed => json_decode(stripslashes($string), true, 512, JSON_THROW_ON_ERROR)));
+        $this->twig->addFilter(new TwigFilter('gettype', static fn(mixed $value): string => gettype($value)));
+        $this->twig->addFilter(new TwigFilter('removeFields', static function (array $fields, array $hideFields): array {
+            return array_values(array_filter($fields, static fn(array $field): bool => !in_array($field["name"], $hideFields)));
+        }));
+        $this->twig->addFunction(new TwigFunction('getSortData', static function (array $queryParams): array {
+            [$sortField, $sortValue] = SageGraphQl::getSortField($queryParams);
+
+            if ($sortValue === 'asc') {
+                $otherSort = 'desc';
+            } else {
+                $sortValue = 'desc';
+                $otherSort = 'asc';
+            }
+
+            return [
+                'sortValue' => $sortValue,
+                'otherSort' => $otherSort,
+                'sortField' => $sortField,
+            ];
+        }));
+        $this->twig->addFilter(new TwigFilter('sortInsensitive', static function (array $array): array {
+            uasort($array, 'strnatcasecmp');
+            return $array;
+        }));
+        $this->twig->addFunction(new TwigFunction('file_exists', static fn(string $path): bool => file_exists($dir . '/' . $path)));
+        $this->twig->addFilter(new TwigFilter('getEntityIdentifier', static function (array $obj, array $mandatoryFields): string {
+            $r = [];
+            foreach ($mandatoryFields as $field) {
+                $r[] = $obj[$field];
+            }
+            return implode('|', $r);
+        }));
+        $this->twig->addFunction(new TwigFunction('getApiHostUrl', static fn(): string => get_option(SageSettings::$base . 'api_host_url')));
 
         // endregion
 
@@ -271,15 +272,24 @@ final class Sage
             if (is_admin() && current_user_can('activate_plugins')) {
                 $allPlugins = get_plugins();
                 $pluginId = 'woocommerce/woocommerce.php';
-                if (!array_key_exists($pluginId, $allPlugins)) {
-                    add_action('admin_notices', static function (): void {
+                $isWooCommerceInstalled = array_key_exists($pluginId, $allPlugins);
+                add_action('admin_notices', static function () use ($isWooCommerceInstalled): void {
+                    ?>
+                    <div id="<?= Sage::$_token ?>_tasks" class="notice notice-info">
+                        <p><span>Sage tasks.</span></p>
+                    </div>
+                    <?php
+                    if (!$isWooCommerceInstalled) {
                         ?>
                         <div class="error"><p>
-                            <?= __('Sage plugin require WooCommerce to be installed.', 'sage') ?>
-                        </p>
-                        </div><?php
-                    });
-                } elseif (!is_plugin_active($pluginId)) {
+                                <?= __('Sage plugin require WooCommerce to be installed.', 'sage') ?>
+                            </p></div>
+                        <?php
+                    }
+                    ?>
+                    <?php
+                });
+                if ($isWooCommerceInstalled && !is_plugin_active($pluginId)) {
                     add_action('admin_notices', static function (): void {
                         ?>
                         <div class="error"><p>

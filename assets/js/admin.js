@@ -1,6 +1,12 @@
 jQuery(document).ready(function () {
   var allFilterContainer = jQuery("#filters_container");
-  var translations = JSON.parse(jQuery("[data-sage-translation]").attr('data-sage-translation'));
+  var translationString = jQuery("[data-sage-translation]").attr('data-sage-translation');
+  var translations = [];
+  if (translationString) {
+    translations = JSON.parse(translationString);
+  }
+  var apiHostUrl = jQuery("[data-sage-api-host-url]").attr('data-sage-api-host-url');
+
   var index = 0;
 
   function getNumberFilter() {
@@ -20,7 +26,7 @@ jQuery(document).ready(function () {
       let fieldName = field.name;
       if (translations[field.transDomain].hasOwnProperty(field.name)) {
         fieldName = translations[field.transDomain][field.name];
-        if(typeof fieldName !== "string") {
+        if (typeof fieldName !== "string") {
           fieldName = fieldName.label;
         }
       }
@@ -194,6 +200,36 @@ jQuery(document).ready(function () {
   });
 
   initFiltersWithQueryParams();
+  // endregion
+
+  // region websocket
+  if (apiHostUrl) {
+    try {
+      apiHostUrl = new URL(apiHostUrl);
+    } catch (_) {
+      apiHostUrl = null;
+    }
+    if (apiHostUrl) {
+      console.log('start websocket', 'wss://' + apiHostUrl.host + '/Socket/ws');
+      const ws = new WebSocket('wss://' + apiHostUrl.host + '/Socket/ws')
+      ws.onopen = () => {
+        console.log('ws opened on browser')
+        ws.send('hello world')
+      }
+
+      ws.onmessage = (message) => {
+        console.log(`message received`, message.data)
+      }
+
+      ws.onerror = (evt) => {
+        console.log(evt)
+      }
+
+      ws.onclose = (evt) => {
+        console.log(evt)
+      }
+    }
+  }
   // endregion
 
 });

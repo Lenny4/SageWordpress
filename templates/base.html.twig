@@ -1,4 +1,6 @@
 {% set allTranslations = getTranslations() %}
+{% set apiHostUrl = getApiHostUrl() %}
 <div data-sage-translation="{{ allTranslations|json_encode }}"></div>
+<div data-sage-api-host-url="{{ apiHostUrl }}"></div>
 {% block body %}
 {% endblock %}

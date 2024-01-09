@@ -157,7 +157,6 @@ final class SageGraphQl
         return [null, $defaultSortValue];
     }
 
-
     public static function getTypeModel(string $object): StdClass|null
     {
         // https://graphql.org/learn/introspection/
