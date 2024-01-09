@@ -3,44 +3,45 @@
 {% set hasActionColumn = file_exists('templates/'~sageEntityMenu.entityName~'/list_action.html.twig') %}
 
 <table class="wp-list-table widefat fixed striped table-view-list users">
-  <thead>
-  {% include 'common/wp_list_header_footer.html.twig' with {'name': 'header'} %}
-  </thead>
-  <tbody id="{{ sageEntityMenu.entityName }}-list">
-  {% for item in data['data'][sageEntityMenu.entityName]['items'] %}
-    {% set entityIdentifier = item|getEntityIdentifier(sageEntityMenu.mandatoryFields) %}
-    <tr id="row_{{ sageEntityMenu.entityName }}_{{ entityIdentifier }}">
-      <th scope="row" class="check-column">
-        <label class="label-covers-full-cell" for="{{ sageEntityMenu.entityName }}_{{ entityIdentifier }}">
-          <span class="screen-reader-text">{{ 'Select'|trans }}{{ entityIdentifier }}</span>
-        </label>
-        <input type="checkbox" name="{{ sageEntityMenu.entityName }}[]" id="{{ sageEntityMenu.entityName }}_{{ entityIdentifier }}" value="{{ entityIdentifier }}">
-      </th>
-      {% for prop, value in item|sortByFields(fields) %}
-        {% if hideField != prop %}
-          <td data-colname="{{ prop }}">
-            {% if value is iterable %}
-              {{ value|bytesToString }}
-            {% else %}
-              {% set transField = allTranslations[sageEntityMenu.transDomain][prop] %}
-              {% if transField|gettype != 'string' and transField['values'][value] is not null %}
-                {{ transField['values'][value] }}
-              {% else %}
-                {{ value }}
-              {% endif %}
+    <thead>
+    {% include 'common/wp_list_header_footer.html.twig' with {'name': 'header'} %}
+    </thead>
+    <tbody id="{{ sageEntityMenu.entityName }}-list">
+    {% for item in data['data'][sageEntityMenu.entityName]['items'] %}
+        {% set entityIdentifier = item|getEntityIdentifier(sageEntityMenu.mandatoryFields) %}
+        <tr id="row_{{ sageEntityMenu.entityName }}_{{ entityIdentifier }}">
+            <th scope="row" class="check-column">
+                <label class="label-covers-full-cell" for="{{ sageEntityMenu.entityName }}_{{ entityIdentifier }}">
+                    <span class="screen-reader-text">{{ 'Select'|trans }}{{ entityIdentifier }}</span>
+                </label>
+                <input type="checkbox" name="{{ sageEntityMenu.entityName }}[]"
+                       id="{{ sageEntityMenu.entityName }}_{{ entityIdentifier }}" value="{{ entityIdentifier }}">
+            </th>
+            {% for prop, value in item|sortByFields(fields) %}
+                {% if hideField != prop %}
+                    <td data-colname="{{ prop }}">
+                        {% if value is iterable %}
+                            {{ value|bytesToString }}
+                        {% else %}
+                            {% set transField = allTranslations[sageEntityMenu.transDomain][prop] %}
+                            {% if transField|gettype != 'string' and transField['values'][value] is not null %}
+                                {{ transField['values'][value] }}
+                            {% else %}
+                                {{ value }}
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                {% endif %}
+            {% endfor %}
+            {% if hasActionColumn %}
+                <td data-colname="actions" style="text-align: right">
+                    {% include sageEntityMenu.entityName~'/list_action.html.twig' %}
+                </td>
             {% endif %}
-          </td>
-        {% endif %}
-      {% endfor %}
-      {% if hasActionColumn %}
-        <td data-colname="actions" style="text-align: right">
-          {% include sageEntityMenu.entityName~'/list_action.html.twig' %}
-        </td>
-      {% endif %}
-    </tr>
-  {% endfor %}
-  </tbody>
-  <tfoot>
-  {% include 'common/wp_list_header_footer.html.twig' with {'name': 'footer'} %}
-  </tfoot>
+        </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot>
+    {% include 'common/wp_list_header_footer.html.twig' with {'name': 'footer'} %}
+    </tfoot>
 </table>

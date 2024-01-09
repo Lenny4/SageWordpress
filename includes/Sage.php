@@ -77,6 +77,7 @@ final class Sage
     {
         $dir = dirname($this->file);
         $this->dir = $dir;
+
         $this->assets_dir = trailingslashit($this->dir) . 'assets';
         $this->assets_url = esc_url(trailingslashit(plugins_url('/assets/', $this->file)));
 
@@ -97,6 +98,7 @@ final class Sage
             // https://twig.symfony.com/doc/3.x/functions/dump.html
             $this->twig->addExtension(new DebugExtension());
         }
+
         $this->twig->addFilter(new TwigFilter('trans', static fn(string $string) => __($string, self::$_token)));
         $this->twig->addFilter(new TwigFilter('esc_attr', static fn(string $string) => esc_attr($string)));
         $this->twig->addFilter(new TwigFilter('selected', static fn(bool $selected) => selected($selected, true, false)));
@@ -179,9 +181,7 @@ final class Sage
         }));
         $this->twig->addFilter(new TwigFilter('json_decode', static fn(string $string): mixed => json_decode(stripslashes($string), true, 512, JSON_THROW_ON_ERROR)));
         $this->twig->addFilter(new TwigFilter('gettype', static fn(mixed $value): string => gettype($value)));
-        $this->twig->addFilter(new TwigFilter('removeFields', static function (array $fields, array $hideFields): array {
-            return array_values(array_filter($fields, static fn(array $field): bool => !in_array($field["name"], $hideFields)));
-        }));
+        $this->twig->addFilter(new TwigFilter('removeFields', static fn(array $fields, array $hideFields): array => array_values(array_filter($fields, static fn(array $field): bool => !in_array($field["name"], $hideFields)))));
         $this->twig->addFunction(new TwigFunction('getSortData', static function (array $queryParams): array {
             [$sortField, $sortValue] = SageGraphQl::getSortField($queryParams);
 
@@ -205,9 +205,10 @@ final class Sage
         $this->twig->addFunction(new TwigFunction('file_exists', static fn(string $path): bool => file_exists($dir . '/' . $path)));
         $this->twig->addFilter(new TwigFilter('getEntityIdentifier', static function (array $obj, array $mandatoryFields): string {
             $r = [];
-            foreach ($mandatoryFields as $field) {
-                $r[] = $obj[$field];
+            foreach ($mandatoryFields as $mandatoryField) {
+                $r[] = $obj[$mandatoryField];
             }
+
             return implode('|', $r);
         }));
         $this->twig->addFunction(new TwigFunction('getApiHostUrl', static fn(): string => get_option(SageSettings::$base . 'api_host_url')));
@@ -329,7 +330,7 @@ final class Sage
      */
     public function load_localisation(): void
     {
-        load_plugin_textdomain('sage', false, dirname((string)plugin_basename($this->file)) . '/lang/');
+        load_plugin_textdomain('sage', false, dirname(plugin_basename($this->file)) . '/lang/');
     }
 
     /**
@@ -383,7 +384,7 @@ final class Sage
         $locale = apply_filters('plugin_locale', get_locale(), $domain);
 
         load_textdomain($domain, WP_LANG_DIR . '/' . $domain . '/' . $domain . '-' . $locale . '.mo');
-        load_plugin_textdomain($domain, false, dirname((string)plugin_basename($this->file)) . '/lang/');
+        load_plugin_textdomain($domain, false, dirname(plugin_basename($this->file)) . '/lang/');
     }
 
     /**

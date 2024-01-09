@@ -11,7 +11,7 @@ https://www.elegantthemes.com/blog/tips-tricks/how-to-add-cron-jobs-to-wordpress
 When add a new entity use function `private function settings_fields` with debugger to get all fields to translate.
 
 ```
-vendor/bin/rector process
+./runc wp-content/plugins/sage/vendor/bin/rector process --config=wp-content/plugins/sage/rector.php
 ```
 
 https://github.com/hlashbrooke/WordPress-Plugin-Template

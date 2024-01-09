@@ -102,7 +102,7 @@ final class SageGraphQl
         $order = null;
         [$sortField, $sortValue] = self::getSortField($queryParams);
         if (!is_null($sortField)) {
-            $order = '{ ' . $sortField . ': ' . strtoupper($sortValue) . ' }';
+            $order = '{ ' . $sortField . ': ' . strtoupper((string)$sortValue) . ' }';
         }
 
         $arguments = [
@@ -112,6 +112,7 @@ final class SageGraphQl
         if (!is_null($order)) {
             $arguments['order'] = new RawObject($order);
         }
+
         if ($where !== []) {
             $stringWhere = [];
             foreach ($where as $f => $w) {
@@ -143,17 +144,23 @@ final class SageGraphQl
             $sortField = array_key_first($json);
             return [$sortField, (string)$json[$sortField]];
         }
+
         if (array_key_exists('page', $queryParams)) {
             if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FDOCENTETE_ENTITY_NAME) {
                 return [SageEntityMenu::FDOCENTETE_DEFAULT_SORT, $defaultSortValue];
-            } else if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FCOMPTET_ENTITY_NAME) {
-                return [SageEntityMenu::FCOMPTET_DEFAULT_SORT, $defaultSortValue];
-            } else if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FARTICLE_ENTITY_NAME) {
-                return [SageEntityMenu::FARTICLE_DEFAULT_SORT, $defaultSortValue];
-            } else {
-                throw new Exception("Unknown page " . $queryParams['page']);
             }
+
+            if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FCOMPTET_ENTITY_NAME) {
+                return [SageEntityMenu::FCOMPTET_DEFAULT_SORT, $defaultSortValue];
+            }
+            
+            if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FARTICLE_ENTITY_NAME) {
+                return [SageEntityMenu::FARTICLE_DEFAULT_SORT, $defaultSortValue];
+            }
+
+            throw new Exception("Unknown page " . $queryParams['page']);
         }
+
         return [null, $defaultSortValue];
     }
 

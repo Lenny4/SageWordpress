@@ -5,7 +5,7 @@
  */
 
 jQuery(document).ready(
-  function (e) {
+    function (e) {
 
-  }
+    }
 );

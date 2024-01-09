@@ -9,7 +9,9 @@ if (!defined('ABSPATH')) {
 final class SageTranslationUtils
 {
     public const TRANS_FCOMPTETS = 'fComptets';
+
     public const TRANS_FDOCENTETES = 'fDocentetes';
+
     public const TRANS_FARTICLES = 'fArticles';
 
     public static function getTranslations(): array

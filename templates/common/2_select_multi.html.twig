@@ -1,49 +1,49 @@
 <div
-  style="display: flex;flex-wrap: wrap;"
+        style="display: flex;flex-wrap: wrap;"
 >
-  <div
-    style="
+    <div
+            style="
     display: flex;
     flex-direction: column;
 ">
-    <label for="{{ field['id']|esc_attr }}_all">
-      {{ 'All options'|trans }}
-    </label>
-    <select
-      id="{{ field['id']|esc_attr }}_all"
-      multiple="multiple"
-      style="min-width: 200px;min-height: 200px;"
-      data-2-select-target="all"
-    >
-      {% for k,v in field['options']|sortInsensitive %}
-        {% if k not in data %}
-          <option value="{{ k|esc_attr }}">{{ v }}</option>
-        {% endif %}
-      {% endfor %}
-    </select>
-  </div>
-  {# separator #}
-  <div
-    style="
+        <label for="{{ field['id']|esc_attr }}_all">
+            {{ 'All options'|trans }}
+        </label>
+        <select
+                id="{{ field['id']|esc_attr }}_all"
+                multiple="multiple"
+                style="min-width: 200px;min-height: 200px;"
+                data-2-select-target="all"
+        >
+            {% for k,v in field['options']|sortInsensitive %}
+                {% if k not in data %}
+                    <option value="{{ k|esc_attr }}">{{ v }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+    {# separator #}
+    <div
+            style="
     display: flex;
     flex-direction: column;
 ">
-    <label for="{{ field['id']|esc_attr }}">
-      {{ 'Selected options'|trans }}
-    </label>
-    <select
-      name="{{ optionName|esc_attr }}[]"
-      id="{{ field['id']|esc_attr }}"
-      multiple="multiple"
-      style="min-width: 200px;min-height: 200px;"
-      data-2-select-target="selected"
-    >
-      {% for k,v in field['options'] %}
-        {% if k in data %}
-          <option value="{{ k|esc_attr }}">{{ v }}</option>
-        {% endif %}
-      {% endfor %}
-    </select>
-  </div>
+        <label for="{{ field['id']|esc_attr }}">
+            {{ 'Selected options'|trans }}
+        </label>
+        <select
+                name="{{ optionName|esc_attr }}[]"
+                id="{{ field['id']|esc_attr }}"
+                multiple="multiple"
+                style="min-width: 200px;min-height: 200px;"
+                data-2-select-target="selected"
+        >
+            {% for k,v in field['options'] %}
+                {% if k in data %}
+                    <option value="{{ k|esc_attr }}">{{ v }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </div>
 
 </div>

@@ -2,12 +2,16 @@
 
 namespace App\class;
 
-class SageEntityMenu
+final class SageEntityMenu
 {
     public const FCOMPTET_ENTITY_NAME = 'fComptets';
+
     public const FCOMPTET_TYPE_MODEL = 'FComptet';
+
     public const FCOMPTET_DEFAULT_SORT = 'ctNum';
+
     public const FCOMPTET_FILTER_TYPE = 'FComptetFilterInput';
+
     public const FCOMPTET_DEFAULT_FIELDS = [
         'ctNum',
         'ctIntitule',
@@ -16,9 +20,13 @@ class SageEntityMenu
     ];
 
     public const FDOCENTETE_ENTITY_NAME = 'fDocentetes';
+
     public const FDOCENTETE_TYPE_MODEL = 'FDocentete';
+
     public const FDOCENTETE_DEFAULT_SORT = 'doPiece';
+
     public const FDOCENTETE_FILTER_TYPE = 'FDocenteteFilterInput';
+
     public const FDOCENTETE_DEFAULT_FIELDS = [
         'doPiece',
         'doType',
@@ -26,9 +34,13 @@ class SageEntityMenu
     ];
 
     public const FARTICLE_ENTITY_NAME = 'fArticles';
+
     public const FARTICLE_TYPE_MODEL = 'FArticle';
+
     public const FARTICLE_DEFAULT_SORT = 'arRef';
+
     public const FARTICLE_FILTER_TYPE = 'FArticleFilterInput';
+
     public const FARTICLE_DEFAULT_FIELDS = [
         'arRef',
         'arDesign',

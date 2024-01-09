@@ -2,33 +2,33 @@
 {#  https://developer.wordpress.org/apis/security/nonces/#adding-a-nonce-to-a-form #}
 {#  {{ 'filter-fDocentetes'|wp_nonce_field|raw }} #}
 <form method="get" id="filter-sage">
-  <input type="hidden" name="page" value="{{ queryParams['page'] }}">
-  {% if queryParams['sort'] is defined %}
-    <input type="hidden" name="sort" value="{{ queryParams['sort']|raw|json_decode|json_encode }}">
-  {% endif %}
-  <div class="tablenav top">
-    <div class="alignleft actions">
-      <input style="margin-bottom: 0.5rem" type="button" id="add_filter" class="button"
-             value="{{ 'Add filter'|trans }}">
-      <div data-all-filter-type="{{ getAllFilterType()|json_encode }}"></div>
-      <div data-all-fields="{{ (fields|removeFields(hideFields))|json_encode }}"></div>
-      <div id="all_filter_container">
-        {% if queryParams['filter_field'] is defined %}
-          {% for i in 1..queryParams['filter_field']|length %}
-            <div class="skeleton skeleton-text"></div>
-          {% endfor %}
-        {% else %}
-          <div class="skeleton skeleton-text"></div>
-        {% endif %}
-        <div style="display: flex;align-items: center;">
-          <div id="or_and_container"></div>
-          <div id="filters_container" style="border-left: 1px solid;padding-left: 10px;"></div>
+    <input type="hidden" name="page" value="{{ queryParams['page'] }}">
+    {% if queryParams['sort'] is defined %}
+        <input type="hidden" name="sort" value="{{ queryParams['sort']|raw|json_decode|json_encode }}">
+    {% endif %}
+    <div class="tablenav top">
+        <div class="alignleft actions">
+            <input style="margin-bottom: 0.5rem" type="button" id="add_filter" class="button"
+                   value="{{ 'Add filter'|trans }}">
+            <div data-all-filter-type="{{ getAllFilterType()|json_encode }}"></div>
+            <div data-all-fields="{{ (fields|removeFields(hideFields))|json_encode }}"></div>
+            <div id="all_filter_container">
+                {% if queryParams['filter_field'] is defined %}
+                    {% for i in 1..queryParams['filter_field']|length %}
+                        <div class="skeleton skeleton-text"></div>
+                    {% endfor %}
+                {% else %}
+                    <div class="skeleton skeleton-text"></div>
+                {% endif %}
+                <div style="display: flex;align-items: center;">
+                    <div id="or_and_container"></div>
+                    <div id="filters_container" style="border-left: 1px solid;padding-left: 10px;"></div>
+                </div>
+            </div>
+            <input type="submit" id="search" class="button action" value="{{ 'Search'|trans }}">
         </div>
-      </div>
-      <input type="submit" id="search" class="button action" value="{{ 'Search'|trans }}">
+        {% include 'common/paging.html.twig' %}
+        <br class="clear">
     </div>
-    {% include 'common/paging.html.twig' %}
-    <br class="clear">
-  </div>
-  <h2 class="screen-reader-text">{{ 'Clients list'|trans }}</h2>
+    <h2 class="screen-reader-text">{{ 'Clients list'|trans }}</h2>
 </form>
