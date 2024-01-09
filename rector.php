@@ -6,7 +6,8 @@ use Rector\TypeDeclaration\Rector\Property\TypedPropertyFromStrictConstructorRec
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->importNames();
-    $rectorConfig->parallel(240); // https://github.com/rectorphp/rector/issues/7323
+//    $rectorConfig->parallel(240); // https://github.com/rectorphp/rector/issues/7323
+    $rectorConfig->disableParallel(); // https://github.com/rectorphp/rector/issues/7323
     $rectorConfig->paths([
         __DIR__ . '/../../..',
     ]);
