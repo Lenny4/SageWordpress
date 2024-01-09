@@ -70,7 +70,13 @@ final class SageGraphQl
     {
         return new Client(
             get_option(SageSettings::$base . 'api_host_url') . '/graphql',
-            ['Api-Key' => get_option(SageSettings::$base . 'api_key')]
+            ['Api-Key' => get_option(SageSettings::$base . 'api_key')],
+            [
+                // vendor/guzzlehttp/guzzle/src/Handler/CurlFactory.php : applyHandlerOptions
+//                'verify' => '/var/www/html/wp-content/plugins/sage/cacert.pem', // specify ca file
+                // todo remove
+                'verify' => false,
+            ]
         );
     }
 
@@ -153,7 +159,7 @@ final class SageGraphQl
             if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FCOMPTET_ENTITY_NAME) {
                 return [SageEntityMenu::FCOMPTET_DEFAULT_SORT, $defaultSortValue];
             }
-            
+
             if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FARTICLE_ENTITY_NAME) {
                 return [SageEntityMenu::FARTICLE_DEFAULT_SORT, $defaultSortValue];
             }
