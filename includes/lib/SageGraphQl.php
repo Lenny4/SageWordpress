@@ -22,13 +22,31 @@ if (!defined('ABSPATH')) {
 // https://github.com/mghoneimy/php-graphql-client
 final class SageGraphQl
 {
-    public static function addUpdateWebsite(
+    private static ?self $_instance = null;
+    private ?Client $client = null;
+
+    public function __construct(public ?Sage $sage)
+    {
+
+    }
+
+    public static function instance(Sage $sage): ?self
+    {
+        if (is_null(self::$_instance)) {
+            self::$_instance = new self($sage);
+        }
+
+        return self::$_instance;
+    }
+
+    public function addUpdateWebsite(
         string      $name,
         string      $username,
         string      $password,
         WebsiteEnum $websiteEnum,
         string      $host,
         string      $protocol,
+        bool        $forceSsl,
     ): StdClass|null
     {
         $query = (new Mutation('addUpdateWebsite'))
@@ -39,18 +57,19 @@ final class SageGraphQl
                 'type' => new RawObject(strtoupper($websiteEnum->name)),
                 'host' => new RawObject('"' . $host . '"'),
                 'protocol' => new RawObject('"' . $protocol . '"'),
+                'forceSsl' => new RawObject($forceSsl ? 'true' : 'false'),
             ])
             ->setSelectionSet(
                 [
                     'id',
                 ]
             );
-        return self::runQuery($query)?->getResults();
+        return $this->runQuery($query)?->getResults();
     }
 
-    private static function runQuery(Query|Mutation $gql): Results|null
+    private function runQuery(Query|Mutation $gql): Results|null
     {
-        $client = self::getClient();
+        $client = $this->getClient();
         try {
             return $client->runQuery($gql);
         } catch (Throwable $throwable) {
@@ -66,21 +85,24 @@ final class SageGraphQl
         return null;
     }
 
-    private static function getClient(): Client
+    private function getClient(): Client
     {
-        return new Client(
-            get_option(SageSettings::$base . 'api_host_url') . '/graphql',
-            ['Api-Key' => get_option(SageSettings::$base . 'api_key')],
-            [
-                // vendor/guzzlehttp/guzzle/src/Handler/CurlFactory.php : applyHandlerOptions
-//                'verify' => '/var/www/html/wp-content/plugins/sage/cacert.pem', // specify ca file
-                // todo remove
-                'verify' => false,
-            ]
-        );
+        if (is_null($this->client)) {
+            $this->client = new Client(
+            // todo what if get_option(SageSettings::$base . 'api_host_url') doesn't respond ?
+                get_option(SageSettings::$base . 'api_host_url') . '/graphql',
+                ['Api-Key' => get_option(SageSettings::$base . 'api_key')],
+                [
+                    // todo add option to remove verify
+                    'verify' => !get_option(SageSettings::$base . 'disable_https_verification_graphql'),
+                    'timeout' => 10, // vendor/guzzlehttp/guzzle/src/Handler/CurlFactory.php
+                ]
+            );
+        }
+        return $this->client;
     }
 
-    public static function searchEntities(string $entityName, array $queryParams, array $fields): StdClass|null
+    public function searchEntities(string $entityName, array $queryParams, array $fields): StdClass|null
     {
         $rawFields = array_map(static fn(array $field) => $field['name'], $fields);
         $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
@@ -139,7 +161,7 @@ final class SageGraphQl
                         ),
                 ]
             );
-        return self::runQuery($query)?->getResults();
+        return $this->runQuery($query)?->getResults();
     }
 
     public static function getSortField(array $queryParams): array
@@ -170,7 +192,7 @@ final class SageGraphQl
         return [null, $defaultSortValue];
     }
 
-    public static function getTypeModel(string $object): StdClass|null
+    public function getTypeModel(string $object): StdClass|null
     {
         // https://graphql.org/learn/introspection/
         $query = (new Query('__type'))
@@ -201,10 +223,10 @@ final class SageGraphQl
                         ),
                 ]
             );
-        return self::runQuery($query)?->getResults();
+        return $this->runQuery($query)?->getResults();
     }
 
-    public static function getTypeFilter(string $object): StdClass|null
+    public function getTypeFilter(string $object): StdClass|null
     {
         $query = (new Query('__type'))
             ->setArguments(['name' => $object])
@@ -225,6 +247,6 @@ final class SageGraphQl
                         ),
                 ]
             );
-        return self::runQuery($query)?->getResults();
+        return $this->runQuery($query)?->getResults();
     }
 }

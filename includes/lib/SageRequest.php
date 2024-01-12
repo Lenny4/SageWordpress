@@ -23,6 +23,7 @@ final class SageRequest
         return (new WP_Http)->request($url, [
             'timeout' => 30,
             'cookies' => $_COOKIE,
+            'sslverify' => false, // no ssl verification required for local request
             ...$params,
         ]);
     }

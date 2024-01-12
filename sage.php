@@ -15,6 +15,7 @@
  * @author Alexandre Beaujour
  */
 
+use App\lib\SageGraphQl;
 use App\Sage;
 use App\SageSettings;
 
@@ -35,6 +36,9 @@ function sage(): Sage
 
     if (is_null($instance->settings)) {
         $instance->settings = SageSettings::instance($instance);
+    }
+    if (is_null($instance->sageGraphQl)) {
+        $instance->sageGraphQl = SageGraphQl::instance($instance);
     }
 
     return $instance;

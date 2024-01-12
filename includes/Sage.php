@@ -67,6 +67,8 @@ final class Sage
 
     public ?Environment $twig = null;
 
+    public SageGraphQl|null $sageGraphQl = null;
+
     /**
      * Constructor funtion.
      *

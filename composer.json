@@ -1,27 +1,28 @@
 {
-    "type": "project",
-    "name": "lenny4/sage",
-    "license": "GPL-2.0-or-later",
-    "description": "Use Sage with your Wordpress website.",
-    "keywords": [
-        "sage"
-    ],
-    "require": {
-        "php": ">=8.2",
-        "gmostafa/php-graphql-client": "^1.13",
-        "ext-curl": "*",
-        "twig/twig": "^3.7",
-        "crysalead/dir": "^2.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "App\\": "includes/"
-        }
-    },
-    "require-dev": {
-        "wp-coding-standards/wpcs": "2.1.*",
-        "squizlabs/php_codesniffer": "^3.3.1",
-        "wp-cli/wp-cli-bundle": "*",
-        "rector/rector": "dev-main"
+  "type": "project",
+  "name": "lenny4/sage",
+  "license": "GPL-2.0-or-later",
+  "description": "Use Sage with your Wordpress website.",
+  "keywords": [
+    "sage"
+  ],
+  "require": {
+    "php": ">=8.2",
+    "gmostafa/php-graphql-client": "^1.13",
+    "ext-curl": "*",
+    "twig/twig": "^3.7",
+    "crysalead/dir": "^2.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "includes/"
     }
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-latest",
+    "wp-coding-standards/wpcs": "2.1.*",
+    "squizlabs/php_codesniffer": "^3.3.1",
+    "wp-cli/wp-cli-bundle": "*",
+    "rector/rector": "dev-main"
+  }
 }

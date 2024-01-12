@@ -4,7 +4,6 @@ namespace App;
 
 use App\class\SageEntityMenu;
 use App\enum\WebsiteEnum;
-use App\lib\SageGraphQl;
 use App\lib\SageRequest;
 use App\Utils\SageTranslationUtils;
 use Exception;
@@ -91,7 +90,7 @@ final class SageSettings
                 transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
                 fields: [],
                 actions: [
-                    SageEntityMenu::FCOMPTET_ENTITY_NAME . '_import_from_sage' => static function (array $data) : void {
+                    SageEntityMenu::FCOMPTET_ENTITY_NAME . '_import_from_sage' => static function (array $data): void {
                         $ctNum = $data['ctNum'];
                         // todo add user in wordpress
                         $todo = 0;
@@ -172,11 +171,21 @@ final class SageSettings
      */
     private function settings_fields(): array
     {
+        $url = parse_url(get_site_url());
+        $defaultWordpressUrl = $url["scheme"] . '://' . $url["host"];
         $settings = [
             'api' => [
                 'title' => __('Api', 'sage'),
                 'description' => __('These are fairly standard form input fields.', 'sage'),
                 'fields' => [
+                    [
+                        'id' => 'api_key',
+                        'label' => __('Api key', 'sage'),
+                        'description' => __('Can be found here.', 'sage'),
+                        'type' => 'text',
+                        'default' => '',
+                        'placeholder' => __('Placeholder text', 'sage')
+                    ],
                     [
                         'id' => 'api_host_url',
                         'label' => __('Api host url', 'sage'),
@@ -186,12 +195,26 @@ final class SageSettings
                         'placeholder' => __('192.168.0.1', 'sage')
                     ],
                     [
-                        'id' => 'api_key',
-                        'label' => __('Api key', 'sage'),
-                        'description' => __('Can be found here.', 'sage'),
+                        'id' => 'disable_https_verification_graphql',
+                        'label' => __('Désactiver Https GraphQl', 'sage'),
+                        'description' => __("Cochez cette case si vous avez l'erreur: cURL error 60: SSL certificate problem: self-signed certificate.", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => ''
+                    ],
+                    [
+                        'id' => 'wordpress_host_url',
+                        'label' => __('Wordpress host url', 'sage'),
+                        'description' => __('Renseigner l\'url à laquelle l\'API Sage peut contacter l\'API de wordpress.', 'sage'),
                         'type' => 'text',
-                        'default' => '',
-                        'placeholder' => __('Placeholder text', 'sage')
+                        'default' => $defaultWordpressUrl,
+                        'placeholder' => __($defaultWordpressUrl, 'sage')
+                    ],
+                    [
+                        'id' => 'disable_https_verification_wordpress',
+                        'label' => __('Désactiver Https Wordpress', 'sage'),
+                        'description' => __("Cochez cette case si vous avez l'erreur: The SSL connection could not be established, see inner exception.", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => ''
                     ],
                     [
                         'id' => 'text_field',
@@ -291,19 +314,19 @@ final class SageSettings
                 ]
             ],
         ];
-        foreach ($this->sageEntityMenus as $sageEntityRectorPrefix202401Menu) {
+        foreach ($this->sageEntityMenus as $sageEntityMenu) {
             $fields = [
-                ...$this->getDefaultField($sageEntityRectorPrefix202401Menu),
-                ...$sageEntityRectorPrefix202401Menu->getFields(),
+                ...$this->getDefaultField($sageEntityMenu),
+                ...$sageEntityMenu->getFields(),
             ];
-            $sageEntityRectorPrefix202401Menu->setFields($fields);
-            $settings[$sageEntityRectorPrefix202401Menu->getEntityName()] = [
-                'title' => __($sageEntityRectorPrefix202401Menu->getTitle(), 'sage'),
-                'description' => $sageEntityRectorPrefix202401Menu->getDescription(),
+            $sageEntityMenu->setFields($fields);
+            $settings[$sageEntityMenu->getEntityName()] = [
+                'title' => __($sageEntityMenu->getTitle(), 'sage'),
+                'description' => $sageEntityMenu->getDescription(),
                 'fields' => $fields,
             ];
         }
-        
+
         return apply_filters(Sage::$_token . '_settings_fields', $settings);
     }
 
@@ -331,9 +354,11 @@ final class SageSettings
 
     private function getFieldsForEntity(string $object, string $transDomain): array
     {
-        $fieldsObject = array_filter(SageGraphQl::getTypeModel($object)?->data?->__type?->fields ?? [], static fn(stdClass $entity): bool => $entity->type->kind !== 'OBJECT' &&
-            $entity->type->kind !== 'LIST' &&
-            $entity->type->ofType?->kind !== 'LIST');
+        $fieldsObject = array_filter(
+            $this->sage->sageGraphQl->getTypeModel($object)?->data?->__type?->fields ?? [],
+            static fn(stdClass $entity): bool => $entity->type->kind !== 'OBJECT' &&
+                $entity->type->kind !== 'LIST' &&
+                $entity->type->ofType?->kind !== 'LIST');
         $trans = SageTranslationUtils::getTranslations();
         $objectFields = [];
         foreach ($fieldsObject as $fieldObject) {
@@ -347,9 +372,12 @@ final class SageSettings
     private function add_website_sage_api(): void
     {
         if (
-            !(array_key_exists('settings-updated', $_GET) &&
+            !(
+                array_key_exists('settings-updated', $_GET) &&
+                array_key_exists('page', $_GET) &&
                 $_GET["settings-updated"] === 'true' &&
-                $_GET["page"] === self::$base . 'settings') ||
+                $_GET["page"] === self::$base . 'settings'
+            ) ||
             !current_user_can(self::$capability)
         ) {
             return;
@@ -409,14 +437,15 @@ final class SageSettings
     private function create_update_website(string $user_id, string $password): bool
     {
         $user = get_user_by('id', $user_id);
-        $url = parse_url(get_site_url());
-        $stdClass = SageGraphQl::addUpdateWebsite(
+        $url = parse_url(get_option(SageSettings::$base . 'wordpress_host_url'));
+        $stdClass = $this->sage->sageGraphQl->addUpdateWebsite(
             name: get_bloginfo(),
             username: $user->data->user_login,
             password: $password,
             websiteEnum: WebsiteEnum::Wordpress,
             host: $url["host"],
             protocol: $url["scheme"],
+            forceSsl: !get_option(SageSettings::$base . 'disable_https_verification_wordpress'),
         );
         if (!is_null($stdClass)) {
             add_action('admin_notices', static function (): void {
@@ -586,7 +615,7 @@ final class SageSettings
                     'menu_title' => __($sageEntityMenu->getTitle(), 'sage'),
                     'capability' => self::$capability,
                     'menu_slug' => Sage::$_token . '_' . $sageEntityMenu->getEntityName(),
-                    'function' => static function () use ($sageSettings, $sageEntityMenu) : void {
+                    'function' => static function () use ($sageSettings, $sageEntityMenu): void {
                         $queryParams = $_GET;
                         if (array_key_exists('action', $queryParams)) {
                             $action = json_decode(stripslashes((string)$queryParams['action']), true, 512, JSON_THROW_ON_ERROR);
@@ -595,16 +624,16 @@ final class SageSettings
                             wp_redirect($goback);
                             exit;
                         }
-                        
+
                         $rawFields = get_option(SageSettings::$base . $sageEntityMenu->getEntityName() . '_fields');
                         if ($rawFields === false) {
                             $rawFields = $sageEntityMenu->getDefaultFields();
                         }
-                        
+
                         $hideFields = array_diff($sageEntityMenu->getMandatoryFields(), $rawFields);
                         $rawFields = array_unique([...$rawFields, ...$hideFields]);
                         $fields = [];
-                        foreach (SageGraphQl::getTypeFilter($sageEntityMenu->getFilterType())?->data?->__type?->inputFields as $inputField) {
+                        foreach ($sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType())?->data?->__type?->inputFields as $inputField) {
                             if (in_array($inputField->name, $rawFields)) {
                                 $fields[] = [
                                     'name' => $inputField->name,
@@ -613,22 +642,22 @@ final class SageSettings
                                 ];
                             }
                         }
-                        
+
                         if (!isset($queryParams['per_page'])) {
                             $queryParams['per_page'] = get_option(SageSettings::$base . $sageEntityMenu->getEntityName() . '_perPage');
                             if ($queryParams['per_page'] === false) {
                                 $queryParams['per_page'] = (string)self::$defaultPagination;
                             }
                         }
-                        
-                        $data = json_decode(json_encode(SageGraphQl::searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields)), true);
+
+                        $data = json_decode(json_encode($sageSettings->sage->sageGraphQl->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields), JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
                         if (
                             !empty($data["data"][$sageEntityMenu->getEntityName()]["items"]) &&
                             array_diff($sageEntityMenu->getMandatoryFields(), array_keys($data["data"][$sageEntityMenu->getEntityName()]["items"][0])) !== []
                         ) {
                             throw new Exception("Mandatory fields are missing");
                         }
-                        
+
                         echo $sageSettings->sage->twig->render($sageEntityMenu->getEntityName() . '/index.html.twig', [
                             'queryParams' => $queryParams,
                             'data' => $data,
@@ -648,7 +677,7 @@ final class SageSettings
                     'menu_title' => __('About', 'sage'),
                     'capability' => self::$capability,
                     'menu_slug' => Sage::$_token . '_about',
-                    'function' => static function () : void {
+                    'function' => static function (): void {
                         echo 'about page';
                     },
                     'position' => null,
