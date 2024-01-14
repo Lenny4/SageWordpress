@@ -51,7 +51,7 @@ final class SageSettings
      *
      * @param Sage|null $sage Parent object.
      */
-    public function __construct(public ?Sage $sage)
+    private function __construct(public ?Sage $sage)
     {
         // Initialise settings.
         add_action('init', function (): void {
@@ -354,11 +354,15 @@ final class SageSettings
 
     private function getFieldsForEntity(string $object, string $transDomain): array
     {
-        $fieldsObject = array_filter(
-            $this->sage->sageGraphQl->getTypeModel($object)?->data?->__type?->fields ?? [],
-            static fn(stdClass $entity): bool => $entity->type->kind !== 'OBJECT' &&
-                $entity->type->kind !== 'LIST' &&
-                $entity->type->ofType?->kind !== 'LIST');
+        $typeModel = $this->sage->sageGraphQl->getTypeModel($object);
+        if (!is_null($typeModel)) {
+            $fieldsObject = array_filter($typeModel,
+                static fn(stdClass $entity): bool => $entity->type->kind !== 'OBJECT' &&
+                    $entity->type->kind !== 'LIST' &&
+                    $entity->type->ofType?->kind !== 'LIST');
+        } else {
+            $fieldsObject = [];
+        }
         $trans = SageTranslationUtils::getTranslations();
         $objectFields = [];
         foreach ($fieldsObject as $fieldObject) {
@@ -633,8 +637,8 @@ final class SageSettings
                         $hideFields = array_diff($sageEntityMenu->getMandatoryFields(), $rawFields);
                         $rawFields = array_unique([...$rawFields, ...$hideFields]);
                         $fields = [];
-                        foreach ($sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType())?->data?->__type?->inputFields as $inputField) {
-                            if (in_array($inputField->name, $rawFields)) {
+                        foreach ($sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType()) ?? [] as $inputField) {
+                            if (in_array($inputField->name, $rawFields, true)) {
                                 $fields[] = [
                                     'name' => $inputField->name,
                                     'type' => $inputField->type->name,
@@ -651,9 +655,10 @@ final class SageSettings
                         }
 
                         $data = json_decode(json_encode($sageSettings->sage->sageGraphQl->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields), JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
+                        $items = $data["data"][$sageEntityMenu->getEntityName()]["items"];
                         if (
-                            !empty($data["data"][$sageEntityMenu->getEntityName()]["items"]) &&
-                            array_diff($sageEntityMenu->getMandatoryFields(), array_keys($data["data"][$sageEntityMenu->getEntityName()]["items"][0])) !== []
+                            !empty($items) &&
+                            array_diff($sageEntityMenu->getMandatoryFields(), array_keys($items[0])) !== []
                         ) {
                             throw new Exception("Mandatory fields are missing");
                         }

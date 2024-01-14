@@ -8,6 +8,7 @@ use App\lib\SagePostType;
 use App\lib\SageTaxonomy;
 use App\Utils\SageTranslationUtils;
 use Lead\Dir\Dir;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
 use Twig\Loader\FilesystemLoader;
@@ -69,6 +70,8 @@ final class Sage
 
     public SageGraphQl|null $sageGraphQl = null;
 
+    public FilesystemAdapter $cache;
+
     /**
      * Constructor funtion.
      *
@@ -79,6 +82,7 @@ final class Sage
     {
         $dir = dirname($this->file);
         $this->dir = $dir;
+        $this->cache = new FilesystemAdapter();
 
         $this->assets_dir = trailingslashit($this->dir) . 'assets';
         $this->assets_url = esc_url(trailingslashit(plugins_url('/assets/', $this->file)));
@@ -232,30 +236,36 @@ final class Sage
             // https://developer.wordpress.org/reference/hooks/upgrader_process_complete/#parameters
             if (
                 array_key_exists('plugins', $hook_extra) &&
-                in_array('sage/sage.php', $hook_extra['plugins'])
+                in_array('sage/sage.php', $hook_extra['plugins'], true)
             ) {
+                // region delete FilesystemAdapter cache
+                $cache = new FilesystemAdapter();
+                $cache->clear();
+                // endregion
+                // region delete twig cache
                 $dir = str_replace('sage.php', 'templates/cache', $this->file);
                 if (is_dir($dir)) {
                     Dir::remove($dir, ['recursive' => true]);
                 }
+                // endregion
             }
         }, 10, 2);
 
         // region enqueue js && css
         // Load frontend JS & CSS.
         add_action('wp_enqueue_scripts', function (): void {
-            $this->enqueue_styles();
-        }, 10);
-        add_action('wp_enqueue_scripts', function (): void {
-            $this->enqueue_scripts();
+            wp_register_style(self::$_token . '-frontend', esc_url($this->assets_url) . 'css/frontend.css', [], $this->_version);
+            wp_enqueue_style(self::$_token . '-frontend');
+            wp_register_script(self::$_token . '-frontend', esc_url($this->assets_url) . 'js/frontend' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
+            wp_enqueue_script(self::$_token . '-frontend');
         }, 10);
 
         // Load admin JS & CSS.
         add_action('admin_enqueue_scripts', function (string $hook = ''): void {
-            $this->admin_enqueue_scripts($hook);
-        }, 10, 1);
-        add_action('admin_enqueue_scripts', function (string $hook = ''): void {
-            $this->admin_enqueue_styles($hook);
+            wp_register_script(self::$_token . '-admin', esc_url($this->assets_url) . 'js/admin' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
+            wp_enqueue_script(self::$_token . '-admin');
+            wp_register_style(self::$_token . '-admin', esc_url($this->assets_url) . 'css/admin.css', [], $this->_version);
+            wp_enqueue_style(self::$_token . '-admin');
         }, 10, 1);
         // endregion
 
@@ -310,70 +320,13 @@ final class Sage
      */
     public function install(): void
     {
-        $this->_log_version_number();
-    }
-
-    /**
-     * Log the plugin version number.
-     */
-    private function _log_version_number(): void
-    {
         update_option(self::$_token . '_version', $this->_version);
     }
 
     public function init(): void
     {
-        $this->load_localisation();
+        load_plugin_textdomain('sage', false, dirname(plugin_basename($this->file)) . '/lang/'); // load_localisation
         // todo register_post_type here
-    }
-
-    /**
-     * Load plugin localisation
-     */
-    public function load_localisation(): void
-    {
-        load_plugin_textdomain('sage', false, dirname(plugin_basename($this->file)) . '/lang/');
-    }
-
-    /**
-     * Load frontend CSS.
-     */
-    public function enqueue_styles(): void
-    {
-        wp_register_style(self::$_token . '-frontend', esc_url($this->assets_url) . 'css/frontend.css', [], $this->_version);
-        wp_enqueue_style(self::$_token . '-frontend');
-    }
-
-    /**
-     * Load frontend Javascript.
-     */
-    public function enqueue_scripts(): void
-    {
-        wp_register_script(self::$_token . '-frontend', esc_url($this->assets_url) . 'js/frontend' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
-        wp_enqueue_script(self::$_token . '-frontend');
-    }
-
-    /**
-     * Load admin Javascript.
-     *
-     *
-     * @param string $hook Hook parameter.
-     */
-    public function admin_enqueue_scripts(string $hook = ''): void
-    {
-        wp_register_script(self::$_token . '-admin', esc_url($this->assets_url) . 'js/admin' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
-        wp_enqueue_script(self::$_token . '-admin');
-    }
-
-    /**
-     * Admin enqueue style.
-     *
-     * @param string $hook Hook parameter.
-     */
-    public function admin_enqueue_styles(string $hook = ''): void
-    {
-        wp_register_style(self::$_token . '-admin', esc_url($this->assets_url) . 'css/admin.css', [], $this->_version);
-        wp_enqueue_style(self::$_token . '-admin');
     }
 
     /**
