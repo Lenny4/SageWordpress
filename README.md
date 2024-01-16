@@ -32,3 +32,40 @@ File assets/js/settings.min.js created: 2.42 kB → 1.15 kB
 
 Done.
 ```
+
+add `Screen Options` and `Help`:
+
+```
+add_action('admin_head', function () {
+
+            //get the current screen object
+            $current_screen = get_current_screen();
+
+            // todo check $current_screen
+
+            $current_screen->add_option('per_page', array(
+                'label' => 'Show on page',
+                'default' => 8,
+                'option' => 'my_page_per_page', // the name of the option will be written in the user's meta-field
+            ));
+
+            //register our main help tab
+            $current_screen->add_help_tab(array(
+                    'id' => 'sp_basic_help_tab',
+                    'title' => __('Basic Help Tab'),
+                    'content' => '<p>Im a help tab, woo!</p>'
+                )
+            );
+
+            //register our secondary help tab (with a callback instead of content)
+//            $current_screen->add_help_tab(array(
+//                    'id' => 'sp_help_tab_callback',
+//                    'title' => __('Help Tab With Callback'),
+//                    'callback' => function () {
+//                        $content = '<p>This is text from our output function</p>';
+//                        echo $content;
+//                    }
+//                )
+//            );
+        });
+```

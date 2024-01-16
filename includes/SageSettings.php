@@ -92,34 +92,14 @@ final class SageSettings
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
                 fields: [
-                    [
-                        'id' => SageEntityMenu::FARTICLE_ENTITY_NAME . '_sync_creation_from_sage',
-                        'label' => __('Synchronise la création des articles de Sage', 'sage'),
-                        'description' => __('Lorsqu\'un article est crée dans Sage il est crée automatiquement dans WooCommerce.', 'sage'),
-                        'type' => 'checkbox',
-                        'default' => ''
-                    ],
-                    [
-                        'id' => SageEntityMenu::FARTICLE_ENTITY_NAME . '_sync_creation_to_sage',
-                        'label' => __('Synchronise la création des articles vers Sage', 'sage'),
-                        'description' => __('Lorsqu\'un article est crée dans WooCommerce il est crée automatiquement dans Sage.', 'sage'),
-                        'type' => 'checkbox',
-                        'default' => ''
-                    ],
-                    [
-                        'id' => SageEntityMenu::FARTICLE_ENTITY_NAME . '_sync_deletion_from_sage',
-                        'label' => __('Synchronise la suppression des articles de Sage', 'sage'),
-                        'description' => __('Lorsqu\'un article est supprimé dans Sage il est supprimé automatiquement dans WooCommerce.', 'sage'),
-                        'type' => 'checkbox',
-                        'default' => ''
-                    ],
-                    [
-                        'id' => SageEntityMenu::FARTICLE_ENTITY_NAME . '_sync_deletion_to_sage',
-                        'label' => __('Synchronise la suppression des articles vers Sage', 'sage'),
-                        'description' => __('Lorsqu\'un article est supprimé dans WooCommerce il est supprimé automatiquement dans Sage.', 'sage'),
-                        'type' => 'checkbox',
-                        'default' => ''
-                    ],
+                    // exemple
+//                    [
+//                        'id' => SageEntityMenu::FARTICLE_ENTITY_NAME . '_something',
+//                        'label' => __('The label', 'sage'),
+//                        'description' => __('Description.', 'sage'),
+//                        'type' => 'checkbox',
+//                        'default' => ''
+//                    ],
                 ],
                 actions: [],
             ),
@@ -164,6 +144,13 @@ final class SageSettings
                             'type' => 'text',
                             'default' => $defaultWordpressUrl,
                             'placeholder' => __($defaultWordpressUrl, 'sage')
+                        ],
+                        [
+                            'id' => 'sync_articles_to_website',
+                            'label' => __('Synchronise les articles de Sage dans Wordpress', 'sage'),
+                            'description' => __('Tous les articles dans Sage sont crées automatiquement dans WooCommerce.', 'sage'),
+                            'type' => 'checkbox',
+                            'default' => ''
                         ],
                         [
                             'id' => 'activate_https_verification_wordpress',
@@ -690,7 +677,7 @@ final class SageSettings
                 array_key_exists('settings-updated', $_GET) &&
                 array_key_exists('page', $_GET) &&
                 $_GET["settings-updated"] === 'true' &&
-                $_GET["page"] === Sage::$_token . 'settings'
+                $_GET["page"] === Sage::$_token . '_settings'
             ) ||
             !current_user_can(self::$capability)
         ) {
@@ -766,6 +753,7 @@ final class SageSettings
             dbName: get_option(Sage::$_token . '_wordpress_db_name'),
             dbUsername: get_option(Sage::$_token . '_wordpress_db_username'),
             dbPassword: get_option(Sage::$_token . '_wordpress_db_password'),
+            syncArticlesToWebsite: (bool)get_option(Sage::$_token . '_sync_articles_to_website'),
         );
         if (!is_null($stdClass)) {
             add_action('admin_notices', static function (): void {

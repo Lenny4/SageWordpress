@@ -110,6 +110,7 @@ final class SageGraphQl
         string      $dbName,
         string      $dbUsername,
         string      $dbPassword,
+        bool        $syncArticlesToWebsite,
     ): StdClass|null
     {
         $query = (new Mutation('addUpdateWebsite'))
@@ -126,6 +127,7 @@ final class SageGraphQl
                 'dbPassword' => new RawObject('"' . $dbPassword . '"'),
                 'tablePrefix' => new RawObject('"' . $tablePrefix . '"'),
                 'dbName' => new RawObject('"' . $dbName . '"'),
+                'syncArticlesToWebsite' => new RawObject($syncArticlesToWebsite ? 'true' : 'false'),
             ])
             ->setSelectionSet(
                 [

@@ -2,7 +2,7 @@
 
 namespace App\lib;
 
-use App\SageSettings;
+use App\Sage;
 use WP_Error;
 use WP_Http;
 
