@@ -694,9 +694,9 @@ final class SageSettings
                         }
 
                         $data = json_decode(json_encode($sageSettings->sage->sageGraphQl->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields), JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
-                        $items = $data["data"][$sageEntityMenu->getEntityName()]["items"];
                         if (
-                            !empty($items) &&
+                            isset($data["data"][$sageEntityMenu->getEntityName()]["items"]) &&
+                            !empty($items = $data["data"][$sageEntityMenu->getEntityName()]["items"]) &&
                             array_diff($sageEntityMenu->getMandatoryFields(), array_keys($items[0])) !== []
                         ) {
                             throw new Exception("Mandatory fields are missing");

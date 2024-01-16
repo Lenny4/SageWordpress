@@ -171,6 +171,9 @@ final class SageGraphQl
 
     public function searchEntities(string $entityName, array $queryParams, array $fields): StdClass|null
     {
+        if (!$this->pingApi) {
+            return null;
+        }
         $rawFields = array_map(static fn(array $field) => $field['name'], $fields);
         $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
         $page = (int)($queryParams["paged"] ?? 1);
