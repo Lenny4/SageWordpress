@@ -48,80 +48,6 @@ final class SageSettings
     private function __construct(public ?Sage $sage)
     {
         $sageSettings = $this;
-
-        // Initialise settings.
-        add_action('init', function (): void {
-            $this->init();
-        }, 11);
-
-        // Register plugin settings.
-        add_action('admin_init', function (): void {
-            $this->register_settings();
-        });
-
-        // Add settings page to menu.
-        add_action('admin_menu', function (): void {
-            $this->add_menu_item();
-        });
-
-        // Add settings link to plugins page.
-        add_filter(
-            'plugin_action_links_' . plugin_basename($this->sage->file),
-            static function (array $links): array {
-                $links[] = '<a href="options-general.php?page=' . Sage::$_token . '_settings">' . __('Settings', 'sage') . '</a>';
-                return $links;
-            }
-        );
-
-        // Configure placement of plugin settings page. See readme for implementation.
-        add_filter(Sage::$_token . '_menu_settings', static function (array $settings = []): array {
-            return $settings;
-        });
-
-        // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
-        add_filter('woocommerce_product_data_tabs', static function ($tabs) { // Code to Create Tab in the Backend
-            $tabs['sage'] = [
-                'label' => __('Sage', 'sage'),
-                'target' => 'sage_product_data_panel',
-                'priority' => 100,
-            ];
-            return $tabs;
-        });
-
-        add_action('woocommerce_product_data_panels', static function () use ($sageSettings) { // Code to Add Data Panel to the Tab
-            $arRef = get_post_meta(get_the_ID(), '_' . Sage::$_token . '_tab_arRef', true);
-            $fArticle = $sageSettings->sage->sageGraphQl->searchEntities(
-                SageEntityMenu::FARTICLE_ENTITY_NAME,
-                [
-                    "filter_field" => [
-                        "arRef"
-                    ],
-                    "filter_type" => [
-                        "eq"
-                    ],
-                    "filter_value" => [
-                        $arRef
-                    ],
-                    "paged" => "1",
-                    "per_page" => "1"
-                ],
-                [
-                    [
-                        "name" => "arRef",
-                        "type" => "StringOperationFilterInput",
-                    ],
-                    [
-                        "name" => "arDesign",
-                        "type" => "StringOperationFilterInput",
-                    ]
-                ]
-            );
-            echo $sageSettings->sage->twig->render('woocommerce/productDataPanels.html.twig', [
-                'fArticle' => !is_null($fArticle) ? $fArticle->data->fArticles->items[0] : $fArticle,
-            ]);
-        });
-        // endregion
-
         $this->sageEntityMenus = [
             new SageEntityMenu(
                 title: 'Clients',
@@ -198,236 +124,542 @@ final class SageSettings
                 actions: [],
             ),
         ];
-    }
+        // Initialise settings.
+        add_action('init', function (): void {
+            $url = parse_url(get_site_url());
+            $defaultWordpressUrl = $url["scheme"] . '://' . $url["host"];
+            global $wpdb;
+            $settings = [
+                'api' => [
+                    'title' => __('Api', 'sage'),
+                    'description' => __('These are fairly standard form input fields.', 'sage'),
+                    'fields' => [
+                        [
+                            'id' => 'api_key',
+                            'label' => __('Api key', 'sage'),
+                            'description' => __('Can be found here.', 'sage'),
+                            'type' => 'text',
+                            'default' => '',
+                            'placeholder' => __('XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX', 'sage')
+                        ],
+                        [
+                            'id' => 'api_host_url',
+                            'label' => __('Api host url', 'sage'),
+                            'description' => __('Can be found here.', 'sage'),
+                            'type' => 'text',
+                            'default' => '',
+                            'placeholder' => __('https://192.168.0.1', 'sage')
+                        ],
+                        [
+                            'id' => 'activate_https_verification_graphql',
+                            'label' => __('Activer Https GraphQl', 'sage'),
+                            'description' => __("Décochez cette case si vous avez l'erreur: cURL error 60: SSL certificate problem: self-signed certificate.", 'sage'),
+                            'type' => 'checkbox',
+                            'default' => 'on'
+                        ],
+                        [
+                            'id' => 'wordpress_host_url',
+                            'label' => __('Wordpress host url', 'sage'),
+                            'description' => __('Renseigner l\'url à laquelle l\'API Sage peut contacter l\'API de wordpress.', 'sage'),
+                            'type' => 'text',
+                            'default' => $defaultWordpressUrl,
+                            'placeholder' => __($defaultWordpressUrl, 'sage')
+                        ],
+                        [
+                            'id' => 'activate_https_verification_wordpress',
+                            'label' => __('Activer Https Wordpress', 'sage'),
+                            'description' => __("Décochez cette case si vous avez l'erreur: <br>The SSL connection could not be established, see inner exception.", 'sage'),
+                            'type' => 'checkbox',
+                            'default' => 'on'
+                        ],
+                        [
+                            'id' => 'wordpress_db_host',
+                            'label' => __('Wordpress db host', 'sage'),
+                            'description' => __('Renseigner l\'IP à laquelle l\'API Sage peut contacter la base de données de wordpress.', 'sage'),
+                            'type' => 'text',
+                            'default' => $wpdb->dbhost,
+                            'placeholder' => __($wpdb->dbhost, 'sage')
+                        ],
+                        [
+                            'id' => 'wordpress_db_name',
+                            'label' => __('Wordpress database name', 'sage'),
+                            'description' => __('Renseigner le nom de la base de données de wordpress.', 'sage'),
+                            'type' => 'text',
+                            'default' => $wpdb->dbname,
+                            'placeholder' => __($wpdb->dbname, 'sage')
+                        ],
+                        [
+                            'id' => 'wordpress_db_username',
+                            'label' => __('Wordpress database username', 'sage'),
+                            'description' => __('Renseigner le nom de l\'utilisateur de la base de données de wordpress.', 'sage'),
+                            'type' => 'text',
+                            'default' => $wpdb->dbuser,
+                            'placeholder' => __($wpdb->dbuser, 'sage')
+                        ],
+                        [
+                            'id' => 'wordpress_db_password',
+                            'label' => __('Wordpress database password', 'sage'),
+                            'description' => __('Renseigner le mot de passe de la base de données de wordpress.', 'sage'),
+                            'type' => 'text',
+                            'default' => $wpdb->dbpassword,
+                            'placeholder' => __($wpdb->dbpassword, 'sage')
+                        ],
+                        [
+                            'id' => 'text_field',
+                            'label' => __('Some Text', 'sage'),
+                            'description' => __('This is a standard text field.', 'sage'),
+                            'type' => 'text',
+                            'default' => '',
+                            'placeholder' => __('Placeholder text', 'sage')
+                        ],
+                        [
+                            'id' => 'password_field',
+                            'label' => __('A Password', 'sage'),
+                            'description' => __('This is a standard password field.', 'sage'),
+                            'type' => 'password',
+                            'default' => '',
+                            'placeholder' => __('Placeholder text', 'sage')
+                        ],
+                        [
+                            'id' => 'secret_text_field',
+                            'label' => __('Some Secret Text', 'sage'),
+                            'description' => __('This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved.', 'sage'),
+                            'type' => 'text_secret',
+                            'default' => '',
+                            'placeholder' => __('Placeholder text', 'sage')
+                        ],
+                        [
+                            'id' => 'text_block',
+                            'label' => __('A Text Block', 'sage'),
+                            'description' => __('This is a standard text area.', 'sage'),
+                            'type' => 'textarea',
+                            'default' => '',
+                            'placeholder' => __('Placeholder text for this textarea', 'sage')
+                        ],
+                        [
+                            'id' => 'single_checkbox',
+                            'label' => __('An Option', 'sage'),
+                            'description' => __("A standard checkbox - if you save this option as checked then it will store the option as 'on', otherwise it will be an empty string.", 'sage'),
+                            'type' => 'checkbox',
+                            'default' => ''
+                        ],
+                        [
+                            'id' => 'select_box',
+                            'label' => __('A Select Box', 'sage'),
+                            'description' => __('A standard select box.', 'sage'),
+                            'type' => 'select',
+                            'options' => ['drupal' => 'Drupal', 'joomla' => 'Joomla', 'wordpress' => 'WordPress'],
+                            'default' => 'wordpress'
+                        ],
+                        [
+                            'id' => 'radio_buttons',
+                            'label' => __('Some Options', 'sage'),
+                            'description' => __('A standard set of radio buttons.', 'sage'),
+                            'type' => 'radio',
+                            'options' => ['superman' => 'Superman', 'batman' => 'Batman', 'ironman' => 'Iron Man'],
+                            'default' => 'batman'
+                        ],
+                        [
+                            'id' => 'multiple_checkboxes',
+                            'label' => __('Some Items', 'sage'),
+                            'description' => __('You can select multiple items and they will be stored as an array.', 'sage'),
+                            'type' => 'checkbox_multi',
+                            'options' =>
+                                ['square' => 'Square', 'circle' => 'Circle', 'rectangle' => 'Rectangle', 'triangle' => 'Triangle'],
+                            'default' => ['circle', 'triangle']
+                        ],
+                        [
+                            'id' => 'number_field',
+                            'label' => __('A Number', 'sage'),
+                            'description' => __('This is a standard number field - if this field contains anything other than numbers then the form will not be submitted.', 'sage'),
+                            'type' => 'number',
+                            'default' => '',
+                            'placeholder' => __('42', 'sage')
+                        ],
+                        [
+                            'id' => 'colour_picker',
+                            'label' => __('Pick a colour', 'sage'),
+                            'description' => __("This uses WordPress' built-in colour picker - the option is stored as the colour's hex code.", 'sage'),
+                            'type' => 'color',
+                            'default' => '#21759B'
+                        ],
+                        [
+                            'id' => 'an_image',
+                            'label' => __('An Image', 'sage'),
+                            'description' => __('This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons.', 'sage'),
+                            'type' => 'image',
+                            'default' => '',
+                            'placeholder' => ''
+                        ],
+                        [
+                            'id' => 'multi_select_box',
+                            'label' => __('A Multi-Select Box', 'sage'),
+                            'description' => __('A standard multi-select box - the saved data is stored as an array.', 'sage'),
+                            'type' => 'select_multi',
+                            'options' => ['linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows'],
+                            'default' => ['linux']
+                        ],
+                    ]
+                ],
+            ];
+            foreach ($this->sageEntityMenus as $sageEntityMenu) {
+                $fields = [
+                    ...[
+                        [
+                            'id' => $sageEntityMenu->getEntityName() . '_fields',
+                            'label' => __('Fields to show', 'sage'),
+                            'description' => __('Please select the fields to show on the table.', 'sage'),
+                            'type' => '2_select_multi',
+                            'options' => $this->getFieldsForEntity($sageEntityMenu->getTypeModel(), $sageEntityMenu->getTransDomain()),
+                            'default' => $sageEntityMenu->getDefaultFields(),
+                        ],
+                        [
+                            'id' => $sageEntityMenu->getEntityName() . '_perPage',
+                            'label' => __('Default per page', 'sage'),
+                            'description' => __('Please select the number of rows to show on the table.', 'sage'),
+                            'type' => 'select',
+                            'options' => array_combine(self::$paginationRange, self::$paginationRange),
+                            'default' => (string)self::$defaultPagination
+                        ],
+                    ],
+                    ...$sageEntityMenu->getFields(),
+                ];
+                $sageEntityMenu->setFields($fields);
+                $settings[$sageEntityMenu->getEntityName()] = [
+                    'title' => __($sageEntityMenu->getTitle(), 'sage'),
+                    'description' => $sageEntityMenu->getDescription(),
+                    'fields' => $fields,
+                ];
+            }
 
-    /**
-     * Initialise settings
-     */
-    public function init(): void
-    {
-        $this->settings = $this->settings_fields();
-        $this->add_website_sage_api();
-    }
+            $this->settings = apply_filters(Sage::$_token . '_settings_fields', $settings);
+            $this->addWebsiteSageApi();
+        }, 11);
 
-    /**
-     * Build settings fields
-     *
-     * @return array Fields to be displayed on settings page
-     */
-    private function settings_fields(): array
-    {
-        $url = parse_url(get_site_url());
-        $defaultWordpressUrl = $url["scheme"] . '://' . $url["host"];
-        global $wpdb;
-        $settings = [
-            'api' => [
-                'title' => __('Api', 'sage'),
-                'description' => __('These are fairly standard form input fields.', 'sage'),
-                'fields' => [
+        // Register plugin settings.
+        add_action('admin_init', function (): void {
+            // Check posted/selected tab.
+            $current_section = '';
+            if (isset($_POST['tab']) && $_POST['tab']) {
+                $current_section = $_POST['tab'];
+            } elseif (isset($_GET['tab']) && $_GET['tab']) {
+                $current_section = $_GET['tab'];
+            }
+
+            foreach ($this->settings as $section => $data) {
+
+                if ($current_section && $current_section !== $section) {
+                    continue;
+                }
+
+                // Add section to page.
+                add_settings_section($section, $data['title'], function (array $section): void {
+                    $html = '<p>' . $this->settings[$section['id']]['description'] . '</p>' . "\n";
+                    echo $html;
+                }, Sage::$_token . '_settings');
+
+                foreach ($data['fields'] as $field) {
+
+                    // Validation callback for field.
+                    $validation = '';
+                    if (isset($field['callback'])) {
+                        $validation = $field['callback'];
+                    }
+
+                    // Register field.
+                    $option_name = Sage::$_token . '_' . $field['id'];
+                    register_setting(Sage::$_token . '_settings', $option_name, $validation);
+
+                    // Add field to page.
+                    add_settings_field(
+                        $field['id'],
+                        $field['label'],
+                        function (...$args): void {
+                            $this->sage->admin->display_field(...$args);
+                        },
+                        Sage::$_token . '_settings',
+                        $section,
+                        ['field' => $field, 'prefix' => Sage::$_token . '_']
+                    );
+                }
+
+                if (!$current_section) {
+                    break;
+                }
+            }
+        });
+
+        // Add settings page to menu.
+        add_action('admin_menu', function () use ($sageSettings): void {
+            $args = apply_filters(
+                Sage::$_token . '_menu_settings',
+                [
                     [
-                        'id' => 'api_key',
-                        'label' => __('Api key', 'sage'),
-                        'description' => __('Can be found here.', 'sage'),
-                        'type' => 'text',
-                        'default' => '',
-                        'placeholder' => __('XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX', 'sage')
+                        'location' => 'menu',
+                        // Possible settings: options, menu, submenu.
+                        'page_title' => __('Sage', 'sage'),
+                        'menu_title' => __('Sage', 'sage'),
+                        'capability' => self::$capability,
+                        'menu_slug' => Sage::$_token . '_settings',
+                        'function' => null,
+                        'icon_url' => 'dashicons-rest-api',
+                        'position' => 55.5,
                     ],
                     [
-                        'id' => 'api_host_url',
-                        'label' => __('Api host url', 'sage'),
-                        'description' => __('Can be found here.', 'sage'),
-                        'type' => 'text',
-                        'default' => '',
-                        'placeholder' => __('https://192.168.0.1', 'sage')
+                        'location' => 'submenu',
+                        // Possible settings: options, menu, submenu.
+                        'parent_slug' => Sage::$_token . '_settings',
+                        'page_title' => __('Settings', 'sage'),
+                        'menu_title' => __('Settings', 'sage'),
+                        'capability' => self::$capability,
+                        'menu_slug' => Sage::$_token . '_settings',
+                        'function' => function (): void {
+                            // todo use twig
+                            // Build page HTML.
+                            $html = $this->sage->twig->render('base.html.twig');
+                            $html .= '<div class="wrap" id="' . Sage::$_token . '_settings">' . "\n";
+                            $html .= '<h2>' . __('Sage', 'sage') . '</h2>' . "\n";
+
+                            $tab = '';
+                            if (isset($_GET['tab']) && $_GET['tab']) {
+                                $tab .= $_GET['tab'];
+                            }
+
+                            // Show page tabs.
+                            if (1 < count($this->settings)) {
+
+                                $html .= '<h2 class="nav-tab-wrapper">' . "\n";
+
+                                $c = 0;
+                                foreach ($this->settings as $section => $data) {
+
+                                    // Set tab class.
+                                    $class = 'nav-tab';
+                                    if (!isset($_GET['tab'])) {
+                                        if (0 === $c) {
+                                            $class .= ' nav-tab-active';
+                                        }
+                                    } elseif ($section == $_GET['tab']) {
+                                        $class .= ' nav-tab-active';
+                                    }
+
+                                    // Set tab link.
+                                    $tab_link = add_query_arg(['tab' => $section]);
+                                    if (isset($_GET['settings-updated'])) {
+                                        $tab_link = remove_query_arg('settings-updated', $tab_link);
+                                    }
+
+                                    // Output tab.
+                                    $html .= '<a href="' . $tab_link . '" class="' . esc_attr($class) . '">' . esc_html($data['title']) . '</a>' . "\n";
+
+                                    ++$c;
+                                }
+
+                                $html .= '</h2>' . "\n";
+                            }
+
+                            $html .= '<form method="post" id="form_settings_sage" action="options.php" enctype="multipart/form-data">';
+
+                            // Get settings fields.
+                            ob_start();
+                            settings_fields(Sage::$_token . '_settings');
+                            do_settings_sections(Sage::$_token . '_settings');
+                            $html .= ob_get_clean();
+
+                            $html .= '<p class="submit">' . "\n";
+                            $html .= '<input type="hidden" name="tab" value="' . esc_attr($tab) . '" />' . "\n";
+                            $html .= '<input name="Submit" type="submit" class="button-primary" value="' . esc_attr(__('Save Settings', 'sage')) . '" />' . "\n";
+                            $html .= '</p>' . "\n";
+                            $html .= '</form>' . "\n";
+                            $html .= '</div>' . "\n";
+
+                            echo $html;
+                        },
+                        'position' => null,
                     ],
-                    [
-                        'id' => 'activate_https_verification_graphql',
-                        'label' => __('Activer Https GraphQl', 'sage'),
-                        'description' => __("Décochez cette case si vous avez l'erreur: cURL error 60: SSL certificate problem: self-signed certificate.", 'sage'),
-                        'type' => 'checkbox',
-                        'default' => 'on'
+                    ...array_map(static fn(SageEntityMenu $sageEntityMenu): array => [
+                        'location' => 'submenu',
+                        // Possible settings: options, menu, submenu.
+                        'parent_slug' => Sage::$_token . '_settings',
+                        'page_title' => __($sageEntityMenu->getTitle(), 'sage'),
+                        'menu_title' => __($sageEntityMenu->getTitle(), 'sage'),
+                        'capability' => self::$capability,
+                        'menu_slug' => Sage::$_token . '_' . $sageEntityMenu->getEntityName(),
+                        'function' => static function () use ($sageSettings, $sageEntityMenu): void {
+                            $queryParams = $_GET;
+                            if (array_key_exists('action', $queryParams)) {
+                                $action = json_decode(stripslashes((string)$queryParams['action']), true, 512, JSON_THROW_ON_ERROR);
+                                $sageEntityMenu->getActions()[$action["type"]]($action["data"]);
+                                $goback = remove_query_arg('action', wp_get_referer());
+                                wp_redirect($goback);
+                                exit;
+                            }
+
+                            $rawFields = get_option(Sage::$_token . '_' . $sageEntityMenu->getEntityName() . '_fields');
+                            if ($rawFields === false) {
+                                $rawFields = $sageEntityMenu->getDefaultFields();
+                            }
+
+                            $hideFields = array_diff($sageEntityMenu->getMandatoryFields(), $rawFields);
+                            $rawFields = array_unique([...$rawFields, ...$hideFields]);
+                            $fields = [];
+                            foreach ($sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType()) ?? [] as $inputField) {
+                                if (in_array($inputField->name, $rawFields, true)) {
+                                    $fields[] = [
+                                        'name' => $inputField->name,
+                                        'type' => $inputField->type->name,
+                                        'transDomain' => $sageEntityMenu->getTransDomain(),
+                                    ];
+                                }
+                            }
+
+                            if (!isset($queryParams['per_page'])) {
+                                $queryParams['per_page'] = get_option(Sage::$_token . '_' . $sageEntityMenu->getEntityName() . '_perPage');
+                                if ($queryParams['per_page'] === false) {
+                                    $queryParams['per_page'] = (string)self::$defaultPagination;
+                                }
+                            }
+
+                            $data = json_decode(json_encode($sageSettings->sage->sageGraphQl->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields), JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
+                            if (
+                                isset($data["data"][$sageEntityMenu->getEntityName()]["items"]) &&
+                                !empty($items = $data["data"][$sageEntityMenu->getEntityName()]["items"]) &&
+                                array_diff($sageEntityMenu->getMandatoryFields(), array_keys($items[0])) !== []
+                            ) {
+                                throw new Exception("Mandatory fields are missing");
+                            }
+
+                            echo $sageSettings->sage->twig->render('sage/' . $sageEntityMenu->getEntityName() . '/index.html.twig', [
+                                'queryParams' => $queryParams,
+                                'data' => $data,
+                                'fields' => $fields,
+                                'hideFields' => $hideFields,
+                                'sageEntityMenu' => $sageEntityMenu,
+                            ]);
+                        },
+                        'position' => null,
                     ],
+                        $this->sageEntityMenus),
                     [
-                        'id' => 'wordpress_host_url',
-                        'label' => __('Wordpress host url', 'sage'),
-                        'description' => __('Renseigner l\'url à laquelle l\'API Sage peut contacter l\'API de wordpress.', 'sage'),
-                        'type' => 'text',
-                        'default' => $defaultWordpressUrl,
-                        'placeholder' => __($defaultWordpressUrl, 'sage')
-                    ],
-                    [
-                        'id' => 'activate_https_verification_wordpress',
-                        'label' => __('Activer Https Wordpress', 'sage'),
-                        'description' => __("Décochez cette case si vous avez l'erreur: <br>The SSL connection could not be established, see inner exception.", 'sage'),
-                        'type' => 'checkbox',
-                        'default' => 'on'
-                    ],
-                    [
-                        'id' => 'wordpress_db_host',
-                        'label' => __('Wordpress db host', 'sage'),
-                        'description' => __('Renseigner l\'IP à laquelle l\'API Sage peut contacter la base de données de wordpress.', 'sage'),
-                        'type' => 'text',
-                        'default' => $wpdb->dbhost,
-                        'placeholder' => __($wpdb->dbhost, 'sage')
-                    ],
-                    [
-                        'id' => 'wordpress_db_name',
-                        'label' => __('Wordpress database name', 'sage'),
-                        'description' => __('Renseigner le nom de la base de données de wordpress.', 'sage'),
-                        'type' => 'text',
-                        'default' => $wpdb->dbname,
-                        'placeholder' => __($wpdb->dbname, 'sage')
-                    ],
-                    [
-                        'id' => 'wordpress_db_username',
-                        'label' => __('Wordpress database username', 'sage'),
-                        'description' => __('Renseigner le nom de l\'utilisateur de la base de données de wordpress.', 'sage'),
-                        'type' => 'text',
-                        'default' => $wpdb->dbuser,
-                        'placeholder' => __($wpdb->dbuser, 'sage')
-                    ],
-                    [
-                        'id' => 'wordpress_db_password',
-                        'label' => __('Wordpress database password', 'sage'),
-                        'description' => __('Renseigner le mot de passe de la base de données de wordpress.', 'sage'),
-                        'type' => 'text',
-                        'default' => $wpdb->dbpassword,
-                        'placeholder' => __($wpdb->dbpassword, 'sage')
-                    ],
-                    [
-                        'id' => 'text_field',
-                        'label' => __('Some Text', 'sage'),
-                        'description' => __('This is a standard text field.', 'sage'),
-                        'type' => 'text',
-                        'default' => '',
-                        'placeholder' => __('Placeholder text', 'sage')
-                    ],
-                    [
-                        'id' => 'password_field',
-                        'label' => __('A Password', 'sage'),
-                        'description' => __('This is a standard password field.', 'sage'),
-                        'type' => 'password',
-                        'default' => '',
-                        'placeholder' => __('Placeholder text', 'sage')
-                    ],
-                    [
-                        'id' => 'secret_text_field',
-                        'label' => __('Some Secret Text', 'sage'),
-                        'description' => __('This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved.', 'sage'),
-                        'type' => 'text_secret',
-                        'default' => '',
-                        'placeholder' => __('Placeholder text', 'sage')
-                    ],
-                    [
-                        'id' => 'text_block',
-                        'label' => __('A Text Block', 'sage'),
-                        'description' => __('This is a standard text area.', 'sage'),
-                        'type' => 'textarea',
-                        'default' => '',
-                        'placeholder' => __('Placeholder text for this textarea', 'sage')
-                    ],
-                    [
-                        'id' => 'single_checkbox',
-                        'label' => __('An Option', 'sage'),
-                        'description' => __("A standard checkbox - if you save this option as checked then it will store the option as 'on', otherwise it will be an empty string.", 'sage'),
-                        'type' => 'checkbox',
-                        'default' => ''
-                    ],
-                    [
-                        'id' => 'select_box',
-                        'label' => __('A Select Box', 'sage'),
-                        'description' => __('A standard select box.', 'sage'),
-                        'type' => 'select',
-                        'options' => ['drupal' => 'Drupal', 'joomla' => 'Joomla', 'wordpress' => 'WordPress'],
-                        'default' => 'wordpress'
-                    ],
-                    [
-                        'id' => 'radio_buttons',
-                        'label' => __('Some Options', 'sage'),
-                        'description' => __('A standard set of radio buttons.', 'sage'),
-                        'type' => 'radio',
-                        'options' => ['superman' => 'Superman', 'batman' => 'Batman', 'ironman' => 'Iron Man'],
-                        'default' => 'batman'
-                    ],
-                    [
-                        'id' => 'multiple_checkboxes',
-                        'label' => __('Some Items', 'sage'),
-                        'description' => __('You can select multiple items and they will be stored as an array.', 'sage'),
-                        'type' => 'checkbox_multi',
-                        'options' =>
-                            ['square' => 'Square', 'circle' => 'Circle', 'rectangle' => 'Rectangle', 'triangle' => 'Triangle'],
-                        'default' => ['circle', 'triangle']
-                    ],
-                    [
-                        'id' => 'number_field',
-                        'label' => __('A Number', 'sage'),
-                        'description' => __('This is a standard number field - if this field contains anything other than numbers then the form will not be submitted.', 'sage'),
-                        'type' => 'number',
-                        'default' => '',
-                        'placeholder' => __('42', 'sage')
-                    ],
-                    [
-                        'id' => 'colour_picker',
-                        'label' => __('Pick a colour', 'sage'),
-                        'description' => __("This uses WordPress' built-in colour picker - the option is stored as the colour's hex code.", 'sage'),
-                        'type' => 'color',
-                        'default' => '#21759B'
-                    ],
-                    [
-                        'id' => 'an_image',
-                        'label' => __('An Image', 'sage'),
-                        'description' => __('This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons.', 'sage'),
-                        'type' => 'image',
-                        'default' => '',
-                        'placeholder' => ''
-                    ],
-                    [
-                        'id' => 'multi_select_box',
-                        'label' => __('A Multi-Select Box', 'sage'),
-                        'description' => __('A standard multi-select box - the saved data is stored as an array.', 'sage'),
-                        'type' => 'select_multi',
-                        'options' => ['linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows'],
-                        'default' => ['linux']
+                        'location' => 'submenu',
+                        // Possible settings: options, menu, submenu.
+                        'parent_slug' => Sage::$_token . '_settings',
+                        'page_title' => __('About', 'sage'),
+                        'menu_title' => __('About', 'sage'),
+                        'capability' => self::$capability,
+                        'menu_slug' => Sage::$_token . '_about',
+                        'function' => static function (): void {
+                            echo 'about page';
+                        },
+                        'position' => null,
                     ],
                 ]
-            ],
-        ];
-        foreach ($this->sageEntityMenus as $sageEntityMenu) {
-            $fields = [
-                ...$this->getDefaultField($sageEntityMenu),
-                ...$sageEntityMenu->getFields(),
-            ];
-            $sageEntityMenu->setFields($fields);
-            $settings[$sageEntityMenu->getEntityName()] = [
-                'title' => __($sageEntityMenu->getTitle(), 'sage'),
-                'description' => $sageEntityMenu->getDescription(),
-                'fields' => $fields,
-            ];
-        }
+            );
 
-        return apply_filters(Sage::$_token . '_settings_fields', $settings);
-    }
+            foreach ($args as $arg) {
+                // Do nothing if wrong location key is set.
+                if (is_array($arg) && isset($arg['location']) && function_exists('add_' . $arg['location'] . '_page')) {
+                    switch ($arg['location']) {
+                        case 'options':
+                        case 'submenu':
+                            $page = add_submenu_page(
+                                $arg['parent_slug'],
+                                $arg['page_title'],
+                                $arg['menu_title'],
+                                $arg['capability'],
+                                $arg['menu_slug'],
+                                $arg['function'],
+                            );
+                            break;
+                        case 'menu':
+                            $page = add_menu_page(
+                                $arg['page_title'],
+                                $arg['menu_title'],
+                                $arg['capability'],
+                                $arg['menu_slug'],
+                                $arg['function'],
+                                $arg['icon_url'],
+                                $arg['position'],
+                            );
+                            break;
+                        default:
+                            return;
+                    }
 
-    private function getDefaultField(SageEntityMenu $sageEntityMenu): array
-    {
-        return [
-            [
-                'id' => $sageEntityMenu->getEntityName() . '_fields',
-                'label' => __('Fields to show', 'sage'),
-                'description' => __('Please select the fields to show on the table.', 'sage'),
-                'type' => '2_select_multi',
-                'options' => $this->getFieldsForEntity($sageEntityMenu->getTypeModel(), $sageEntityMenu->getTransDomain()),
-                'default' => $sageEntityMenu->getDefaultFields(),
-            ],
-            [
-                'id' => $sageEntityMenu->getEntityName() . '_perPage',
-                'label' => __('Default per page', 'sage'),
-                'description' => __('Please select the number of rows to show on the table.', 'sage'),
-                'type' => 'select',
-                'options' => array_combine(self::$paginationRange, self::$paginationRange),
-                'default' => (string)self::$defaultPagination
-            ],
-        ];
+                    add_action('admin_print_styles-' . $page, function (): void {
+                        // We're including the farbtastic script & styles here because they're needed for the colour picker
+                        // If you're not including a colour picker field then you can leave these calls out as well as the farbtastic dependency for the wpt-admin-js script below.
+                        wp_enqueue_style('farbtastic');
+                        wp_enqueue_script('farbtastic');
+
+                        // We're including the WP media scripts here because they're needed for the image upload field.
+                        // If you're not including an image upload then you can leave this function call out.
+                        wp_enqueue_media();
+
+                        wp_register_script(Sage::$_token . '-settings-js', $this->sage->assets_url . 'js/settings' . $this->sage->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
+                        wp_enqueue_script(Sage::$_token . '-settings-js');
+                    });
+                }
+            }
+        });
+
+        // Add settings link to plugins page.
+        add_filter(
+            'plugin_action_links_' . plugin_basename($this->sage->file),
+            static function (array $links): array {
+                $links[] = '<a href="options-general.php?page=' . Sage::$_token . '_settings">' . __('Settings', 'sage') . '</a>';
+                return $links;
+            }
+        );
+
+        // Configure placement of plugin settings page. See readme for implementation.
+        add_filter(Sage::$_token . '_menu_settings', static function (array $settings = []): array {
+            return $settings;
+        });
+
+        // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
+        add_filter('woocommerce_product_data_tabs', static function ($tabs) { // Code to Create Tab in the Backend
+            $tabs['sage'] = [
+                'label' => __('Sage', 'sage'),
+                'target' => 'sage_product_data_panel',
+                'priority' => 100,
+            ];
+            return $tabs;
+        });
+
+        add_action('woocommerce_product_data_panels', static function () use ($sageSettings) { // Code to Add Data Panel to the Tab
+            $arRef = get_post_meta(get_the_ID(), '_' . Sage::$_token . '_tab_arRef', true);
+            $fArticle = $sageSettings->sage->sageGraphQl->searchEntities(
+                SageEntityMenu::FARTICLE_ENTITY_NAME,
+                [
+                    "filter_field" => [
+                        "arRef"
+                    ],
+                    "filter_type" => [
+                        "eq"
+                    ],
+                    "filter_value" => [
+                        $arRef
+                    ],
+                    "paged" => "1",
+                    "per_page" => "1"
+                ],
+                [
+                    [
+                        "name" => "arRef",
+                        "type" => "StringOperationFilterInput",
+                    ],
+                    [
+                        "name" => "arDesign",
+                        "type" => "StringOperationFilterInput",
+                    ]
+                ]
+            );
+            echo $sageSettings->sage->twig->render('woocommerce/productDataPanels.html.twig', [
+                'fArticle' => !is_null($fArticle) ? $fArticle->data->fArticles->items[0] : $fArticle,
+            ]);
+        });
+        // endregion
     }
 
     private function getFieldsForEntity(string $object, string $transDomain): array
@@ -451,7 +683,7 @@ final class SageSettings
         return $objectFields;
     }
 
-    private function add_website_sage_api(): void
+    private function addWebsiteSageApi(): void
     {
         if (
             !(
@@ -478,7 +710,7 @@ final class SageSettings
             !$optionHasPassword ||
             !$this->isApiAuthenticated()
         ) {
-            $newPassword = $this->create_application_password($user_id, $applicationPasswordOption);
+            $newPassword = $this->createApplicationPassword($user_id, $applicationPasswordOption);
         }
     }
 
@@ -492,7 +724,7 @@ final class SageSettings
      * https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password
      * todo create TU to check if this work with every wordpress version
      */
-    private function create_application_password(string $user_id, string $applicationPasswordOption): string
+    private function createApplicationPassword(string $user_id, string $applicationPasswordOption): string
     {
         $passwords = WP_Application_Passwords::get_user_application_passwords($user_id);
         $currentPassword = current(array_filter($passwords, static fn(array $password): bool => $password['name'] === $applicationPasswordOption));
@@ -512,11 +744,11 @@ final class SageSettings
         ]);
         $newPassword = json_decode((string)$response["body"], true, 512, JSON_THROW_ON_ERROR)['password'];
         update_option($applicationPasswordOption, $user_id);
-        $this->create_update_website($user_id, $newPassword);
+        $this->createUpdateWebsite($user_id, $newPassword);
         return $newPassword;
     }
 
-    private function create_update_website(string $user_id, string $password): bool
+    private function createUpdateWebsite(string $user_id, string $password): bool
     {
         $user = get_user_by('id', $user_id);
         $url = parse_url(get_option(Sage::$_token . '_wordpress_host_url'));
@@ -547,318 +779,6 @@ final class SageSettings
         }
 
         return false;
-    }
-
-    /**
-     * Register plugin settings
-     */
-    public function register_settings(): void
-    {
-        // Check posted/selected tab.
-        $current_section = '';
-        if (isset($_POST['tab']) && $_POST['tab']) {
-            $current_section = $_POST['tab'];
-        } elseif (isset($_GET['tab']) && $_GET['tab']) {
-            $current_section = $_GET['tab'];
-        }
-
-        foreach ($this->settings as $section => $data) {
-
-            if ($current_section && $current_section !== $section) {
-                continue;
-            }
-
-            // Add section to page.
-            add_settings_section($section, $data['title'], function (array $section): void {
-                $this->settings_section($section);
-            }, Sage::$_token . '_settings');
-
-            foreach ($data['fields'] as $field) {
-
-                // Validation callback for field.
-                $validation = '';
-                if (isset($field['callback'])) {
-                    $validation = $field['callback'];
-                }
-
-                // Register field.
-                $option_name = Sage::$_token . '_' . $field['id'];
-                register_setting(Sage::$_token . '_settings', $option_name, $validation);
-
-                // Add field to page.
-                add_settings_field(
-                    $field['id'],
-                    $field['label'],
-                    function (...$args): void {
-                        $this->sage->admin->display_field(...$args);
-                    },
-                    Sage::$_token . '_settings',
-                    $section,
-                    ['field' => $field, 'prefix' => Sage::$_token . '_']
-                );
-            }
-
-            if (!$current_section) {
-                break;
-            }
-        }
-    }
-
-    /**
-     * Settings section.
-     *
-     * @param array $section Array of section ids.
-     */
-    public function settings_section(array $section): void
-    {
-        $html = '<p>' . $this->settings[$section['id']]['description'] . '</p>' . "\n";
-        echo $html;
-    }
-
-    /**
-     * Add settings page to admin menu
-     */
-    public function add_menu_item(): void
-    {
-
-        $args = $this->menu_settings();
-
-        foreach ($args as $arg) {
-            // Do nothing if wrong location key is set.
-            if (is_array($arg) && isset($arg['location']) && function_exists('add_' . $arg['location'] . '_page')) {
-                switch ($arg['location']) {
-                    case 'options':
-                    case 'submenu':
-                        $page = add_submenu_page(
-                            $arg['parent_slug'],
-                            $arg['page_title'],
-                            $arg['menu_title'],
-                            $arg['capability'],
-                            $arg['menu_slug'],
-                            $arg['function'],
-                        );
-                        break;
-                    case 'menu':
-                        $page = add_menu_page(
-                            $arg['page_title'],
-                            $arg['menu_title'],
-                            $arg['capability'],
-                            $arg['menu_slug'],
-                            $arg['function'],
-                            $arg['icon_url'],
-                            $arg['position'],
-                        );
-                        break;
-                    default:
-                        return;
-                }
-
-                add_action('admin_print_styles-' . $page, function (): void {
-                    $this->settings_assets();
-                });
-            }
-        }
-    }
-
-    /**
-     * Prepare default settings page arguments
-     *
-     * @return mixed|void
-     */
-    private function menu_settings()
-    {
-        $sageSettings = $this;
-        return apply_filters(
-            Sage::$_token . '_menu_settings',
-            [
-                [
-                    'location' => 'menu',
-                    // Possible settings: options, menu, submenu.
-                    'page_title' => __('Sage', 'sage'),
-                    'menu_title' => __('Sage', 'sage'),
-                    'capability' => self::$capability,
-                    'menu_slug' => Sage::$_token . '_settings',
-                    'function' => null,
-                    'icon_url' => 'dashicons-rest-api',
-                    'position' => 55.5,
-                ],
-                [
-                    'location' => 'submenu',
-                    // Possible settings: options, menu, submenu.
-                    'parent_slug' => Sage::$_token . '_settings',
-                    'page_title' => __('Settings', 'sage'),
-                    'menu_title' => __('Settings', 'sage'),
-                    'capability' => self::$capability,
-                    'menu_slug' => Sage::$_token . '_settings',
-                    'function' => function (): void {
-                        $this->settings_page();
-                    },
-                    'position' => null,
-                ],
-                ...array_map(static fn(SageEntityMenu $sageEntityMenu): array => [
-                    'location' => 'submenu',
-                    // Possible settings: options, menu, submenu.
-                    'parent_slug' => Sage::$_token . '_settings',
-                    'page_title' => __($sageEntityMenu->getTitle(), 'sage'),
-                    'menu_title' => __($sageEntityMenu->getTitle(), 'sage'),
-                    'capability' => self::$capability,
-                    'menu_slug' => Sage::$_token . '_' . $sageEntityMenu->getEntityName(),
-                    'function' => static function () use ($sageSettings, $sageEntityMenu): void {
-                        $queryParams = $_GET;
-                        if (array_key_exists('action', $queryParams)) {
-                            $action = json_decode(stripslashes((string)$queryParams['action']), true, 512, JSON_THROW_ON_ERROR);
-                            $sageEntityMenu->getActions()[$action["type"]]($action["data"]);
-                            $goback = remove_query_arg('action', wp_get_referer());
-                            wp_redirect($goback);
-                            exit;
-                        }
-
-                        $rawFields = get_option(Sage::$_token . '_' . $sageEntityMenu->getEntityName() . '_fields');
-                        if ($rawFields === false) {
-                            $rawFields = $sageEntityMenu->getDefaultFields();
-                        }
-
-                        $hideFields = array_diff($sageEntityMenu->getMandatoryFields(), $rawFields);
-                        $rawFields = array_unique([...$rawFields, ...$hideFields]);
-                        $fields = [];
-                        foreach ($sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType()) ?? [] as $inputField) {
-                            if (in_array($inputField->name, $rawFields, true)) {
-                                $fields[] = [
-                                    'name' => $inputField->name,
-                                    'type' => $inputField->type->name,
-                                    'transDomain' => $sageEntityMenu->getTransDomain(),
-                                ];
-                            }
-                        }
-
-                        if (!isset($queryParams['per_page'])) {
-                            $queryParams['per_page'] = get_option(Sage::$_token . '_' . $sageEntityMenu->getEntityName() . '_perPage');
-                            if ($queryParams['per_page'] === false) {
-                                $queryParams['per_page'] = (string)self::$defaultPagination;
-                            }
-                        }
-
-                        $data = json_decode(json_encode($sageSettings->sage->sageGraphQl->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields), JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
-                        if (
-                            isset($data["data"][$sageEntityMenu->getEntityName()]["items"]) &&
-                            !empty($items = $data["data"][$sageEntityMenu->getEntityName()]["items"]) &&
-                            array_diff($sageEntityMenu->getMandatoryFields(), array_keys($items[0])) !== []
-                        ) {
-                            throw new Exception("Mandatory fields are missing");
-                        }
-
-                        echo $sageSettings->sage->twig->render('sage/' . $sageEntityMenu->getEntityName() . '/index.html.twig', [
-                            'queryParams' => $queryParams,
-                            'data' => $data,
-                            'fields' => $fields,
-                            'hideFields' => $hideFields,
-                            'sageEntityMenu' => $sageEntityMenu,
-                        ]);
-                    },
-                    'position' => null,
-                ],
-                    $this->sageEntityMenus),
-                [
-                    'location' => 'submenu',
-                    // Possible settings: options, menu, submenu.
-                    'parent_slug' => Sage::$_token . '_settings',
-                    'page_title' => __('About', 'sage'),
-                    'menu_title' => __('About', 'sage'),
-                    'capability' => self::$capability,
-                    'menu_slug' => Sage::$_token . '_about',
-                    'function' => static function (): void {
-                        echo 'about page';
-                    },
-                    'position' => null,
-                ],
-            ]
-        );
-    }
-
-    /**
-     * Load settings page content.
-     */
-    private function settings_page(): void
-    {
-
-        // Build page HTML.
-        $html = $this->sage->twig->render('base.html.twig');
-        $html .= '<div class="wrap" id="' . Sage::$_token . '_settings">' . "\n";
-        $html .= '<h2>' . __('Sage', 'sage') . '</h2>' . "\n";
-
-        $tab = '';
-        if (isset($_GET['tab']) && $_GET['tab']) {
-            $tab .= $_GET['tab'];
-        }
-
-        // Show page tabs.
-        if (1 < count($this->settings)) {
-
-            $html .= '<h2 class="nav-tab-wrapper">' . "\n";
-
-            $c = 0;
-            foreach ($this->settings as $section => $data) {
-
-                // Set tab class.
-                $class = 'nav-tab';
-                if (!isset($_GET['tab'])) {
-                    if (0 === $c) {
-                        $class .= ' nav-tab-active';
-                    }
-                } elseif ($section == $_GET['tab']) {
-                    $class .= ' nav-tab-active';
-                }
-
-                // Set tab link.
-                $tab_link = add_query_arg(['tab' => $section]);
-                if (isset($_GET['settings-updated'])) {
-                    $tab_link = remove_query_arg('settings-updated', $tab_link);
-                }
-
-                // Output tab.
-                $html .= '<a href="' . $tab_link . '" class="' . esc_attr($class) . '">' . esc_html($data['title']) . '</a>' . "\n";
-
-                ++$c;
-            }
-
-            $html .= '</h2>' . "\n";
-        }
-
-        $html .= '<form method="post" id="form_settings_sage" action="options.php" enctype="multipart/form-data">';
-
-        // Get settings fields.
-        ob_start();
-        settings_fields(Sage::$_token . '_settings');
-        do_settings_sections(Sage::$_token . '_settings');
-        $html .= ob_get_clean();
-
-        $html .= '<p class="submit">' . "\n";
-        $html .= '<input type="hidden" name="tab" value="' . esc_attr($tab) . '" />' . "\n";
-        $html .= '<input name="Submit" type="submit" class="button-primary" value="' . esc_attr(__('Save Settings', 'sage')) . '" />' . "\n";
-        $html .= '</p>' . "\n";
-        $html .= '</form>' . "\n";
-        $html .= '</div>' . "\n";
-
-        echo $html;
-    }
-
-    /**
-     * Load settings JS & CSS
-     */
-    public function settings_assets(): void
-    {
-
-        // We're including the farbtastic script & styles here because they're needed for the colour picker
-        // If you're not including a colour picker field then you can leave these calls out as well as the farbtastic dependency for the wpt-admin-js script below.
-        wp_enqueue_style('farbtastic');
-        wp_enqueue_script('farbtastic');
-
-        // We're including the WP media scripts here because they're needed for the image upload field.
-        // If you're not including an image upload then you can leave this function call out.
-        wp_enqueue_media();
-
-        wp_register_script(Sage::$_token . '-settings-js', $this->sage->assets_url . 'js/settings' . $this->sage->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
-        wp_enqueue_script(Sage::$_token . '-settings-js');
     }
 
     /**
