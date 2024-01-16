@@ -21,6 +21,7 @@ final class SageSettings
 {
 
     /**
+     * todo remove $base and use Sage::$_token instead
      * Prefix for plugin settings.
      */
     public static string $base = 'sage_';
@@ -53,6 +54,8 @@ final class SageSettings
      */
     private function __construct(public ?Sage $sage)
     {
+        $sageSettings = $this;
+
         // Initialise settings.
         add_action('init', function (): void {
             $this->init();
@@ -71,11 +74,60 @@ final class SageSettings
         // Add settings link to plugins page.
         add_filter(
             'plugin_action_links_' . plugin_basename($this->sage->file),
-            fn(array $links): array => $this->add_settings_link($links)
+            static function (array $links): array {
+                $links[] = '<a href="options-general.php?page=' . Sage::$_token . '_settings">' . __('Settings', 'sage') . '</a>';
+                return $links;
+            }
         );
 
         // Configure placement of plugin settings page. See readme for implementation.
-        add_filter(self::$base . 'menu_settings', fn(array $settings = []): array => $this->configure_settings($settings));
+        add_filter(self::$base . 'menu_settings', static function (array $settings = []): array {
+            return $settings;
+        });
+
+        // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
+        add_filter('woocommerce_product_data_tabs', static function ($tabs) { // Code to Create Tab in the Backend
+            $tabs['sage'] = [
+                'label' => __('Sage', 'sage'),
+                'target' => 'sage_product_data_panel',
+                'priority' => 100,
+            ];
+            return $tabs;
+        });
+
+        add_action('woocommerce_product_data_panels', static function () use ($sageSettings) { // Code to Add Data Panel to the Tab
+            $arRef = get_post_meta(get_the_ID(), '_' . Sage::$_token . '_tab_arRef', true);
+            $fArticle = $sageSettings->sage->sageGraphQl->searchEntities(
+                SageEntityMenu::FARTICLE_ENTITY_NAME,
+                [
+                    "filter_field" => [
+                        "arRef"
+                    ],
+                    "filter_type" => [
+                        "eq"
+                    ],
+                    "filter_value" => [
+                        $arRef
+                    ],
+                    "paged" => "1",
+                    "per_page" => "1"
+                ],
+                [
+                    [
+                        "name" => "arRef",
+                        "type" => "StringOperationFilterInput",
+                    ],
+                    [
+                        "name" => "arDesign",
+                        "type" => "StringOperationFilterInput",
+                    ]
+                ]
+            );
+            echo $sageSettings->sage->twig->render('woocommerce/productDataPanels.html.twig', [
+                'fArticle' => !is_null($fArticle) ? $fArticle->data->fArticles->items[0] : $fArticle,
+            ]);
+        });
+        // endregion
 
         $this->sageEntityMenus = [
             new SageEntityMenu(
@@ -431,13 +483,13 @@ final class SageSettings
 
         if (
             !$optionHasPassword ||
-            !$this->is_api_authenticated()
+            !$this->isApiAuthenticated()
         ) {
             $newPassword = $this->create_application_password($user_id, $applicationPasswordOption);
         }
     }
 
-    private function is_api_authenticated(): bool
+    private function isApiAuthenticated(): bool
     {
         $response = SageRequest::apiRequest('/Website/' . $_SERVER['HTTP_HOST'] . '/Authorization');
         return $response === 'true';
@@ -702,7 +754,7 @@ final class SageSettings
                             throw new Exception("Mandatory fields are missing");
                         }
 
-                        echo $sageSettings->sage->twig->render($sageEntityMenu->getEntityName() . '/index.html.twig', [
+                        echo $sageSettings->sage->twig->render('sage/' . $sageEntityMenu->getEntityName() . '/index.html.twig', [
                             'queryParams' => $queryParams,
                             'data' => $data,
                             'fields' => $fields,
@@ -814,29 +866,6 @@ final class SageSettings
 
         wp_register_script(Sage::$_token . '-settings-js', $this->sage->assets_url . 'js/settings' . $this->sage->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
         wp_enqueue_script(Sage::$_token . '-settings-js');
-    }
-
-    /**
-     * Add settings link to plugin list table
-     *
-     * @param array $links Existing links.
-     * @return array        Modified links.
-     */
-    public function add_settings_link(array $links): array
-    {
-        $settings_link = '<a href="options-general.php?page=' . Sage::$_token . '_settings">' . __('Settings', 'sage') . '</a>';
-        $links[] = $settings_link;
-        return $links;
-    }
-
-    /**
-     * Container for settings page arguments
-     *
-     * @param array $settings Settings array.
-     */
-    public function configure_settings(array $settings = []): array
-    {
-        return $settings;
     }
 
     /**

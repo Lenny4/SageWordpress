@@ -217,7 +217,7 @@ final class SageGraphQl
                 $stringWhere[] = $f . ': { ' . implode(',', $w) . ' }';
             }
 
-            $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': {' . implode(',', $stringWhere) . '}}');
+            $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': [{' . implode('},{', $stringWhere) . '}]}');
         }
 
         $query = (new Query($entityName))
