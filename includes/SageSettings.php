@@ -173,6 +173,7 @@ final class SageSettings
     {
         $url = parse_url(get_site_url());
         $defaultWordpressUrl = $url["scheme"] . '://' . $url["host"];
+        global $wpdb;
         $settings = [
             'api' => [
                 'title' => __('Api', 'sage'),
@@ -184,7 +185,7 @@ final class SageSettings
                         'description' => __('Can be found here.', 'sage'),
                         'type' => 'text',
                         'default' => '',
-                        'placeholder' => __('Placeholder text', 'sage')
+                        'placeholder' => __('XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX', 'sage')
                     ],
                     [
                         'id' => 'api_host_url',
@@ -192,14 +193,14 @@ final class SageSettings
                         'description' => __('Can be found here.', 'sage'),
                         'type' => 'text',
                         'default' => '',
-                        'placeholder' => __('192.168.0.1', 'sage')
+                        'placeholder' => __('https://192.168.0.1', 'sage')
                     ],
                     [
-                        'id' => 'disable_https_verification_graphql',
-                        'label' => __('Désactiver Https GraphQl', 'sage'),
-                        'description' => __("Cochez cette case si vous avez l'erreur: cURL error 60: SSL certificate problem: self-signed certificate.", 'sage'),
+                        'id' => 'activate_https_verification_graphql',
+                        'label' => __('Activer Https GraphQl', 'sage'),
+                        'description' => __("Décochez cette case si vous avez l'erreur: cURL error 60: SSL certificate problem: self-signed certificate.", 'sage'),
                         'type' => 'checkbox',
-                        'default' => ''
+                        'default' => 'on'
                     ],
                     [
                         'id' => 'wordpress_host_url',
@@ -210,11 +211,43 @@ final class SageSettings
                         'placeholder' => __($defaultWordpressUrl, 'sage')
                     ],
                     [
-                        'id' => 'disable_https_verification_wordpress',
-                        'label' => __('Désactiver Https Wordpress', 'sage'),
-                        'description' => __("Cochez cette case si vous avez l'erreur: The SSL connection could not be established, see inner exception.", 'sage'),
+                        'id' => 'activate_https_verification_wordpress',
+                        'label' => __('Activer Https Wordpress', 'sage'),
+                        'description' => __("Décochez cette case si vous avez l'erreur: <br>The SSL connection could not be established, see inner exception.", 'sage'),
                         'type' => 'checkbox',
-                        'default' => ''
+                        'default' => 'on'
+                    ],
+                    [
+                        'id' => 'wordpress_db_host',
+                        'label' => __('Wordpress db host', 'sage'),
+                        'description' => __('Renseigner l\'IP à laquelle l\'API Sage peut contacter la base de données de wordpress.', 'sage'),
+                        'type' => 'text',
+                        'default' => $wpdb->dbhost,
+                        'placeholder' => __($wpdb->dbhost, 'sage')
+                    ],
+                    [
+                        'id' => 'wordpress_db_name',
+                        'label' => __('Wordpress database name', 'sage'),
+                        'description' => __('Renseigner le nom de la base de données de wordpress.', 'sage'),
+                        'type' => 'text',
+                        'default' => $wpdb->dbname,
+                        'placeholder' => __($wpdb->dbname, 'sage')
+                    ],
+                    [
+                        'id' => 'wordpress_db_username',
+                        'label' => __('Wordpress database username', 'sage'),
+                        'description' => __('Renseigner le nom de l\'utilisateur de la base de données de wordpress.', 'sage'),
+                        'type' => 'text',
+                        'default' => $wpdb->dbuser,
+                        'placeholder' => __($wpdb->dbuser, 'sage')
+                    ],
+                    [
+                        'id' => 'wordpress_db_password',
+                        'label' => __('Wordpress database password', 'sage'),
+                        'description' => __('Renseigner le mot de passe de la base de données de wordpress.', 'sage'),
+                        'type' => 'text',
+                        'default' => $wpdb->dbpassword,
+                        'placeholder' => __($wpdb->dbpassword, 'sage')
                     ],
                     [
                         'id' => 'text_field',
@@ -441,7 +474,8 @@ final class SageSettings
     private function create_update_website(string $user_id, string $password): bool
     {
         $user = get_user_by('id', $user_id);
-        $url = parse_url(get_option(SageSettings::$base . 'wordpress_host_url'));
+        $url = parse_url(get_option(self::$base . 'wordpress_host_url'));
+        global $wpdb;
         $stdClass = $this->sage->sageGraphQl->addUpdateWebsite(
             name: get_bloginfo(),
             username: $user->data->user_login,
@@ -449,13 +483,18 @@ final class SageSettings
             websiteEnum: WebsiteEnum::Wordpress,
             host: $url["host"],
             protocol: $url["scheme"],
-            forceSsl: !get_option(SageSettings::$base . 'disable_https_verification_wordpress'),
+            forceSsl: (bool)get_option(self::$base . 'activate_https_verification_wordpress'),
+            dbHost: get_option(self::$base . 'wordpress_db_host'),
+            tablePrefix: $wpdb->prefix,
+            dbName: get_option(self::$base . 'wordpress_db_name'),
+            dbUsername: get_option(self::$base . 'wordpress_db_username'),
+            dbPassword: get_option(self::$base . 'wordpress_db_password'),
         );
         if (!is_null($stdClass)) {
             add_action('admin_notices', static function (): void {
                 ?>
                 <div class="notice notice-success is-dismissible"><p><?=
-                        __('Successfully connected to API', 'sage')
+                        __('Successfully connected to API.', 'sage')
                         ?></p></div>
                 <?php
             });
@@ -629,7 +668,7 @@ final class SageSettings
                             exit;
                         }
 
-                        $rawFields = get_option(SageSettings::$base . $sageEntityMenu->getEntityName() . '_fields');
+                        $rawFields = get_option(self::$base . $sageEntityMenu->getEntityName() . '_fields');
                         if ($rawFields === false) {
                             $rawFields = $sageEntityMenu->getDefaultFields();
                         }
@@ -648,7 +687,7 @@ final class SageSettings
                         }
 
                         if (!isset($queryParams['per_page'])) {
-                            $queryParams['per_page'] = get_option(SageSettings::$base . $sageEntityMenu->getEntityName() . '_perPage');
+                            $queryParams['per_page'] = get_option(self::$base . $sageEntityMenu->getEntityName() . '_perPage');
                             if ($queryParams['per_page'] === false) {
                                 $queryParams['per_page'] = (string)self::$defaultPagination;
                             }

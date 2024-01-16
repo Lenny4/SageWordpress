@@ -32,6 +32,62 @@ final class SageGraphQl
         $this->ping();
     }
 
+    private function ping(): void
+    {
+        $hostUrl = get_option(SageSettings::$base . 'api_host_url');
+        if (!is_string($hostUrl) || empty($hostUrl)) {
+            add_action('admin_notices', static function (): void {
+                ?>
+                <div class="notice notice-info">
+                    <p>
+                        <?= __('Veuillez renseigner l\'host du serveur Sage.', 'sage') ?>
+                    </p>
+                </div>
+                <?php
+            });
+            $this->pingApi = false;
+            return;
+        }
+        $curl = curl_init();
+        $sslVerification = (bool)get_option(SageSettings::$base . 'activate_https_verification_graphql');
+        $data = [
+            CURLOPT_URL => $hostUrl . '/healthz',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 2,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+        ];
+        if (!$sslVerification) {
+            $data[CURLOPT_SSL_VERIFYPEER] = false;
+            $data[CURLOPT_SSL_VERIFYHOST] = 0;
+        }
+        curl_setopt_array($curl, $data);
+        $response = curl_exec($curl);
+        $errorMsg = null;
+        if (curl_errno($curl)) {
+            $errorMsg = curl_error($curl);
+        }
+        curl_close($curl);
+        $this->pingApi = $response === 'Healthy';
+        if (!$this->pingApi) {
+            add_action('admin_notices', static function () use ($errorMsg): void {
+                ?>
+                <div class="error"><p>
+                        <?= __('Sage API is not reachable. Did you launched the server ?', 'sage') ?>
+                        <?php
+                        if (!is_null($errorMsg)) {
+                            echo "<br>" . __('Error', 'sage') . ": " . $errorMsg;
+                        }
+                        ?>
+                    </p></div>
+                <?php
+            });
+        }
+    }
+
     public static function instance(Sage $sage): ?self
     {
         if (is_null(self::$_instance)) {
@@ -39,34 +95,6 @@ final class SageGraphQl
         }
 
         return self::$_instance;
-    }
-
-    private function ping(): void
-    {
-        $curl = curl_init();
-
-        $noSslVerification = get_option(SageSettings::$base . 'disable_https_verification_graphql');
-        $data = [
-            CURLOPT_URL => get_option(SageSettings::$base . 'api_host_url') . '/healthz',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 5,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-        ];
-        if($noSslVerification) {
-            $data[CURLOPT_SSL_VERIFYPEER] = false;
-            $data[CURLOPT_SSL_VERIFYHOST] = 0;
-        }
-        curl_setopt_array($curl, $data);
-        $response = curl_exec($curl);
-        if (curl_errno($curl)) {
-            $error_msg = curl_error($curl);
-        }
-        curl_close($curl);
-        $this->pingApi = $response === 'Healthy';
     }
 
     public function addUpdateWebsite(
@@ -77,6 +105,11 @@ final class SageGraphQl
         string      $host,
         string      $protocol,
         bool        $forceSsl,
+        string      $dbHost,
+        string      $tablePrefix,
+        string      $dbName,
+        string      $dbUsername,
+        string      $dbPassword,
     ): StdClass|null
     {
         $query = (new Mutation('addUpdateWebsite'))
@@ -88,6 +121,11 @@ final class SageGraphQl
                 'host' => new RawObject('"' . $host . '"'),
                 'protocol' => new RawObject('"' . $protocol . '"'),
                 'forceSsl' => new RawObject($forceSsl ? 'true' : 'false'),
+                'dbHost' => new RawObject('"' . $dbHost . '"'),
+                'dbUsername' => new RawObject('"' . $dbUsername . '"'),
+                'dbPassword' => new RawObject('"' . $dbPassword . '"'),
+                'tablePrefix' => new RawObject('"' . $tablePrefix . '"'),
+                'dbName' => new RawObject('"' . $dbName . '"'),
             ])
             ->setSelectionSet(
                 [
@@ -106,7 +144,7 @@ final class SageGraphQl
             add_action('admin_notices', static function () use ($throwable): void {
                 ?>
                 <div class="error"><p>
-                        <?= __($throwable->getMessage(), 'sage') ?>
+                        <?= $throwable->getMessage() ?>
                     </p></div>
                 <?php
             });
@@ -123,7 +161,7 @@ final class SageGraphQl
                 get_option(SageSettings::$base . 'api_host_url') . '/graphql',
                 ['Api-Key' => get_option(SageSettings::$base . 'api_key')],
                 [
-                    'verify' => !get_option(SageSettings::$base . 'disable_https_verification_graphql'),
+                    'verify' => (bool)get_option(SageSettings::$base . 'activate_https_verification_graphql'),
                     'timeout' => 10, // vendor/guzzlehttp/guzzle/src/Handler/CurlFactory.php
                 ]
             );
