@@ -34,7 +34,7 @@ final class SageGraphQl
 
     private function ping(): void
     {
-        $hostUrl = get_option(SageSettings::$base . 'api_host_url');
+        $hostUrl = get_option(Sage::$_token . '_api_host_url');
         if (!is_string($hostUrl) || empty($hostUrl)) {
             add_action('admin_notices', static function (): void {
                 ?>
@@ -49,7 +49,7 @@ final class SageGraphQl
             return;
         }
         $curl = curl_init();
-        $sslVerification = (bool)get_option(SageSettings::$base . 'activate_https_verification_graphql');
+        $sslVerification = (bool)get_option(Sage::$_token . '_activate_https_verification_graphql');
         $data = [
             CURLOPT_URL => $hostUrl . '/healthz',
             CURLOPT_RETURNTRANSFER => true,
@@ -157,11 +157,10 @@ final class SageGraphQl
     {
         if (is_null($this->client)) {
             $this->client = new Client(
-            // todo what if get_option(SageSettings::$base . 'api_host_url') doesn't respond ?
-                get_option(SageSettings::$base . 'api_host_url') . '/graphql',
-                ['Api-Key' => get_option(SageSettings::$base . 'api_key')],
+                get_option(Sage::$_token . '_api_host_url') . '/graphql',
+                ['Api-Key' => get_option(Sage::$_token . '_api_key')],
                 [
-                    'verify' => (bool)get_option(SageSettings::$base . 'activate_https_verification_graphql'),
+                    'verify' => (bool)get_option(Sage::$_token . '_activate_https_verification_graphql'),
                     'timeout' => 10, // vendor/guzzlehttp/guzzle/src/Handler/CurlFactory.php
                 ]
             );

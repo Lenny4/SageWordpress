@@ -19,13 +19,6 @@ if (!defined('ABSPATH')) {
  */
 final class SageSettings
 {
-
-    /**
-     * todo remove $base and use Sage::$_token instead
-     * Prefix for plugin settings.
-     */
-    public static string $base = 'sage_';
-
     public static string $capability = 'manage_options';
 
     public static array $paginationRange = [20, 50, 100];
@@ -81,7 +74,7 @@ final class SageSettings
         );
 
         // Configure placement of plugin settings page. See readme for implementation.
-        add_filter(self::$base . 'menu_settings', static function (array $settings = []): array {
+        add_filter(Sage::$_token . '_menu_settings', static function (array $settings = []): array {
             return $settings;
         });
 
@@ -465,14 +458,14 @@ final class SageSettings
                 array_key_exists('settings-updated', $_GET) &&
                 array_key_exists('page', $_GET) &&
                 $_GET["settings-updated"] === 'true' &&
-                $_GET["page"] === self::$base . 'settings'
+                $_GET["page"] === Sage::$_token . 'settings'
             ) ||
             !current_user_can(self::$capability)
         ) {
             return;
         }
 
-        $applicationPasswordOption = self::$base . 'application-passwords';
+        $applicationPasswordOption = Sage::$_token . '_application-passwords';
         $userApplicationPassword = get_option($applicationPasswordOption, null);
         $user_id = get_current_user_id();
         $optionHasPassword = false;
@@ -526,7 +519,7 @@ final class SageSettings
     private function create_update_website(string $user_id, string $password): bool
     {
         $user = get_user_by('id', $user_id);
-        $url = parse_url(get_option(self::$base . 'wordpress_host_url'));
+        $url = parse_url(get_option(Sage::$_token . '_wordpress_host_url'));
         global $wpdb;
         $stdClass = $this->sage->sageGraphQl->addUpdateWebsite(
             name: get_bloginfo(),
@@ -535,12 +528,12 @@ final class SageSettings
             websiteEnum: WebsiteEnum::Wordpress,
             host: $url["host"],
             protocol: $url["scheme"],
-            forceSsl: (bool)get_option(self::$base . 'activate_https_verification_wordpress'),
-            dbHost: get_option(self::$base . 'wordpress_db_host'),
+            forceSsl: (bool)get_option(Sage::$_token . '_activate_https_verification_wordpress'),
+            dbHost: get_option(Sage::$_token . '_wordpress_db_host'),
             tablePrefix: $wpdb->prefix,
-            dbName: get_option(self::$base . 'wordpress_db_name'),
-            dbUsername: get_option(self::$base . 'wordpress_db_username'),
-            dbPassword: get_option(self::$base . 'wordpress_db_password'),
+            dbName: get_option(Sage::$_token . '_wordpress_db_name'),
+            dbUsername: get_option(Sage::$_token . '_wordpress_db_username'),
+            dbPassword: get_option(Sage::$_token . '_wordpress_db_password'),
         );
         if (!is_null($stdClass)) {
             add_action('admin_notices', static function (): void {
@@ -589,7 +582,7 @@ final class SageSettings
                 }
 
                 // Register field.
-                $option_name = self::$base . $field['id'];
+                $option_name = Sage::$_token . '_' . $field['id'];
                 register_setting(Sage::$_token . '_settings', $option_name, $validation);
 
                 // Add field to page.
@@ -601,7 +594,7 @@ final class SageSettings
                     },
                     Sage::$_token . '_settings',
                     $section,
-                    ['field' => $field, 'prefix' => self::$base]
+                    ['field' => $field, 'prefix' => Sage::$_token . '_']
                 );
             }
 
@@ -676,7 +669,7 @@ final class SageSettings
     {
         $sageSettings = $this;
         return apply_filters(
-            self::$base . 'menu_settings',
+            Sage::$_token . '_menu_settings',
             [
                 [
                     'location' => 'menu',
@@ -720,7 +713,7 @@ final class SageSettings
                             exit;
                         }
 
-                        $rawFields = get_option(self::$base . $sageEntityMenu->getEntityName() . '_fields');
+                        $rawFields = get_option(Sage::$_token . '_' . $sageEntityMenu->getEntityName() . '_fields');
                         if ($rawFields === false) {
                             $rawFields = $sageEntityMenu->getDefaultFields();
                         }
@@ -739,7 +732,7 @@ final class SageSettings
                         }
 
                         if (!isset($queryParams['per_page'])) {
-                            $queryParams['per_page'] = get_option(self::$base . $sageEntityMenu->getEntityName() . '_perPage');
+                            $queryParams['per_page'] = get_option(Sage::$_token . '_' . $sageEntityMenu->getEntityName() . '_perPage');
                             if ($queryParams['per_page'] === false) {
                                 $queryParams['per_page'] = (string)self::$defaultPagination;
                             }

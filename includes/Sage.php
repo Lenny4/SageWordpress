@@ -217,7 +217,7 @@ final class Sage
 
             return implode('|', $r);
         }));
-        $this->twig->addFunction(new TwigFunction('getApiHostUrl', static fn(): string => get_option(SageSettings::$base . 'api_host_url')));
+        $this->twig->addFunction(new TwigFunction('getApiHostUrl', static fn(): string => get_option(Sage::$_token . '_api_host_url')));
 
         // endregion
 
