@@ -104,9 +104,26 @@ final class SageSettings
 //                    ],
                 ],
                 actions: [
-                    'import_from_sage' => static function (array $data): void {
+                    'import_from_sage' => static function (array $data) use ($sageSettings): void {
                         $arRef = $data['arRef'];
-                        $t = 0;
+                        $fArticle = $sageSettings->sage->sageGraphQl->getFArticle($arRef);
+                        $alreadyExists = $sageSettings->sage->sageWoocommerce->alreadyExists($arRef);
+                        if (empty($alreadyExists)) {
+                            // todo
+                            $t = 0;
+                        } else {
+                            $article = $sageSettings->sage->sageWoocommerce->convertSageArticleToWoocommerce($fArticle);
+                            $response = SageRequest::selfRequest('/wp-json/wc/v3/products', [
+                                'headers' => [
+                                    'Content-Type' => 'application/json',
+                                ],
+                                'method' => 'POST',
+                                'body' => json_encode($article, JSON_THROW_ON_ERROR),
+                            ]);
+                        }
+                        // todo if error $response show error
+                        // todo if success $response show success
+                        // todo see how sage products are displayed on the website and map sage data to product
                     }
                 ],
             ),
@@ -638,10 +655,10 @@ final class SageSettings
             ['name' => 'general', 'trans' => __('General', 'sage')],
             ['name' => 'inventory', 'trans' => __('Inventory', 'sage')],
             ['name' => 'shipping', 'trans' => __('Shipping', 'sage')],
-            ['name' => 'linked_product', 'trans' => __('Linked Products', 'sage')],
-            ['name' => 'attribute', 'trans' => __('Attributes', 'sage')],
+//            ['name' => 'linked_product', 'trans' => __('Linked Products', 'sage')],
+//            ['name' => 'attribute', 'trans' => __('Attributes', 'sage')],
             ['name' => 'variations', 'trans' => __('Variations', 'sage')],
-            ['name' => 'advanced', 'trans' => __('Advanced', 'sage')],
+//            ['name' => 'advanced', 'trans' => __('Advanced', 'sage')],
         ];
         add_filter('woocommerce_product_data_tabs', static function ($tabs) use ($productTabs) { // Code to Create Tab in the Backend
             $arRef = SageSettings::getArRef();
@@ -650,9 +667,9 @@ final class SageSettings
             }
             foreach ($productTabs as $prop) {
                 $tabs[$prop['name']] = [
+                    ...$tabs[$prop['name']],
                     'label' => $prop['trans'],
                     'target' => Sage::$_token . '_product_data_panel_' . $prop['name'],
-                    'priority' => 100,
                 ];
             }
             return $tabs;
@@ -663,35 +680,10 @@ final class SageSettings
             if (empty($arRef)) {
                 return;
             }
-            $fArticle = $sageSettings->sage->sageGraphQl->searchEntities(
-                SageEntityMenu::FARTICLE_ENTITY_NAME,
-                [
-                    "filter_field" => [
-                        "arRef"
-                    ],
-                    "filter_type" => [
-                        "eq"
-                    ],
-                    "filter_value" => [
-                        $arRef
-                    ],
-                    "paged" => "1",
-                    "per_page" => "1"
-                ],
-                [
-                    [
-                        "name" => "arRef",
-                        "type" => "StringOperationFilterInput",
-                    ],
-                    [
-                        "name" => "arDesign",
-                        "type" => "StringOperationFilterInput",
-                    ]
-                ]
-            );
+            $fArticle = $sageSettings->sage->sageGraphQl->getFArticle($arRef);
             echo $sageSettings->sage->twig->render('woocommerce/tabs.html.twig', [
                 'tabNames' => array_map(static fn(array $productTab) => $productTab['name'], $productTabs),
-                'fArticle' => !is_null($fArticle) ? $fArticle->data->fArticles->items[0] : $fArticle,
+                'fArticle' => $fArticle,
             ]);
         });
         // endregion

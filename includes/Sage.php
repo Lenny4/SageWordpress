@@ -6,6 +6,7 @@ use App\lib\SageAdminApi;
 use App\lib\SageGraphQl;
 use App\lib\SagePostType;
 use App\lib\SageTaxonomy;
+use App\lib\SageWoocommerce;
 use App\Utils\SageTranslationUtils;
 use Lead\Dir\Dir;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -69,6 +70,8 @@ final class Sage
     public ?Environment $twig = null;
 
     public SageGraphQl|null $sageGraphQl = null;
+
+    public SageWoocommerce|null $sageWoocommerce = null;
 
     public FilesystemAdapter $cache;
 
@@ -350,10 +353,10 @@ final class Sage
      * @param string $file File instance.
      * @param string $version Version parameter.
      *
-     * @return Sage|null sage instance
+     * @return Sage sage instance
      * @see sage()
      */
-    public static function instance(string $file = '', string $version = '1.0.0'): ?self
+    public static function instance(string $file = '', string $version = '1.0.0'): self
     {
         if (is_null(self::$_instance)) {
             self::$_instance = new self($file, $version);

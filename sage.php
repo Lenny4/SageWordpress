@@ -16,6 +16,7 @@
  */
 
 use App\lib\SageGraphQl;
+use App\lib\SageWoocommerce;
 use App\Sage;
 use App\SageSettings;
 
@@ -39,6 +40,9 @@ function sage(): Sage
     }
     if (is_null($instance->sageGraphQl)) {
         $instance->sageGraphQl = SageGraphQl::instance($instance);
+    }
+    if (is_null($instance->sageWoocommerce)) {
+        $instance->sageWoocommerce = SageWoocommerce::instance($instance);
     }
 
     return $instance;

@@ -170,6 +170,126 @@ final class SageGraphQl
         return $this->client;
     }
 
+    public function getTypeModel(string $object): array|null
+    {
+        $cacheName = 'TypeModel_' . $object;
+        if (!$this->pingApi) {
+            $this->sage->cache->delete($cacheName);
+            return null;
+        }
+        $sageGraphQl = $this;
+        $function = static function () use ($object, $sageGraphQl) {
+            // https://graphql.org/learn/introspection/
+            $query = (new Query('__type'))
+                ->setArguments(['name' => $object])
+                ->setSelectionSet(
+                    [
+                        'name',
+                        (new Query('fields'))
+                            ->setSelectionSet(
+                                [
+                                    'name',
+                                    'description',
+                                    (new Query('type'))
+                                        ->setSelectionSet(
+                                            [
+                                                'name',
+                                                'kind',
+                                                (new Query('ofType'))
+                                                    ->setSelectionSet(
+                                                        [
+                                                            'name',
+                                                            'kind',
+                                                        ]
+                                                    ),
+                                            ]
+                                        ),
+                                ],
+                            ),
+                    ]
+                );
+            return $sageGraphQl->runQuery($query)?->getResults()?->data?->__type?->fields;
+        };
+        $typeModel = $this->sage->cache->get($object, $function);
+        if (empty($typeModel)) {
+            $this->sage->cache->delete($cacheName);
+            $typeModel = $this->sage->cache->get($object, $function);
+        }
+        return $typeModel;
+    }
+
+    public function getTypeFilter(string $object): array|null
+    {
+        $cacheName = 'TypeFilter_' . $object;
+        if (!$this->pingApi) {
+            $this->sage->cache->delete($cacheName);
+            return null;
+        }
+        $sageGraphQl = $this;
+        $function = static function () use ($object, $sageGraphQl) {
+            $query = (new Query('__type'))
+                ->setArguments(['name' => $object])
+                ->setSelectionSet(
+                    [
+                        'name',
+                        (new Query('inputFields'))
+                            ->setSelectionSet(
+                                [
+                                    'name',
+                                    (new Query('type'))
+                                        ->setSelectionSet(
+                                            [
+                                                'name',
+                                            ]
+                                        ),
+                                ],
+                            ),
+                    ]
+                );
+            return $sageGraphQl->runQuery($query)?->getResults()?->data?->__type?->inputFields;
+        };
+        $typeModel = $this->sage->cache->get($object, $function);
+        if (empty($typeModel)) {
+            $this->sage->cache->delete($cacheName);
+            $typeModel = $this->sage->cache->get($object, $function);
+        }
+        return $typeModel;
+    }
+
+    public function getFArticle(string $arRef): StdClass|null
+    {
+        $fArticle = $this->searchEntities(
+            SageEntityMenu::FARTICLE_ENTITY_NAME,
+            [
+                "filter_field" => [
+                    "arRef"
+                ],
+                "filter_type" => [
+                    "eq"
+                ],
+                "filter_value" => [
+                    $arRef
+                ],
+                "paged" => "1",
+                "per_page" => "1"
+            ],
+            [
+                [
+                    "name" => "arRef",
+                    "type" => "StringOperationFilterInput",
+                ],
+                [
+                    "name" => "arDesign",
+                    "type" => "StringOperationFilterInput",
+                ]
+            ]
+        );
+        if (is_null($fArticle) || $fArticle->data->fArticles->totalCount !== 1) {
+            return null;
+        }
+        return $fArticle->data->fArticles->items[0];
+    }
+
     public function searchEntities(string $entityName, array $queryParams, array $fields): StdClass|null
     {
         if (!$this->pingApi) {
@@ -261,91 +381,5 @@ final class SageGraphQl
         }
 
         return [null, $defaultSortValue];
-    }
-
-    public function getTypeModel(string $object): array|null
-    {
-        $cacheName = 'TypeModel_' . $object;
-        if (!$this->pingApi) {
-            $this->sage->cache->delete($cacheName);
-            return null;
-        }
-        $sageGraphQl = $this;
-        $function = static function () use ($object, $sageGraphQl) {
-            // https://graphql.org/learn/introspection/
-            $query = (new Query('__type'))
-                ->setArguments(['name' => $object])
-                ->setSelectionSet(
-                    [
-                        'name',
-                        (new Query('fields'))
-                            ->setSelectionSet(
-                                [
-                                    'name',
-                                    'description',
-                                    (new Query('type'))
-                                        ->setSelectionSet(
-                                            [
-                                                'name',
-                                                'kind',
-                                                (new Query('ofType'))
-                                                    ->setSelectionSet(
-                                                        [
-                                                            'name',
-                                                            'kind',
-                                                        ]
-                                                    ),
-                                            ]
-                                        ),
-                                ],
-                            ),
-                    ]
-                );
-            return $sageGraphQl->runQuery($query)?->getResults()?->data?->__type?->fields;
-        };
-        $typeModel = $this->sage->cache->get($object, $function);
-        if (empty($typeModel)) {
-            $this->sage->cache->delete($cacheName);
-            $typeModel = $this->sage->cache->get($object, $function);
-        }
-        return $typeModel;
-    }
-
-    public function getTypeFilter(string $object): array|null
-    {
-        $cacheName = 'TypeFilter_' . $object;
-        if (!$this->pingApi) {
-            $this->sage->cache->delete($cacheName);
-            return null;
-        }
-        $sageGraphQl = $this;
-        $function = static function () use ($object, $sageGraphQl) {
-            $query = (new Query('__type'))
-                ->setArguments(['name' => $object])
-                ->setSelectionSet(
-                    [
-                        'name',
-                        (new Query('inputFields'))
-                            ->setSelectionSet(
-                                [
-                                    'name',
-                                    (new Query('type'))
-                                        ->setSelectionSet(
-                                            [
-                                                'name',
-                                            ]
-                                        ),
-                                ],
-                            ),
-                    ]
-                );
-            return $sageGraphQl->runQuery($query)?->getResults()?->data?->__type?->inputFields;
-        };
-        $typeModel = $this->sage->cache->get($object, $function);
-        if (empty($typeModel)) {
-            $this->sage->cache->delete($cacheName);
-            $typeModel = $this->sage->cache->get($object, $function);
-        }
-        return $typeModel;
     }
 }
