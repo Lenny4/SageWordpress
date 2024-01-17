@@ -605,16 +605,31 @@ final class SageSettings
         });
 
         // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
-        add_filter('woocommerce_product_data_tabs', static function ($tabs) { // Code to Create Tab in the Backend
-            $tabs['sage'] = [
-                'label' => __('Sage', 'sage'),
-                'target' => 'sage_product_data_panel',
-                'priority' => 100,
-            ];
+        $productTabs = [
+            ['name' => 'general', 'trans' => __('General', 'sage')],
+            ['name' => 'inventory', 'trans' => __('Inventory', 'sage')],
+            ['name' => 'shipping', 'trans' => __('Shipping', 'sage')],
+            ['name' => 'linked_product', 'trans' => __('Linked Products', 'sage')],
+            ['name' => 'attribute', 'trans' => __('Attributes', 'sage')],
+            ['name' => 'variations', 'trans' => __('Variations', 'sage')],
+            ['name' => 'advanced', 'trans' => __('Advanced', 'sage')],
+        ];
+        add_filter('woocommerce_product_data_tabs', static function ($tabs) use ($productTabs) { // Code to Create Tab in the Backend
+            $arRef = get_post_meta(get_the_ID(), '_' . Sage::$_token . '_tab_arRef', true);
+            if (empty($arRef)) {
+                return $tabs;
+            }
+            foreach ($productTabs as $prop) {
+                $tabs[$prop['name']] = [
+                    'label' => $prop['trans'],
+                    'target' => Sage::$_token . '_product_data_panel_' . $prop['name'],
+                    'priority' => 100,
+                ];
+            }
             return $tabs;
         });
 
-        add_action('woocommerce_product_data_panels', static function () use ($sageSettings) { // Code to Add Data Panel to the Tab
+        add_action('woocommerce_product_data_panels', static function () use ($sageSettings, $productTabs) { // Code to Add Data Panel to the Tab
             $arRef = get_post_meta(get_the_ID(), '_' . Sage::$_token . '_tab_arRef', true);
             $fArticle = $sageSettings->sage->sageGraphQl->searchEntities(
                 SageEntityMenu::FARTICLE_ENTITY_NAME,
@@ -642,9 +657,12 @@ final class SageSettings
                     ]
                 ]
             );
-            echo $sageSettings->sage->twig->render('woocommerce/productDataPanels.html.twig', [
-                'fArticle' => !is_null($fArticle) ? $fArticle->data->fArticles->items[0] : $fArticle,
-            ]);
+            foreach ($productTabs as $productTab) {
+                echo $sageSettings->sage->twig->render('woocommerce/tabs/' . $productTab['name'] . '.html.twig', [
+                    'tabName' => $productTab['name'],
+                    'fArticle' => !is_null($fArticle) ? $fArticle->data->fArticles->items[0] : $fArticle,
+                ]);
+            }
         });
         // endregion
     }
