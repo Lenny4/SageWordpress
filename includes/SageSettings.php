@@ -63,7 +63,7 @@ final class SageSettings
                 transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
                 fields: [],
                 actions: [
-                    SageEntityMenu::FCOMPTET_ENTITY_NAME . '_import_from_sage' => static function (array $data): void {
+                    'import_from_sage' => static function (array $data): void {
                         $ctNum = $data['ctNum'];
                         // todo add user in wordpress
                         $todo = 0;
@@ -103,7 +103,12 @@ final class SageSettings
 //                        'default' => ''
 //                    ],
                 ],
-                actions: [],
+                actions: [
+                    'import_from_sage' => static function (array $data): void {
+                        $arRef = $data['arRef'];
+                        $t = 0;
+                    }
+                ],
             ),
         ];
         // Initialise settings.

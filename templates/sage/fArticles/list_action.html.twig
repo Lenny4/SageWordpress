@@ -2,12 +2,12 @@
     <a href="{{ getUrlWithParam('action', {
         'type': 'import_from_sage',
         'data': {
-            'ctNum': item.ctNum
+            'arRef': item.arRef
         }
     }|json_encode()) }}">
         <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
     </a>
     <div class="tooltiptext" style="right: 0">
-        {{ 'Importer/Mettre à jour le client'|trans }}
+        {{ 'Importer/Mettre à jour l\'article'|trans }}
     </div>
 </div>

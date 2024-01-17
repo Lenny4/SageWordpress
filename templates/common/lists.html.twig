@@ -1,7 +1,5 @@
-{# todo faire translate #}
-
-{% set hasActionColumn = file_exists('templates/'~sageEntityMenu.entityName~'/list_action.html.twig') %}
-
+{% set actionFile = 'sage/'~sageEntityMenu.entityName~'/list_action.html.twig' %}
+{% set hasActionColumn = file_exists('templates/'~actionFile) %}
 <table class="wp-list-table widefat fixed striped table-view-list users">
     <thead>
     {% include 'common/wp_list_header_footer.html.twig' with {'name': 'header'} %}
@@ -35,7 +33,7 @@
             {% endfor %}
             {% if hasActionColumn %}
                 <td data-colname="actions" style="text-align: right">
-                    {% include sageEntityMenu.entityName~'/list_action.html.twig' %}
+                    {% include actionFile %}
                 </td>
             {% endif %}
         </tr>
