@@ -652,13 +652,13 @@ final class SageSettings
 
         // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
         $productTabs = [
-            ['name' => 'general', 'trans' => __('General', 'sage')],
-            ['name' => 'inventory', 'trans' => __('Inventory', 'sage')],
-            ['name' => 'shipping', 'trans' => __('Shipping', 'sage')],
-//            ['name' => 'linked_product', 'trans' => __('Linked Products', 'sage')],
-//            ['name' => 'attribute', 'trans' => __('Attributes', 'sage')],
-            ['name' => 'variations', 'trans' => __('Variations', 'sage')],
-//            ['name' => 'advanced', 'trans' => __('Advanced', 'sage')],
+            ['name' => 'general', 'trans' => __('General', 'woocommerce')],
+            ['name' => 'inventory', 'trans' => __('Inventory', 'woocommerce')],
+            ['name' => 'shipping', 'trans' => __('Shipping', 'woocommerce')],
+//            ['name' => 'linked_product', 'trans' => __('Linked Products', 'woocommerce')],
+//            ['name' => 'attribute', 'trans' => __('Attributes', 'woocommerce')],
+            ['name' => 'variations', 'trans' => __('Variations', 'woocommerce')],
+//            ['name' => 'advanced', 'trans' => __('Advanced', 'woocommerce')],
         ];
         add_filter('woocommerce_product_data_tabs', static function ($tabs) use ($productTabs) { // Code to Create Tab in the Backend
             $arRef = SageSettings::getArRef();
