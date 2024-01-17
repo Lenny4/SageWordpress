@@ -12,7 +12,8 @@
     "ext-curl": "*",
     "twig/twig": "^3.7",
     "crysalead/dir": "^2.0",
-    "symfony/cache": "^7.0"
+    "symfony/cache": "^7.0",
+    "paquettg/php-html-parser": "^2.2"
   },
   "autoload": {
     "psr-4": {

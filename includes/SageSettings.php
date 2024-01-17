@@ -7,8 +7,11 @@ use App\enum\WebsiteEnum;
 use App\lib\SageRequest;
 use App\Utils\SageTranslationUtils;
 use Exception;
+use PHPHtmlParser\Dom;
 use stdClass;
+use WC_Meta_Box_Product_Data;
 use WP_Application_Passwords;
+use WP_Post;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -604,6 +607,24 @@ final class SageSettings
             return $settings;
         });
 
+        // region WooCommerce
+        add_action('add_meta_boxes', static function () { // remove [Product type | virtual | downloadable] add product arRef
+            $arRef = SageSettings::getArRef();
+            if (empty($arRef)) {
+                return;
+            }
+            remove_meta_box('woocommerce-product-data', 'product', 'normal');
+            // woocommerce/includes/admin/class-wc-admin-meta-boxes.php
+            add_meta_box('woocommerce-product-data', __('Product data', 'woocommerce'), static function (WP_Post $post) use ($arRef) {
+                ob_start();
+                WC_Meta_Box_Product_Data::output($post);
+                $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
+                $dom->loadStr(ob_get_clean());
+                $a = $dom->find('span.product-data-wrapper')[0];
+                echo str_replace($a->innerHtml(), ': <span style="display: initial" class="h4">' . $arRef . '</span>', $dom);
+            }, 'product', 'normal', 'high');
+        }, 40); // woocommerce/includes/admin/class-wc-admin-meta-boxes.php => 40 > 30 : add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 30 );
+
         // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
         $productTabs = [
             ['name' => 'general', 'trans' => __('General', 'sage')],
@@ -615,7 +636,7 @@ final class SageSettings
             ['name' => 'advanced', 'trans' => __('Advanced', 'sage')],
         ];
         add_filter('woocommerce_product_data_tabs', static function ($tabs) use ($productTabs) { // Code to Create Tab in the Backend
-            $arRef = get_post_meta(get_the_ID(), '_' . Sage::$_token . '_tab_arRef', true);
+            $arRef = SageSettings::getArRef();
             if (empty($arRef)) {
                 return $tabs;
             }
@@ -630,7 +651,10 @@ final class SageSettings
         });
 
         add_action('woocommerce_product_data_panels', static function () use ($sageSettings, $productTabs) { // Code to Add Data Panel to the Tab
-            $arRef = get_post_meta(get_the_ID(), '_' . Sage::$_token . '_tab_arRef', true);
+            $arRef = SageSettings::getArRef();
+            if (empty($arRef)) {
+                return;
+            }
             $fArticle = $sageSettings->sage->sageGraphQl->searchEntities(
                 SageEntityMenu::FARTICLE_ENTITY_NAME,
                 [
@@ -657,13 +681,12 @@ final class SageSettings
                     ]
                 ]
             );
-            foreach ($productTabs as $productTab) {
-                echo $sageSettings->sage->twig->render('woocommerce/tabs/' . $productTab['name'] . '.html.twig', [
-                    'tabName' => $productTab['name'],
-                    'fArticle' => !is_null($fArticle) ? $fArticle->data->fArticles->items[0] : $fArticle,
-                ]);
-            }
+            echo $sageSettings->sage->twig->render('woocommerce/tabs.html.twig', [
+                'tabNames' => array_map(static fn(array $productTab) => $productTab['name'], $productTabs),
+                'fArticle' => !is_null($fArticle) ? $fArticle->data->fArticles->items[0] : $fArticle,
+            ]);
         });
+        // endregion
         // endregion
     }
 
@@ -785,6 +808,11 @@ final class SageSettings
         }
 
         return false;
+    }
+
+    private static function getArRef(): mixed
+    {
+        return get_post_meta(get_the_ID(), '_' . Sage::$_token . '_arRef', true);
     }
 
     /**
