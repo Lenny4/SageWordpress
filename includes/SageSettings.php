@@ -9,7 +9,6 @@ use App\Utils\SageTranslationUtils;
 use Exception;
 use PHPHtmlParser\Dom;
 use stdClass;
-use WC_Meta_Box_Product_Data;
 use WP_Application_Passwords;
 use WP_Post;
 
@@ -613,11 +612,15 @@ final class SageSettings
             if (empty($arRef)) {
                 return;
             }
-            remove_meta_box('woocommerce-product-data', 'product', 'normal');
-            // woocommerce/includes/admin/class-wc-admin-meta-boxes.php
-            add_meta_box('woocommerce-product-data', __('Product data', 'woocommerce'), static function (WP_Post $post) use ($arRef) {
+            global $wp_meta_boxes;
+            $id = 'woocommerce-product-data';
+            $screen = 'product';
+            $context = 'normal';
+            $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
+            remove_meta_box($id, $screen, $context);
+            add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $post) use ($arRef, $callback) {
                 ob_start();
-                WC_Meta_Box_Product_Data::output($post);
+                $callback($post);
                 $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
                 $dom->loadStr(ob_get_clean());
                 $a = $dom->find('span.product-data-wrapper')[0];
