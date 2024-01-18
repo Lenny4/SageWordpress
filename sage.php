@@ -38,9 +38,11 @@ function sage(): Sage
     if (is_null($instance->settings)) {
         $instance->settings = SageSettings::instance($instance);
     }
+
     if (is_null($instance->sageGraphQl)) {
         $instance->sageGraphQl = SageGraphQl::instance($instance);
     }
+
     if (is_null($instance->sageWoocommerce)) {
         $instance->sageWoocommerce = SageWoocommerce::instance($instance);
     }

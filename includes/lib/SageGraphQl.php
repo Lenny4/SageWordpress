@@ -23,6 +23,7 @@ if (!defined('ABSPATH')) {
 final class SageGraphQl
 {
     private static ?self $_instance = null;
+
     private ?Client $client = null;
 
     private bool $pingApi = false;
@@ -34,13 +35,13 @@ final class SageGraphQl
 
     private function ping(): void
     {
-        $hostUrl = get_option(Sage::$_token . '_api_host_url');
-        if (!is_string($hostUrl) || empty($hostUrl)) {
+        $hostUrl = get_option(Sage::TOKEN . '_api_host_url');
+        if (!is_string($hostUrl) || ($hostUrl === '' || $hostUrl === '0')) {
             add_action('admin_notices', static function (): void {
                 ?>
                 <div class="notice notice-info">
                     <p>
-                        <?= __('Veuillez renseigner l\'host du serveur Sage.', 'sage') ?>
+                        <?= __("Veuillez renseigner l'host du serveur Sage.", 'sage') ?>
                     </p>
                 </div>
                 <?php
@@ -48,8 +49,9 @@ final class SageGraphQl
             $this->pingApi = false;
             return;
         }
-        $curl = curl_init();
-        $sslVerification = (bool)get_option(Sage::$_token . '_activate_https_verification_graphql');
+
+        $curlHandle = curl_init();
+        $sslVerification = (bool)get_option(Sage::TOKEN . '_activate_https_verification_graphql');
         $data = [
             CURLOPT_URL => $hostUrl . '/healthz',
             CURLOPT_RETURNTRANSFER => true,
@@ -64,13 +66,15 @@ final class SageGraphQl
             $data[CURLOPT_SSL_VERIFYPEER] = false;
             $data[CURLOPT_SSL_VERIFYHOST] = 0;
         }
-        curl_setopt_array($curl, $data);
-        $response = curl_exec($curl);
+
+        curl_setopt_array($curlHandle, $data);
+        $response = curl_exec($curlHandle);
         $errorMsg = null;
-        if (curl_errno($curl)) {
-            $errorMsg = curl_error($curl);
+        if (curl_errno($curlHandle) !== 0) {
+            $errorMsg = curl_error($curlHandle);
         }
-        curl_close($curl);
+
+        curl_close($curlHandle);
         $this->pingApi = $response === 'Healthy';
         if (!$this->pingApi) {
             add_action('admin_notices', static function () use ($errorMsg): void {
@@ -159,14 +163,15 @@ final class SageGraphQl
     {
         if (is_null($this->client)) {
             $this->client = new Client(
-                get_option(Sage::$_token . '_api_host_url') . '/graphql',
-                ['Api-Key' => get_option(Sage::$_token . '_api_key')],
+                get_option(Sage::TOKEN . '_api_host_url') . '/graphql',
+                ['Api-Key' => get_option(Sage::TOKEN . '_api_key')],
                 [
-                    'verify' => (bool)get_option(Sage::$_token . '_activate_https_verification_graphql'),
+                    'verify' => (bool)get_option(Sage::TOKEN . '_activate_https_verification_graphql'),
                     'timeout' => 10, // vendor/guzzlehttp/guzzle/src/Handler/CurlFactory.php
                 ]
             );
         }
+
         return $this->client;
     }
 
@@ -177,6 +182,7 @@ final class SageGraphQl
             $this->sage->cache->delete($cacheName);
             return null;
         }
+
         $sageGraphQl = $this;
         $function = static function () use ($object, $sageGraphQl) {
             // https://graphql.org/learn/introspection/
@@ -215,6 +221,7 @@ final class SageGraphQl
             $this->sage->cache->delete($cacheName);
             $typeModel = $this->sage->cache->get($object, $function);
         }
+
         return $typeModel;
     }
 
@@ -225,6 +232,7 @@ final class SageGraphQl
             $this->sage->cache->delete($cacheName);
             return null;
         }
+
         $sageGraphQl = $this;
         $function = static function () use ($object, $sageGraphQl) {
             $query = (new Query('__type'))
@@ -253,6 +261,7 @@ final class SageGraphQl
             $this->sage->cache->delete($cacheName);
             $typeModel = $this->sage->cache->get($object, $function);
         }
+
         return $typeModel;
     }
 
@@ -281,12 +290,16 @@ final class SageGraphQl
                 [
                     "name" => "arDesign",
                     "type" => "StringOperationFilterInput",
-                ]
+                ],
+                [
+                    "name" => "price",
+                ],
             ]
         );
         if (is_null($fArticle) || $fArticle->data->fArticles->totalCount !== 1) {
             return null;
         }
+
         return $fArticle->data->fArticles->items[0];
     }
 
@@ -295,6 +308,7 @@ final class SageGraphQl
         if (!$this->pingApi) {
             return null;
         }
+
         $rawFields = array_map(static fn(array $field) => $field['name'], $fields);
         $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
         $page = (int)($queryParams["paged"] ?? 1);
@@ -365,15 +379,15 @@ final class SageGraphQl
         }
 
         if (array_key_exists('page', $queryParams)) {
-            if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FDOCENTETE_ENTITY_NAME) {
+            if ($queryParams['page'] === Sage::TOKEN . '_' . SageEntityMenu::FDOCENTETE_ENTITY_NAME) {
                 return [SageEntityMenu::FDOCENTETE_DEFAULT_SORT, $defaultSortValue];
             }
 
-            if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FCOMPTET_ENTITY_NAME) {
+            if ($queryParams['page'] === Sage::TOKEN . '_' . SageEntityMenu::FCOMPTET_ENTITY_NAME) {
                 return [SageEntityMenu::FCOMPTET_DEFAULT_SORT, $defaultSortValue];
             }
 
-            if ($queryParams['page'] === Sage::$_token . '_' . SageEntityMenu::FARTICLE_ENTITY_NAME) {
+            if ($queryParams['page'] === Sage::TOKEN . '_' . SageEntityMenu::FARTICLE_ENTITY_NAME) {
                 return [SageEntityMenu::FARTICLE_DEFAULT_SORT, $defaultSortValue];
             }
 

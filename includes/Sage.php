@@ -26,11 +26,7 @@ if (!defined('ABSPATH')) {
  */
 final class Sage
 {
-
-    /**
-     * The token.
-     */
-    public static string $_token = 'sage';
+    public final const TOKEN = 'sage';
 
     /**
      * The single instance of sage.
@@ -85,6 +81,7 @@ final class Sage
     {
         $dir = dirname($this->file);
         $this->dir = $dir;
+
         $this->cache = new FilesystemAdapter();
 
         $this->assets_dir = trailingslashit($this->dir) . 'assets';
@@ -108,7 +105,7 @@ final class Sage
             $this->twig->addExtension(new DebugExtension());
         }
 
-        $this->twig->addFilter(new TwigFilter('trans', static fn(string $string) => __($string, self::$_token)));
+        $this->twig->addFilter(new TwigFilter('trans', static fn(string $string) => __($string, self::TOKEN)));
         $this->twig->addFilter(new TwigFilter('esc_attr', static fn(string $string) => esc_attr($string)));
         $this->twig->addFilter(new TwigFilter('selected', static fn(bool $selected) => selected($selected, true, false)));
         $this->twig->addFilter(new TwigFilter('disabled', static fn(bool $disabled) => disabled($disabled, true, false)));
@@ -220,7 +217,7 @@ final class Sage
 
             return implode('|', $r);
         }));
-        $this->twig->addFunction(new TwigFunction('getApiHostUrl', static fn(): string => get_option(Sage::$_token . '_api_host_url')));
+        $this->twig->addFunction(new TwigFunction('getApiHostUrl', static fn(): string => get_option(Sage::TOKEN . '_api_host_url')));
 
         // endregion
 
@@ -250,6 +247,7 @@ final class Sage
                 if (is_dir($dir)) {
                     Dir::remove($dir, ['recursive' => true]);
                 }
+
                 // endregion
             }
         }, 10, 2);
@@ -257,18 +255,18 @@ final class Sage
         // region enqueue js && css
         // Load frontend JS & CSS.
         add_action('wp_enqueue_scripts', function (): void {
-            wp_register_style(self::$_token . '-frontend', esc_url($this->assets_url) . 'css/frontend.css', [], $this->_version);
-            wp_enqueue_style(self::$_token . '-frontend');
-            wp_register_script(self::$_token . '-frontend', esc_url($this->assets_url) . 'js/frontend' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
-            wp_enqueue_script(self::$_token . '-frontend');
+            wp_register_style(self::TOKEN . '-frontend', esc_url($this->assets_url) . 'css/frontend.css', [], $this->_version);
+            wp_enqueue_style(self::TOKEN . '-frontend');
+            wp_register_script(self::TOKEN . '-frontend', esc_url($this->assets_url) . 'js/frontend' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
+            wp_enqueue_script(self::TOKEN . '-frontend');
         }, 10);
 
         // Load admin JS & CSS.
         add_action('admin_enqueue_scripts', function (string $hook = ''): void {
-            wp_register_script(self::$_token . '-admin', esc_url($this->assets_url) . 'js/admin' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
-            wp_enqueue_script(self::$_token . '-admin');
-            wp_register_style(self::$_token . '-admin', esc_url($this->assets_url) . 'css/admin.css', [], $this->_version);
-            wp_enqueue_style(self::$_token . '-admin');
+            wp_register_script(self::TOKEN . '-admin', esc_url($this->assets_url) . 'js/admin' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
+            wp_enqueue_script(self::TOKEN . '-admin');
+            wp_register_style(self::TOKEN . '-admin', esc_url($this->assets_url) . 'css/admin.css', [], $this->_version);
+            wp_enqueue_style(self::TOKEN . '-admin');
         }, 10, 1);
         // endregion
 
@@ -291,7 +289,7 @@ final class Sage
                 $isWooCommerceInstalled = array_key_exists($pluginId, $allPlugins);
                 add_action('admin_notices', static function () use ($isWooCommerceInstalled): void {
                     ?>
-                    <div id="<?= Sage::$_token ?>_tasks" class="notice notice-info">
+                    <div id="<?= Sage::TOKEN ?>_tasks" class="notice notice-info">
                         <p><span>Sage tasks.</span></p>
                     </div>
                     <?php
@@ -314,6 +312,11 @@ final class Sage
                         </div><?php
                     });
                 }
+                if (array_key_exists(Sage::TOKEN . '_message', $_GET)) {
+                    add_action('admin_notices', static function (): void {
+                        echo str_replace("\'", "'", $_GET[Sage::TOKEN . '_message']);
+                    });
+                }
             }
         });
     }
@@ -323,7 +326,7 @@ final class Sage
      */
     public function install(): void
     {
-        update_option(self::$_token . '_version', $this->_version);
+        update_option(self::TOKEN . '_version', $this->_version);
     }
 
     public function init(): void
@@ -363,6 +366,11 @@ final class Sage
         }
 
         return self::$_instance;
+    }
+
+    public static function getArRef(int $postId): mixed
+    {
+        return get_post_meta($postId, '_' . Sage::TOKEN . '_arRef', true);
     }
 
     /**
@@ -433,5 +441,4 @@ final class Sage
     {
         _doing_it_wrong(__FUNCTION__, esc_html(__('Unserializing instances of sage is forbidden')), esc_attr($this->_version));
     }
-
 }

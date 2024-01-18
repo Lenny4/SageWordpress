@@ -10,6 +10,7 @@ use Exception;
 use PHPHtmlParser\Dom;
 use stdClass;
 use WP_Application_Passwords;
+use WP_Error;
 use WP_Post;
 
 if (!defined('ABSPATH')) {
@@ -104,26 +105,43 @@ final class SageSettings
 //                    ],
                 ],
                 actions: [
-                    'import_from_sage' => static function (array $data) use ($sageSettings): void {
+                    'import_from_sage' => static function (array $data) use ($sageSettings): string {
                         $arRef = $data['arRef'];
                         $fArticle = $sageSettings->sage->sageGraphQl->getFArticle($arRef);
-                        $alreadyExists = $sageSettings->sage->sageWoocommerce->alreadyExists($arRef);
-                        if (empty($alreadyExists)) {
-                            // todo
-                            $t = 0;
-                        } else {
-                            $article = $sageSettings->sage->sageWoocommerce->convertSageArticleToWoocommerce($fArticle);
-                            $response = SageRequest::selfRequest('/wp-json/wc/v3/products', [
-                                'headers' => [
-                                    'Content-Type' => 'application/json',
-                                ],
-                                'method' => 'POST',
-                                'body' => json_encode($article, JSON_THROW_ON_ERROR),
-                            ]);
+                        $articleId = $sageSettings->sage->sageWoocommerce->getWooCommerceId($arRef);
+                        $article = $sageSettings->sage->sageWoocommerce->convertSageArticleToWoocommerce($fArticle);
+                        $url = '/wp-json/wc/v3/products';
+                        if (!is_null($articleId)) {
+                            $url .= '/' . $articleId;
                         }
-                        // todo if error $response show error
-                        // todo if success $response show success
-                        // todo see how sage products are displayed on the website and map sage data to product
+                        $response = SageRequest::selfRequest($url, [
+                            'headers' => [
+                                'Content-Type' => 'application/json',
+                            ],
+                            'method' => is_null($articleId) ? 'POST' : 'PUT',
+                            'body' => json_encode($article, JSON_THROW_ON_ERROR),
+                        ]);
+                        if ($response instanceof WP_Error) {
+                            return "<div class=error>
+                                <pre>" . $response->get_error_code() . "</pre>
+                                <pre>" . $response->get_error_message() . "</pre>
+                                </div>";
+                        }
+
+                        if (!in_array($response["response"]["code"], [200, 201], true)) {
+                            return "<div class=error>
+                                <pre>" . $response['response']['code'] . "</pre>
+                                <pre>" . $response['body'] . "</pre>
+                                </div>";
+                        }
+                        if ($response["response"]["code"] === 200) {
+                            return "<div class='notice notice-success'>
+                        " . __('Article updated', 'sage') . "
+                                </div>";
+                        }
+                        return "<div class='notice notice-success'>
+                        " . __('Article created', 'sage') . "
+                                </div>";
                     }
                 ],
             ),
@@ -343,7 +361,7 @@ final class SageSettings
                 ];
             }
 
-            $this->settings = apply_filters(Sage::$_token . '_settings_fields', $settings);
+            $this->settings = apply_filters(Sage::TOKEN . '_settings_fields', $settings);
             $this->addWebsiteSageApi();
         }, 11);
 
@@ -367,7 +385,7 @@ final class SageSettings
                 add_settings_section($section, $data['title'], function (array $section): void {
                     $html = '<p>' . $this->settings[$section['id']]['description'] . '</p>' . "\n";
                     echo $html;
-                }, Sage::$_token . '_settings');
+                }, Sage::TOKEN . '_settings');
 
                 foreach ($data['fields'] as $field) {
 
@@ -378,8 +396,8 @@ final class SageSettings
                     }
 
                     // Register field.
-                    $option_name = Sage::$_token . '_' . $field['id'];
-                    register_setting(Sage::$_token . '_settings', $option_name, $validation);
+                    $option_name = Sage::TOKEN . '_' . $field['id'];
+                    register_setting(Sage::TOKEN . '_settings', $option_name, $validation);
 
                     // Add field to page.
                     add_settings_field(
@@ -388,9 +406,9 @@ final class SageSettings
                         function (...$args): void {
                             $this->sage->admin->display_field(...$args);
                         },
-                        Sage::$_token . '_settings',
+                        Sage::TOKEN . '_settings',
                         $section,
-                        ['field' => $field, 'prefix' => Sage::$_token . '_']
+                        ['field' => $field, 'prefix' => Sage::TOKEN . '_']
                     );
                 }
 
@@ -403,7 +421,7 @@ final class SageSettings
         // Add settings page to menu.
         add_action('admin_menu', function () use ($sageSettings): void {
             $args = apply_filters(
-                Sage::$_token . '_menu_settings',
+                Sage::TOKEN . '_menu_settings',
                 [
                     [
                         'location' => 'menu',
@@ -411,7 +429,7 @@ final class SageSettings
                         'page_title' => __('Sage', 'sage'),
                         'menu_title' => __('Sage', 'sage'),
                         'capability' => self::$capability,
-                        'menu_slug' => Sage::$_token . '_settings',
+                        'menu_slug' => Sage::TOKEN . '_settings',
                         'function' => null,
                         'icon_url' => 'dashicons-rest-api',
                         'position' => 55.5,
@@ -419,16 +437,16 @@ final class SageSettings
                     [
                         'location' => 'submenu',
                         // Possible settings: options, menu, submenu.
-                        'parent_slug' => Sage::$_token . '_settings',
+                        'parent_slug' => Sage::TOKEN . '_settings',
                         'page_title' => __('Settings', 'sage'),
                         'menu_title' => __('Settings', 'sage'),
                         'capability' => self::$capability,
-                        'menu_slug' => Sage::$_token . '_settings',
+                        'menu_slug' => Sage::TOKEN . '_settings',
                         'function' => function (): void {
                             // todo use twig
                             // Build page HTML.
                             $html = $this->sage->twig->render('base.html.twig');
-                            $html .= '<div class="wrap" id="' . Sage::$_token . '_settings">' . "\n";
+                            $html .= '<div class="wrap" id="' . Sage::TOKEN . '_settings">' . "\n";
                             $html .= '<h2>' . __('Sage', 'sage') . '</h2>' . "\n";
 
                             $tab = '';
@@ -473,8 +491,8 @@ final class SageSettings
 
                             // Get settings fields.
                             ob_start();
-                            settings_fields(Sage::$_token . '_settings');
-                            do_settings_sections(Sage::$_token . '_settings');
+                            settings_fields(Sage::TOKEN . '_settings');
+                            do_settings_sections(Sage::TOKEN . '_settings');
                             $html .= ob_get_clean();
 
                             $html .= '<p class="submit">' . "\n";
@@ -491,22 +509,23 @@ final class SageSettings
                     ...array_map(static fn(SageEntityMenu $sageEntityMenu): array => [
                         'location' => 'submenu',
                         // Possible settings: options, menu, submenu.
-                        'parent_slug' => Sage::$_token . '_settings',
+                        'parent_slug' => Sage::TOKEN . '_settings',
                         'page_title' => __($sageEntityMenu->getTitle(), 'sage'),
                         'menu_title' => __($sageEntityMenu->getTitle(), 'sage'),
                         'capability' => self::$capability,
-                        'menu_slug' => Sage::$_token . '_' . $sageEntityMenu->getEntityName(),
+                        'menu_slug' => Sage::TOKEN . '_' . $sageEntityMenu->getEntityName(),
                         'function' => static function () use ($sageSettings, $sageEntityMenu): void {
                             $queryParams = $_GET;
                             if (array_key_exists('action', $queryParams)) {
                                 $action = json_decode(stripslashes((string)$queryParams['action']), true, 512, JSON_THROW_ON_ERROR);
-                                $sageEntityMenu->getActions()[$action["type"]]($action["data"]);
-                                $goback = remove_query_arg('action', wp_get_referer());
-                                wp_redirect($goback);
+                                $message = $sageEntityMenu->getActions()[$action["type"]]($action["data"]);
+                                $redirect = remove_query_arg('action', wp_get_referer());
+                                $redirect = add_query_arg(Sage::TOKEN . '_message', urlencode($message), $redirect);
+                                wp_redirect($redirect);
                                 exit;
                             }
 
-                            $rawFields = get_option(Sage::$_token . '_' . $sageEntityMenu->getEntityName() . '_fields');
+                            $rawFields = get_option(Sage::TOKEN . '_' . $sageEntityMenu->getEntityName() . '_fields');
                             if ($rawFields === false) {
                                 $rawFields = $sageEntityMenu->getDefaultFields();
                             }
@@ -525,7 +544,7 @@ final class SageSettings
                             }
 
                             if (!isset($queryParams['per_page'])) {
-                                $queryParams['per_page'] = get_option(Sage::$_token . '_' . $sageEntityMenu->getEntityName() . '_perPage');
+                                $queryParams['per_page'] = get_option(Sage::TOKEN . '_' . $sageEntityMenu->getEntityName() . '_perPage');
                                 if ($queryParams['per_page'] === false) {
                                     $queryParams['per_page'] = (string)self::$defaultPagination;
                                 }
@@ -554,11 +573,11 @@ final class SageSettings
                     [
                         'location' => 'submenu',
                         // Possible settings: options, menu, submenu.
-                        'parent_slug' => Sage::$_token . '_settings',
+                        'parent_slug' => Sage::TOKEN . '_settings',
                         'page_title' => __('About', 'sage'),
                         'menu_title' => __('About', 'sage'),
                         'capability' => self::$capability,
-                        'menu_slug' => Sage::$_token . '_about',
+                        'menu_slug' => Sage::TOKEN . '_about',
                         'function' => static function (): void {
                             echo 'about page';
                         },
@@ -607,8 +626,8 @@ final class SageSettings
                         // If you're not including an image upload then you can leave this function call out.
                         wp_enqueue_media();
 
-                        wp_register_script(Sage::$_token . '-settings-js', $this->sage->assets_url . 'js/settings' . $this->sage->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
-                        wp_enqueue_script(Sage::$_token . '-settings-js');
+                        wp_register_script(Sage::TOKEN . '-settings-js', $this->sage->assets_url . 'js/settings' . $this->sage->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
+                        wp_enqueue_script(Sage::TOKEN . '-settings-js');
                     });
                 }
             }
@@ -618,33 +637,33 @@ final class SageSettings
         add_filter(
             'plugin_action_links_' . plugin_basename($this->sage->file),
             static function (array $links): array {
-                $links[] = '<a href="options-general.php?page=' . Sage::$_token . '_settings">' . __('Settings', 'sage') . '</a>';
+                $links[] = '<a href="options-general.php?page=' . Sage::TOKEN . '_settings">' . __('Settings', 'sage') . '</a>';
                 return $links;
             }
         );
 
         // Configure placement of plugin settings page. See readme for implementation.
-        add_filter(Sage::$_token . '_menu_settings', static function (array $settings = []): array {
-            return $settings;
-        });
+        add_filter(Sage::TOKEN . '_menu_settings', static fn(array $settings = []): array => $settings);
 
         // region WooCommerce
-        add_action('add_meta_boxes', static function () { // remove [Product type | virtual | downloadable] add product arRef
-            $arRef = SageSettings::getArRef();
+        add_action('add_meta_boxes', static function (): void { // remove [Product type | virtual | downloadable] add product arRef
+            $arRef = Sage::getArRef(get_the_ID());
             if (empty($arRef)) {
                 return;
             }
+
             global $wp_meta_boxes;
             $id = 'woocommerce-product-data';
             $screen = 'product';
             $context = 'normal';
             $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
             remove_meta_box($id, $screen, $context);
-            add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $post) use ($arRef, $callback) {
+            add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $wpPost) use ($arRef, $callback): void {
                 ob_start();
-                $callback($post);
+                $callback($wpPost);
                 $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
                 $dom->loadStr(ob_get_clean());
+
                 $a = $dom->find('span.product-data-wrapper')[0];
                 echo str_replace($a->innerHtml(), ': <span style="display: initial" class="h4">' . $arRef . '</span>', $dom);
             }, 'product', 'normal', 'high');
@@ -660,29 +679,32 @@ final class SageSettings
             ['name' => 'variations', 'trans' => __('Variations', 'woocommerce')],
 //            ['name' => 'advanced', 'trans' => __('Advanced', 'woocommerce')],
         ];
-        add_filter('woocommerce_product_data_tabs', static function ($tabs) use ($productTabs) { // Code to Create Tab in the Backend
-            $arRef = SageSettings::getArRef();
+        add_filter('woocommerce_product_data_tabs', static function (array $tabs) use ($productTabs) { // Code to Create Tab in the Backend
+            $arRef = Sage::getArRef(get_the_ID());
             if (empty($arRef)) {
                 return $tabs;
             }
-            foreach ($productTabs as $prop) {
-                $tabs[$prop['name']] = [
-                    ...$tabs[$prop['name']],
-                    'label' => $prop['trans'],
-                    'target' => Sage::$_token . '_product_data_panel_' . $prop['name'],
+
+            foreach ($productTabs as $productTab) {
+                $tabs[$productTab['name']] = [
+                    ...$tabs[$productTab['name']],
+                    'label' => $productTab['trans'],
+                    'target' => Sage::TOKEN . '_product_data_panel_' . $productTab['name'],
                 ];
             }
+
             return $tabs;
         });
 
-        add_action('woocommerce_product_data_panels', static function () use ($sageSettings, $productTabs) { // Code to Add Data Panel to the Tab
-            $arRef = SageSettings::getArRef();
+        add_action('woocommerce_product_data_panels', static function () use ($sageSettings, $productTabs): void { // Code to Add Data Panel to the Tab
+            $arRef = Sage::getArRef(get_the_ID());
             if (empty($arRef)) {
                 return;
             }
+
             $fArticle = $sageSettings->sage->sageGraphQl->getFArticle($arRef);
             echo $sageSettings->sage->twig->render('woocommerce/tabs.html.twig', [
-                'tabNames' => array_map(static fn(array $productTab) => $productTab['name'], $productTabs),
+                'tabNames' => array_map(static fn(array $productTab): string => $productTab['name'], $productTabs),
                 'fArticle' => $fArticle,
             ]);
         });
@@ -701,6 +723,7 @@ final class SageSettings
         } else {
             $fieldsObject = [];
         }
+
         $trans = SageTranslationUtils::getTranslations();
         $objectFields = [];
         foreach ($fieldsObject as $fieldObject) {
@@ -718,14 +741,14 @@ final class SageSettings
                 array_key_exists('settings-updated', $_GET) &&
                 array_key_exists('page', $_GET) &&
                 $_GET["settings-updated"] === 'true' &&
-                $_GET["page"] === Sage::$_token . '_settings'
+                $_GET["page"] === Sage::TOKEN . '_settings'
             ) ||
             !current_user_can(self::$capability)
         ) {
             return;
         }
 
-        $applicationPasswordOption = Sage::$_token . '_application-passwords';
+        $applicationPasswordOption = Sage::TOKEN . '_application-passwords';
         $userApplicationPassword = get_option($applicationPasswordOption, null);
         $user_id = get_current_user_id();
         $optionHasPassword = false;
@@ -779,7 +802,7 @@ final class SageSettings
     private function createUpdateWebsite(string $user_id, string $password): bool
     {
         $user = get_user_by('id', $user_id);
-        $url = parse_url(get_option(Sage::$_token . '_wordpress_host_url'));
+        $url = parse_url((string)get_option(Sage::TOKEN . '_wordpress_host_url'));
         global $wpdb;
         $stdClass = $this->sage->sageGraphQl->addUpdateWebsite(
             name: get_bloginfo(),
@@ -788,13 +811,13 @@ final class SageSettings
             websiteEnum: WebsiteEnum::Wordpress,
             host: $url["host"],
             protocol: $url["scheme"],
-            forceSsl: (bool)get_option(Sage::$_token . '_activate_https_verification_wordpress'),
-            dbHost: get_option(Sage::$_token . '_wordpress_db_host'),
+            forceSsl: (bool)get_option(Sage::TOKEN . '_activate_https_verification_wordpress'),
+            dbHost: get_option(Sage::TOKEN . '_wordpress_db_host'),
             tablePrefix: $wpdb->prefix,
-            dbName: get_option(Sage::$_token . '_wordpress_db_name'),
-            dbUsername: get_option(Sage::$_token . '_wordpress_db_username'),
-            dbPassword: get_option(Sage::$_token . '_wordpress_db_password'),
-            syncArticlesToWebsite: (bool)get_option(Sage::$_token . '_sync_articles_to_website'),
+            dbName: get_option(Sage::TOKEN . '_wordpress_db_name'),
+            dbUsername: get_option(Sage::TOKEN . '_wordpress_db_username'),
+            dbPassword: get_option(Sage::TOKEN . '_wordpress_db_password'),
+            syncArticlesToWebsite: (bool)get_option(Sage::TOKEN . '_sync_articles_to_website'),
         );
         if (!is_null($stdClass)) {
             add_action('admin_notices', static function (): void {
@@ -808,11 +831,6 @@ final class SageSettings
         }
 
         return false;
-    }
-
-    private static function getArRef(): mixed
-    {
-        return get_post_meta(get_the_ID(), '_' . Sage::$_token . '_arRef', true);
     }
 
     /**
