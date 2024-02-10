@@ -9,6 +9,7 @@ use App\Utils\SageTranslationUtils;
 use Exception;
 use PHPHtmlParser\Dom;
 use stdClass;
+use WC_Product;
 use WP_Application_Passwords;
 use WP_Error;
 use WP_Post;
@@ -697,15 +698,15 @@ final class SageSettings
         });
 
         add_action('woocommerce_product_data_panels', static function () use ($sageSettings, $productTabs): void { // Code to Add Data Panel to the Tab
-            $arRef = Sage::getArRef(get_the_ID());
-            if (empty($arRef)) {
+            $product = wc_get_product();
+            if (!($product instanceof WC_Product)) {
                 return;
             }
-
-            $fArticle = $sageSettings->sage->sageGraphQl->getFArticle($arRef);
+            $pCattarifs = $sageSettings->sage->sageGraphQl->getPCattarifs();
             echo $sageSettings->sage->twig->render('woocommerce/tabs.html.twig', [
                 'tabNames' => array_map(static fn(array $productTab): string => $productTab['name'], $productTabs),
-                'fArticle' => $fArticle,
+                'product' => $product,
+                'pCattarifs' => $pCattarifs,
             ]);
         });
         // endregion

@@ -15,6 +15,8 @@ use Twig\Extension\DebugExtension;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
+use WC_Meta_Data;
+use WC_Product;
 use WP_Upgrader;
 
 if (!defined('ABSPATH')) {
@@ -218,7 +220,26 @@ final class Sage
             return implode('|', $r);
         }));
         $this->twig->addFunction(new TwigFunction('getApiHostUrl', static fn(): string => get_option(Sage::TOKEN . '_api_host_url')));
-
+        $this->twig->addFunction(new TwigFunction('getPricesProduct', static function (WC_Product $product): array {
+            $r = [];
+            /** @var WC_Meta_Data[] $metaDatas */
+            $metaDatas = $product->get_meta_data();
+            foreach ($metaDatas as $metaData) {
+                $data = $metaData->get_data();
+                if ($data["key"] !== '_' . Sage::TOKEN . '_prices') {
+                    continue;
+                }
+                $prices = json_decode($data["value"], true, 512, JSON_THROW_ON_ERROR);
+                foreach ($prices as $price) {
+                    $r[$price['CbMarq']] = $price;
+                }
+                break;
+            }
+            return $r;
+        }));
+        $this->twig->addFunction(new TwigFunction('get_woocommerce_currency_symbol', static function (): string {
+            return get_woocommerce_currency_symbol();
+        }));
         // endregion
 
         register_activation_hook($this->file, function (): void {

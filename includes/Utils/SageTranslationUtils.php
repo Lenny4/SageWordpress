@@ -458,7 +458,7 @@ final class SageTranslationUtils
                 "cbCreationUser" => __("cbCreationUser", 'sage'),
                 "arInterdireCommande" => __("arInterdireCommande", 'sage'),
                 "arExclure" => __("arExclure", 'sage'),
-                "price" => __("Price", 'sage'),
+                "prices" => __("Prices", 'sage'),
             ],
             'words' => [
                 'contains' => __("Contient", 'sage'),

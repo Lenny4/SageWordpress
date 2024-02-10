@@ -1,2 +1,21 @@
-<h1>{{ fArticle.arRef }}</h1>
-<h1>{{ fArticle.arDesign }}</h1>
+{% set prices = getPricesProduct(product) %}
+{% set currencySymbol = get_woocommerce_currency_symbol() %}
+<h1>{{ product.get_data()['name'] }}</h1>
+<table class="table-border">
+    <thead>
+    <tr>
+        <td>{{ 'Intitule'|trans }}</td>
+        <td>{{ 'HT'|trans }}</td>
+        <td>{{ 'TTC'|trans }}</td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for pCattarif in pCattarifs %}
+        <tr>
+            <td>{{ pCattarif.ctIntitule }}</td>
+            <td>{{ prices[pCattarif.cbMarq]['PriceHt'] }} {{ currencySymbol|raw }}</td>
+            <td>{{ prices[pCattarif.cbMarq]['PriceTtc'] }} {{ currencySymbol|raw }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

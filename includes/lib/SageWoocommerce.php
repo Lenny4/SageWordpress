@@ -4,6 +4,8 @@ namespace App\lib;
 
 use App\Sage;
 use StdClass;
+use WC_Meta_Data;
+use WC_Product;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -52,13 +54,25 @@ final class SageWoocommerce
 
     }
 
-    private function custom_price($price, $product): float|string
+    private function custom_price(string $price, WC_Product $product): float|string
     {
         $arRef = $product->get_meta(self::META_KEY);
         if (empty($arRef)) {
             return $price;
         }
-        return (float)$price; // todo
+        /** @var WC_Meta_Data[] $metaDatas */
+        $metaDatas = $product->get_meta_data();
+        foreach ($metaDatas as $metaData) {
+            $data = $metaData->get_data();
+            // todo change according to user
+            if ($data["key"] !== '_' . Sage::TOKEN . '_max_price') {
+                continue;
+            }
+            $priceData = json_decode($data["value"], true, 512, JSON_THROW_ON_ERROR);
+            $price = $priceData["PriceTtc"];
+            break;
+        }
+        return (float)$price;
     }
 
     public static function instance(Sage $sage): ?self
@@ -76,15 +90,16 @@ final class SageWoocommerce
             return null;
         }
 
+        $prices = json_decode($fArticle->prices, true, 512, JSON_THROW_ON_ERROR);
+        usort($prices, static function (array $a, array $b) {
+            return $b['PriceTtc'] <=> $a['PriceTtc'];
+        });
         return [
             'name' => $fArticle->arDesign,
             'meta_data' => [
                 ['key' => self::META_KEY, 'value' => $fArticle->arRef],
-                ['key' => '_' . Sage::TOKEN . '_price', 'value' => [
-                    '0' => 45,
-                    '1' => 46,
-                    '5' => 98,
-                ]],
+                ['key' => '_' . Sage::TOKEN . '_prices', 'value' => $fArticle->prices],
+                ['key' => '_' . Sage::TOKEN . '_max_price', 'value' => json_encode($prices[0], JSON_THROW_ON_ERROR)],
             ],
         ];
     }

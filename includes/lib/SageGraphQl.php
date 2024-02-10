@@ -216,10 +216,10 @@ final class SageGraphQl
                 );
             return $sageGraphQl->runQuery($query)?->getResults()?->data?->__type?->fields;
         };
-        $typeModel = $this->sage->cache->get($object, $function);
+        $typeModel = $this->sage->cache->get($cacheName, $function);
         if (empty($typeModel)) {
             $this->sage->cache->delete($cacheName);
-            $typeModel = $this->sage->cache->get($object, $function);
+            $typeModel = $this->sage->cache->get($cacheName, $function);
         }
 
         return $typeModel;
@@ -256,10 +256,10 @@ final class SageGraphQl
                 );
             return $sageGraphQl->runQuery($query)?->getResults()?->data?->__type?->inputFields;
         };
-        $typeModel = $this->sage->cache->get($object, $function);
+        $typeModel = $this->sage->cache->get($cacheName, $function);
         if (empty($typeModel)) {
             $this->sage->cache->delete($cacheName);
-            $typeModel = $this->sage->cache->get($object, $function);
+            $typeModel = $this->sage->cache->get($cacheName, $function);
         }
 
         return $typeModel;
@@ -292,7 +292,7 @@ final class SageGraphQl
                     "type" => "StringOperationFilterInput",
                 ],
                 [
-                    "name" => "price",
+                    "name" => "prices",
                 ],
             ]
         );
@@ -303,70 +303,87 @@ final class SageGraphQl
         return $fArticle->data->fArticles->items[0];
     }
 
-    public function searchEntities(string $entityName, array $queryParams, array $fields): StdClass|null
+    public function searchEntities(string $entityName, array $queryParams, array $fields, ?string $cacheName = null): StdClass|null
     {
-        if (!$this->pingApi) {
+        if (!is_null($cacheName)) {
+            $cacheName = 'SearchEntities_' . $cacheName;
+        }
+        if (!$this->pingApi && !is_null($cacheName)) {
+            $this->sage->cache->delete($cacheName);
             return null;
         }
 
-        $rawFields = array_map(static fn(array $field) => $field['name'], $fields);
-        $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
-        $page = (int)($queryParams["paged"] ?? 1);
-        $where = [];
-        if (array_key_exists('filter_field', $queryParams)) {
-            foreach ($queryParams["filter_field"] as $k => $v) {
-                $fieldType = current(array_filter($fields, static fn(array $field): bool => $field['name'] === $v))['type'];
-                if (in_array($fieldType, [
-                    'StringOperationFilterInput',
-                    'DateTimeOperationFilterInput',
-                    'UuidOperationFilterInput',
-                ])) {
-                    $queryParams["filter_value"][$k] = '"' . $queryParams["filter_value"][$k] . '"';
+        $sageGraphQl = $this;
+        $function = static function () use ($entityName, $queryParams, $fields, $sageGraphQl) {
+            $rawFields = array_map(static fn(array $field) => $field['name'], $fields);
+            $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
+            $page = (int)($queryParams["paged"] ?? 1);
+            $where = [];
+            if (array_key_exists('filter_field', $queryParams)) {
+                foreach ($queryParams["filter_field"] as $k => $v) {
+                    $fieldType = current(array_filter($fields, static fn(array $field): bool => $field['name'] === $v))['type'];
+                    if (in_array($fieldType, [
+                        'StringOperationFilterInput',
+                        'DateTimeOperationFilterInput',
+                        'UuidOperationFilterInput',
+                    ])) {
+                        $queryParams["filter_value"][$k] = '"' . $queryParams["filter_value"][$k] . '"';
+                    }
+
+                    if (!isset($where[$queryParams["filter_field"][$k]])) {
+                        $where[$queryParams["filter_field"][$k]] = [];
+                    }
+
+                    $where[$queryParams["filter_field"][$k]][] = $queryParams["filter_type"][$k] . ': ' . $queryParams["filter_value"][$k];
                 }
-
-                if (!isset($where[$queryParams["filter_field"][$k]])) {
-                    $where[$queryParams["filter_field"][$k]] = [];
-                }
-
-                $where[$queryParams["filter_field"][$k]][] = $queryParams["filter_type"][$k] . ': ' . $queryParams["filter_value"][$k];
-            }
-        }
-
-        $order = null;
-        [$sortField, $sortValue] = self::getSortField($queryParams);
-        if (!is_null($sortField)) {
-            $order = '{ ' . $sortField . ': ' . strtoupper((string)$sortValue) . ' }';
-        }
-
-        $arguments = [
-            'skip' => $nbPerPage * ($page - 1),
-            'take' => $nbPerPage,
-        ];
-        if (!is_null($order)) {
-            $arguments['order'] = new RawObject($order);
-        }
-
-        if ($where !== []) {
-            $stringWhere = [];
-            foreach ($where as $f => $w) {
-                $stringWhere[] = $f . ': { ' . implode(',', $w) . ' }';
             }
 
-            $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': [{' . implode('},{', $stringWhere) . '}]}');
+            $order = null;
+            [$sortField, $sortValue] = self::getSortField($queryParams);
+            if (!is_null($sortField)) {
+                $order = '{ ' . $sortField . ': ' . strtoupper((string)$sortValue) . ' }';
+            }
+
+            $arguments = [
+                'skip' => $nbPerPage * ($page - 1),
+                'take' => $nbPerPage,
+            ];
+            if (!is_null($order)) {
+                $arguments['order'] = new RawObject($order);
+            }
+
+            if ($where !== []) {
+                $stringWhere = [];
+                foreach ($where as $f => $w) {
+                    $stringWhere[] = $f . ': { ' . implode(',', $w) . ' }';
+                }
+
+                $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': [{' . implode('},{', $stringWhere) . '}]}');
+            }
+
+            $query = (new Query($entityName))
+                ->setArguments($arguments)
+                ->setSelectionSet(
+                    [
+                        'totalCount',
+                        (new Query('items'))
+                            ->setSelectionSet(
+                                $rawFields
+                            ),
+                    ]
+                );
+            return $sageGraphQl->runQuery($query)?->getResults();
+        };
+        if (is_null($cacheName)) {
+            return $function();
+        }
+        $results = $this->sage->cache->get($cacheName, $function);
+        if (empty($results)) {
+            $this->sage->cache->delete($cacheName);
+            $results = $this->sage->cache->get($cacheName, $function);
         }
 
-        $query = (new Query($entityName))
-            ->setArguments($arguments)
-            ->setSelectionSet(
-                [
-                    'totalCount',
-                    (new Query('items'))
-                        ->setSelectionSet(
-                            $rawFields
-                        ),
-                ]
-            );
-        return $this->runQuery($query)?->getResults();
+        return $results;
     }
 
     public static function getSortField(array $queryParams): array
@@ -395,5 +412,44 @@ final class SageGraphQl
         }
 
         return [null, $defaultSortValue];
+    }
+
+    public function getPCattarifs(): array
+    {
+        $cacheName = SageEntityMenu::PCATTARIF_TYPE_MODEL;
+        $pCattarifs = $this->searchEntities(
+            SageEntityMenu::PCATTARIF_ENTITY_NAME,
+            [
+                "filter_field" => [
+                    "ctIntitule"
+                ],
+                "filter_type" => [
+                    "neq"
+                ],
+                "filter_value" => [
+                    ''
+                ],
+                "paged" => "1",
+                "per_page" => "100"
+            ],
+            [
+                [
+                    "name" => "cbMarq",
+                ],
+                [
+                    "name" => "cbIndice",
+                ],
+                [
+                    "name" => "ctIntitule",
+                    "type" => "StringOperationFilterInput",
+                ],
+            ],
+            $cacheName
+        );
+        $result = is_null($pCattarifs) ? [] : $pCattarifs->data->pCattarifs->items;
+        usort($result, static function (stdClass $a, stdClass $b) {
+            return $a->cbIndice <=> $b->cbIndice;
+        });
+        return $result;
     }
 }

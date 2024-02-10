@@ -46,6 +46,10 @@ final class SageEntityMenu
         'arDesign',
     ];
 
+    public const PCATTARIF_ENTITY_NAME = 'pCattarifs';
+
+    public const PCATTARIF_TYPE_MODEL = 'PCattarif';
+
     /**
      * @param string[] $mandatoryFields
      * @param string[] $defaultFields
