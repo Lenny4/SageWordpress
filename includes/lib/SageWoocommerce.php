@@ -2,6 +2,7 @@
 
 namespace App\lib;
 
+use App\class\SageEntityMenu;
 use App\Sage;
 use App\SageSettings;
 use DateTime;
@@ -126,11 +127,12 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return null;
     }
 
-    public function populateMetaDatasFArticle(?array $data, array $fields): array|null
+    public function populateMetaDatasFArticle(?array $data, array $fields, SageEntityMenu $sageEntityMenu): array|null
     {
         if (empty($data)) {
             return $data;
         }
+        $entityName = $sageEntityMenu->getEntityName();
         $fieldNames = array_map(static function (array $field) {
             return str_replace(SageSettings::PREFIX_META_DATA, '', $field['name']);
         }, array_filter($fields, static function (array $field) {
@@ -138,7 +140,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         }));
         $arRefs = array_map(static function (array $fArticle) {
             return $fArticle['arRef'];
-        }, $data["data"]["fArticles"]["items"]);
+        }, $data["data"][$entityName]["items"]);
 
         global $wpdb;
         $temps = $wpdb->get_results("
@@ -160,7 +162,7 @@ ORDER BY wp_postmeta2.meta_value = '" . self::META_KEY . "';
             $results[$mapping[$temp->post_id]][$temp->meta_key] = $temp->meta_value;
         }
 
-        foreach ($data["data"]["fArticles"]["items"] as &$item) {
+        foreach ($data["data"][$entityName]["items"] as &$item) {
             foreach ($fieldNames as $fieldName) {
                 if (isset($results[$item["arRef"]][$fieldName])) {
                     $item[$fieldName] = $results[$item["arRef"]][$fieldName];

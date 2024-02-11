@@ -573,7 +573,7 @@ final class SageSettings
                                 throw new Exception("Mandatory fields are missing");
                             }
                             if ($sageEntityMenu->getTypeModel() === SageEntityMenu::FARTICLE_TYPE_MODEL) {
-                                $data = $sageSettings->sage->sageWoocommerce->populateMetaDatasFArticle($data, $fields);
+                                $data = $sageSettings->sage->sageWoocommerce->populateMetaDatasFArticle($data, $fields, $sageEntityMenu);
                             }
                             echo $sageSettings->sage->twig->render('sage/' . $sageEntityMenu->getEntityName() . '/index.html.twig', [
                                 'queryParams' => $queryParams,
