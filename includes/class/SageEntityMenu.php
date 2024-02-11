@@ -2,6 +2,9 @@
 
 namespace App\class;
 
+use App\Sage;
+use App\SageSettings;
+
 final class SageEntityMenu
 {
     public const FCOMPTET_ENTITY_NAME = 'fComptets';
@@ -44,6 +47,7 @@ final class SageEntityMenu
     public const FARTICLE_DEFAULT_FIELDS = [
         'arRef',
         'arDesign',
+        SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update',
     ];
 
     public const PCATTARIF_ENTITY_NAME = 'pCattarifs';

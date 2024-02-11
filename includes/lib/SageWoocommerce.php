@@ -3,6 +3,8 @@
 namespace App\lib;
 
 use App\Sage;
+use App\SageSettings;
+use DateTime;
 use StdClass;
 use WC_Meta_Data;
 use WC_Product;
@@ -100,6 +102,7 @@ final class SageWoocommerce
                 ['key' => self::META_KEY, 'value' => $fArticle->arRef],
                 ['key' => '_' . Sage::TOKEN . '_prices', 'value' => $fArticle->prices],
                 ['key' => '_' . Sage::TOKEN . '_max_price', 'value' => json_encode($prices[0], JSON_THROW_ON_ERROR)],
+                ['key' => '_' . Sage::TOKEN . '_last_update', 'value' => (new DateTime())->format('Y-m-d H:i:s')],
             ],
         ];
     }
@@ -121,5 +124,51 @@ WHERE {$wpdb->posts}.post_type = 'product'
             return (int)$r[0]->ID;
         }
         return null;
+    }
+
+    public function populateMetaDatasFArticle(?array $data, array $fields): array|null
+    {
+        if (empty($data)) {
+            return $data;
+        }
+        $fieldNames = array_map(static function (array $field) {
+            return str_replace(SageSettings::PREFIX_META_DATA, '', $field['name']);
+        }, array_filter($fields, static function (array $field) {
+            return str_starts_with($field['name'], SageSettings::PREFIX_META_DATA);
+        }));
+        $arRefs = array_map(static function (array $fArticle) {
+            return $fArticle['arRef'];
+        }, $data["data"]["fArticles"]["items"]);
+
+        global $wpdb;
+        $temps = $wpdb->get_results("
+SELECT wp_postmeta2.post_id, wp_postmeta2.meta_value, wp_postmeta2.meta_key
+FROM wp_postmeta
+         LEFT JOIN wp_postmeta wp_postmeta2 ON wp_postmeta2.post_id = wp_postmeta.post_id
+WHERE wp_postmeta.meta_value IN ('" . implode("','", $arRefs) . "')
+  AND wp_postmeta2.meta_key IN ('" . implode("','", [self::META_KEY, ...$fieldNames]) . "')
+ORDER BY wp_postmeta2.meta_value = '" . self::META_KEY . "';
+");
+        $results = [];
+        $mapping = [];
+        foreach ($temps as $temp) {
+            if ($temp->meta_key === self::META_KEY) {
+                $results[$temp->meta_value] = [];
+                $mapping[$temp->post_id] = $temp->meta_value;
+                continue;
+            }
+            $results[$mapping[$temp->post_id]][$temp->meta_key] = $temp->meta_value;
+        }
+
+        foreach ($data["data"]["fArticles"]["items"] as &$item) {
+            foreach ($fieldNames as $fieldName) {
+                if (isset($results[$item["arRef"]][$fieldName])) {
+                    $item[$fieldName] = $results[$item["arRef"]][$fieldName];
+                } else {
+                    $item[$fieldName] = '';
+                }
+            }
+        }
+        return $data;
     }
 }

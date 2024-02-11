@@ -17,25 +17,32 @@
                 abbr="{{ field['name'] }}"
             >
                 <div style="display: flex;align-items: center;">
+                    {% set transField = allTranslations[field['transDomain']][field['name']] %}
+                    {% set transFieldHasValues = transField|gettype != 'string' %}
+                    {% if transField|gettype != 'string' %}
+                        {% set transFieldLabel = transField['label'] %}
+                    {% else %}
+                        {% set transFieldLabel = transField %}
+                    {% endif %}
+                    {% set isMetaDataField = field.name starts with 'metaData' %}
+                    {% if isMetaDataField == false %}
                     {% if sortField == field['name'] %}
                     <a href="{{ getUrlWithParam('sort', '{"'~field['name']~'":"'~otherSort~'"}') }}">
                         {% else %}
                         <a href="{{ getUrlWithParam('sort', '{"'~field['name']~'":"asc"}') }}">
                             {% endif %}
-                            {% set transField = allTranslations[field['transDomain']][field['name']] %}
-                            {% set transFieldHasValues = transField|gettype != 'string' %}
-                            {% if transField|gettype != 'string' %}
-                                {% set transFieldLabel = transField['label'] %}
-                            {% else %}
-                                {% set transFieldLabel = transField %}
                             {% endif %}
                             <span>{{ transFieldLabel }}</span>
-                            <span class="sorting-indicators">
-            <span class="sorting-indicator asc" aria-hidden="true"></span>
-            <span class="sorting-indicator desc" aria-hidden="true"></span>
-          </span>
-                            <span class="screen-reader-text">{{ ('Sort ' ~ sortValue)|trans }}.</span>
+                            {% if isMetaDataField == false %}
+                                <span class="sorting-indicators">
+                                <span class="sorting-indicator asc" aria-hidden="true"></span>
+                                <span class="sorting-indicator desc" aria-hidden="true"></span>
+                            </span>
+                                <span class="screen-reader-text">{{ ('Sort ' ~ sortValue)|trans }}.</span>
+                            {% endif %}
+                            {% if isMetaDataField == false %}
                         </a>
+                        {% endif %}
                         {% if transField|gettype != 'string' %}
                             <div class="tooltip">
                                 <span class="dashicons dashicons-info"

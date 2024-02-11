@@ -254,7 +254,12 @@ final class SageGraphQl
                             ),
                     ]
                 );
-            return $sageGraphQl->runQuery($query)?->getResults()?->data?->__type?->inputFields;
+            $temps = $sageGraphQl->runQuery($query)?->getResults()?->data?->__type?->inputFields;
+            $r = [];
+            foreach ($temps as $temp) {
+                $r[$temp->name] = $temp;
+            }
+            return $r;
         };
         $typeModel = $this->sage->cache->get($cacheName, $function);
         if (empty($typeModel)) {
@@ -315,7 +320,9 @@ final class SageGraphQl
 
         $sageGraphQl = $this;
         $function = static function () use ($entityName, $queryParams, $fields, $sageGraphQl) {
-            $rawFields = array_map(static fn(array $field) => $field['name'], $fields);
+            $rawFields = array_filter(array_map(static fn(array $field) => $field['name'], $fields), static function (string $field) {
+                return !str_starts_with($field, SageSettings::PREFIX_META_DATA);
+            });
             $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
             $page = (int)($queryParams["paged"] ?? 1);
             $where = [];

@@ -168,7 +168,7 @@ final class Sage
             uksort($item, static function (string $a, string $b) use ($fields): int {
                 $fieldsOrder = [];
                 foreach ($fields as $i => $f) {
-                    $fieldsOrder[$f['name']] = $i;
+                    $fieldsOrder[str_replace(SageSettings::PREFIX_META_DATA, '', $f['name'])] = $i;
                 }
 
                 return $fieldsOrder[$a] <=> $fieldsOrder[$b];
@@ -391,7 +391,7 @@ final class Sage
 
     public static function getArRef(int $postId): mixed
     {
-        return get_post_meta($postId, '_' . Sage::TOKEN . '_arRef', true);
+        return get_post_meta($postId, SageWoocommerce::META_KEY, true);
     }
 
     /**

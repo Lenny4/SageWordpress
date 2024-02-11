@@ -2,6 +2,9 @@
 
 namespace App\Utils;
 
+use App\Sage;
+use App\SageSettings;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -459,6 +462,7 @@ final class SageTranslationUtils
                 "arInterdireCommande" => __("arInterdireCommande", 'sage'),
                 "arExclure" => __("arExclure", 'sage'),
                 "prices" => __("Prices", 'sage'),
+                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update' => __("Dernière synchronisation dans Wordpress", 'sage'),
             ],
             'words' => [
                 'contains' => __("Contient", 'sage'),

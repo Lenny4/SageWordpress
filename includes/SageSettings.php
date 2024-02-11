@@ -23,8 +23,8 @@ if (!defined('ABSPATH')) {
  */
 final class SageSettings
 {
+    public final const PREFIX_META_DATA = 'metaData';
     public static string $capability = 'manage_options';
-
     public static array $paginationRange = [20, 50, 100];
 
     public static int $defaultPagination = 20;
@@ -109,6 +109,11 @@ final class SageSettings
                     'import_from_sage' => static function (array $data) use ($sageSettings): string {
                         $arRef = $data['arRef'];
                         $fArticle = $sageSettings->sage->sageGraphQl->getFArticle($arRef);
+                        if (is_null($fArticle)) {
+                            return "<div class='error'>
+                        " . __("L'article n'a pas pu être importé", 'sage') . "
+                                </div>";
+                        }
                         $articleId = $sageSettings->sage->sageWoocommerce->getWooCommerceId($arRef);
                         $article = $sageSettings->sage->sageWoocommerce->convertSageArticleToWoocommerce($fArticle);
                         $url = '/wp-json/wc/v3/products';
@@ -534,12 +539,20 @@ final class SageSettings
                             $hideFields = array_diff($sageEntityMenu->getMandatoryFields(), $rawFields);
                             $rawFields = array_unique([...$rawFields, ...$hideFields]);
                             $fields = [];
-                            foreach ($sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType()) ?? [] as $inputField) {
-                                if (in_array($inputField->name, $rawFields, true)) {
+                            $inputFields = $sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType()) ?? [];
+                            $transDomain = $sageEntityMenu->getTransDomain();
+                            foreach ($rawFields as $rawField) {
+                                if (array_key_exists($rawField, $inputFields)) {
                                     $fields[] = [
-                                        'name' => $inputField->name,
-                                        'type' => $inputField->type->name,
-                                        'transDomain' => $sageEntityMenu->getTransDomain(),
+                                        'name' => $inputFields[$rawField]->name,
+                                        'type' => $inputFields[$rawField]->type->name,
+                                        'transDomain' => $transDomain,
+                                    ];
+                                } else if (str_starts_with($rawField, SageSettings::PREFIX_META_DATA)) {
+                                    $fields[] = [
+                                        'name' => $rawField,
+                                        'type' => 'StringOperationFilterInput',
+                                        'transDomain' => $transDomain,
                                     ];
                                 }
                             }
@@ -559,7 +572,9 @@ final class SageSettings
                             ) {
                                 throw new Exception("Mandatory fields are missing");
                             }
-
+                            if ($sageEntityMenu->getTypeModel() === SageEntityMenu::FARTICLE_TYPE_MODEL) {
+                                $data = $sageSettings->sage->sageWoocommerce->populateMetaDatasFArticle($data, $fields);
+                            }
                             echo $sageSettings->sage->twig->render('sage/' . $sageEntityMenu->getEntityName() . '/index.html.twig', [
                                 'queryParams' => $queryParams,
                                 'data' => $data,
@@ -731,6 +746,16 @@ final class SageSettings
             $v = $trans[$transDomain][$fieldObject->name];
             $objectFields[$fieldObject->name] = $v['label'] ?? $v;
         }
+
+        // region custom meta fields
+        $prefix = self::PREFIX_META_DATA . '_' . Sage::TOKEN;
+        if ($object === SageEntityMenu::FARTICLE_TYPE_MODEL) {
+            foreach (['_last_update'] as $field) {
+                $fieldName = $prefix . $field;
+                $objectFields[self::PREFIX_META_DATA . $fieldName] = $trans[$transDomain][$fieldName];
+            }
+        }
+        // endregion
 
         return $objectFields;
     }
