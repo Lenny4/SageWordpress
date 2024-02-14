@@ -13,6 +13,8 @@ use WC_Product;
 use WP_Application_Passwords;
 use WP_Error;
 use WP_Post;
+use WP_REST_Request;
+use WP_User;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -65,10 +67,36 @@ final class SageSettings
                 transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
                 fields: [],
                 actions: [
-                    'import_from_sage' => static function (array $data): void {
+                    'import_from_sage' => static function (array $data) use ($sageSettings): string {
                         $ctNum = $data['ctNum'];
-                        // todo add user in wordpress
-                        $todo = 0;
+                        $fComptet = $sageSettings->sage->sageGraphQl->getFComptet($ctNum);
+                        if (is_null($fComptet)) {
+                            return "<div class='error'>
+                        " . __("L'utilisateur n'a pas pu être importé", 'sage') . "
+                                </div>";
+                        }
+                        $userId = $sageSettings->sage->getUserIdWithCtNum($ctNum);
+                        $user = $sageSettings->sage->sageWoocommerce->convertSageUserToWoocommerce($fComptet, $userId);
+                        if (is_string($user)) {
+                            return $user;
+                        }
+                        $url = '/wp-json/wp/v2/users';
+                        if (!is_null($userId)) {
+                            $url .= '/' . $userId;
+                        }
+                        [$response, $responseError] = $sageSettings->createResource($url, is_null($userId) ? 'POST' : 'PUT', $user);
+
+                        if (is_string($responseError)) {
+                            return $responseError;
+                        }
+                        if ($response["response"]["code"] === 200) {
+                            return "<div class='notice notice-success'>
+                        " . __('User updated', 'sage') . "
+                                </div>";
+                        }
+                        return "<div class='notice notice-success'>
+                        " . __('User created', 'sage') . "
+                                </div>";
                     }
                 ],
             ),
@@ -114,31 +142,15 @@ final class SageSettings
                         " . __("L'article n'a pas pu être importé", 'sage') . "
                                 </div>";
                         }
-                        $articleId = $sageSettings->sage->sageWoocommerce->getWooCommerceId($arRef);
+                        $articleId = $sageSettings->sage->sageWoocommerce->getWooCommerceIdArticle($arRef);
                         $article = $sageSettings->sage->sageWoocommerce->convertSageArticleToWoocommerce($fArticle);
                         $url = '/wp-json/wc/v3/products';
                         if (!is_null($articleId)) {
                             $url .= '/' . $articleId;
                         }
-                        $response = SageRequest::selfRequest($url, [
-                            'headers' => [
-                                'Content-Type' => 'application/json',
-                            ],
-                            'method' => is_null($articleId) ? 'POST' : 'PUT',
-                            'body' => json_encode($article, JSON_THROW_ON_ERROR),
-                        ]);
-                        if ($response instanceof WP_Error) {
-                            return "<div class=error>
-                                <pre>" . $response->get_error_code() . "</pre>
-                                <pre>" . $response->get_error_message() . "</pre>
-                                </div>";
-                        }
-
-                        if (!in_array($response["response"]["code"], [200, 201], true)) {
-                            return "<div class=error>
-                                <pre>" . $response['response']['code'] . "</pre>
-                                <pre>" . $response['body'] . "</pre>
-                                </div>";
+                        [$response, $responseError] = $sageSettings->createResource($url, is_null($articleId) ? 'POST' : 'PUT', $article);
+                        if (is_string($responseError)) {
+                            return $responseError;
                         }
                         if ($response["response"]["code"] === 200) {
                             return "<div class='notice notice-success'>
@@ -339,23 +351,21 @@ final class SageSettings
             ];
             foreach ($this->sageEntityMenus as $sageEntityMenu) {
                 $fields = [
-                    ...[
-                        [
-                            'id' => $sageEntityMenu->getEntityName() . '_fields',
-                            'label' => __('Fields to show', 'sage'),
-                            'description' => __('Please select the fields to show on the table.', 'sage'),
-                            'type' => '2_select_multi',
-                            'options' => $this->getFieldsForEntity($sageEntityMenu->getTypeModel(), $sageEntityMenu->getTransDomain()),
-                            'default' => $sageEntityMenu->getDefaultFields(),
-                        ],
-                        [
-                            'id' => $sageEntityMenu->getEntityName() . '_perPage',
-                            'label' => __('Default per page', 'sage'),
-                            'description' => __('Please select the number of rows to show on the table.', 'sage'),
-                            'type' => 'select',
-                            'options' => array_combine(self::$paginationRange, self::$paginationRange),
-                            'default' => (string)self::$defaultPagination
-                        ],
+                    [
+                        'id' => $sageEntityMenu->getEntityName() . '_fields',
+                        'label' => __('Fields to show', 'sage'),
+                        'description' => __('Please select the fields to show on the table.', 'sage'),
+                        'type' => '2_select_multi',
+                        'options' => $this->getFieldsForEntity($sageEntityMenu->getTypeModel(), $sageEntityMenu->getTransDomain()),
+                        'default' => $sageEntityMenu->getDefaultFields(),
+                    ],
+                    [
+                        'id' => $sageEntityMenu->getEntityName() . '_perPage',
+                        'label' => __('Default per page', 'sage'),
+                        'description' => __('Please select the number of rows to show on the table.', 'sage'),
+                        'type' => 'select',
+                        'options' => array_combine(self::$paginationRange, self::$paginationRange),
+                        'default' => (string)self::$defaultPagination
                     ],
                     ...$sageEntityMenu->getFields(),
                 ];
@@ -726,6 +736,61 @@ final class SageSettings
         });
         // endregion
         // endregion
+
+        // region user meta
+        $userMetaProp = 'customMeta';
+        add_filter('rest_pre_insert_user', static function (
+            stdClass        $prepared_user,
+            WP_REST_Request $request
+        ) use ($userMetaProp): stdClass {
+            if (!empty($request['meta'])) {
+                $prepared_user->{$userMetaProp} = [];
+                foreach ($request['meta'] as $key => $value) {
+                    $prepared_user->{$userMetaProp}[$key] = $value;
+                }
+            }
+            return $prepared_user;
+        }, accepted_args: 2);
+        add_filter('insert_custom_user_meta', static function (
+            array   $custom_meta,
+            WP_User $user,
+            bool    $update,
+            array   $userdata
+        ) use ($userMetaProp): array {
+            if (array_key_exists($userMetaProp, $userdata)) {
+                foreach ($userdata[$userMetaProp] as $key => $value) {
+                    $custom_meta[$key] = $value;
+                }
+            }
+            return $custom_meta;
+        }, accepted_args: 4);
+        // endregion
+    }
+
+    private function createResource(string $url, string $method, array $body): array
+    {
+        $response = SageRequest::selfRequest($url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+            'method' => $method,
+            'body' => json_encode($body, JSON_THROW_ON_ERROR),
+        ]);
+        $responseError = null;
+        if ($response instanceof WP_Error) {
+            $responseError = "<div class=error>
+                                <pre>" . $response->get_error_code() . "</pre>
+                                <pre>" . $response->get_error_message() . "</pre>
+                                </div>";
+        }
+
+        if (!in_array($response["response"]["code"], [200, 201], true)) {
+            $responseError = "<div class=error>
+                                <pre>" . $response['response']['code'] . "</pre>
+                                <pre>" . $response['body'] . "</pre>
+                                </div>";
+        }
+        return [$response, $responseError];
     }
 
     private function getFieldsForEntity(string $object, string $transDomain): array

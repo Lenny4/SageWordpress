@@ -5,6 +5,7 @@ namespace App\lib;
 use App\class\SageEntityMenu;
 use App\Sage;
 use App\SageSettings;
+use Cocur\Slugify\Slugify;
 use DateTime;
 use StdClass;
 use WC_Meta_Data;
@@ -16,8 +17,6 @@ if (!defined('ABSPATH')) {
 
 final class SageWoocommerce
 {
-    public final const META_KEY = '_' . Sage::TOKEN . '_arRef';
-
     private static ?self $_instance = null;
 
     private function __construct(public ?Sage $sage)
@@ -59,7 +58,7 @@ final class SageWoocommerce
 
     private function custom_price(string $price, WC_Product $product): float|string
     {
-        $arRef = $product->get_meta(self::META_KEY);
+        $arRef = $product->get_meta(Sage::META_KEY_AR_REF);
         if (empty($arRef)) {
             return $price;
         }
@@ -87,12 +86,8 @@ final class SageWoocommerce
         return self::$_instance;
     }
 
-    public function convertSageArticleToWoocommerce(StdClass|null $fArticle): array|null
+    public function convertSageArticleToWoocommerce(StdClass $fArticle): array
     {
-        if (is_null($fArticle)) {
-            return null;
-        }
-
         $prices = json_decode($fArticle->prices, true, 512, JSON_THROW_ON_ERROR);
         usort($prices, static function (array $a, array $b) {
             return $b['PriceTtc'] <=> $a['PriceTtc'];
@@ -100,7 +95,7 @@ final class SageWoocommerce
         return [
             'name' => $fArticle->arDesign,
             'meta_data' => [
-                ['key' => self::META_KEY, 'value' => $fArticle->arRef],
+                ['key' => Sage::META_KEY_AR_REF, 'value' => $fArticle->arRef],
                 ['key' => '_' . Sage::TOKEN . '_prices', 'value' => $fArticle->prices],
                 ['key' => '_' . Sage::TOKEN . '_max_price', 'value' => json_encode($prices[0], JSON_THROW_ON_ERROR)],
                 ['key' => '_' . Sage::TOKEN . '_last_update', 'value' => (new DateTime())->format('Y-m-d H:i:s')],
@@ -108,7 +103,76 @@ final class SageWoocommerce
         ];
     }
 
-    public function getWooCommerceId(string $arRef): int|null
+    public function convertSageUserToWoocommerce(StdClass $fComptet, ?int $userId): array|string
+    {
+        $email = $fComptet->ctEmail;
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return "<div class=error>" . __("L'adresse email n'est pas au bon format [email: '" . $email . "']", 'sage') . "</div>";
+        }
+        $mailExistsUserId = email_exists($email);
+        if ($mailExistsUserId !== false && $mailExistsUserId !== $userId) {
+            return "<div class=error>" . __('This email address is already registered.', 'woocommerce') . "</div>";
+        }
+        $fComptetAddress = Sage::createAddressWithFComptet($fComptet);
+        $addressTypes = ['billing', 'shipping'];
+        $address = [];
+        foreach ($addressTypes as $addressType) {
+            $thisAdress = current(array_filter($fComptet->fLivraisons, static function (StdClass $fLivraison) use ($addressType, $fComptetAddress) {
+                if ($addressType === 'billing') {
+                    return $fLivraison->liAdresseFact === 1;
+                }
+                return $fLivraison->liPrincipal === 1;
+            }));
+            if ($thisAdress === false) {
+                $thisAdress = $fComptetAddress;
+            }
+            $address[$addressType] = $thisAdress;
+        }
+        $meta = [
+            Sage::META_KEY_CT_NUM => $fComptet->ctNum,
+        ];
+        foreach ($addressTypes as $addressType) {
+            $thisAddress = $address[$addressType];
+            [$firstName, $lastName] = Sage::getFirstNameLastName(
+                intitule: $thisAddress->liIntitule,
+                contact: $thisAddress->liContact
+            );
+            $meta = [
+                ...$meta,
+                // region woocommerce (got from: woocommerce/includes/class-wc-privacy-erasers.php)
+                $addressType . '_first_name' => $firstName,
+                $addressType . '_last_name' => $lastName,
+                $addressType . '_company' => Sage::getName(intitule: $thisAddress->liIntitule, contact: $thisAddress->liContact),
+                $addressType . '_address_1' => $thisAddress->liAdresse,
+                $addressType . '_address_2' => $thisAddress->liComplement,
+                $addressType . '_city' => $thisAddress->liVille,
+                $addressType . '_postcode' => $thisAddress->liCodePostal,
+                $addressType . '_state' => $thisAddress->liCodeRegion,
+                $addressType . '_country' => $thisAddress->liPays,
+                $addressType . '_phone' => $thisAddress->liTelephone,
+                $addressType . '_email' => $thisAddress->liEmail,
+                // endregion
+            ];
+        }
+        [$firstName, $lastName] = Sage::getFirstNameLastName(
+            intitule: $fComptet->ctIntitule,
+            contact: $fComptet->ctContact
+        );
+        $result = [
+            'name' => Sage::getName(intitule: $fComptet->ctIntitule, contact: $fComptet->ctContact), // Display name for the user
+            'first_name' => $firstName, // First name for the user
+            'last_name' => $lastName, // Last name for the user
+            'email' => $email, // The email address for the user
+            'meta' => $meta,
+
+        ];
+        if(is_null($userId)) {
+            $result['username'] = $fComptet->ctNum;
+        }
+        return $result;
+    }
+
+    public function getWooCommerceIdArticle(string $arRef): int|null
     {
         global $wpdb;
         $r = $wpdb->get_results(
@@ -120,7 +184,7 @@ FROM {$wpdb->posts}
 WHERE {$wpdb->posts}.post_type = 'product'
   AND {$wpdb->postmeta}.meta_key = %s
   AND {$wpdb->postmeta}.meta_value = %s
-                        ", [self::META_KEY, $arRef]));
+", [Sage::META_KEY_AR_REF, $arRef]));
         if (!empty($r)) {
             return (int)$r[0]->ID;
         }
@@ -148,13 +212,13 @@ SELECT wp_postmeta2.post_id, wp_postmeta2.meta_value, wp_postmeta2.meta_key
 FROM wp_postmeta
          LEFT JOIN wp_postmeta wp_postmeta2 ON wp_postmeta2.post_id = wp_postmeta.post_id
 WHERE wp_postmeta.meta_value IN ('" . implode("','", $arRefs) . "')
-  AND wp_postmeta2.meta_key IN ('" . implode("','", [self::META_KEY, ...$fieldNames]) . "')
-ORDER BY wp_postmeta2.meta_value = '" . self::META_KEY . "';
+  AND wp_postmeta2.meta_key IN ('" . implode("','", [Sage::META_KEY_AR_REF, ...$fieldNames]) . "')
+ORDER BY wp_postmeta2.meta_value = '" . Sage::META_KEY_AR_REF . "';
 ");
         $results = [];
         $mapping = [];
         foreach ($temps as $temp) {
-            if ($temp->meta_key === self::META_KEY) {
+            if ($temp->meta_key === Sage::META_KEY_AR_REF) {
                 $results[$temp->meta_value] = [];
                 $mapping[$temp->post_id] = $temp->meta_value;
                 continue;

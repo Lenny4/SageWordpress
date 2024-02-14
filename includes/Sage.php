@@ -9,6 +9,7 @@ use App\lib\SageTaxonomy;
 use App\lib\SageWoocommerce;
 use App\Utils\SageTranslationUtils;
 use Lead\Dir\Dir;
+use StdClass;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
@@ -29,6 +30,9 @@ if (!defined('ABSPATH')) {
 final class Sage
 {
     public final const TOKEN = 'sage';
+
+    public final const META_KEY_AR_REF = '_' . self::TOKEN . '_arRef';
+    public final const META_KEY_CT_NUM = '_' . self::TOKEN . '_ctNum';
 
     /**
      * The single instance of sage.
@@ -391,7 +395,53 @@ final class Sage
 
     public static function getArRef(int $postId): mixed
     {
-        return get_post_meta($postId, SageWoocommerce::META_KEY, true);
+        return get_post_meta($postId, self::META_KEY_AR_REF, true);
+    }
+
+    public static function getName(?string $intitule, ?string $contact): string
+    {
+        $intitule = trim($intitule ?? '');
+        $contact = trim($contact ?? '');
+        $name = $intitule;
+        if (empty($name)) {
+            $name = $contact;
+        }
+        return $name;
+    }
+
+    public static function getFirstNameLastName(?string $intitule, ?string $contact): array
+    {
+        $names = $contact;
+        if (empty($names)) {
+            $names = $intitule;
+        }
+        $names = explode(' ', $names);
+        $firstName = '';
+        $lastName = '';
+        if (!empty($names)) {
+            $firstName = $names[0];
+            $names[0] = "";
+            $lastName = implode(' ', $names);
+        }
+        return [$firstName, $lastName];
+    }
+
+    public static function createAddressWithFComptet(StdClass $fComptet): StdClass
+    {
+        $r = new StdClass();
+        $r->liIntitule = $fComptet->ctIntitule;
+        $r->liAdresse = $fComptet->ctAdresse;
+        $r->liComplement = $fComptet->ctComplement;
+        $r->liCodePostal = $fComptet->ctCodePostal;
+        $r->liPrincipal = 0;
+        $r->liVille = $fComptet->ctVille;
+        $r->liPays = $fComptet->ctPays;
+        $r->liContact = $fComptet->ctContact;
+        $r->liTelephone = $fComptet->ctTelephone;
+        $r->liEmail = $fComptet->ctEmail;
+        $r->liCodeRegion = $fComptet->ctCodeRegion;
+        $r->liAdresseFact = 0;
+        return $r;
     }
 
     /**
@@ -444,6 +494,22 @@ final class Sage
         }
 
         return new SageTaxonomy($taxonomy, $plural, $single, $post_types, $taxonomy_args);
+    }
+
+    public function getUserIdWithCtNum(string $ctNum): int|null
+    {
+        global $wpdb;
+        $r = $wpdb->get_results(
+            $wpdb->prepare("
+SELECT user_id
+FROM {$wpdb->usermeta}
+WHERE meta_key = %s
+  AND meta_value = %s
+", [self::META_KEY_CT_NUM, $ctNum]));
+        if (!empty($r)) {
+            return (int)$r[0]->user_id;
+        }
+        return null;
     }
 
     /**

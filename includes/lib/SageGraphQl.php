@@ -288,14 +288,12 @@ final class SageGraphQl
                 "per_page" => "1"
             ],
             [
-                [
-                    "name" => "arRef",
-                    "type" => "StringOperationFilterInput",
-                ],
-                [
-                    "name" => "arDesign",
-                    "type" => "StringOperationFilterInput",
-                ],
+                ...array_map(static function (string $field) {
+                    return [
+                        "name" => $field,
+                        "type" => "StringOperationFilterInput",
+                    ];
+                }, ['arRef', 'arDesign']),
                 [
                     "name" => "prices",
                 ],
@@ -320,15 +318,13 @@ final class SageGraphQl
 
         $sageGraphQl = $this;
         $function = static function () use ($entityName, $queryParams, $fields, $sageGraphQl) {
-            $rawFields = array_filter(array_map(static fn(array $field) => $field['name'], $fields), static function (string $field) {
-                return !str_starts_with($field, SageSettings::PREFIX_META_DATA);
-            });
             $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
             $page = (int)($queryParams["paged"] ?? 1);
             $where = [];
             if (array_key_exists('filter_field', $queryParams)) {
+                $primaryFields = array_filter($fields, static fn(array $field): bool => array_key_exists('name', $field));
                 foreach ($queryParams["filter_field"] as $k => $v) {
-                    $fieldType = current(array_filter($fields, static fn(array $field): bool => $field['name'] === $v))['type'];
+                    $fieldType = current(array_filter($primaryFields, static fn(array $field): bool => $field['name'] === $v))['type'];
                     if (in_array($fieldType, [
                         'StringOperationFilterInput',
                         'DateTimeOperationFilterInput',
@@ -374,9 +370,7 @@ final class SageGraphQl
                     [
                         'totalCount',
                         (new Query('items'))
-                            ->setSelectionSet(
-                                $rawFields
-                            ),
+                            ->setSelectionSet($sageGraphQl->getSelectionSet($fields)),
                     ]
                 );
             return $sageGraphQl->runQuery($query)?->getResults();
@@ -419,6 +413,87 @@ final class SageGraphQl
         }
 
         return [null, $defaultSortValue];
+    }
+
+    private function getSelectionSet(array $fields): array
+    {
+        $result = [];
+        foreach ($fields as $key => $value) {
+            if (is_numeric($key)) {
+                if (!str_starts_with($value['name'], SageSettings::PREFIX_META_DATA)) {
+                    $result[] = $value['name'];
+                }
+            } else {
+                $result[] = (new Query($key))->setSelectionSet($this->getSelectionSet($value));
+            }
+        }
+        return $result;
+    }
+
+    public function getFComptet(string $ctNum): StdClass|null
+    {
+        $fComptet = $this->searchEntities(
+            SageEntityMenu::FCOMPTET_ENTITY_NAME,
+            [
+                "filter_field" => [
+                    "ctNum"
+                ],
+                "filter_type" => [
+                    "eq"
+                ],
+                "filter_value" => [
+                    $ctNum
+                ],
+                "paged" => "1",
+                "per_page" => "1"
+            ],
+            [
+                ...array_map(static function (string $field) {
+                    return [
+                        "name" => $field,
+                        "type" => "StringOperationFilterInput",
+                    ];
+                }, [
+                    'ctNum',
+                    'ctIntitule',
+                    'ctEmail',
+                    'ctContact',
+                    'ctAdresse',
+                    'ctComplement',
+                    'ctVille',
+                    'ctCodePostal',
+                    'ctPays',
+                    'ctTelephone',
+                    'ctCodeRegion',
+                ]),
+                'fLivraisons' => [
+                    ...array_map(static function (string $field) {
+                        return [
+                            "name" => $field,
+                            "type" => "StringOperationFilterInput",
+                        ];
+                    }, [
+                        'liIntitule',
+                        'liAdresse',
+                        'liComplement',
+                        'liCodePostal',
+                        'liPrincipal',
+                        'liVille',
+                        'liPays',
+                        'liContact',
+                        'liTelephone',
+                        'liEmail',
+                        'liAdresseFact',
+                        'liCodeRegion',
+                    ])
+                ],
+            ]
+        );
+        if (is_null($fComptet) || $fComptet->data->fComptets->totalCount !== 1) {
+            return null;
+        }
+
+        return $fComptet->data->fComptets->items[0];
     }
 
     public function getPCattarifs(): array
