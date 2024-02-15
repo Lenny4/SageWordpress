@@ -70,7 +70,7 @@ final class SageEntityMenu
         private array  $mandatoryFields,
         private string $filterType,
         private string $transDomain,
-        private array  $fields,
+        private array  $options,
         private array  $actions,
         private array  $metadata,
         private string $metaKeyIdentifier,
@@ -155,14 +155,14 @@ final class SageEntityMenu
         return $this;
     }
 
-    public function getFields(): array
+    public function getOptions(): array
     {
-        return $this->fields;
+        return $this->options;
     }
 
-    public function setFields(array $fields): self
+    public function setOptions(array $options): self
     {
-        $this->fields = $fields;
+        $this->options = $options;
         return $this;
     }
 

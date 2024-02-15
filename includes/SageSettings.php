@@ -67,7 +67,7 @@ final class SageSettings
                 mandatoryFields: ['ctNum'],
                 filterType: SageEntityMenu::FCOMPTET_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
-                fields: [],
+                options: [],
                 actions: [
                     'import_from_sage' => static function (array $data) use ($sageSettings): string {
                         $ctNum = $data['ctNum'];
@@ -124,7 +124,7 @@ final class SageSettings
                 mandatoryFields: ['doPiece', 'doType'],
                 filterType: SageEntityMenu::FDOCENTETE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FDOCENTETES,
-                fields: [],
+                options: [],
                 actions: [],
                 metadata: [],
                 metaKeyIdentifier: '',
@@ -139,7 +139,7 @@ final class SageSettings
                 mandatoryFields: ['arRef'],
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
-                fields: [
+                options: [
                     // exemple
 //                    [
 //                        'id' => SageEntityMenu::FARTICLE_ENTITY_NAME . '_something',
@@ -376,7 +376,7 @@ final class SageSettings
                 ],
             ];
             foreach ($this->sageEntityMenus as $sageEntityMenu) {
-                $fields = [
+                $options = [
                     [
                         'id' => $sageEntityMenu->getEntityName() . '_fields',
                         'label' => __('Fields to show', 'sage'),
@@ -393,13 +393,13 @@ final class SageSettings
                         'options' => array_combine(self::$paginationRange, self::$paginationRange),
                         'default' => (string)self::$defaultPagination
                     ],
-                    ...$sageEntityMenu->getFields(),
+                    ...$sageEntityMenu->getOptions(),
                 ];
-                $sageEntityMenu->setFields($fields);
+                $sageEntityMenu->setOptions($options);
                 $settings[$sageEntityMenu->getEntityName()] = [
                     'title' => __($sageEntityMenu->getTitle(), 'sage'),
                     'description' => $sageEntityMenu->getDescription(),
-                    'fields' => $fields,
+                    'options' => $options,
                 ];
             }
 
@@ -429,28 +429,28 @@ final class SageSettings
                     echo $html;
                 }, Sage::TOKEN . '_settings');
 
-                foreach ($data['fields'] as $field) {
+                foreach ($data['options'] as $option) {
 
                     // Validation callback for field.
                     $validation = '';
-                    if (isset($field['callback'])) {
-                        $validation = $field['callback'];
+                    if (isset($option['callback'])) {
+                        $validation = $option['callback'];
                     }
 
                     // Register field.
-                    $option_name = Sage::TOKEN . '_' . $field['id'];
+                    $option_name = Sage::TOKEN . '_' . $option['id'];
                     register_setting(Sage::TOKEN . '_settings', $option_name, $validation);
 
                     // Add field to page.
                     add_settings_field(
-                        $field['id'],
-                        $field['label'],
+                        $option['id'],
+                        $option['label'],
                         function (...$args): void {
                             $this->sage->admin->display_field(...$args);
                         },
                         Sage::TOKEN . '_settings',
                         $section,
-                        ['field' => $field, 'prefix' => Sage::TOKEN . '_']
+                        ['field' => $option, 'prefix' => Sage::TOKEN . '_']
                     );
                 }
 
