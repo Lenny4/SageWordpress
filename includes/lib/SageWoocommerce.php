@@ -5,7 +5,6 @@ namespace App\lib;
 use App\class\SageEntityMenu;
 use App\Sage;
 use App\SageSettings;
-use DateTime;
 use StdClass;
 use WC_Meta_Data;
 use WC_Product;
@@ -232,6 +231,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $results[$mapping[$temp->post_id]][$temp->meta_key] = $temp->meta_value;
         }
 
+        $mapping = array_flip($mapping);
         foreach ($data["data"][$entityName]["items"] as &$item) {
             foreach ($fieldNames as $fieldName) {
                 if (isset($results[$item[$mandatoryField]][$fieldName])) {
@@ -239,6 +239,10 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 } else {
                     $item[$fieldName] = '';
                 }
+            }
+            $item['_' . Sage::TOKEN . '_postId'] = null;
+            if (array_key_exists($item['ctNum'], $mapping)) {
+                $item['_' . Sage::TOKEN . '_postId'] = $mapping[$item['ctNum']];
             }
         }
         return $data;

@@ -465,6 +465,7 @@ final class SageGraphQl
                     'ctPays',
                     'ctTelephone',
                     'ctCodeRegion',
+                    'nCatTarif',
                 ]),
                 'fLivraisons' => [
                     ...array_map(static function (string $field) {

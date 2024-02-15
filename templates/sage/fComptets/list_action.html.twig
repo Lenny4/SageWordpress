@@ -11,3 +11,13 @@
         {{ 'Importer/Mettre à jour le client'|trans }}
     </div>
 </div>
+{% if item._sage_postId != null %}
+    <div class="tooltip">
+        <a href="/wp-admin/user-edit.php?user_id={{ item._sage_postId }}">
+            <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>
+        </a>
+        <div class="tooltiptext" style="right: 0">
+            {{ 'Voir l\'utilisateur Sage'|trans }}
+        </div>
+    </div>
+{% endif %}

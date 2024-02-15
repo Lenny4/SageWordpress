@@ -8,7 +8,6 @@ use App\enum\WebsiteEnum;
 use App\lib\SageRequest;
 use App\Utils\SageTranslationUtils;
 use DateTime;
-use Exception;
 use PHPHtmlParser\Dom;
 use stdClass;
 use WC_Product;
@@ -110,6 +109,9 @@ final class SageSettings
                 metadata: [
                     new SageEntityMetadata(field: '_ctNum', value: static function (StdClass $fComptet) {
                         return $fComptet->ctNum;
+                    }),
+                    new SageEntityMetadata(field: '_nCatTarif', value: static function (StdClass $fComptet) {
+                        return $fComptet->nCatTarif;
                     }),
                     new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {
                         return (new DateTime())->format('Y-m-d H:i:s');
@@ -588,19 +590,22 @@ final class SageSettings
                                 $rawFields = $sageEntityMenu->getDefaultFields();
                             }
 
-                            $hideFields = array_diff($sageEntityMenu->getMandatoryFields(), $rawFields);
+                            $mandatoryFields = $sageEntityMenu->getMandatoryFields();
+                            $hideFields = [...array_diff($mandatoryFields, $rawFields), SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId'];
                             $rawFields = array_unique([...$rawFields, ...$hideFields]);
                             $fields = [];
                             $inputFields = $sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType()) ?? [];
                             $transDomain = $sageEntityMenu->getTransDomain();
-                            foreach ($rawFields as $rawField) {
+                            foreach (
+                                array_unique([...$rawFields, ...$mandatoryFields])
+                                as $rawField) {
                                 if (array_key_exists($rawField, $inputFields)) {
                                     $fields[] = [
                                         'name' => $inputFields[$rawField]->name,
                                         'type' => $inputFields[$rawField]->type->name,
                                         'transDomain' => $transDomain,
                                     ];
-                                } else if (str_starts_with($rawField, SageSettings::PREFIX_META_DATA)) {
+                                } else {
                                     $fields[] = [
                                         'name' => $rawField,
                                         'type' => 'StringOperationFilterInput',
@@ -616,15 +621,13 @@ final class SageSettings
                                 }
                             }
 
-                            $data = json_decode(json_encode($sageSettings->sage->sageGraphQl->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields), JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
-                            if (
-                                isset($data["data"][$sageEntityMenu->getEntityName()]["items"]) &&
-                                !empty($items = $data["data"][$sageEntityMenu->getEntityName()]["items"]) &&
-                                array_diff($sageEntityMenu->getMandatoryFields(), array_keys($items[0])) !== []
-                            ) {
-                                throw new Exception("Mandatory fields are missing");
-                            }
+                            $data = json_decode(json_encode($sageSettings->sage->sageGraphQl
+                                ->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields)
+                                , JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
                             $data = $sageSettings->sage->sageWoocommerce->populateMetaDatas($data, $fields, $sageEntityMenu);
+                            $hideFields = array_map(static function (string $hideField) {
+                                return str_replace(SageSettings::PREFIX_META_DATA, '', $hideField);
+                            }, $hideFields);
                             echo $sageSettings->sage->twig->render('sage/' . $sageEntityMenu->getEntityName() . '/index.html.twig', [
                                 'queryParams' => $queryParams,
                                 'data' => $data,

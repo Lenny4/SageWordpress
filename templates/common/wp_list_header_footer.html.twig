@@ -43,6 +43,11 @@
                             {% if isMetaDataField == false %}
                         </a>
                         {% endif %}
+
+                        {% if transField == null %}
+                            {{ 'Must create translation for field ' ~ field['name']|trans }}
+                        {% endif %}
+
                         {% if transField|gettype != 'string' %}
                             <div class="tooltip">
                                 <span class="dashicons dashicons-info"
