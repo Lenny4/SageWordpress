@@ -162,6 +162,7 @@ final class SageTranslationUtils
                 "ctDeliveryDay07" => __("ctDeliveryDay07", 'sage'),
                 "calNo" => __("calNo", 'sage'),
                 "cbCalNo" => __("cbCalNo", 'sage'),
+                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update' => __("Dernière synchronisation dans Wordpress", 'sage'),
             ],
             self::TRANS_FDOCENTETES => [
                 "doDomaine" => __("Domaine (cf. énumérateur DomaineType).", 'sage'),

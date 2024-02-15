@@ -20,6 +20,7 @@ final class SageEntityMenu
         'ctIntitule',
         'ctContact',
         'ctEmail',
+        SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update',
     ];
 
     public const FDOCENTETE_ENTITY_NAME = 'fDocentetes';
@@ -57,6 +58,7 @@ final class SageEntityMenu
     /**
      * @param string[] $mandatoryFields
      * @param string[] $defaultFields
+     * @param SageEntityMetadata[] $metadata
      */
     public function __construct(
         private string $title,
@@ -70,6 +72,8 @@ final class SageEntityMenu
         private string $transDomain,
         private array  $fields,
         private array  $actions,
+        private array  $metadata,
+        private string $metaKeyIdentifier,
     )
     {
     }
@@ -192,6 +196,28 @@ final class SageEntityMenu
     public function setActions(array $actions): self
     {
         $this->actions = $actions;
+        return $this;
+    }
+
+    public function getMetadata(): array
+    {
+        return $this->metadata;
+    }
+
+    public function setMetadata(array $metadata): self
+    {
+        $this->metadata = $metadata;
+        return $this;
+    }
+
+    public function getMetaKeyIdentifier(): string
+    {
+        return $this->metaKeyIdentifier;
+    }
+
+    public function setMetaKeyIdentifier(string $metaKeyIdentifier): self
+    {
+        $this->metaKeyIdentifier = $metaKeyIdentifier;
         return $this;
     }
 }

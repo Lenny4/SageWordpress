@@ -3,9 +3,11 @@
 namespace App;
 
 use App\class\SageEntityMenu;
+use App\class\SageEntityMetadata;
 use App\enum\WebsiteEnum;
 use App\lib\SageRequest;
 use App\Utils\SageTranslationUtils;
+use DateTime;
 use Exception;
 use PHPHtmlParser\Dom;
 use stdClass;
@@ -76,7 +78,13 @@ final class SageSettings
                                 </div>";
                         }
                         $userId = $sageSettings->sage->getUserIdWithCtNum($ctNum);
-                        $user = $sageSettings->sage->sageWoocommerce->convertSageUserToWoocommerce($fComptet, $userId);
+                        $user = $sageSettings->sage->sageWoocommerce->convertSageUserToWoocommerce(
+                            $fComptet,
+                            $userId,
+                            current(array_filter($sageSettings->sageEntityMenus,
+                                static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_CT_NUM
+                            ))
+                        );
                         if (is_string($user)) {
                             return $user;
                         }
@@ -99,6 +107,12 @@ final class SageSettings
                                 </div>";
                     }
                 ],
+                metadata: [
+                    new SageEntityMetadata(field: '_last_update', value: static function () {
+                        return (new DateTime())->format('Y-m-d H:i:s');
+                    }),
+                ],
+                metaKeyIdentifier: Sage::META_KEY_CT_NUM,
             ),
             new SageEntityMenu(
                 title: 'Documents',
@@ -112,6 +126,8 @@ final class SageSettings
                 transDomain: SageTranslationUtils::TRANS_FDOCENTETES,
                 fields: [],
                 actions: [],
+                metadata: [],
+                metaKeyIdentifier: '',
             ),
             new SageEntityMenu(
                 title: 'Articles',
@@ -134,7 +150,7 @@ final class SageSettings
 //                    ],
                 ],
                 actions: [
-                    'import_from_sage' => static function (array $data) use ($sageSettings): string {
+                    'import_from_sage' => function (array $data) use ($sageSettings): string {
                         $arRef = $data['arRef'];
                         $fArticle = $sageSettings->sage->sageGraphQl->getFArticle($arRef);
                         if (is_null($fArticle)) {
@@ -143,7 +159,11 @@ final class SageSettings
                                 </div>";
                         }
                         $articleId = $sageSettings->sage->sageWoocommerce->getWooCommerceIdArticle($arRef);
-                        $article = $sageSettings->sage->sageWoocommerce->convertSageArticleToWoocommerce($fArticle);
+                        $article = $sageSettings->sage->sageWoocommerce->convertSageArticleToWoocommerce($fArticle,
+                            current(array_filter($sageSettings->sageEntityMenus,
+                                static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_AR_REF
+                            ))
+                        );
                         $url = '/wp-json/wc/v3/products';
                         if (!is_null($articleId)) {
                             $url .= '/' . $articleId;
@@ -162,6 +182,12 @@ final class SageSettings
                                 </div>";
                     }
                 ],
+                metadata: [
+                    new SageEntityMetadata(field: '_last_update', value: static function () {
+                        return (new DateTime())->format('Y-m-d H:i:s');
+                    }),
+                ],
+                metaKeyIdentifier: Sage::META_KEY_AR_REF,
             ),
         ];
         // Initialise settings.
@@ -356,7 +382,7 @@ final class SageSettings
                         'label' => __('Fields to show', 'sage'),
                         'description' => __('Please select the fields to show on the table.', 'sage'),
                         'type' => '2_select_multi',
-                        'options' => $this->getFieldsForEntity($sageEntityMenu->getTypeModel(), $sageEntityMenu->getTransDomain()),
+                        'options' => $this->getFieldsForEntity($sageEntityMenu),
                         'default' => $sageEntityMenu->getDefaultFields(),
                     ],
                     [
@@ -582,9 +608,7 @@ final class SageSettings
                             ) {
                                 throw new Exception("Mandatory fields are missing");
                             }
-                            if ($sageEntityMenu->getTypeModel() === SageEntityMenu::FARTICLE_TYPE_MODEL) {
-                                $data = $sageSettings->sage->sageWoocommerce->populateMetaDatasFArticle($data, $fields, $sageEntityMenu);
-                            }
+                            $data = $sageSettings->sage->sageWoocommerce->populateMetaDatas($data, $fields, $sageEntityMenu);
                             echo $sageSettings->sage->twig->render('sage/' . $sageEntityMenu->getEntityName() . '/index.html.twig', [
                                 'queryParams' => $queryParams,
                                 'data' => $data,
@@ -793,9 +817,10 @@ final class SageSettings
         return [$response, $responseError];
     }
 
-    private function getFieldsForEntity(string $object, string $transDomain): array
+    private function getFieldsForEntity(SageEntityMenu $sageEntityMenu): array
     {
-        $typeModel = $this->sage->sageGraphQl->getTypeModel($object);
+        $transDomain = $sageEntityMenu->getTransDomain();
+        $typeModel = $this->sage->sageGraphQl->getTypeModel($sageEntityMenu->getTypeModel());
         if (!is_null($typeModel)) {
             $fieldsObject = array_filter($typeModel,
                 static fn(stdClass $entity): bool => $entity->type->kind !== 'OBJECT' &&
@@ -814,11 +839,9 @@ final class SageSettings
 
         // region custom meta fields
         $prefix = self::PREFIX_META_DATA . '_' . Sage::TOKEN;
-        if ($object === SageEntityMenu::FARTICLE_TYPE_MODEL) {
-            foreach (['_last_update'] as $field) {
-                $fieldName = $prefix . $field;
-                $objectFields[self::PREFIX_META_DATA . $fieldName] = $trans[$transDomain][$fieldName];
-            }
+        foreach ($sageEntityMenu->getMetadata() as $metadata) {
+            $fieldName = $prefix . $metadata->getField();
+            $objectFields[$fieldName] = $trans[$transDomain][$fieldName];
         }
         // endregion
 

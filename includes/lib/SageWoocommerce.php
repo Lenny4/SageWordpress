@@ -5,7 +5,6 @@ namespace App\lib;
 use App\class\SageEntityMenu;
 use App\Sage;
 use App\SageSettings;
-use Cocur\Slugify\Slugify;
 use DateTime;
 use StdClass;
 use WC_Meta_Data;
@@ -86,24 +85,30 @@ final class SageWoocommerce
         return self::$_instance;
     }
 
-    public function convertSageArticleToWoocommerce(StdClass $fArticle): array
+    public function convertSageArticleToWoocommerce(StdClass $fArticle, SageEntityMenu $sageEntityMenu): array
     {
         $prices = json_decode($fArticle->prices, true, 512, JSON_THROW_ON_ERROR);
         usort($prices, static function (array $a, array $b) {
             return $b['PriceTtc'] <=> $a['PriceTtc'];
         });
-        return [
+        $result = [
             'name' => $fArticle->arDesign,
             'meta_data' => [
                 ['key' => Sage::META_KEY_AR_REF, 'value' => $fArticle->arRef],
                 ['key' => '_' . Sage::TOKEN . '_prices', 'value' => $fArticle->prices],
                 ['key' => '_' . Sage::TOKEN . '_max_price', 'value' => json_encode($prices[0], JSON_THROW_ON_ERROR)],
-                ['key' => '_' . Sage::TOKEN . '_last_update', 'value' => (new DateTime())->format('Y-m-d H:i:s')],
             ],
         ];
+        foreach ($sageEntityMenu->getMetadata() as $metadata) {
+            $result['meta_data'][] = [
+                'key' => '_' . Sage::TOKEN . $metadata->getField(),
+                'value' => $metadata->getValue()(),
+            ];
+        }
+        return $result;
     }
 
-    public function convertSageUserToWoocommerce(StdClass $fComptet, ?int $userId): array|string
+    public function convertSageUserToWoocommerce(StdClass $fComptet, ?int $userId, SageEntityMenu $sageEntityMenu): array|string
     {
         $email = $fComptet->ctEmail;
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -130,7 +135,11 @@ final class SageWoocommerce
         }
         $meta = [
             Sage::META_KEY_CT_NUM => $fComptet->ctNum,
+            '_' . Sage::TOKEN . '_last_update' => (new DateTime())->format('Y-m-d H:i:s'),
         ];
+        foreach ($sageEntityMenu->getMetadata() as $metadata) {
+            $meta['_' . Sage::TOKEN . $metadata->getField()] = $metadata->getValue()();
+        }
         foreach ($addressTypes as $addressType) {
             $thisAddress = $address[$addressType];
             [$firstName, $lastName] = Sage::getFirstNameLastName(
@@ -164,9 +173,8 @@ final class SageWoocommerce
             'last_name' => $lastName, // Last name for the user
             'email' => $email, // The email address for the user
             'meta' => $meta,
-
         ];
-        if(is_null($userId)) {
+        if (is_null($userId)) {
             $result['username'] = $fComptet->ctNum;
         }
         return $result;
@@ -191,7 +199,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return null;
     }
 
-    public function populateMetaDatasFArticle(?array $data, array $fields, SageEntityMenu $sageEntityMenu): array|null
+    public function populateMetaDatas(?array $data, array $fields, SageEntityMenu $sageEntityMenu): array|null
     {
         if (empty($data)) {
             return $data;
@@ -202,23 +210,31 @@ WHERE {$wpdb->posts}.post_type = 'product'
         }, array_filter($fields, static function (array $field) {
             return str_starts_with($field['name'], SageSettings::PREFIX_META_DATA);
         }));
-        $arRefs = array_map(static function (array $fArticle) {
-            return $fArticle['arRef'];
+        $mandatoryField = $sageEntityMenu->getMandatoryFields()[0];
+        $ids = array_map(static function (array $entity) use ($mandatoryField) {
+            return $entity[$mandatoryField];
         }, $data["data"][$entityName]["items"]);
 
+        $metaKeyIdentifier = $sageEntityMenu->getMetaKeyIdentifier();
         global $wpdb;
+        $table = 'wp_postmeta';
+        $idColumn = 'post_id';
+        if ($metaKeyIdentifier === Sage::META_KEY_CT_NUM) {
+            $table = 'wp_usermeta';
+            $idColumn = 'user_id';
+        }
         $temps = $wpdb->get_results("
-SELECT wp_postmeta2.post_id, wp_postmeta2.meta_value, wp_postmeta2.meta_key
-FROM wp_postmeta
-         LEFT JOIN wp_postmeta wp_postmeta2 ON wp_postmeta2.post_id = wp_postmeta.post_id
-WHERE wp_postmeta.meta_value IN ('" . implode("','", $arRefs) . "')
-  AND wp_postmeta2.meta_key IN ('" . implode("','", [Sage::META_KEY_AR_REF, ...$fieldNames]) . "')
-ORDER BY wp_postmeta2.meta_value = '" . Sage::META_KEY_AR_REF . "';
+SELECT " . $table . "2." . $idColumn . " post_id, " . $table . "2.meta_value, " . $table . "2.meta_key
+FROM " . $table . "
+         LEFT JOIN " . $table . " " . $table . "2 ON " . $table . "2." . $idColumn . " = " . $table . "." . $idColumn . "
+WHERE " . $table . ".meta_value IN ('" . implode("','", $ids) . "')
+  AND " . $table . "2.meta_key IN ('" . implode("','", [$metaKeyIdentifier, ...$fieldNames]) . "')
+ORDER BY " . $table . "2.meta_value = '" . $metaKeyIdentifier . "';
 ");
         $results = [];
         $mapping = [];
         foreach ($temps as $temp) {
-            if ($temp->meta_key === Sage::META_KEY_AR_REF) {
+            if ($temp->meta_key === $metaKeyIdentifier) {
                 $results[$temp->meta_value] = [];
                 $mapping[$temp->post_id] = $temp->meta_value;
                 continue;
@@ -228,8 +244,8 @@ ORDER BY wp_postmeta2.meta_value = '" . Sage::META_KEY_AR_REF . "';
 
         foreach ($data["data"][$entityName]["items"] as &$item) {
             foreach ($fieldNames as $fieldName) {
-                if (isset($results[$item["arRef"]][$fieldName])) {
-                    $item[$fieldName] = $results[$item["arRef"]][$fieldName];
+                if (isset($results[$item[$mandatoryField]][$fieldName])) {
+                    $item[$fieldName] = $results[$item[$mandatoryField]][$fieldName];
                 } else {
                     $item[$fieldName] = '';
                 }
