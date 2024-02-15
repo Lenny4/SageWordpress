@@ -163,6 +163,7 @@ final class SageTranslationUtils
                 "calNo" => __("calNo", 'sage'),
                 "cbCalNo" => __("cbCalNo", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update' => __("Dernière synchronisation dans Wordpress", 'sage'),
+                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_ctNum' => __("Numéro de compte", 'sage'),
             ],
             self::TRANS_FDOCENTETES => [
                 "doDomaine" => __("Domaine (cf. énumérateur DomaineType).", 'sage'),
@@ -464,6 +465,9 @@ final class SageTranslationUtils
                 "arExclure" => __("arExclure", 'sage'),
                 "prices" => __("Prices", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update' => __("Dernière synchronisation dans Wordpress", 'sage'),
+                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_arRef' => __("arRef", 'sage'),
+                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_prices' => __("Prices", 'sage'),
+                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_max_price' => __("Prix max", 'sage'),
             ],
             'words' => [
                 'contains' => __("Contient", 'sage'),

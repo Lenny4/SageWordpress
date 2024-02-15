@@ -87,22 +87,14 @@ final class SageWoocommerce
 
     public function convertSageArticleToWoocommerce(StdClass $fArticle, SageEntityMenu $sageEntityMenu): array
     {
-        $prices = json_decode($fArticle->prices, true, 512, JSON_THROW_ON_ERROR);
-        usort($prices, static function (array $a, array $b) {
-            return $b['PriceTtc'] <=> $a['PriceTtc'];
-        });
         $result = [
             'name' => $fArticle->arDesign,
-            'meta_data' => [
-                ['key' => Sage::META_KEY_AR_REF, 'value' => $fArticle->arRef],
-                ['key' => '_' . Sage::TOKEN . '_prices', 'value' => $fArticle->prices],
-                ['key' => '_' . Sage::TOKEN . '_max_price', 'value' => json_encode($prices[0], JSON_THROW_ON_ERROR)],
-            ],
+            'meta_data' => [],
         ];
         foreach ($sageEntityMenu->getMetadata() as $metadata) {
             $result['meta_data'][] = [
                 'key' => '_' . Sage::TOKEN . $metadata->getField(),
-                'value' => $metadata->getValue()(),
+                'value' => $metadata->getValue()($fArticle),
             ];
         }
         return $result;
@@ -133,12 +125,9 @@ final class SageWoocommerce
             }
             $address[$addressType] = $thisAdress;
         }
-        $meta = [
-            Sage::META_KEY_CT_NUM => $fComptet->ctNum,
-            '_' . Sage::TOKEN . '_last_update' => (new DateTime())->format('Y-m-d H:i:s'),
-        ];
+        $meta = [];
         foreach ($sageEntityMenu->getMetadata() as $metadata) {
-            $meta['_' . Sage::TOKEN . $metadata->getField()] = $metadata->getValue()();
+            $meta['_' . Sage::TOKEN . $metadata->getField()] = $metadata->getValue()($fComptet);
         }
         foreach ($addressTypes as $addressType) {
             $thisAddress = $address[$addressType];
@@ -176,6 +165,7 @@ final class SageWoocommerce
         ];
         if (is_null($userId)) {
             $result['username'] = $fComptet->ctNum;
+            $result['password'] = bin2hex(openssl_random_pseudo_bytes(4));
         }
         return $result;
     }
@@ -229,7 +219,7 @@ FROM " . $table . "
          LEFT JOIN " . $table . " " . $table . "2 ON " . $table . "2." . $idColumn . " = " . $table . "." . $idColumn . "
 WHERE " . $table . ".meta_value IN ('" . implode("','", $ids) . "')
   AND " . $table . "2.meta_key IN ('" . implode("','", [$metaKeyIdentifier, ...$fieldNames]) . "')
-ORDER BY " . $table . "2.meta_value = '" . $metaKeyIdentifier . "';
+ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 ");
         $results = [];
         $mapping = [];

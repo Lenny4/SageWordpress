@@ -108,7 +108,10 @@ final class SageSettings
                     }
                 ],
                 metadata: [
-                    new SageEntityMetadata(field: '_last_update', value: static function () {
+                    new SageEntityMetadata(field: '_ctNum', value: static function (StdClass $fComptet) {
+                        return $fComptet->ctNum;
+                    }),
+                    new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {
                         return (new DateTime())->format('Y-m-d H:i:s');
                     }),
                 ],
@@ -183,7 +186,20 @@ final class SageSettings
                     }
                 ],
                 metadata: [
-                    new SageEntityMetadata(field: '_last_update', value: static function () {
+                    new SageEntityMetadata(field: '_arRef', value: static function (StdClass $fArticle) {
+                        return $fArticle->arRef;
+                    }),
+                    new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {
+                        return $fArticle->prices;
+                    }),
+                    new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) {
+                        $prices = json_decode($fArticle->prices, true, 512, JSON_THROW_ON_ERROR);
+                        usort($prices, static function (array $a, array $b) {
+                            return $b['PriceTtc'] <=> $a['PriceTtc'];
+                        });
+                        return json_encode($prices[0]);
+                    }),
+                    new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
                         return (new DateTime())->format('Y-m-d H:i:s');
                     }),
                 ],
@@ -399,7 +415,7 @@ final class SageSettings
                 $settings[$sageEntityMenu->getEntityName()] = [
                     'title' => __($sageEntityMenu->getTitle(), 'sage'),
                     'description' => $sageEntityMenu->getDescription(),
-                    'options' => $options,
+                    'fields' => $options,
                 ];
             }
 
@@ -429,28 +445,28 @@ final class SageSettings
                     echo $html;
                 }, Sage::TOKEN . '_settings');
 
-                foreach ($data['options'] as $option) {
+                foreach ($data['fields'] as $field) {
 
                     // Validation callback for field.
                     $validation = '';
-                    if (isset($option['callback'])) {
-                        $validation = $option['callback'];
+                    if (isset($field['callback'])) {
+                        $validation = $field['callback'];
                     }
 
                     // Register field.
-                    $option_name = Sage::TOKEN . '_' . $option['id'];
+                    $option_name = Sage::TOKEN . '_' . $field['id'];
                     register_setting(Sage::TOKEN . '_settings', $option_name, $validation);
 
                     // Add field to page.
                     add_settings_field(
-                        $option['id'],
-                        $option['label'],
+                        $field['id'],
+                        $field['label'],
                         function (...$args): void {
                             $this->sage->admin->display_field(...$args);
                         },
                         Sage::TOKEN . '_settings',
                         $section,
-                        ['field' => $option, 'prefix' => Sage::TOKEN . '_']
+                        ['field' => $field, 'prefix' => Sage::TOKEN . '_']
                     );
                 }
 
