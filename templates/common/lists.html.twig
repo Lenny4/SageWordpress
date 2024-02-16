@@ -16,7 +16,7 @@
                        id="{{ sageEntityMenu.entityName }}_{{ entityIdentifier }}" value="{{ entityIdentifier }}">
             </th>
             {% for prop, value in item|sortByFields(fields) %}
-                {% if hideField != prop %}
+                {% if prop not in hideFields %}
                     <td data-colname="{{ prop }}">
                         {% if value is iterable %}
                             {{ value|bytesToString }}

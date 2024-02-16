@@ -11,7 +11,7 @@
         <input id="cb-select-all-{{ name }}" type="checkbox">
     </td>
     {% for field in fields %}
-        {% if hideField != field['name'] %}
+        {% if field['name']|replace({'metaData': ""}) not in hideFields %}
             <th scope="col" id="{{ field['name'] }}"
                 class="manage-column column-{{ field['name'] }} sortable {% if sortField == field['name'] %} sorted {% endif %} {{ sortValue }}"
                 abbr="{{ field['name'] }}"
