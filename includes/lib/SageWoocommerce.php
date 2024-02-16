@@ -44,7 +44,8 @@ final class SageWoocommerce
             if ($column === 'sage') {
                 $arRef = Sage::getArRef($postId);
                 if (!empty($arRef)) {
-                    echo '<span class="dashicons dashicons-yes" style="color: green"></span>';
+//                    echo '<span class="dashicons dashicons-yes" style="color: green"></span>';
+                    echo $arRef;
                 } else {
                     echo '<span class="dashicons dashicons-no" style="color: red"></span>';
                 }
@@ -64,12 +65,27 @@ final class SageWoocommerce
         $metaDatas = $product->get_meta_data();
         foreach ($metaDatas as $metaData) {
             $data = $metaData->get_data();
-            // todo change according to user
-            if ($data["key"] !== '_' . Sage::TOKEN . '_max_price') {
+            if ($data["key"] !== '_' . Sage::TOKEN . '_prices') {
                 continue;
             }
-            $priceData = json_decode($data["value"], true, 512, JSON_THROW_ON_ERROR);
-            $price = $priceData["PriceTtc"];
+            $pricesData = json_decode($data["value"], true, 512, JSON_THROW_ON_ERROR);
+            $nCatTarifCbIndice = get_user_meta(get_current_user_id(), '_' . Sage::TOKEN . '_nCatTarif', true);
+            if ($nCatTarifCbIndice !== '') {
+                $pCattarifs = $this->sage->sageGraphQl->getPCattarifs();
+                $nCatTarifCbMarq = current(array_filter($pCattarifs, static fn(StdClass $pCattarif) => $pCattarif->cbIndice === (int)$nCatTarifCbIndice));
+                if ($nCatTarifCbMarq !== false) {
+                    $priceData = current(array_filter($pricesData, static fn(array $p) => $p['CbMarq'] === $nCatTarifCbMarq->cbMarq));
+                    if ($priceData !== false) {
+                        $price = $priceData["PriceTtc"];
+                    }
+                }
+            }
+            if (empty($price)) {
+                $allPrices = array_map(static function (array $priceData) {
+                    return $priceData['PriceTtc'];
+                }, $pricesData);
+                $price = max($allPrices);
+            }
             break;
         }
         return (float)$price;
