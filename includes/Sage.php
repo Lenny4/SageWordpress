@@ -312,7 +312,7 @@ final class Sage
                 $allPlugins = get_plugins();
                 $pluginId = 'woocommerce/woocommerce.php';
                 $isWooCommerceInstalled = array_key_exists($pluginId, $allPlugins);
-                add_action('admin_notices', static function () use ($isWooCommerceInstalled): void {
+                add_action('admin_notices', static function () use ($isWooCommerceInstalled, $pluginId): void {
                     ?>
                     <div id="<?= Sage::TOKEN ?>_tasks" class="notice notice-info">
                         <p><span>Sage tasks.</span></p>
@@ -325,23 +325,47 @@ final class Sage
                             </p></div>
                         <?php
                     }
-                    ?>
-                    <?php
-                });
-                if ($isWooCommerceInstalled && !is_plugin_active($pluginId)) {
-                    add_action('admin_notices', static function (): void {
+                    if ($isWooCommerceInstalled && !is_plugin_active($pluginId)) {
                         ?>
                         <div class="error"><p>
                             <?= __('Sage plugin require WooCommerce to be activated.', 'sage') ?>
                         </p>
                         </div><?php
-                    });
-                }
-                if (array_key_exists(Sage::TOKEN . '_message', $_GET)) {
-                    add_action('admin_notices', static function (): void {
+                    }
+                    if (array_key_exists(Sage::TOKEN . '_message', $_GET)) {
                         echo str_replace("\'", "'", $_GET[Sage::TOKEN . '_message']);
-                    });
-                }
+                    }
+                    if (array_key_exists('page', $_GET) && str_starts_with($_GET['page'], Sage::TOKEN)) {
+                        $woocommerceEnableGuestCheckout = get_option('woocommerce_enable_guest_checkout');
+                        if ($woocommerceEnableGuestCheckout === 'yes') {
+                            ?>
+                            <div class="error"><p>
+                                <?= __('Veuillez désactiver l\'option dans Woocommerce:', 'sage') ?>
+                                <code>
+                                    <?= __('Allow customers to place orders without an account', 'woocommerce') ?>
+                                </code>
+                            </p>
+                            <p>
+                                <?= __("Lorsque cette option est activée vos clients ne sont pas obligés de se connecter à leurs comptes pour passer commande et il est donc impossible de créer automatiquement la commande passé dans Wordpress dans Sage.", 'sage') ?>
+                            </p>
+                            <form method="post" action="options.php" enctype="multipart/form-data">
+                                <input type="hidden" name="woocommerce_enable_guest_checkout" value="no">
+                                <input type="hidden" name="page_options" value="woocommerce_enable_guest_checkout" />
+                                <input type="hidden" name="_wp_http_referer" value="<?= $_SERVER["REQUEST_URI"] ?>">
+                                <input type="hidden" name="action" value="update">
+                                <input type="hidden" name="option_page" value="options"/>
+                                <?php wp_nonce_field('options-options'); ?>
+                                <p class="submit">
+                                    <input name="Update" type="submit" class="button-primary"
+                                           value="<?= __('Mettre à jour', 'sage') ?>">
+                                </p>
+                            </form>
+                            </div><?php
+                        }
+                    }
+                    ?>
+                    <?php
+                });
             }
         });
     }
