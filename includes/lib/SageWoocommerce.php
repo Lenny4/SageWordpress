@@ -117,13 +117,13 @@ final class SageWoocommerce
 
     public function convertSageUserToWoocommerce(StdClass $fComptet, ?int $userId, SageEntityMenu $sageEntityMenu): array|string
     {
-        $email = $fComptet->ctEmail;
+        $email = explode(';', $fComptet->ctEmail)[0];
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return "<div class=error>" . __("L'adresse email n'est pas au bon format [email: '" . $email . "']", 'sage') . "</div>";
         }
         $mailExistsUserId = email_exists($email);
         if ($mailExistsUserId !== false && $mailExistsUserId !== $userId) {
-            return "<div class=error>" . __('This email address is already registered.', 'woocommerce') . "</div>";
+            return "<div class=error>" . __('This email address [' . $email . '] is already registered for user id: ' . $mailExistsUserId . '.', 'woocommerce') . "</div>";
         }
         $fComptetAddress = Sage::createAddressWithFComptet($fComptet);
         $addressTypes = ['billing', 'shipping'];

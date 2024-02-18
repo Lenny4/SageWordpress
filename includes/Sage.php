@@ -2,9 +2,11 @@
 
 namespace App;
 
+use App\class\SageEntityMenu;
 use App\lib\SageAdminApi;
 use App\lib\SageGraphQl;
 use App\lib\SagePostType;
+use App\lib\SageRequest;
 use App\lib\SageTaxonomy;
 use App\lib\SageWoocommerce;
 use App\Utils\SageTranslationUtils;
@@ -18,7 +20,9 @@ use Twig\TwigFilter;
 use Twig\TwigFunction;
 use WC_Meta_Data;
 use WC_Product;
+use WP_Error;
 use WP_Upgrader;
+use WP_User;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -350,7 +354,7 @@ final class Sage
                             </p>
                             <form method="post" action="options.php" enctype="multipart/form-data">
                                 <input type="hidden" name="woocommerce_enable_guest_checkout" value="no">
-                                <input type="hidden" name="page_options" value="woocommerce_enable_guest_checkout" />
+                                <input type="hidden" name="page_options" value="woocommerce_enable_guest_checkout"/>
                                 <input type="hidden" name="_wp_http_referer" value="<?= $_SERVER["REQUEST_URI"] ?>">
                                 <input type="hidden" name="action" value="update">
                                 <input type="hidden" name="option_page" value="options"/>
@@ -368,6 +372,22 @@ final class Sage
                 });
             }
         });
+
+        // region link wordpress user to sage user
+        add_action('show_user_profile', function (WP_User $user): void {
+            $this->addCustomerMetaFields($user);
+        });
+        add_action('edit_user_profile', function (WP_User $user): void {
+            $this->addCustomerMetaFields($user);
+        });
+
+        add_action('personal_options_update', function (int $userId): void {
+            $this->saveCustomerMetaFields($userId);
+        });
+        add_action('edit_user_profile_update', function (int $userId): void {
+            $this->saveCustomerMetaFields($userId);
+        });
+        // endregion
     }
 
     /**
@@ -395,6 +415,119 @@ final class Sage
 
         load_textdomain($domain, WP_LANG_DIR . '/' . $domain . '/' . $domain . '-' . $locale . '.mo');
         load_plugin_textdomain($domain, false, dirname(plugin_basename($this->file)) . '/lang/');
+    }
+
+    public function addCustomerMetaFields(WP_User $user): void
+    {
+        echo $this->twig->render('user/formMetaFields.html.twig', [
+            'user' => $user,
+            'ctNum' => get_user_meta($user->ID, self::META_KEY_CT_NUM, true),
+        ]);
+    }
+
+    public function saveCustomerMetaFields(int $userId): void
+    {
+        $queryParam = Sage::TOKEN . '_ctNum';
+        if (!array_key_exists($queryParam, $_POST)) {
+            return;
+        }
+        if ($_POST[$queryParam]) {
+            $message = $this->importUserFromSage($_POST[$queryParam], $userId);
+            if ($message) {
+                $redirect = add_query_arg(Sage::TOKEN . '_message', urlencode($message), wp_get_referer());
+                wp_redirect($redirect);
+                exit;
+            }
+        }
+    }
+
+    public function importUserFromSage(string $ctNum, ?int $shouldBeUserId = null): string
+    {
+        $fComptet = $this->sageGraphQl->getFComptet($ctNum);
+        if (is_null($fComptet)) {
+            return "<div class='error'>
+                        " . __("Le compte Sage n'a pas pu être importé", 'sage') . "
+                                </div>";
+        }
+        $userId = $this->getUserIdWithCtNum($ctNum);
+        if (!is_null($shouldBeUserId)) {
+            if (is_null($userId)) {
+                $userId = $shouldBeUserId;
+            } else if ($userId !== $shouldBeUserId) {
+                return "<div class='error'>
+                        " . __("Ce numéro de compte Sage est déjà assigné à un utilisateur Wordpress", 'sage') . "
+                                </div>";
+            }
+        }
+        $user = $this->sageWoocommerce->convertSageUserToWoocommerce(
+            $fComptet,
+            $userId,
+            current(array_filter($this->settings->sageEntityMenus,
+                static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_CT_NUM
+            ))
+        );
+        if (is_string($user)) {
+            return $user;
+        }
+        $url = '/wp-json/wp/v2/users';
+        if (!is_null($userId)) {
+            $url .= '/' . $userId;
+        }
+        [$response, $responseError] = $this->createResource($url, is_null($userId) ? 'POST' : 'PUT', $user);
+
+        if (is_string($responseError)) {
+            return $responseError;
+        }
+        if ($response["response"]["code"] === 200) {
+            return "<div class='notice notice-success'>
+                        " . __('User updated', 'sage') . "
+                                </div>";
+        }
+        return "<div class='notice notice-success'>
+                        " . __('User created', 'sage') . "
+                                </div>";
+    }
+
+    public function getUserIdWithCtNum(string $ctNum): int|null
+    {
+        global $wpdb;
+        $r = $wpdb->get_results(
+            $wpdb->prepare("
+SELECT user_id
+FROM {$wpdb->usermeta}
+WHERE meta_key = %s
+  AND meta_value = %s
+", [self::META_KEY_CT_NUM, $ctNum]));
+        if (!empty($r)) {
+            return (int)$r[0]->user_id;
+        }
+        return null;
+    }
+
+    public function createResource(string $url, string $method, array $body): array
+    {
+        $response = SageRequest::selfRequest($url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+            'method' => $method,
+            'body' => json_encode($body, JSON_THROW_ON_ERROR),
+        ]);
+        $responseError = null;
+        if ($response instanceof WP_Error) {
+            $responseError = "<div class=error>
+                                <pre>" . $response->get_error_code() . "</pre>
+                                <pre>" . $response->get_error_message() . "</pre>
+                                </div>";
+        }
+
+        if (!in_array($response["response"]["code"], [200, 201], true)) {
+            $responseError = "<div class=error>
+                                <pre>" . $response['response']['code'] . "</pre>
+                                <pre>" . $response['body'] . "</pre>
+                                </div>";
+        }
+        return [$response, $responseError];
     }
 
     /**
@@ -518,22 +651,6 @@ final class Sage
         }
 
         return new SageTaxonomy($taxonomy, $plural, $single, $post_types, $taxonomy_args);
-    }
-
-    public function getUserIdWithCtNum(string $ctNum): int|null
-    {
-        global $wpdb;
-        $r = $wpdb->get_results(
-            $wpdb->prepare("
-SELECT user_id
-FROM {$wpdb->usermeta}
-WHERE meta_key = %s
-  AND meta_value = %s
-", [self::META_KEY_CT_NUM, $ctNum]));
-        if (!empty($r)) {
-            return (int)$r[0]->user_id;
-        }
-        return null;
     }
 
     /**

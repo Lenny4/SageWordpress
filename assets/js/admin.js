@@ -6,6 +6,11 @@ jQuery(document).ready(function () {
         translations = JSON.parse(translationString);
     }
     var apiHostUrl = jQuery("[data-sage-api-host-url]").attr('data-sage-api-host-url');
+    // region remove sage_message in query
+    var url = new URL(location.href);
+    url.searchParams.delete('sage_message');
+    window.history.replaceState(null, '', url);
+    // endregion
 
     var index = 0;
 

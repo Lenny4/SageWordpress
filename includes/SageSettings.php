@@ -12,7 +12,6 @@ use PHPHtmlParser\Dom;
 use stdClass;
 use WC_Product;
 use WP_Application_Passwords;
-use WP_Error;
 use WP_Post;
 use WP_REST_Request;
 use WP_User;
@@ -45,7 +44,7 @@ final class SageSettings
     /**
      * @var SageEntityMenu[]
      */
-    private readonly array $sageEntityMenus;
+    public readonly array $sageEntityMenus;
 
     /**
      * Constructor function.
@@ -70,40 +69,7 @@ final class SageSettings
                 actions: [
                     'import_from_sage' => static function (array $data) use ($sageSettings): string {
                         $ctNum = $data['ctNum'];
-                        $fComptet = $sageSettings->sage->sageGraphQl->getFComptet($ctNum);
-                        if (is_null($fComptet)) {
-                            return "<div class='error'>
-                        " . __("L'utilisateur n'a pas pu être importé", 'sage') . "
-                                </div>";
-                        }
-                        $userId = $sageSettings->sage->getUserIdWithCtNum($ctNum);
-                        $user = $sageSettings->sage->sageWoocommerce->convertSageUserToWoocommerce(
-                            $fComptet,
-                            $userId,
-                            current(array_filter($sageSettings->sageEntityMenus,
-                                static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_CT_NUM
-                            ))
-                        );
-                        if (is_string($user)) {
-                            return $user;
-                        }
-                        $url = '/wp-json/wp/v2/users';
-                        if (!is_null($userId)) {
-                            $url .= '/' . $userId;
-                        }
-                        [$response, $responseError] = $sageSettings->createResource($url, is_null($userId) ? 'POST' : 'PUT', $user);
-
-                        if (is_string($responseError)) {
-                            return $responseError;
-                        }
-                        if ($response["response"]["code"] === 200) {
-                            return "<div class='notice notice-success'>
-                        " . __('User updated', 'sage') . "
-                                </div>";
-                        }
-                        return "<div class='notice notice-success'>
-                        " . __('User created', 'sage') . "
-                                </div>";
+                        return $sageSettings->sage->importUserFromSage($ctNum);
                     }
                 ],
                 metadata: [
@@ -173,7 +139,7 @@ final class SageSettings
                         if (!is_null($articleId)) {
                             $url .= '/' . $articleId;
                         }
-                        [$response, $responseError] = $sageSettings->createResource($url, is_null($articleId) ? 'POST' : 'PUT', $article);
+                        [$response, $responseError] = $sageSettings->sage->createResource($url, is_null($articleId) ? 'POST' : 'PUT', $article);
                         if (is_string($responseError)) {
                             return $responseError;
                         }
@@ -811,32 +777,6 @@ final class SageSettings
             return $custom_meta;
         }, accepted_args: 4);
         // endregion
-    }
-
-    private function createResource(string $url, string $method, array $body): array
-    {
-        $response = SageRequest::selfRequest($url, [
-            'headers' => [
-                'Content-Type' => 'application/json',
-            ],
-            'method' => $method,
-            'body' => json_encode($body, JSON_THROW_ON_ERROR),
-        ]);
-        $responseError = null;
-        if ($response instanceof WP_Error) {
-            $responseError = "<div class=error>
-                                <pre>" . $response->get_error_code() . "</pre>
-                                <pre>" . $response->get_error_message() . "</pre>
-                                </div>";
-        }
-
-        if (!in_array($response["response"]["code"], [200, 201], true)) {
-            $responseError = "<div class=error>
-                                <pre>" . $response['response']['code'] . "</pre>
-                                <pre>" . $response['body'] . "</pre>
-                                </div>";
-        }
-        return [$response, $responseError];
     }
 
     private function getFieldsForEntity(SageEntityMenu $sageEntityMenu): array
