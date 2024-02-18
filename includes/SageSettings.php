@@ -82,6 +82,7 @@ final class SageSettings
                     new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {
                         return (new DateTime())->format('Y-m-d H:i:s');
                     }),
+                    new SageEntityMetadata(field: '_postId', value: null),
                 ],
                 metaKeyIdentifier: Sage::META_KEY_CT_NUM,
             ),
@@ -173,6 +174,7 @@ final class SageSettings
                     new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
                         return (new DateTime())->format('Y-m-d H:i:s');
                     }),
+                    new SageEntityMetadata(field: '_postId', value: null),
                 ],
                 metaKeyIdentifier: Sage::META_KEY_AR_REF,
             ),
@@ -742,7 +744,7 @@ final class SageSettings
             if (!($product instanceof WC_Product)) {
                 return;
             }
-            $pCattarifs = $sageSettings->sage->sageGraphQl->getPCattarifs();
+            $pCattarifs = Sage::getPCattarifs();
             echo $sageSettings->sage->twig->render('woocommerce/tabs.html.twig', [
                 'tabNames' => array_map(static fn(array $productTab): string => $productTab['name'], $productTabs),
                 'product' => $product,
@@ -899,6 +901,8 @@ final class SageSettings
             syncArticlesToWebsite: (bool)get_option(Sage::TOKEN . '_sync_articles_to_website'),
         );
         if (!is_null($stdClass)) {
+            $pCattarifs = $this->sage->sageGraphQl->getPCattarifs(false);
+            update_option(Sage::TOKEN . '_pCattarifs', json_encode($pCattarifs, JSON_THROW_ON_ERROR));
             add_action('admin_notices', static function (): void {
                 ?>
                 <div class="notice notice-success is-dismissible"><p><?=

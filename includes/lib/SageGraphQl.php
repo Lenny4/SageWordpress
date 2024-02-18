@@ -499,7 +499,7 @@ final class SageGraphQl
         return $fComptet->data->fComptets->items[0];
     }
 
-    public function getPCattarifs(): array
+    public function getPCattarifs($useCache = true): array
     {
         $cacheName = SageEntityMenu::PCATTARIF_TYPE_MODEL;
         $pCattarifs = $this->searchEntities(
@@ -529,7 +529,7 @@ final class SageGraphQl
                     "type" => "StringOperationFilterInput",
                 ],
             ],
-            $cacheName
+            $useCache ? $cacheName : null
         );
         $result = is_null($pCattarifs) ? [] : $pCattarifs->data->pCattarifs->items;
         usort($result, static function (stdClass $a, stdClass $b) {

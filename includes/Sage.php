@@ -13,6 +13,7 @@ use App\Utils\SageTranslationUtils;
 use Lead\Dir\Dir;
 use StdClass;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Throwable;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
 use Twig\Loader\FilesystemLoader;
@@ -553,6 +554,15 @@ WHERE meta_key = %s
     public static function getArRef(int $postId): mixed
     {
         return get_post_meta($postId, self::META_KEY_AR_REF, true);
+    }
+
+    public static function getPCattarifs(): array
+    {
+        try {
+            return json_decode(get_option(Sage::TOKEN . '_pCattarifs'), false, 512, JSON_THROW_ON_ERROR);
+        } catch (Throwable) {
+            return [];
+        }
     }
 
     public static function getName(?string $intitule, ?string $contact): string

@@ -63,6 +63,7 @@ final class SageWoocommerce
         }
         /** @var WC_Meta_Data[] $metaDatas */
         $metaDatas = $product->get_meta_data();
+        $pCattarifs = Sage::getPCattarifs();
         foreach ($metaDatas as $metaData) {
             $data = $metaData->get_data();
             if ($data["key"] !== '_' . Sage::TOKEN . '_prices') {
@@ -71,7 +72,6 @@ final class SageWoocommerce
             $pricesData = json_decode($data["value"], true, 512, JSON_THROW_ON_ERROR);
             $nCatTarifCbIndice = get_user_meta(get_current_user_id(), '_' . Sage::TOKEN . '_nCatTarif', true);
             if ($nCatTarifCbIndice !== '') {
-                $pCattarifs = $this->sage->sageGraphQl->getPCattarifs();
                 $nCatTarifCbMarq = current(array_filter($pCattarifs, static fn(StdClass $pCattarif) => $pCattarif->cbIndice === (int)$nCatTarifCbIndice));
                 if ($nCatTarifCbMarq !== false) {
                     $priceData = current(array_filter($pricesData, static fn(array $p) => $p['CbMarq'] === $nCatTarifCbMarq->cbMarq));
@@ -107,10 +107,13 @@ final class SageWoocommerce
             'meta_data' => [],
         ];
         foreach ($sageEntityMenu->getMetadata() as $metadata) {
-            $result['meta_data'][] = [
-                'key' => '_' . Sage::TOKEN . $metadata->getField(),
-                'value' => $metadata->getValue()($fArticle),
-            ];
+            $value = $metadata->getValue();
+            if (!is_null($value)) {
+                $result['meta_data'][] = [
+                    'key' => '_' . Sage::TOKEN . $metadata->getField(),
+                    'value' => $value($fArticle),
+                ];
+            }
         }
         return $result;
     }
@@ -143,7 +146,10 @@ final class SageWoocommerce
         }
         $meta = [];
         foreach ($sageEntityMenu->getMetadata() as $metadata) {
-            $meta['_' . Sage::TOKEN . $metadata->getField()] = $metadata->getValue()($fComptet);
+            $value = $metadata->getValue();
+            if (!is_null($value)) {
+                $meta['_' . Sage::TOKEN . $metadata->getField()] = $value($fComptet);
+            }
         }
         foreach ($addressTypes as $addressType) {
             $thisAddress = $address[$addressType];
