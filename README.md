@@ -69,3 +69,25 @@ add_action('admin_head', function () {
 //            );
         });
 ```
+
+- pouvoir manuellement lier un compte wordpress à un compte sage
+
+- liste des users afficher le compte Sage associé
+
+- getPCattarifs doit être appelé lorsque l'on mets à jour les settings puis utiliser les options à la place de l'appeler
+  directement
+
+- Add option: automatically create an account in sage when create a wordpress account (doit marcher même si l'API est
+  hors ligne)
+
+- ajouter l'option: "Envoyer un mail à l'utilisateur lorsque son compte Sage a été importé dans Wordpress" -> send
+  wordpress function reset password
+  // Verify user capabilities.
+  if ( ! current_user_can( 'edit_user', $user_id ) ) {
+  wp_send_json_error( __( 'Cannot send password reset, permission denied.' ) );
+  }
+  // Send the password reset link.
+  $user = get_userdata( $user_id );
+  $results = retrieve_password( $user->user_login );
+
+- le site doit pouvoir marcher même si l'API est down (un utilisateur doit pouvoir ce connecter et passer commande)

@@ -128,6 +128,7 @@ final class SageWoocommerce
         $fComptetAddress = Sage::createAddressWithFComptet($fComptet);
         $addressTypes = ['billing', 'shipping'];
         $address = [];
+        $fPays = $this->sage->sageGraphQl->getFPays();
         foreach ($addressTypes as $addressType) {
             $thisAdress = current(array_filter($fComptet->fLivraisons, static function (StdClass $fLivraison) use ($addressType, $fComptetAddress) {
                 if ($addressType === 'billing') {
@@ -150,6 +151,7 @@ final class SageWoocommerce
                 intitule: $thisAddress->liIntitule,
                 contact: $thisAddress->liContact
             );
+            $fPay = current(array_filter($fPays, static fn(StdClass $fPay) => $fPay->paIntitule === $thisAddress->liPays));
             $meta = [
                 ...$meta,
                 // region woocommerce (got from: woocommerce/includes/class-wc-privacy-erasers.php)
@@ -161,7 +163,7 @@ final class SageWoocommerce
                 $addressType . '_city' => $thisAddress->liVille,
                 $addressType . '_postcode' => $thisAddress->liCodePostal,
                 $addressType . '_state' => $thisAddress->liCodeRegion,
-                $addressType . '_country' => $thisAddress->liPays,
+                $addressType . '_country' => $fPay !== false ? $fPay->paCode : $thisAddress->liPays,
                 $addressType . '_phone' => $thisAddress->liTelephone,
                 $addressType . '_email' => $thisAddress->liEmail,
                 // endregion
@@ -180,7 +182,7 @@ final class SageWoocommerce
         ];
         if (is_null($userId)) {
             $result['username'] = $fComptet->ctNum;
-            $result['password'] = bin2hex(openssl_random_pseudo_bytes(4));
+            $result['password'] = bin2hex(random_bytes(5));
         }
         return $result;
     }

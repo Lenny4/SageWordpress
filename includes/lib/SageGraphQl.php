@@ -30,7 +30,9 @@ final class SageGraphQl
 
     private function __construct(public ?Sage $sage)
     {
-        $this->ping();
+        if (is_admin()) {
+            $this->ping();
+        }
     }
 
     private function ping(): void
@@ -534,5 +536,30 @@ final class SageGraphQl
             return $a->cbIndice <=> $b->cbIndice;
         });
         return $result;
+    }
+
+    public function getFPays(): array
+    {
+        $cacheName = SageEntityMenu::FPAYS_TYPE_MODEL;
+        $fPays = $this->searchEntities(
+            SageEntityMenu::FPAYS_ENTITY_NAME,
+            [
+                "paged" => "1",
+                "per_page" => "300" // 197 countries exists
+            ],
+            [
+                ...array_map(static function (string $field) {
+                    return [
+                        "name" => $field,
+                        "type" => "StringOperationFilterInput",
+                    ];
+                }, [
+                    'paIntitule',
+                    'paCode',
+                ]),
+            ],
+            $cacheName
+        );
+        return is_null($fPays) ? [] : $fPays->data->fPays->items;
     }
 }

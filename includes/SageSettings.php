@@ -576,7 +576,10 @@ final class SageSettings
                         'menu_slug' => Sage::TOKEN . '_' . $sageEntityMenu->getEntityName(),
                         'function' => static function () use ($sageSettings, $sageEntityMenu): void {
                             $queryParams = $_GET;
-                            if (array_key_exists('action', $queryParams)) {
+                            if (
+                                array_key_exists('action', $queryParams) &&
+                                current_user_can(self::$capability)
+                            ) {
                                 $action = json_decode(stripslashes((string)$queryParams['action']), true, 512, JSON_THROW_ON_ERROR);
                                 $message = $sageEntityMenu->getActions()[$action["type"]]($action["data"]);
                                 $redirect = remove_query_arg('action', wp_get_referer());

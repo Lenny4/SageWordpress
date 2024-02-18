@@ -55,6 +55,10 @@ final class SageEntityMenu
 
     public const PCATTARIF_TYPE_MODEL = 'PCattarif';
 
+    public const FPAYS_ENTITY_NAME = 'fPays';
+
+    public const FPAYS_TYPE_MODEL = 'FPay';
+
     /**
      * @param string[] $mandatoryFields
      * @param string[] $defaultFields
