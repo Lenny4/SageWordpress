@@ -222,7 +222,7 @@ final class Sage
         $this->twig->addFilter(new TwigFilter('getEntityIdentifier', static function (array $obj, array $mandatoryFields): string {
             $r = [];
             foreach ($mandatoryFields as $mandatoryField) {
-                $r[] = $obj[$mandatoryField];
+                $r[] = $obj[str_replace(SageSettings::PREFIX_META_DATA, '', $mandatoryField)];
             }
 
             return implode('|', $r);

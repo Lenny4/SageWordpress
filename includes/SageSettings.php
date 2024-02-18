@@ -107,7 +107,10 @@ final class SageSettings
                 typeModel: SageEntityMenu::FARTICLE_TYPE_MODEL,
                 defaultSortField: 'arRef',
                 defaultFields: SageEntityMenu::FARTICLE_DEFAULT_FIELDS,
-                mandatoryFields: ['arRef'],
+                mandatoryFields: [
+                    'arRef',
+                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId'
+                ],
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
                 options: [
@@ -560,7 +563,7 @@ final class SageSettings
                             }
 
                             $mandatoryFields = $sageEntityMenu->getMandatoryFields();
-                            $hideFields = [...array_diff($mandatoryFields, $rawFields), SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId'];
+                            $hideFields = [...array_diff($mandatoryFields, $rawFields)];
                             $rawFields = array_unique([...$rawFields, ...$hideFields]);
                             $fields = [];
                             $inputFields = $sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType()) ?? [];

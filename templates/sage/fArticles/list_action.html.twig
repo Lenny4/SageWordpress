@@ -11,3 +11,13 @@
         {{ 'Importer/Mettre à jour l\'article'|trans }}
     </div>
 </div>
+{% if item._sage_postId != null %}
+    <div class="tooltip">
+        <a href="/wp-admin/post.php?post={{ item._sage_postId }}&action=edit">
+            <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>
+        </a>
+        <div class="tooltiptext" style="right: 0">
+            {{ 'Voir l\'article Wordpress'|trans }}
+        </div>
+    </div>
+{% endif %}

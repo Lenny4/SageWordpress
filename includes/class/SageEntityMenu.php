@@ -21,6 +21,7 @@ final class SageEntityMenu
         'ctContact',
         'ctEmail',
         SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update',
+        SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
     ];
 
     public const FDOCENTETE_ENTITY_NAME = 'fDocentetes';
@@ -49,6 +50,7 @@ final class SageEntityMenu
         'arRef',
         'arDesign',
         SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update',
+        SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
     ];
 
     public const PCATTARIF_ENTITY_NAME = 'pCattarifs';

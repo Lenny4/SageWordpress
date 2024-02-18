@@ -165,7 +165,7 @@ final class SageTranslationUtils
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update' => __("Dernière synchronisation dans Wordpress", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_ctNum' => __("Numéro de compte", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_nCatTarif' => __("Catégorie de tarif", 'sage'),
-                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId' => __("Identifiant Sage", 'sage'),
+                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId' => __("Wordpress ID", 'sage'),
             ],
             self::TRANS_FDOCENTETES => [
                 "doDomaine" => __("Domaine (cf. énumérateur DomaineType).", 'sage'),
@@ -326,7 +326,7 @@ final class SageTranslationUtils
                 "doPaiementLigne" => __("doPaiementLigne", 'sage'),
                 "doMotifDevis" => __("Motif devis perdus", 'sage'),
                 "doConversion" => __("doConversion", 'sage'),
-                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId' => __("Identifiant Sage", 'sage'),
+                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId' => __("Wordpress ID", 'sage'),
             ],
             self::TRANS_FARTICLES => [
                 "arRef" => __("arRef", 'sage'),
@@ -471,7 +471,7 @@ final class SageTranslationUtils
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_arRef' => __("arRef", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_prices' => __("Prices", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_max_price' => __("Prix max", 'sage'),
-                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId' => __("Identifiant Sage", 'sage'),
+                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId' => __("Wordpress ID", 'sage'),
             ],
             'words' => [
                 'contains' => __("Contient", 'sage'),

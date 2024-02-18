@@ -259,8 +259,8 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 }
             }
             $item['_' . Sage::TOKEN . '_postId'] = null;
-            if (array_key_exists($item['ctNum'], $mapping)) {
-                $item['_' . Sage::TOKEN . '_postId'] = $mapping[$item['ctNum']];
+            if (array_key_exists($item[$mandatoryField], $mapping)) {
+                $item['_' . Sage::TOKEN . '_postId'] = $mapping[$item[$mandatoryField]];
             }
         }
         return $data;
