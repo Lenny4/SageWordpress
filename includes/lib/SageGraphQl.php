@@ -103,7 +103,7 @@ final class SageGraphQl
         return self::$_instance;
     }
 
-    public function addUpdateWebsite(
+    public function createUpdateWebsite(
         string      $name,
         string      $username,
         string      $password,
@@ -119,7 +119,7 @@ final class SageGraphQl
         bool        $syncArticlesToWebsite,
     ): StdClass|null
     {
-        $query = (new Mutation('addUpdateWebsite'))
+        $query = (new Mutation('createUpdateWebsite'))
             ->setArguments([
                 'name' => new RawObject('"' . $name . '"'),
                 'username' => new RawObject('"' . $username . '"'),
@@ -149,6 +149,7 @@ final class SageGraphQl
         try {
             return $client->runQuery($gql);
         } catch (Throwable $throwable) {
+            // todo store logs
             add_action('admin_notices', static function () use ($throwable): void {
                 ?>
                 <div class="error"><p>
@@ -175,6 +176,94 @@ final class SageGraphQl
         }
 
         return $this->client;
+    }
+
+    public function createFComptet(
+        string  $ctIntitule,
+        string  $ctEmail,
+        ?string $ctNum = null,
+        ?bool   $autoGenerateCtNum = null,
+    ): StdClass|null
+    {
+        $arguments = [
+            'ctIntitule' => new RawObject('"' . $ctIntitule . '"'),
+            'ctEmail' => new RawObject('"' . $ctEmail . '"'),
+        ];
+        if (!is_null($ctNum)) {
+            $arguments['ctNum'] = new RawObject('"' . $ctNum . '"');
+        }
+        if (!is_null($autoGenerateCtNum)) {
+            $arguments['autoGenerateCtNum'] = new RawObject($autoGenerateCtNum ? 'true' : 'false');
+        }
+        $query = (new Mutation('createFComptet'))
+            ->setArguments($arguments)
+            ->setSelectionSet($this->formatSelectionSet($this->_getFComptetSelectionSet()));
+        $result = $this->runQuery($query)?->getResults();
+        if (!is_null($result)) {
+            return $result->data->createFComptet;
+        }
+        return null;
+    }
+
+    private function formatSelectionSet(array $selectionSets): array
+    {
+        $result = [];
+        foreach ($selectionSets as $key => $value) {
+            if (is_numeric($key)) {
+                if (!str_starts_with($value['name'], SageSettings::PREFIX_META_DATA)) {
+                    $result[] = $value['name'];
+                }
+            } else {
+                $result[] = (new Query($key))->setSelectionSet($this->formatSelectionSet($value));
+            }
+        }
+        return $result;
+    }
+
+    private function _getFComptetSelectionSet(): array
+    {
+        return [
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'ctNum',
+                'ctIntitule',
+                'ctEmail',
+                'ctContact',
+                'ctAdresse',
+                'ctComplement',
+                'ctVille',
+                'ctCodePostal',
+                'ctPays',
+                'ctTelephone',
+                'ctCodeRegion',
+                'nCatTarif',
+            ]),
+            'fLivraisons' => [
+                ...array_map(static function (string $field) {
+                    return [
+                        "name" => $field,
+                        "type" => "StringOperationFilterInput",
+                    ];
+                }, [
+                    'liIntitule',
+                    'liAdresse',
+                    'liComplement',
+                    'liCodePostal',
+                    'liPrincipal',
+                    'liVille',
+                    'liPays',
+                    'liContact',
+                    'liTelephone',
+                    'liEmail',
+                    'liAdresseFact',
+                    'liCodeRegion',
+                ])
+            ],
+        ];
     }
 
     public function getTypeModel(string $object): array|null
@@ -308,7 +397,7 @@ final class SageGraphQl
         return $fArticle->data->fArticles->items[0];
     }
 
-    public function searchEntities(string $entityName, array $queryParams, array $fields, ?string $cacheName = null): StdClass|null
+    public function searchEntities(string $entityName, array $queryParams, array $selectionSets, ?string $cacheName = null): StdClass|null
     {
         if (!is_null($cacheName)) {
             $cacheName = 'SearchEntities_' . $cacheName;
@@ -319,12 +408,12 @@ final class SageGraphQl
         }
 
         $sageGraphQl = $this;
-        $function = static function () use ($entityName, $queryParams, $fields, $sageGraphQl) {
+        $function = static function () use ($entityName, $queryParams, $selectionSets, $sageGraphQl) {
             $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
             $page = (int)($queryParams["paged"] ?? 1);
             $where = [];
             if (array_key_exists('filter_field', $queryParams)) {
-                $primaryFields = array_filter($fields, static fn(array $field): bool => array_key_exists('name', $field));
+                $primaryFields = array_filter($selectionSets, static fn(array $field): bool => array_key_exists('name', $field));
                 foreach ($queryParams["filter_field"] as $k => $v) {
                     $fieldType = current(array_filter($primaryFields, static fn(array $field): bool => $field['name'] === $v))['type'];
                     if (in_array($fieldType, [
@@ -372,7 +461,7 @@ final class SageGraphQl
                     [
                         'totalCount',
                         (new Query('items'))
-                            ->setSelectionSet($sageGraphQl->getSelectionSet($fields)),
+                            ->setSelectionSet($sageGraphQl->formatSelectionSet($selectionSets)),
                     ]
                 );
             return $sageGraphQl->runQuery($query)?->getResults();
@@ -417,21 +506,6 @@ final class SageGraphQl
         return [null, $defaultSortValue];
     }
 
-    private function getSelectionSet(array $fields): array
-    {
-        $result = [];
-        foreach ($fields as $key => $value) {
-            if (is_numeric($key)) {
-                if (!str_starts_with($value['name'], SageSettings::PREFIX_META_DATA)) {
-                    $result[] = $value['name'];
-                }
-            } else {
-                $result[] = (new Query($key))->setSelectionSet($this->getSelectionSet($value));
-            }
-        }
-        return $result;
-    }
-
     public function getFComptet(string $ctNum): StdClass|null
     {
         $fComptet = $this->searchEntities(
@@ -449,48 +523,7 @@ final class SageGraphQl
                 "paged" => "1",
                 "per_page" => "1"
             ],
-            [
-                ...array_map(static function (string $field) {
-                    return [
-                        "name" => $field,
-                        "type" => "StringOperationFilterInput",
-                    ];
-                }, [
-                    'ctNum',
-                    'ctIntitule',
-                    'ctEmail',
-                    'ctContact',
-                    'ctAdresse',
-                    'ctComplement',
-                    'ctVille',
-                    'ctCodePostal',
-                    'ctPays',
-                    'ctTelephone',
-                    'ctCodeRegion',
-                    'nCatTarif',
-                ]),
-                'fLivraisons' => [
-                    ...array_map(static function (string $field) {
-                        return [
-                            "name" => $field,
-                            "type" => "StringOperationFilterInput",
-                        ];
-                    }, [
-                        'liIntitule',
-                        'liAdresse',
-                        'liComplement',
-                        'liCodePostal',
-                        'liPrincipal',
-                        'liVille',
-                        'liPays',
-                        'liContact',
-                        'liTelephone',
-                        'liEmail',
-                        'liAdresseFact',
-                        'liCodeRegion',
-                    ])
-                ],
-            ]
+            $this->_getFComptetSelectionSet()
         );
         if (is_null($fComptet) || $fComptet->data->fComptets->totalCount !== 1) {
             return null;

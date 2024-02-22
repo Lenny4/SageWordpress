@@ -388,6 +388,13 @@ final class Sage
         add_action('edit_user_profile_update', function (int $userId): void {
             $this->saveCustomerMetaFields($userId);
         });
+
+        add_action('user_register', function (int $userId, array $userdata): void {
+            $autoCreateSageAccount = (bool)get_option(Sage::TOKEN . '_auto_create_sage_account');
+            if ($autoCreateSageAccount) {
+                $this->createUserSage($userId, $userdata);
+            }
+        }, accepted_args: 2);
         // endregion
     }
 
@@ -442,9 +449,12 @@ final class Sage
         }
     }
 
-    public function importUserFromSage(string $ctNum, ?int $shouldBeUserId = null): string
+    public function importUserFromSage(string $ctNum, ?int $shouldBeUserId = null, ?stdClass $fComptet = null): string
     {
-        $fComptet = $this->sageGraphQl->getFComptet($ctNum);
+        if (is_null($fComptet)) {
+            $fComptet = $this->sageGraphQl->getFComptet($ctNum);
+        }
+        $ctNum = $fComptet->ctNum;
         if (is_null($fComptet)) {
             return "<div class='error'>
                         " . __("Le compte Sage n'a pas pu être importé", 'sage') . "
@@ -529,6 +539,31 @@ WHERE meta_key = %s
                                 </div>";
         }
         return [$response, $responseError];
+    }
+
+    public function createUserSage(int $userId, array $userdata): void
+    {
+        $userMetaProp = SageSettings::PREFIX_META_DATA;
+        if (
+            array_key_exists($userMetaProp, $userdata) &&
+            array_key_exists(self::META_KEY_CT_NUM, $userdata[$userMetaProp])
+        ) {
+            return;
+        }
+        $ctIntitule = trim(explode(' ', $userdata['first_name'])[0] . ' ' . $userdata['last_name']);
+        if ($ctIntitule === '') {
+            $ctIntitule = $userdata['user_login'];
+        }
+        $fComptet = $this->sageGraphQl->createFComptet(
+            ctIntitule: $ctIntitule,
+            ctEmail: $userdata['user_email'],
+            autoGenerateCtNum: true,
+        );
+        if (is_null($fComptet)) {
+            // todo if can't be created register to create it later
+        } else {
+            $this->importUserFromSage($fComptet->ctNum, $userId, $fComptet);
+        }
     }
 
     /**

@@ -267,6 +267,13 @@ final class SageSettings
                             'placeholder' => __($wpdb->dbpassword, 'sage')
                         ],
                         [
+                            'id' => 'auto_create_sage_account',
+                            'label' => __('Automatically create Sage account', 'sage'),
+                            'description' => __("Lorsqu'un utilisateur créé un compte dans Wordpress un compte client est automatiquement créé dans Sage.", 'sage'),
+                            'type' => 'checkbox',
+                            'default' => 'on'
+                        ],
+                        [
                             'id' => 'text_field',
                             'label' => __('Some Text', 'sage'),
                             'description' => __('This is a standard text field.', 'sage'),
@@ -755,7 +762,7 @@ final class SageSettings
         // endregion
 
         // region user meta
-        $userMetaProp = 'customMeta';
+        $userMetaProp = self::PREFIX_META_DATA;
         add_filter('rest_pre_insert_user', static function (
             stdClass        $prepared_user,
             WP_REST_Request $request
@@ -885,7 +892,7 @@ final class SageSettings
         $user = get_user_by('id', $user_id);
         $url = parse_url((string)get_option(Sage::TOKEN . '_wordpress_host_url'));
         global $wpdb;
-        $stdClass = $this->sage->sageGraphQl->addUpdateWebsite(
+        $stdClass = $this->sage->sageGraphQl->createUpdateWebsite(
             name: get_bloginfo(),
             username: $user->data->user_login,
             password: $password,

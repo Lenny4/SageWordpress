@@ -70,16 +70,26 @@ add_action('admin_head', function () {
         });
 ```
 
-- Add option: automatically create an account in sage when create a wordpress account (doit marcher même si l'API est hors ligne)
 
-- ajouter l'option: "Envoyer un mail à l'utilisateur lorsque son compte Sage a été importé dans Wordpress" -> send wordpress function reset password
+
+[
+'id' => 'auto_send_mail_import_sage_account',
+'label' => __('Automatically send email to reset password', 'sage'),
+'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", 'sage'),
+'type' => 'checkbox',
+'default' => 'on'
+],
+- ajouter l'option: "Envoyer un mail à l'utilisateur lorsque son compte Sage a été importé dans Wordpress" -> send
+  wordpress function reset password
   // Verify user capabilities.
   if ( ! current_user_can( 'edit_user', $user_id ) ) {
   wp_send_json_error( __( 'Cannot send password reset, permission denied.' ) );
   }
   // Send the password reset link.
-  $user    = get_userdata( $user_id );
+  $user = get_userdata( $user_id );
   $results = retrieve_password( $user->user_login );
 
 - le site doit pouvoir marcher même si l'API est down (un utilisateur doit pouvoir ce connecter et passer commande)
 
+- logger tous les appels API en erreur
+- 
