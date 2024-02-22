@@ -8,7 +8,11 @@
         <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
     </a>
     <div class="tooltiptext" style="right: 0">
-        {{ 'Importer/Mettre à jour le client'|trans }}
+        {% if item._sage_postId != null %}
+            {{ 'Mettre à jour le client'|trans }}
+        {% else %}
+            {{ 'Importer le client'|trans }}
+        {% endif %}
     </div>
 </div>
 {% if item._sage_postId != null %}

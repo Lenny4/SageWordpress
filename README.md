@@ -92,4 +92,5 @@ add_action('admin_head', function () {
 - le site doit pouvoir marcher même si l'API est down (un utilisateur doit pouvoir ce connecter et passer commande)
 
 - logger tous les appels API en erreur
-- 
+
+- Ajouter un bouton créer la commande dans Sage dans la liste et dans le détail de la commande
