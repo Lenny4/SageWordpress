@@ -274,6 +274,13 @@ final class SageSettings
                             'default' => 'on'
                         ],
                         [
+                            'id' => 'auto_send_mail_import_sage_account',
+                            'label' => __('Automatically send email to reset password', 'sage'),
+                            'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", 'sage'),
+                            'type' => 'checkbox',
+                            'default' => 'on'
+                        ],
+                        [
                             'id' => 'text_field',
                             'label' => __('Some Text', 'sage'),
                             'description' => __('This is a standard text field.', 'sage'),
@@ -789,6 +796,19 @@ final class SageSettings
             }
             return $custom_meta;
         }, accepted_args: 4);
+        add_action('rest_after_insert_user', static function (
+            WP_User         $user,
+            WP_REST_Request $request,
+            bool            $creating
+        ): void {
+            if ($creating) {
+                $sendMail = (bool)get_option(Sage::TOKEN . '_auto_send_mail_import_sage_account');
+                if ($sendMail) {
+                    // Accepts only 'user', 'admin' , 'both' or default '' as $notify.
+                    wp_send_new_user_notifications($user->ID, 'user');
+                }
+            }
+        }, accepted_args: 3);
         // endregion
         // region user show Sage id: https://wordpress.stackexchange.com/a/160423/201039
         add_filter('manage_users_columns', static function (array $columns): array {

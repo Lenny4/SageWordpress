@@ -70,24 +70,7 @@ add_action('admin_head', function () {
         });
 ```
 
-
-
-[
-'id' => 'auto_send_mail_import_sage_account',
-'label' => __('Automatically send email to reset password', 'sage'),
-'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", 'sage'),
-'type' => 'checkbox',
-'default' => 'on'
-],
-- ajouter l'option: "Envoyer un mail à l'utilisateur lorsque son compte Sage a été importé dans Wordpress" -> send
-  wordpress function reset password
-  // Verify user capabilities.
-  if ( ! current_user_can( 'edit_user', $user_id ) ) {
-  wp_send_json_error( __( 'Cannot send password reset, permission denied.' ) );
-  }
-  // Send the password reset link.
-  $user = get_userdata( $user_id );
-  $results = retrieve_password( $user->user_login );
+- lorsque l'on créer un compte wordpress vérifier que le ct num n'est pas déjà utilisé par un autre user
 
 - le site doit pouvoir marcher même si l'API est down (un utilisateur doit pouvoir ce connecter et passer commande)
 
