@@ -201,7 +201,7 @@ final class SageWoocommerce
                 "
 SELECT {$wpdb->posts}.ID
 FROM {$wpdb->posts}
-         INNER JOIN wp_postmeta ON {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+         INNER JOIN {$wpdb->postmeta} ON {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
 WHERE {$wpdb->posts}.post_type = 'product'
   AND {$wpdb->postmeta}.meta_key = %s
   AND {$wpdb->postmeta}.meta_value = %s
@@ -230,10 +230,10 @@ WHERE {$wpdb->posts}.post_type = 'product'
 
         $metaKeyIdentifier = $sageEntityMenu->getMetaKeyIdentifier();
         global $wpdb;
-        $table = 'wp_postmeta';
+        $table = $wpdb->postmeta;
         $idColumn = 'post_id';
         if ($metaKeyIdentifier === Sage::META_KEY_CT_NUM) {
-            $table = 'wp_usermeta';
+            $table = $wpdb->usermeta;
             $idColumn = 'user_id';
         }
         $temps = $wpdb->get_results("

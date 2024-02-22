@@ -777,8 +777,29 @@ final class SageSettings
         ) use ($userMetaProp): stdClass {
             if (!empty($request['meta'])) {
                 $prepared_user->{$userMetaProp} = [];
+                $ctNum = null;
+                $metaKey = '_' . Sage::TOKEN . '_ctNum';
                 foreach ($request['meta'] as $key => $value) {
+                    if ($key === $metaKey) {
+                        $ctNum = $value;
+                    }
                     $prepared_user->{$userMetaProp}[$key] = $value;
+                }
+                if (!is_null($ctNum)) {
+                    global $wpdb;
+                    $r = $wpdb->get_results(
+                        $wpdb->prepare("
+SELECT {$wpdb->users}.ID, {$wpdb->users}.user_login
+FROM {$wpdb->usermeta}
+    INNER JOIN {$wpdb->users} ON {$wpdb->users}.ID = {$wpdb->usermeta}.user_id
+WHERE meta_key = %s
+  AND meta_value = %s
+", [$metaKey, $ctNum]));
+                    if (!empty($r)) {
+                        wp_send_json_error([
+                            'existing_user_ctNum' => __("Le compte Sage [" . $ctNum . "] est déjà lié au compte Wordpress [" . $r[0]->user_login . " (id: " . $r[0]->ID . ")]"),
+                        ]);
+                    }
                 }
             }
             return $prepared_user;
