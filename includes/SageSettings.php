@@ -761,7 +761,8 @@ final class SageSettings
         // endregion
         // endregion
 
-        // region user meta
+        // region user
+        // region user save meta with API: https://wordpress.stackexchange.com/a/422521/201039
         $userMetaProp = self::PREFIX_META_DATA;
         add_filter('rest_pre_insert_user', static function (
             stdClass        $prepared_user,
@@ -788,6 +789,16 @@ final class SageSettings
             }
             return $custom_meta;
         }, accepted_args: 4);
+        // endregion
+        // region user show Sage id: https://wordpress.stackexchange.com/a/160423/201039
+        add_filter('manage_users_columns', static function (array $columns): array {
+            $columns['sage'] = __("Sage", 'sage');
+            return $columns;
+        });
+        add_filter('manage_users_custom_column', static function (string $val, string $columnName, int $userId): string {
+            return get_user_meta($userId, Sage::META_KEY_CT_NUM, true) ?? '';
+        }, accepted_args: 3);
+        // endregion
         // endregion
     }
 
