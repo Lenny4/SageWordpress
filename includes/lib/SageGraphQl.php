@@ -449,7 +449,7 @@ final class SageGraphQl
         return $fDocentetes->data->fDocentetes->items;
     }
 
-    public function getFDocentete(string $doPiece, int $doType): stdClass|null
+    public function getFDocentete(string $doPiece, int $doType, bool $getError = false): stdClass|null|false|string
     {
         $fDocentetes = $this->searchEntities(
             SageEntityMenu::FDOCENTETE_ENTITY_NAME,
@@ -471,13 +471,16 @@ final class SageGraphQl
                 "per_page" => "1"
             ],
             $this->_getFDocenteteSelectionSet(),
+            getError: $getError,
         );
         if (
             is_null($fDocentetes) ||
-            is_string($fDocentetes) ||
-            $fDocentetes->data->fDocentetes->totalCount !== 1
+            is_string($fDocentetes)
         ) {
-            return null;
+            return $fDocentetes;
+        }
+        if ($fDocentetes->data->fDocentetes->totalCount !== 1) {
+            return false;
         }
 
         return $fDocentetes->data->fDocentetes->items[0];

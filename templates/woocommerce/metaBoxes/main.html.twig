@@ -16,10 +16,22 @@
             <span class="dashicons dashicons-no endDashiconsInput hidden" style="color: red"></span>
         </div>
     {% else %}
-        {% if fDocentete is null %}
-            todo nous n'avons pas pu nous connecter à l'api
+        {% if fDocentete|gettype == 'string' %}
+            <div class="notice notice-error">
+                <p>
+                    {{ fDocentete }}
+                </p>
+            </div>
+        {% elseif fDocentete is null %}
+            todo sur le tableau des documents pouvoir importer un document de vente en commande
+            todo afficher message: nous n'avons pas pu nous connecter à l'api
+        {% elseif fDocentete == false %}
+            todo le document n'existe pas/plus]
         {% else %}
-            {{ fDocentete.doPiece }}
+            <p>
+                {{ allTranslations['fDocentetes']['doType']['values'][fDocentete.doType] }}
+                <strong>{{ fDocentete.doPiece }}</strong>
+            </p>
         {% endif %}
     {% endif %}
 {% endblock %}

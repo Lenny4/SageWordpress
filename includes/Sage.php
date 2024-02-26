@@ -424,7 +424,8 @@ final class Sage
                     $hasFDocentete = !is_null($fDocenteteIdentifier);
                     $fDocentete = $sageGraphQl->getFDocentete(
                         $fDocenteteIdentifier["doPiece"],
-                        $fDocenteteIdentifier["doType"]
+                        $fDocenteteIdentifier["doType"],
+                        getError: true,
                     );
                     echo $twig->render('woocommerce/metaBoxes/main.html.twig', [
                         'order' => $order,
