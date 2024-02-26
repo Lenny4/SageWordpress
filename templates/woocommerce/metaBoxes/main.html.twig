@@ -1,11 +1,12 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-    {% if fDcocentete is null %}
+    {% if hasFDocentete == false %}
         <label for="sage-fdocentete-dopiece">
             {{ 'Veuillez renseigner le N°pièce de la commande Sage'|trans }}
         </label>
         <div style="position: relative">
-            <input name="sage-fdocentete-dopiece" style="padding-right: 20px" id="sage-fdocentete-dopiece" type="text" size="20"
+            <input name="sage-fdocentete-dopiece" style="padding-right: 20px" id="sage-fdocentete-dopiece" type="text"
+                   size="20"
                    value="">
             <input name="sage-fdocentete-dotype" id="sage-fdocentete-dotype" type="hidden">
             <svg class="svg-spinner hidden" viewBox="0 0 50 50">
@@ -15,6 +16,10 @@
             <span class="dashicons dashicons-no endDashiconsInput hidden" style="color: red"></span>
         </div>
     {% else %}
-        non papa
+        {% if fDocentete is null %}
+            todo nous n'avons pas pu nous connecter à l'api
+        {% else %}
+            {{ fDocentete.doPiece }}
+        {% endif %}
     {% endif %}
 {% endblock %}

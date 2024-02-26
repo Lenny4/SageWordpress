@@ -401,23 +401,34 @@ final class Sage
         }, accepted_args: 2);
         // endregion
 
+        $this->settings = SageSettings::instance($this);
+        $this->sageGraphQl = SageGraphQl::instance($this);
+        $this->sageWoocommerce = SageWoocommerce::instance($this);
+
+        $sageGraphQl = $this->sageGraphQl;
         // region link wordpress order to sage order
         $screenId = 'woocommerce_page_wc-orders';
-        add_action('add_meta_boxes_' . $screenId, static function (Order $order) use ($screenId, $twig): void { // woocommerce/src/Internal/Admin/Orders/Edit.php: do_action( 'add_meta_boxes_' . $this->screen_id, $this->order );
-            $fDocentete = null;
+        add_action('add_meta_boxes_' . $screenId, static function (Order $order) use ($screenId, $twig, $sageGraphQl): void { // woocommerce/src/Internal/Admin/Orders/Edit.php: do_action( 'add_meta_boxes_' . $this->screen_id, $this->order );
+            $fDocenteteIdentifier = null;
             foreach ($order->get_meta_data() as $meta) {
                 $data = $meta->get_data();
                 if ($data['key'] === '_' . Sage::TOKEN . '_identifier') {
-                    $fDocentete = $data['value'];
+                    $fDocenteteIdentifier = json_decode($data['value'], true, 512, JSON_THROW_ON_ERROR);
                     break;
                 }
             }
             add_meta_box(
                 'woocommerce-order-' . self::TOKEN . '-main',
                 __('Sage', 'sage'),
-                static function () use ($order, $fDocentete, $twig) {
+                static function () use ($order, $fDocenteteIdentifier, $twig, $sageGraphQl) {
+                    $hasFDocentete = !is_null($fDocenteteIdentifier);
+                    $fDocentete = $sageGraphQl->getFDocentete(
+                        $fDocenteteIdentifier["doPiece"],
+                        $fDocenteteIdentifier["doType"]
+                    );
                     echo $twig->render('woocommerce/metaBoxes/main.html.twig', [
                         'order' => $order,
+                        'hasFDocentete' => $hasFDocentete,
                         'fDocentete' => $fDocentete,
                     ]);
                 },
@@ -426,28 +437,28 @@ final class Sage
                 'high'
             );
         });
-        add_action('woocommerce_process_shop_order_meta', static function (int $orderId, Order $order): void {
+        add_action('woocommerce_process_shop_order_meta', static function (int $orderId, Order $order) use ($sageGraphQl): void {
             if (
-                array_key_exists('fdocentete-dotype', $_POST) &&
-                array_key_exists('fdocentete-dopiece', $_POST) &&
-                is_numeric($_POST['fdocentete-dotype']) &&
-                !empty($_POST['fdocentete-dopiece'])
+                array_key_exists(Sage::TOKEN . '-fdocentete-dotype', $_POST) &&
+                array_key_exists(Sage::TOKEN . '-fdocentete-dopiece', $_POST) &&
+                is_numeric($_POST[Sage::TOKEN . '-fdocentete-dotype']) &&
+                !empty($_POST[Sage::TOKEN . '-fdocentete-dopiece'])
             ) {
-                $t = 0;
-                $order->update_meta_data($request_meta_key, $request_meta_value, $request_meta_id);
-                $hasMetaChanges = true;
-                if ($hasMetaChanges) {
+                $fDocentete = $sageGraphQl->getFDocentete(
+                    $_POST[Sage::TOKEN . '-fdocentete-dopiece'],
+                    (int)$_POST[Sage::TOKEN . '-fdocentete-dotype']
+                );
+                if (!is_null($fDocentete)) {
+                    $order->update_meta_data('_' . Sage::TOKEN . '_identifier', json_encode([
+                        'doPiece' => $fDocentete->doPiece,
+                        'doType' => $fDocentete->doType,
+                    ], JSON_THROW_ON_ERROR));
                     $order->save();
                 }
             }
         }, accepted_args: 2);
         // endregion
 
-        $this->settings = SageSettings::instance($this);
-        $this->sageGraphQl = SageGraphQl::instance($this);
-        $this->sageWoocommerce = SageWoocommerce::instance($this);
-
-        $sageGraphQl = $this->sageGraphQl;
         // region api endpoint
         add_action('rest_api_init', static function () use ($sageGraphQl) {
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+$)', [

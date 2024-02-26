@@ -11,7 +11,6 @@ use GraphQL\Client;
 use GraphQL\Mutation;
 use GraphQL\Query;
 use GraphQL\RawObject;
-use GraphQL\Results;
 use StdClass;
 use Throwable;
 
@@ -274,6 +273,24 @@ final class SageGraphQl
         ];
     }
 
+    private function _getFDocenteteSelectionSet(): array
+    {
+        return [
+            [
+                'name' => 'doType',
+                "type" => "IntOperationFilterInput",
+            ],
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'doPiece',
+            ]),
+        ];
+    }
+
     public function getTypeModel(string $object): array|null
     {
         $cacheName = 'TypeModel_' . $object;
@@ -422,17 +439,7 @@ final class SageGraphQl
                 "paged" => "1",
                 "per_page" => "10"
             ],
-            [
-                ...array_map(static function (string $field) {
-                    return [
-                        "name" => $field,
-                        "type" => "StringOperationFilterInput",
-                    ];
-                }, [
-                    'doPiece',
-                    'doType',
-                ]),
-            ],
+            $this->_getFDocenteteSelectionSet(),
             getError: $getError,
         );
         if (is_null($fDocentetes) || is_string($fDocentetes)) {
@@ -440,6 +447,40 @@ final class SageGraphQl
         }
 
         return $fDocentetes->data->fDocentetes->items;
+    }
+
+    public function getFDocentete(string $doPiece, int $doType): stdClass|null
+    {
+        $fDocentetes = $this->searchEntities(
+            SageEntityMenu::FDOCENTETE_ENTITY_NAME,
+            [
+                "filter_field" => [
+                    "doPiece",
+                    "doType",
+                ],
+                "filter_type" => [
+                    "eq",
+                    "eq",
+                ],
+                "filter_value" => [
+                    $doPiece,
+                    $doType,
+                ],
+                'where_condition' => 'and',
+                "paged" => "1",
+                "per_page" => "1"
+            ],
+            $this->_getFDocenteteSelectionSet(),
+        );
+        if (
+            is_null($fDocentetes) ||
+            is_string($fDocentetes) ||
+            $fDocentetes->data->fDocentetes->totalCount !== 1
+        ) {
+            return null;
+        }
+
+        return $fDocentetes->data->fDocentetes->items[0];
     }
 
     public function searchEntities(
