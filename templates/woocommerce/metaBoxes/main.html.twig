@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    {% if fDcocentete is null %}
+        <label for="sage-fdocentete-dopiece">
+            {{ 'Veuillez renseigner le N°pièce de la commande Sage'|trans }}
+        </label>
+        <div style="position: relative">
+            <input name="sage-fdocentete-dopiece" style="padding-right: 20px" id="sage-fdocentete-dopiece" type="text" size="20"
+                   value="">
+            <input name="sage-fdocentete-dotype" id="sage-fdocentete-dotype" type="hidden">
+            <svg class="svg-spinner hidden" viewBox="0 0 50 50">
+                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+            </svg>
+            <span class="dashicons dashicons-yes endDashiconsInput hidden" style="color: green"></span>
+            <span class="dashicons dashicons-no endDashiconsInput hidden" style="color: red"></span>
+        </div>
+    {% else %}
+        non papa
+    {% endif %}
+{% endblock %}

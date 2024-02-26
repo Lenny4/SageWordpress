@@ -140,20 +140,28 @@ final class SageGraphQl
                     'id',
                 ]
             );
-        return $this->runQuery($query)?->getResults();
+        $r = $this->runQuery($query);
+        if (is_string($r)) {
+            return null;
+        }
+        return $r;
     }
 
-    private function runQuery(Query|Mutation $gql): Results|null
+    private function runQuery(Query|Mutation $gql, bool $getError = false): array|object|null|string
     {
         $client = $this->getClient();
         try {
-            return $client->runQuery($gql);
+            return $client->runQuery($gql)?->getResults();
         } catch (Throwable $throwable) {
             // todo store logs
-            add_action('admin_notices', static function () use ($throwable): void {
+            $message = $throwable->getMessage();
+            if ($getError) {
+                return $message;
+            }
+            add_action('admin_notices', static function () use ($message): void {
                 ?>
                 <div class="error"><p>
-                        <?= $throwable->getMessage() ?>
+                        <?= $message ?>
                     </p></div>
                 <?php
             });
@@ -198,8 +206,8 @@ final class SageGraphQl
         $query = (new Mutation('createFComptet'))
             ->setArguments($arguments)
             ->setSelectionSet($this->formatSelectionSet($this->_getFComptetSelectionSet()));
-        $result = $this->runQuery($query)?->getResults();
-        if (!is_null($result)) {
+        $result = $this->runQuery($query);
+        if (!is_null($result) && !is_string($result)) {
             return $result->data->createFComptet;
         }
         return null;
@@ -305,7 +313,7 @@ final class SageGraphQl
                             ),
                     ]
                 );
-            return $sageGraphQl->runQuery($query)?->getResults()?->data?->__type?->fields;
+            return $sageGraphQl->runQuery($query)?->data?->__type?->fields;
         };
         $typeModel = $this->sage->cache->get($cacheName, $function);
         if (empty($typeModel)) {
@@ -345,7 +353,7 @@ final class SageGraphQl
                             ),
                     ]
                 );
-            $temps = $sageGraphQl->runQuery($query)?->getResults()?->data?->__type?->inputFields;
+            $temps = $sageGraphQl->runQuery($query)?->data?->__type?->inputFields;
             $r = [];
             foreach ($temps as $temp) {
                 $r[$temp->name] = $temp;
@@ -397,7 +405,50 @@ final class SageGraphQl
         return $fArticle->data->fArticles->items[0];
     }
 
-    public function searchEntities(string $entityName, array $queryParams, array $selectionSets, ?string $cacheName = null): StdClass|null
+    public function getFDocentetes(string $doPiece, bool $getError = false): array|null|string
+    {
+        $fDocentetes = $this->searchEntities(
+            SageEntityMenu::FDOCENTETE_ENTITY_NAME,
+            [
+                "filter_field" => [
+                    "doPiece"
+                ],
+                "filter_type" => [
+                    "eq"
+                ],
+                "filter_value" => [
+                    $doPiece
+                ],
+                "paged" => "1",
+                "per_page" => "10"
+            ],
+            [
+                ...array_map(static function (string $field) {
+                    return [
+                        "name" => $field,
+                        "type" => "StringOperationFilterInput",
+                    ];
+                }, [
+                    'doPiece',
+                    'doType',
+                ]),
+            ],
+            getError: $getError,
+        );
+        if (is_null($fDocentetes) || is_string($fDocentetes)) {
+            return $fDocentetes;
+        }
+
+        return $fDocentetes->data->fDocentetes->items;
+    }
+
+    public function searchEntities(
+        string  $entityName,
+        array   $queryParams,
+        array   $selectionSets,
+        ?string $cacheName = null,
+        bool    $getError = false
+    ): StdClass|null|string
     {
         if (!is_null($cacheName)) {
             $cacheName = 'SearchEntities_' . $cacheName;
@@ -408,7 +459,7 @@ final class SageGraphQl
         }
 
         $sageGraphQl = $this;
-        $function = static function () use ($entityName, $queryParams, $selectionSets, $sageGraphQl) {
+        $function = static function () use ($entityName, $queryParams, $selectionSets, $getError, $sageGraphQl) {
             $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
             $page = (int)($queryParams["paged"] ?? 1);
             $where = [];
@@ -464,13 +515,13 @@ final class SageGraphQl
                             ->setSelectionSet($sageGraphQl->formatSelectionSet($selectionSets)),
                     ]
                 );
-            return $sageGraphQl->runQuery($query)?->getResults();
+            return $sageGraphQl->runQuery($query, $getError);
         };
         if (is_null($cacheName)) {
             return $function();
         }
         $results = $this->sage->cache->get($cacheName, $function);
-        if (empty($results)) {
+        if (empty($results) || is_string($results)) { // if $results is string it means it's an error
             $this->sage->cache->delete($cacheName);
             $results = $this->sage->cache->get($cacheName, $function);
         }
@@ -489,7 +540,7 @@ final class SageGraphQl
 
         if (array_key_exists('page', $queryParams)) {
             if ($queryParams['page'] === Sage::TOKEN . '_' . SageEntityMenu::FDOCENTETE_ENTITY_NAME) {
-                return [SageEntityMenu::FDOCENTETE_DEFAULT_SORT, $defaultSortValue];
+                return [SageEntityMenu::FDOCENTETE_DEFAULT_SORT, 'desc'];
             }
 
             if ($queryParams['page'] === Sage::TOKEN . '_' . SageEntityMenu::FCOMPTET_ENTITY_NAME) {

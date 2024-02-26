@@ -33,21 +33,7 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
  */
 function sage(): Sage
 {
-    $instance = Sage::instance(__FILE__, '1.0.0');
-
-    if (is_null($instance->settings)) {
-        $instance->settings = SageSettings::instance($instance);
-    }
-
-    if (is_null($instance->sageGraphQl)) {
-        $instance->sageGraphQl = SageGraphQl::instance($instance);
-    }
-
-    if (is_null($instance->sageWoocommerce)) {
-        $instance->sageWoocommerce = SageWoocommerce::instance($instance);
-    }
-
-    return $instance;
+    return Sage::instance(__FILE__, '1.0.0');
 }
 
 sage();

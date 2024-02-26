@@ -10,6 +10,7 @@ use App\lib\SageRequest;
 use App\lib\SageTaxonomy;
 use App\lib\SageWoocommerce;
 use App\Utils\SageTranslationUtils;
+use Automattic\WooCommerce\Admin\Overrides\Order;
 use Lead\Dir\Dir;
 use StdClass;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -22,6 +23,8 @@ use Twig\TwigFunction;
 use WC_Meta_Data;
 use WC_Product;
 use WP_Error;
+use WP_REST_Request;
+use WP_REST_Response;
 use WP_Upgrader;
 use WP_User;
 
@@ -111,6 +114,7 @@ final class Sage
         }
 
         $this->twig = new Environment($filesystemLoader, $twigOptions);
+        $twig = $this->twig;
         if (WP_DEBUG) {
             // https://twig.symfony.com/doc/3.x/functions/dump.html
             $this->twig->addExtension(new DebugExtension());
@@ -395,6 +399,78 @@ final class Sage
                 $this->createUserSage($userId, $userdata);
             }
         }, accepted_args: 2);
+        // endregion
+
+        // region link wordpress order to sage order
+        $screenId = 'woocommerce_page_wc-orders';
+        add_action('add_meta_boxes_' . $screenId, static function (Order $order) use ($screenId, $twig): void { // woocommerce/src/Internal/Admin/Orders/Edit.php: do_action( 'add_meta_boxes_' . $this->screen_id, $this->order );
+            $fDocentete = null;
+            foreach ($order->get_meta_data() as $meta) {
+                $data = $meta->get_data();
+                if ($data['key'] === '_' . Sage::TOKEN . '_identifier') {
+                    $fDocentete = $data['value'];
+                    break;
+                }
+            }
+            add_meta_box(
+                'woocommerce-order-' . self::TOKEN . '-main',
+                __('Sage', 'sage'),
+                static function () use ($order, $fDocentete, $twig) {
+                    echo $twig->render('woocommerce/metaBoxes/main.html.twig', [
+                        'order' => $order,
+                        'fDocentete' => $fDocentete,
+                    ]);
+                },
+                $screenId,
+                'normal',
+                'high'
+            );
+        });
+        add_action('woocommerce_process_shop_order_meta', static function (int $orderId, Order $order): void {
+            if (
+                array_key_exists('fdocentete-dotype', $_POST) &&
+                array_key_exists('fdocentete-dopiece', $_POST) &&
+                is_numeric($_POST['fdocentete-dotype']) &&
+                !empty($_POST['fdocentete-dopiece'])
+            ) {
+                $t = 0;
+                $order->update_meta_data($request_meta_key, $request_meta_value, $request_meta_id);
+                $hasMetaChanges = true;
+                if ($hasMetaChanges) {
+                    $order->save();
+                }
+            }
+        }, accepted_args: 2);
+        // endregion
+
+        $this->settings = SageSettings::instance($this);
+        $this->sageGraphQl = SageGraphQl::instance($this);
+        $this->sageWoocommerce = SageWoocommerce::instance($this);
+
+        $sageGraphQl = $this->sageGraphQl;
+        // region api endpoint
+        add_action('rest_api_init', static function () use ($sageGraphQl) {
+            register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+$)', [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($sageGraphQl) {
+                    $fDocentetes = $sageGraphQl->getFDocentetes(strtoupper(trim($request['doPiece'])), true);
+                    if (is_string($fDocentetes)) {
+                        return new WP_REST_Response([
+                            'message' => $fDocentetes
+                        ], 400);
+                    }
+                    if (is_null($fDocentetes)) {
+                        return new WP_REST_Response([
+                            'message' => 'Unknown error'
+                        ], 500);
+                    }
+                    if ($fDocentetes === []) {
+                        return new WP_REST_Response(null, 404);
+                    }
+                    return new WP_REST_Response($fDocentetes, 200);
+                },
+            ]);
+        });
         // endregion
     }
 

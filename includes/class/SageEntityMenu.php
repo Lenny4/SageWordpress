@@ -28,7 +28,7 @@ final class SageEntityMenu
 
     public const FDOCENTETE_TYPE_MODEL = 'FDocentete';
 
-    public const FDOCENTETE_DEFAULT_SORT = 'doPiece';
+    public const FDOCENTETE_DEFAULT_SORT = 'doDate';
 
     public const FDOCENTETE_FILTER_TYPE = 'FDocenteteFilterInput';
 

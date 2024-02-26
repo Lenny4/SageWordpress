@@ -493,6 +493,9 @@ final class SageTranslationUtils
                 'neq' => __("Pas égal", 'sage'),
                 'nin' => __("Pas dedans", 'sage'),
             ],
+            'sentences' => [
+                'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),
+            ],
         ];
     }
 }

@@ -237,4 +237,73 @@ jQuery(document).ready(function () {
     }
     // endregion
 
+    // region search fdocentete
+    let searchFDocentete = "";
+    jQuery(document).on('input', '[name="sage-fdocentete-dopiece"]', function (e) {
+        const inputDoPiece = e.target;
+        const domContainer = jQuery(inputDoPiece).parent();
+        const inputDoType = jQuery(domContainer).find('[name="sage-fdocentete-dotype"]');
+        const successIcon = jQuery(domContainer).find(".dashicons-yes");
+        const errorIcon = jQuery(domContainer).find(".dashicons-no");
+
+        jQuery(domContainer).find("div.notice").remove();
+        jQuery(successIcon).addClass("hidden");
+        jQuery(errorIcon).addClass("hidden");
+        jQuery(inputDoType).val('');
+        searchFDocentete = inputDoPiece.value;
+        const currentSearch = inputDoPiece.value;
+        setTimeout(async () => {
+            if (currentSearch !== searchFDocentete) {
+                return;
+            }
+            const spinner = jQuery(domContainer).find(".svg-spinner");
+            jQuery(spinner).removeClass("hidden");
+            const response = await fetch("/wp-json/sage/v1/fdocentetes/" + encodeURIComponent(currentSearch));
+            if (currentSearch !== searchFDocentete) {
+                return;
+            }
+            jQuery(spinner).addClass("hidden");
+
+            if (response.status === 200) {
+                const fDocentetes = await response.json();
+                if (fDocentetes.length === 0) {
+                    jQuery(errorIcon).removeClass("hidden");
+                } else if (fDocentetes.length === 1) {
+                    jQuery(inputDoType).val(fDocentetes[0].doType);
+                    jQuery(successIcon).removeClass("hidden");
+                } else {
+                    jQuery(errorIcon).removeClass("hidden");
+                    const multipleResultDiv = jQuery("<div class='notice notice-info'></div>").prependTo(domContainer);
+                    jQuery(multipleResultDiv).append('<p>' + translations.sentences.multipleDoPieces + '</p>');
+                    const listDom = jQuery('<div class="d-flex flex-wrap"></div>').appendTo(multipleResultDiv);
+                    for (const fDocentete of fDocentetes) {
+                        jQuery(listDom).append('<div class="card cursor-pointer" data-select-sage-fdocentete-dotype="' + fDocentete.doType + '" style="max-width: none">' +
+                            translations.fDocentetes.doType.values[fDocentete.doType] +
+                            '</div>');
+                    }
+                }
+            } else {
+                jQuery(errorIcon).removeClass("hidden");
+                try {
+                    const body = await response.json();
+                    const errorDiv = jQuery("<div class='notice notice-error'></div>").prependTo(domContainer);
+                    jQuery(errorDiv).html('<pre>' + JSON.stringify(body, undefined, 2) + '</pre>');
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }, 500);
+    });
+    jQuery(document).on('click', '[data-select-sage-fdocentete-dotype]', function (e) {
+        const divDoType = e.target;
+        const domContainer = jQuery(divDoType).closest('.notice').parent();
+        const inputDoType = jQuery(domContainer).find('[name="sage-fdocentete-dotype"]');
+        const successIcon = jQuery(domContainer).find(".dashicons-yes");
+        const errorIcon = jQuery(domContainer).find(".dashicons-no");
+        jQuery(domContainer).find("div.notice").remove();
+        jQuery(inputDoType).val(jQuery(divDoType).attr('data-select-sage-fdocentete-dotype'));
+        jQuery(successIcon).removeClass("hidden");
+        jQuery(errorIcon).addClass("hidden");
+    });
+    // endregion
 });
