@@ -16,22 +16,55 @@
             <span class="dashicons dashicons-no endDashiconsInput hidden" style="color: red"></span>
         </div>
     {% else %}
-        {% if fDocentete|gettype == 'string' %}
+        {% if fDoclignes|gettype == 'string' %}
             <div class="notice notice-error">
                 <p>
-                    {{ fDocentete }}
+                    {{ fDoclignes }}
                 </p>
             </div>
-        {% elseif fDocentete is null %}
-            todo sur le tableau des documents pouvoir importer un document de vente en commande
-            todo afficher message: nous n'avons pas pu nous connecter à l'api
-        {% elseif fDocentete == false %}
-            todo le document n'existe pas/plus]
-        {% else %}
+        {% elseif fDoclignes is null %}
+            <div class="notice notice-error">
+                <p>
+                    {{ 'Une erreur s\'est produite lors de la récupération du document de vente' |trans }}
+                </p>
+            </div>
+        {% elseif fDoclignes is empty %}
             <p>
-                {{ allTranslations['fDocentetes']['doType']['values'][fDocentete.doType] }}
-                <strong>{{ fDocentete.doPiece }}</strong>
+                {{ 'Le document de vente ['~allTranslations['fDocentetes']['doType']['values'][doType]~' n° '~doPiece~'] n\'a pas été trouvé ou est vide.' |trans }}
             </p>
+        {% else %}
+            <h2>
+                <strong>{{ allTranslations['fDocentetes']['doType']['values'][doType] ~': n° '~ doPiece }}</strong>
+            </h2>
+            {% set doPiecesFDoclignes = getDoPiecesFDoclignes(fDoclignes) %}
+            {% if doPiecesFDoclignes|length > 1 %}
+                <div class="d-flex">
+                    {% for doType, doPieces in doPiecesFDoclignes %}
+                        {% if doPieces is not empty %}
+                            <div style="{% if loop.first == false %} margin-left: 15px; {% endif %} flex-direction: column;"
+                                 class="d-flex">
+                            <span class="d-block">
+                <strong>{{ allTranslations['fDocentetes']['doType']['values'][doType] }}</strong>
+                            </span>
+                                <div style="flex-direction: column; justify-content: center; flex: 1" class="d-flex">
+                                    {% for doPiece in doPieces %}
+                                        <span class="d-block">
+                            {{ doPiece }}
+                            </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <table>
+                {% for fDocligne in fDoclignes %}
+                    <tr>
+                        <td>{{ fDocligne.arRef }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
         {% endif %}
     {% endif %}
 {% endblock %}

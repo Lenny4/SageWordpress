@@ -38,6 +38,8 @@ final class SageEntityMenu
         'doDate',
     ];
 
+    public const FDOCLIGNE_ENTITY_NAME = 'fDoclignes';
+
     public const FARTICLE_ENTITY_NAME = 'fArticles';
 
     public const FARTICLE_TYPE_MODEL = 'FArticle';

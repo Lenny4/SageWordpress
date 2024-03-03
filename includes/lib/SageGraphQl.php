@@ -6,6 +6,7 @@ use App\class\SageEntityMenu;
 use App\enum\WebsiteEnum;
 use App\Sage;
 use App\SageSettings;
+use App\Utils\FDocenteteUtils;
 use Exception;
 use GraphQL\Client;
 use GraphQL\Mutation;
@@ -291,6 +292,30 @@ final class SageGraphQl
         ];
     }
 
+    private function _getFDocligneSelectionSet(): array
+    {
+        return [
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'doType',
+            ]),
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'doPiece',
+                'arRef',
+                ...array_values(FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
+            ]),
+        ];
+    }
+
     public function getTypeModel(string $object): array|null
     {
         $cacheName = 'TypeModel_' . $object;
@@ -447,6 +472,41 @@ final class SageGraphQl
         }
 
         return $fDocentetes->data->fDocentetes->items;
+    }
+
+    public function getFDoclignes(string $doPiece, int $doType, bool $getError = false): array|null|string
+    {
+        $orWhere = '';
+        if (!is_null($field = FDocenteteUtils::getFdocligneMappingDoType($doType))) {
+            $orWhere = '{ ' . $field . ': { eq: "' . $doPiece . '" } }';
+        }
+        $arguments = [
+            'skip' => 0,
+            'take' => 100,
+            'where' => new RawObject("
+{
+    or: [
+        { doPiece: { eq: \"" . $doPiece . "\" }, doType: { eq: " . $doType . " } }
+        " . $orWhere . "
+    ]
+}
+            "),
+        ];
+        $query = (new Query(SageEntityMenu::FDOCLIGNE_ENTITY_NAME))
+            ->setArguments($arguments)
+            ->setSelectionSet(
+                [
+                    'totalCount',
+                    (new Query('items'))
+                        ->setSelectionSet($this->formatSelectionSet($this->_getFDocligneSelectionSet())),
+                ]
+            );
+        $result = $this->runQuery($query, $getError);
+        if (is_null($result) || is_string($result)) {
+            return $result;
+        }
+
+        return $result->data->fDoclignes->items;
     }
 
     public function getFDocentete(string $doPiece, int $doType, bool $getError = false): stdClass|null|false|string

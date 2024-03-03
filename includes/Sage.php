@@ -9,6 +9,7 @@ use App\lib\SagePostType;
 use App\lib\SageRequest;
 use App\lib\SageTaxonomy;
 use App\lib\SageWoocommerce;
+use App\Utils\FDocenteteUtils;
 use App\Utils\SageTranslationUtils;
 use Automattic\WooCommerce\Admin\Overrides\Order;
 use Lead\Dir\Dir;
@@ -253,6 +254,33 @@ final class Sage
         $this->twig->addFunction(new TwigFunction('get_woocommerce_currency_symbol', static function (): string {
             return get_woocommerce_currency_symbol();
         }));
+        $this->twig->addFunction(new TwigFunction('getDoPiecesFDoclignes', static function (array $fDoclignes): array {
+            $result = [];
+            foreach (FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE as $doType => $field) {
+                if (!array_key_exists($doType, $result)) {
+                    $result[$doType] = [];
+                }
+                foreach ($fDoclignes as $fDocligne) {
+                    $result[$doType][] = $fDocligne->{$field};
+                    if ($fDocligne->doType !== $doType) {
+                        if (!array_key_exists($fDocligne->doType, $result)) {
+                            $result[$fDocligne->doType] = [];
+                        }
+                        $result[$fDocligne->doType][] = $fDocligne->doPiece;
+                    }
+                }
+            }
+            foreach ($result as $k => $arr) {
+                $result[$k] = array_values(array_filter(array_unique($arr), static function (string $v) {
+                    return $v !== '';
+                }));
+            }
+            ksort($result);
+            $result = array_filter($result, static function (array $arr) {
+                return $arr !== [];
+            });
+            return $result;
+        }));
         // endregion
 
         register_activation_hook($this->file, function (): void {
@@ -422,15 +450,21 @@ final class Sage
                 __('Sage', 'sage'),
                 static function () use ($order, $fDocenteteIdentifier, $twig, $sageGraphQl) {
                     $hasFDocentete = !is_null($fDocenteteIdentifier);
-                    $fDocentete = $sageGraphQl->getFDocentete(
-                        $fDocenteteIdentifier["doPiece"],
-                        $fDocenteteIdentifier["doType"],
-                        getError: true,
-                    );
+                    $fDoclignes = null;
+                    if ($hasFDocentete) {
+                        $fDoclignes = $sageGraphQl->getFDoclignes(
+                            $fDocenteteIdentifier["doPiece"],
+                            $fDocenteteIdentifier["doType"],
+                            getError: true,
+                        );
+                    }
+                    // original WC_Meta_Box_Order_Data::output
                     echo $twig->render('woocommerce/metaBoxes/main.html.twig', [
+                        'doPiece' => $fDocenteteIdentifier["doPiece"],
+                        'doType' => $fDocenteteIdentifier["doType"],
                         'order' => $order,
                         'hasFDocentete' => $hasFDocentete,
-                        'fDocentete' => $fDocentete,
+                        'fDoclignes' => $fDoclignes,
                     ]);
                 },
                 $screenId,
@@ -438,6 +472,7 @@ final class Sage
                 'high'
             );
         });
+        // action is trigger when click update button on order
         add_action('woocommerce_process_shop_order_meta', static function (int $orderId, Order $order) use ($sageGraphQl): void {
             if (
                 array_key_exists(Sage::TOKEN . '-fdocentete-dotype', $_POST) &&
@@ -449,7 +484,7 @@ final class Sage
                     $_POST[Sage::TOKEN . '-fdocentete-dopiece'],
                     (int)$_POST[Sage::TOKEN . '-fdocentete-dotype']
                 );
-                if (!is_null($fDocentete)) {
+                if ($fDocentete instanceof stdClass) {
                     $order->update_meta_data('_' . Sage::TOKEN . '_identifier', json_encode([
                         'doPiece' => $fDocentete->doPiece,
                         'doType' => $fDocentete->doType,
