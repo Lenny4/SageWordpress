@@ -254,32 +254,94 @@ final class Sage
         $this->twig->addFunction(new TwigFunction('get_woocommerce_currency_symbol', static function (): string {
             return get_woocommerce_currency_symbol();
         }));
-        $this->twig->addFunction(new TwigFunction('getDoPiecesFDoclignes', static function (array $fDoclignes): array {
+        $this->twig->addFunction(new TwigFunction('getDoTypes', static function (array $fDoclignes): array {
             $result = [];
-            foreach (FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE as $doType => $field) {
-                if (!array_key_exists($doType, $result)) {
-                    $result[$doType] = [];
-                }
-                foreach ($fDoclignes as $fDocligne) {
-                    $result[$doType][] = $fDocligne->{$field};
-                    if ($fDocligne->doType !== $doType) {
-                        if (!array_key_exists($fDocligne->doType, $result)) {
-                            $result[$fDocligne->doType] = [];
-                        }
-                        $result[$fDocligne->doType][] = $fDocligne->doPiece;
+            foreach ($fDoclignes as $fDocligne) {
+                $result[$fDocligne->doType] = '';
+                foreach (FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE as $doType => $field) {
+                    if (!empty($fDocligne->{'dlPiece' . $field})) {
+                        $result[$doType] = '';
                     }
                 }
             }
-            foreach ($result as $k => $arr) {
-                $result[$k] = array_values(array_filter(array_unique($arr), static function (string $v) {
-                    return $v !== '';
-                }));
-            }
-            ksort($result);
-            $result = array_filter($result, static function (array $arr) {
-                return $arr !== [];
-            });
+            $result = array_keys($result);
+            sort($result);
             return $result;
+        }));
+        $this->twig->addFunction(new TwigFunction('formatFDoclignes', static function (array $fDoclignes, array $doTypes): array {
+            usort($fDoclignes, static function (stdClass $a, stdClass $b) use ($doTypes) {
+                foreach ($doTypes as $doType) {
+                    if ($a->doType === $doType) {
+                        $doPieceA = $a->doPiece;
+                    } else {
+                        $doPieceA = $a->{'dlPiece' . FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE[$doType]};
+                    }
+                    if ($b->doType === $doType) {
+                        $doPieceB = $b->doPiece;
+                    } else {
+                        $doPieceB = $b->{'dlPiece' . FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE[$doType]};
+                    }
+                    if ($doPieceA !== $doPieceB) {
+                        return strcmp($doPieceA, $doPieceB);
+                    }
+                }
+                return 0;
+            });
+            $nbFDoclignes = count($fDoclignes);
+            for ($i = 0; $i < $nbFDoclignes; $i++) {
+                $fDoclignes[$i]->display = [];
+                foreach ($doTypes as $doType) {
+                    if ($fDoclignes[$i]->doType === $doType) {
+                        $doPiece = $fDoclignes[$i]->doPiece;
+                        $dlQte = (int)$fDoclignes[$i]->dlQte;
+                    } else {
+                        $doPiece = $fDoclignes[$i]->{'dlPiece' . FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE[$doType]};
+                        $dlQte = (int)$fDoclignes[$i]->{'dlQte' . FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE[$doType]};
+                    }
+                    $fDoclignes[$i]->display[$doType] = [
+                        'doPiece' => $doPiece,
+                        'dlQte' => $dlQte,
+                        'prevDoPiece' => '',
+                        'nextDoPiece' => '',
+                    ];
+                }
+            }
+            foreach ($doTypes as $indexDoType => $doType) {
+                for ($i = 0; $i < $nbFDoclignes; $i++) {
+                    foreach (['prev' => -1, 'next' => +1] as $f => $v) {
+                        $y = $i + $v;
+                        while (
+                            (
+                                ($y > 0 && $v === -1) ||
+                                ($y < $nbFDoclignes - 1 && $v === 1)
+                            ) &&
+                            (
+                                $fDoclignes[$y]->display[$doType]['doPiece'] === ''
+                            )
+                        ) {
+                            $y += $v;
+                        }
+                        if ($i !== $y && $y >= 0 && $y < $nbFDoclignes) {
+                            $fDoclignes[$i]->display[$doType][$f . 'DoPiece'] = $fDoclignes[$y]->display[$doType]['doPiece'];
+                        }
+                    }
+                    $doPiece = $fDoclignes[$i]->display[$doType]["doPiece"];
+                    $prevDoPiece = $fDoclignes[$i]->display[$doType]["prevDoPiece"];
+                    $nextDoPiece = $fDoclignes[$i]->display[$doType]["nextDoPiece"];
+//                    {# todo display products and if linked in wordpress, if not link add button to link it#}
+//                        {# todo if wordpress order is not synchronise with sage order add a button to synchronise#}
+                    $fDoclignes[$i]->display[$doType]['showBorderBottom'] = $doPiece !== '' && $doPiece !== $nextDoPiece;
+                    $fDoclignes[$i]->display[$doType]['showBorderX'] = $doPiece !== '' || $prevDoPiece === $nextDoPiece;
+                    $fDoclignes[$i]->display[$doType]['showDoPiece'] = !empty($doPiece) && ($doPiece !== $prevDoPiece);
+                    $fDoclignes[$i]->display[$doType]['showArrow'] =
+                        $indexDoType > 0 &&
+                        $doPiece !== '' &&
+                        array_key_exists($doTypes[$indexDoType - 1], $fDoclignes[$i]->display) &&
+                        $fDoclignes[$i]->display[$doTypes[$indexDoType - 1]]["doPiece"] !== '';
+                }
+            }
+
+            return $fDoclignes;
         }));
         // endregion
 
@@ -460,11 +522,12 @@ final class Sage
                     }
                     // original WC_Meta_Box_Order_Data::output
                     echo $twig->render('woocommerce/metaBoxes/main.html.twig', [
-                        'doPiece' => $fDocenteteIdentifier["doPiece"],
-                        'doType' => $fDocenteteIdentifier["doType"],
+                        'doPieceIdentifier' => $fDocenteteIdentifier["doPiece"],
+                        'doTypeIdentifier' => $fDocenteteIdentifier["doType"],
                         'order' => $order,
                         'hasFDocentete' => $hasFDocentete,
                         'fDoclignes' => $fDoclignes,
+                        'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
                     ]);
                 },
                 $screenId,

@@ -302,6 +302,10 @@ final class SageGraphQl
                 ];
             }, [
                 'doType',
+                'dlQte',
+                ...array_map(static function (string $field) {
+                    return 'dlQte' . $field;
+                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
             ]),
             ...array_map(static function (string $field) {
                 return [
@@ -311,7 +315,9 @@ final class SageGraphQl
             }, [
                 'doPiece',
                 'arRef',
-                ...array_values(FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
+                ...array_map(static function (string $field) {
+                    return 'dlPiece' . $field;
+                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
             ]),
         ];
     }
@@ -476,9 +482,12 @@ final class SageGraphQl
 
     public function getFDoclignes(string $doPiece, int $doType, bool $getError = false): array|null|string
     {
+        if (!$this->pingApi) {
+            return null;
+        }
         $orWhere = '';
         if (!is_null($field = FDocenteteUtils::getFdocligneMappingDoType($doType))) {
-            $orWhere = '{ ' . $field . ': { eq: "' . $doPiece . '" } }';
+            $orWhere = '{ dlPiece' . $field . ': { eq: "' . $doPiece . '" } }';
         }
         $arguments = [
             'skip' => 0,

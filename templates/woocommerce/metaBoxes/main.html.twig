@@ -30,41 +30,69 @@
             </div>
         {% elseif fDoclignes is empty %}
             <p>
-                {{ 'Le document de vente ['~allTranslations['fDocentetes']['doType']['values'][doType]~' n° '~doPiece~'] n\'a pas été trouvé ou est vide.' |trans }}
+                {{ 'Le document de vente ['~allTranslations['fDocentetes']['doType']['values'][doTypeIdentifier]~' n° '~doPieceIdentifier~'] n\'a pas été trouvé ou est vide.' |trans }}
             </p>
         {% else %}
             <h2>
-                <strong>{{ allTranslations['fDocentetes']['doType']['values'][doType] ~': n° '~ doPiece }}</strong>
+                <strong>{{ allTranslations['fDocentetes']['doType']['values'][doTypeIdentifier] ~': n° '~ doPieceIdentifier }}</strong>
             </h2>
-            {% set doPiecesFDoclignes = getDoPiecesFDoclignes(fDoclignes) %}
-            {% if doPiecesFDoclignes|length > 1 %}
-                <div class="d-flex">
-                    {% for doType, doPieces in doPiecesFDoclignes %}
-                        {% if doPieces is not empty %}
-                            <div style="{% if loop.first == false %} margin-left: 15px; {% endif %} flex-direction: column;"
-                                 class="d-flex">
-                            <span class="d-block">
-                <strong>{{ allTranslations['fDocentetes']['doType']['values'][doType] }}</strong>
-                            </span>
-                                <div style="flex-direction: column; justify-content: center; flex: 1" class="d-flex">
-                                    {% for doPiece in doPieces %}
-                                        <span class="d-block">
-                            {{ doPiece }}
-                            </span>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            {% endif %}
+            {#            region display fDoclignes #}
+            {% set doTypes = getDoTypes(fDoclignes) %}
+            {% set fDocligneFormatteds = formatFDoclignes(fDoclignes, doTypes) %}
             <table>
-                {% for fDocligne in fDoclignes %}
+                <tr>
+                    {% for doType in doTypes %}
+                        {% if loop.first == false %}
+                            <td class="td-separator"></td>
+                        {% endif %}
+                        <td class="border-x border-y">
+                            <strong>
+                                {{ allTranslations['fDocentetes']['doType']['values'][doType] }}
+                            </strong>
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr class="pt-1">
+                    {% for doType in doTypes %}
+                        {% if loop.first == false %}
+                            <td class="td-separator"></td>
+                        {% endif %}
+                        <td></td>
+                    {% endfor %}
+                </tr>
+                {% for fDocligneFormatted in fDocligneFormatteds %}
                     <tr>
-                        <td>{{ fDocligne.arRef }}</td>
+                        {% for display in fDocligneFormatted.display %}
+                            {% if loop.first == false %}
+                                <td class="td-separator"></td>
+                            {% endif %}
+                            <td class="text-center {% if display.showDoPiece or display.showBorderX %} border-x {% endif %} {% if display.showDoPiece %} border-y {% endif %}">
+                                {% if display.showDoPiece %}
+                                    {{ display.doPiece }}
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        {% for display in fDocligneFormatted.display %}
+                            {% if loop.first == false %}
+                                <td class="td-separator">
+                                    {% if display.showArrow %}
+                                        <span class="dashicons dashicons-arrow-right-alt"></span>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                            <td class="{% if display.showBorderX %} border-x {% endif %} {% if display.showBorderBottom %} border-bottom {% endif %}">
+                                {% if display.doPiece != '' %}
+                                    {{ display.dlQte }}
+                                    {{ fDocligneFormatted.arRef }}
+                                {% endif %}
+                            </td>
+                        {% endfor %}
                     </tr>
                 {% endfor %}
             </table>
+            {#            endregion #}
         {% endif %}
     {% endif %}
 {% endblock %}

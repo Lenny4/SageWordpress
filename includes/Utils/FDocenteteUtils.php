@@ -19,10 +19,10 @@ final class FDocenteteUtils
     public const VENTE_FACTURE_ARCHIVE = 8;
 
     public const FDOCLIGNE_MAPPING_DO_TYPE = [
-        self::VENTE_DEVIS => 'dlPieceDe',
-        self::VENTE_COMMANDE => 'dlPieceBc',
-        self::VENTE_PREPA_LIVRAISON => 'dlPiecePl',
-        self::VENTE_LIVRAISON => 'dlPieceBl',
+        self::VENTE_DEVIS => 'De',
+        self::VENTE_COMMANDE => 'Bc',
+        self::VENTE_PREPA_LIVRAISON => 'Pl',
+        self::VENTE_LIVRAISON => 'Bl',
     ];
 
     public static function getFdocligneMappingDoType(int $doType): string|null
