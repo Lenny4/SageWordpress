@@ -74,7 +74,7 @@
                         {% endfor %}
                     </tr>
                     <tr>
-                        {% for display in fDocligneFormatted.display %}
+                        {% for doType, display in fDocligneFormatted.display %}
                             {% if loop.first == false %}
                                 <td class="td-separator">
                                     {% if display.showArrow %}
@@ -84,8 +84,14 @@
                             {% endif %}
                             <td class="{% if display.showBorderX %} border-x {% endif %} {% if display.showBorderBottom %} border-bottom {% endif %}">
                                 {% if display.doPiece != '' %}
-                                    {{ display.dlQte }}
+                                    {% set showData = doType == fDocligneFormatted.doType %}
+                                    {% if showData %}
+                                        {{ display.dlQte }}
+                                    {% endif %}
                                     {{ fDocligneFormatted.arRef }}
+                                    {% if showData %}
+                                        {{ fDocligneFormatted.dlDesign }}
+                                    {% endif %}
                                 {% endif %}
                             </td>
                         {% endfor %}

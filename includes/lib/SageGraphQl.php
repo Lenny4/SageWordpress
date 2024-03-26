@@ -315,6 +315,7 @@ final class SageGraphQl
             }, [
                 'doPiece',
                 'arRef',
+                'dlDesign',
                 ...array_map(static function (string $field) {
                     return 'dlPiece' . $field;
                 }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),

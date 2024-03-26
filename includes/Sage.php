@@ -282,7 +282,7 @@ final class Sage
                         $doPieceB = $b->{'dlPiece' . FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE[$doType]};
                     }
                     if ($doPieceA !== $doPieceB) {
-                        return strcmp($doPieceA, $doPieceB);
+                        return strcmp($doPieceB, $doPieceA);
                     }
                 }
                 return 0;
@@ -328,8 +328,6 @@ final class Sage
                     $doPiece = $fDoclignes[$i]->display[$doType]["doPiece"];
                     $prevDoPiece = $fDoclignes[$i]->display[$doType]["prevDoPiece"];
                     $nextDoPiece = $fDoclignes[$i]->display[$doType]["nextDoPiece"];
-//                    {# todo display products and if linked in wordpress, if not link add button to link it#}
-//                        {# todo if wordpress order is not synchronise with sage order add a button to synchronise#}
                     $fDoclignes[$i]->display[$doType]['showBorderBottom'] = $doPiece !== '' && $doPiece !== $nextDoPiece;
                     $fDoclignes[$i]->display[$doType]['showBorderX'] = $doPiece !== '' || $prevDoPiece === $nextDoPiece;
                     $fDoclignes[$i]->display[$doType]['showDoPiece'] = !empty($doPiece) && ($doPiece !== $prevDoPiece);
