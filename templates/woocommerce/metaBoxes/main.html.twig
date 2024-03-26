@@ -36,16 +36,17 @@
             <h2>
                 <strong>{{ allTranslations['fDocentetes']['doType']['values'][doTypeIdentifier] ~': n° '~ doPieceIdentifier }}</strong>
             </h2>
-            {#            region display fDoclignes #}
+            {# region display fDoclignes #}
             {% set doTypes = getDoTypes(fDoclignes) %}
             {% set fDocligneFormatteds = formatFDoclignes(fDoclignes, doTypes) %}
+            {% set colspan = 4 %}
             <table>
                 <tr>
                     {% for doType in doTypes %}
                         {% if loop.first == false %}
                             <td class="td-separator"></td>
                         {% endif %}
-                        <td class="border-x border-y">
+                        <td class="text-center border-x border-y" colspan="{{ colspan }}">
                             <strong>
                                 {{ allTranslations['fDocentetes']['doType']['values'][doType] }}
                             </strong>
@@ -66,7 +67,8 @@
                             {% if loop.first == false %}
                                 <td class="td-separator"></td>
                             {% endif %}
-                            <td class="text-center {% if display.showDoPiece or display.showBorderX %} border-x {% endif %} {% if display.showDoPiece %} border-y {% endif %}">
+                            <td colspan="{{ colspan }}"
+                                class="text-center {% if display.showDoPiece or display.showBorderX %} border-x {% endif %} {% if display.showDoPiece %} border-y {% endif %}">
                                 {% if display.showDoPiece %}
                                     {{ display.doPiece }}
                                 {% endif %}
@@ -82,23 +84,58 @@
                                     {% endif %}
                                 </td>
                             {% endif %}
-                            <td class="{% if display.showBorderX %} border-x {% endif %} {% if display.showBorderBottom %} border-bottom {% endif %}">
+                            {% set showData = doType == fDocligneFormatted.doType and display.doPiece != '' %}
+                            {% set className = '' %}
+                            {% if display.showBorderBottom != '' %}
+                                {% set className = className ~ ' border-bottom' %}
+                            {% endif %}
+                            {% if showData %}
+                                {% set className = className ~ ' pr-1' %}
+                            {% endif %}
+                            <td class="{% if display.showBorderX %} border-left {% endif %} {{ className }}">
+                                {% if showData %}
+                                    {{ display.dlQte }}
+                                {% endif %}
+                            </td>
+                            <td class="{{ className }}">
                                 {% if display.doPiece != '' %}
-                                    {% set showData = doType == fDocligneFormatted.doType %}
-                                    {% if showData %}
-                                        {{ display.dlQte }}
-                                    {% endif %}
                                     {{ fDocligneFormatted.arRef }}
-                                    {% if showData %}
-                                        {{ fDocligneFormatted.dlDesign }}
-                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td class="{{ className }}">
+                                {% if showData %}
+                                    {{ fDocligneFormatted.dlDesign }}
+                                {% endif %}
+                            </td>
+                            <td class="{% if display.showBorderX %} border-right {% endif %} {{ className }}">
+                                {% if showData %}
+                                    <div class="tooltip">
+                                        <span class="dashicons dashicons-no cursor-pointer" style="color: red"></span>
+                                        <div class="tooltiptext">
+                                            <p>{{ 'Ce produit n\'existe pas dans Wordpress. Veuillez cliquer sur la croix pour le créer.'|trans }}</p>
+                                        </div>
+                                    </div>
                                 {% endif %}
                             </td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
             </table>
-            {#            endregion #}
+            {# endregion #}
+            <div class="mt-2" style="
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+">
+                <button type="button"
+                        class="button button-primary">{{ 'Synchroniser la commande Sage avec Wordpress' }}</button>
+                <div class="tooltip">
+                    <span class="dashicons dashicons-info"></span>
+                    <div class="tooltiptext">
+                        <p>{{ 'Explication de la synchronisation'|trans }}</p>
+                    </div>
+                </div>
+            </div>
         {% endif %}
     {% endif %}
 {% endblock %}
