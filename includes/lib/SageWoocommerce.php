@@ -5,6 +5,8 @@ namespace App\lib;
 use App\class\SageEntityMenu;
 use App\Sage;
 use App\SageSettings;
+use App\Utils\FDocenteteUtils;
+use Automattic\WooCommerce\Admin\Overrides\Order;
 use StdClass;
 use WC_Meta_Data;
 use WC_Product;
@@ -275,5 +277,36 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             }
         }
         return $data;
+    }
+
+    public function getMetaboxSage(Order $order, bool $ignorePingApi = false): string
+    {
+        $fDocenteteIdentifier = null;
+        foreach ($order->get_meta_data() as $meta) {
+            $data = $meta->get_data();
+            if ($data['key'] === '_' . Sage::TOKEN . '_identifier') {
+                $fDocenteteIdentifier = json_decode($data['value'], true, 512, JSON_THROW_ON_ERROR);
+                break;
+            }
+        }
+        $hasFDocentete = !is_null($fDocenteteIdentifier);
+        $fDoclignes = null;
+        if ($hasFDocentete) {
+            $fDoclignes = $this->sage->sageGraphQl->getFDoclignes(
+                $fDocenteteIdentifier["doPiece"],
+                $fDocenteteIdentifier["doType"],
+                getError: true,
+                ignorePingApi: $ignorePingApi,
+            );
+        }
+        // original WC_Meta_Box_Order_Data::output
+        return $this->sage->twig->render('woocommerce/metaBoxes/main.html.twig', [
+            'doPieceIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doPiece"] : null,
+            'doTypeIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doType"] : null,
+            'order' => $order,
+            'hasFDocentete' => $hasFDocentete,
+            'fDoclignes' => $fDoclignes,
+            'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
+        ]);
     }
 }

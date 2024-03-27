@@ -9,6 +9,8 @@
                    size="20"
                    value="">
             <input name="sage-fdocentete-dotype" id="sage-fdocentete-dotype" type="hidden">
+            <input name="sage-fdocentete-wpnonce" id="sage-fdocentete-wpnonce" type="hidden"
+                   value="{{ 'wp_rest'|wp_create_nonce }}">
             <svg class="svg-spinner hidden" viewBox="0 0 50 50">
                 <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
             </svg>
@@ -127,7 +129,7 @@
     align-items: center;
     justify-content: flex-end;
 ">
-                <button type="button"
+                <button type="button" id="synchronise-order" data-nonce="{{ 'wp_rest'|wp_create_nonce }}"
                         class="button button-primary">{{ 'Synchroniser la commande Sage avec Wordpress' }}</button>
                 <div class="tooltip">
                     <span class="dashicons dashicons-info"></span>

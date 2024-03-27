@@ -495,39 +495,15 @@ final class Sage
         $this->sageWoocommerce = SageWoocommerce::instance($this);
 
         $sageGraphQl = $this->sageGraphQl;
+        $sageWoocommerce = $this->sageWoocommerce;
         // region link wordpress order to sage order
         $screenId = 'woocommerce_page_wc-orders';
-        add_action('add_meta_boxes_' . $screenId, static function (Order $order) use ($screenId, $twig, $sageGraphQl): void { // woocommerce/src/Internal/Admin/Orders/Edit.php: do_action( 'add_meta_boxes_' . $this->screen_id, $this->order );
-            $fDocenteteIdentifier = null;
-            foreach ($order->get_meta_data() as $meta) {
-                $data = $meta->get_data();
-                if ($data['key'] === '_' . Sage::TOKEN . '_identifier') {
-                    $fDocenteteIdentifier = json_decode($data['value'], true, 512, JSON_THROW_ON_ERROR);
-                    break;
-                }
-            }
+        add_action('add_meta_boxes_' . $screenId, static function (Order $order) use ($screenId, $sageWoocommerce): void { // woocommerce/src/Internal/Admin/Orders/Edit.php: do_action( 'add_meta_boxes_' . $this->screen_id, $this->order );
             add_meta_box(
                 'woocommerce-order-' . self::TOKEN . '-main',
                 __('Sage', 'sage'),
-                static function () use ($order, $fDocenteteIdentifier, $twig, $sageGraphQl) {
-                    $hasFDocentete = !is_null($fDocenteteIdentifier);
-                    $fDoclignes = null;
-                    if ($hasFDocentete) {
-                        $fDoclignes = $sageGraphQl->getFDoclignes(
-                            $fDocenteteIdentifier["doPiece"],
-                            $fDocenteteIdentifier["doType"],
-                            getError: true,
-                        );
-                    }
-                    // original WC_Meta_Box_Order_Data::output
-                    echo $twig->render('woocommerce/metaBoxes/main.html.twig', [
-                        'doPieceIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doPiece"] : null,
-                        'doTypeIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doType"] : null,
-                        'order' => $order,
-                        'hasFDocentete' => $hasFDocentete,
-                        'fDoclignes' => $fDoclignes,
-                        'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
-                    ]);
+                static function () use ($order, $sageWoocommerce) {
+                    echo $sageWoocommerce->getMetaboxSage($order);
                 },
                 $screenId,
                 'normal',
@@ -558,7 +534,19 @@ final class Sage
         // endregion
 
         // region api endpoint
-        add_action('rest_api_init', static function () use ($sageGraphQl) {
+        add_action('rest_api_init', static function () use ($sageWoocommerce, $sageGraphQl) {
+            register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/sync', [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
+                    $order = new Order($request['id']);
+                    return new WP_REST_Response([
+                        'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true)
+                    ], 200);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+$)', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageGraphQl) {

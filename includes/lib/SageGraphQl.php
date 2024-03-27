@@ -274,55 +274,6 @@ final class SageGraphQl
         ];
     }
 
-    private function _getFDocenteteSelectionSet(): array
-    {
-        return [
-            [
-                'name' => 'doType',
-                "type" => "IntOperationFilterInput",
-            ],
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
-                'doPiece',
-            ]),
-        ];
-    }
-
-    private function _getFDocligneSelectionSet(): array
-    {
-        return [
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
-                'doType',
-                'dlQte',
-                ...array_map(static function (string $field) {
-                    return 'dlQte' . $field;
-                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
-            ]),
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
-                'doPiece',
-                'arRef',
-                'dlDesign',
-                ...array_map(static function (string $field) {
-                    return 'dlPiece' . $field;
-                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
-            ]),
-        ];
-    }
-
     public function getTypeModel(string $object): array|null
     {
         $cacheName = 'TypeModel_' . $object;
@@ -454,108 +405,6 @@ final class SageGraphQl
         return $fArticle->data->fArticles->items[0];
     }
 
-    public function getFDocentetes(string $doPiece, bool $getError = false): array|null|string
-    {
-        $fDocentetes = $this->searchEntities(
-            SageEntityMenu::FDOCENTETE_ENTITY_NAME,
-            [
-                "filter_field" => [
-                    "doPiece"
-                ],
-                "filter_type" => [
-                    "eq"
-                ],
-                "filter_value" => [
-                    $doPiece
-                ],
-                "paged" => "1",
-                "per_page" => "10"
-            ],
-            $this->_getFDocenteteSelectionSet(),
-            getError: $getError,
-        );
-        if (is_null($fDocentetes) || is_string($fDocentetes)) {
-            return $fDocentetes;
-        }
-
-        return $fDocentetes->data->fDocentetes->items;
-    }
-
-    public function getFDoclignes(string $doPiece, int $doType, bool $getError = false): array|null|string
-    {
-        if (!$this->pingApi) {
-            return null;
-        }
-        $orWhere = '';
-        if (!is_null($field = FDocenteteUtils::getFdocligneMappingDoType($doType))) {
-            $orWhere = '{ dlPiece' . $field . ': { eq: "' . $doPiece . '" } }';
-        }
-        $arguments = [
-            'skip' => 0,
-            'take' => 100,
-            'where' => new RawObject("
-{
-    or: [
-        { doPiece: { eq: \"" . $doPiece . "\" }, doType: { eq: " . $doType . " } }
-        " . $orWhere . "
-    ]
-}
-            "),
-        ];
-        $query = (new Query(SageEntityMenu::FDOCLIGNE_ENTITY_NAME))
-            ->setArguments($arguments)
-            ->setSelectionSet(
-                [
-                    'totalCount',
-                    (new Query('items'))
-                        ->setSelectionSet($this->formatSelectionSet($this->_getFDocligneSelectionSet())),
-                ]
-            );
-        $result = $this->runQuery($query, $getError);
-        if (is_null($result) || is_string($result)) {
-            return $result;
-        }
-
-        return $result->data->fDoclignes->items;
-    }
-
-    public function getFDocentete(string $doPiece, int $doType, bool $getError = false): stdClass|null|false|string
-    {
-        $fDocentetes = $this->searchEntities(
-            SageEntityMenu::FDOCENTETE_ENTITY_NAME,
-            [
-                "filter_field" => [
-                    "doPiece",
-                    "doType",
-                ],
-                "filter_type" => [
-                    "eq",
-                    "eq",
-                ],
-                "filter_value" => [
-                    $doPiece,
-                    $doType,
-                ],
-                'where_condition' => 'and',
-                "paged" => "1",
-                "per_page" => "1"
-            ],
-            $this->_getFDocenteteSelectionSet(),
-            getError: $getError,
-        );
-        if (
-            is_null($fDocentetes) ||
-            is_string($fDocentetes)
-        ) {
-            return $fDocentetes;
-        }
-        if ($fDocentetes->data->fDocentetes->totalCount !== 1) {
-            return false;
-        }
-
-        return $fDocentetes->data->fDocentetes->items[0];
-    }
-
     public function searchEntities(
         string  $entityName,
         array   $queryParams,
@@ -669,6 +518,157 @@ final class SageGraphQl
         }
 
         return [null, $defaultSortValue];
+    }
+
+    public function getFDocentetes(string $doPiece, bool $getError = false): array|null|string
+    {
+        $fDocentetes = $this->searchEntities(
+            SageEntityMenu::FDOCENTETE_ENTITY_NAME,
+            [
+                "filter_field" => [
+                    "doPiece"
+                ],
+                "filter_type" => [
+                    "eq"
+                ],
+                "filter_value" => [
+                    $doPiece
+                ],
+                "paged" => "1",
+                "per_page" => "10"
+            ],
+            $this->_getFDocenteteSelectionSet(),
+            getError: $getError,
+        );
+        if (is_null($fDocentetes) || is_string($fDocentetes)) {
+            return $fDocentetes;
+        }
+
+        return $fDocentetes->data->fDocentetes->items;
+    }
+
+    private function _getFDocenteteSelectionSet(): array
+    {
+        return [
+            [
+                'name' => 'doType',
+                "type" => "IntOperationFilterInput",
+            ],
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'doPiece',
+            ]),
+        ];
+    }
+
+    public function getFDoclignes(string $doPiece, int $doType, bool $getError = false, bool $ignorePingApi = false): array|null|string
+    {
+        if (!$this->pingApi && !$ignorePingApi) {
+            return null;
+        }
+        $orWhere = '';
+        if (!is_null($field = FDocenteteUtils::getFdocligneMappingDoType($doType))) {
+            $orWhere = '{ dlPiece' . $field . ': { eq: "' . $doPiece . '" } }';
+        }
+        $arguments = [
+            'skip' => 0,
+            'take' => 100,
+            'where' => new RawObject("
+{
+    or: [
+        { doPiece: { eq: \"" . $doPiece . "\" }, doType: { eq: " . $doType . " } }
+        " . $orWhere . "
+    ]
+}
+            "),
+        ];
+        $query = (new Query(SageEntityMenu::FDOCLIGNE_ENTITY_NAME))
+            ->setArguments($arguments)
+            ->setSelectionSet(
+                [
+                    'totalCount',
+                    (new Query('items'))
+                        ->setSelectionSet($this->formatSelectionSet($this->_getFDocligneSelectionSet())),
+                ]
+            );
+        $result = $this->runQuery($query, $getError);
+        if (is_null($result) || is_string($result)) {
+            return $result;
+        }
+
+        return $result->data->fDoclignes->items;
+    }
+
+    private function _getFDocligneSelectionSet(): array
+    {
+        return [
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'doType',
+                'dlQte',
+                ...array_map(static function (string $field) {
+                    return 'dlQte' . $field;
+                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
+            ]),
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'doPiece',
+                'arRef',
+                'dlDesign',
+                ...array_map(static function (string $field) {
+                    return 'dlPiece' . $field;
+                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
+            ]),
+        ];
+    }
+
+    public function getFDocentete(string $doPiece, int $doType, bool $getError = false): stdClass|null|false|string
+    {
+        $fDocentetes = $this->searchEntities(
+            SageEntityMenu::FDOCENTETE_ENTITY_NAME,
+            [
+                "filter_field" => [
+                    "doPiece",
+                    "doType",
+                ],
+                "filter_type" => [
+                    "eq",
+                    "eq",
+                ],
+                "filter_value" => [
+                    $doPiece,
+                    $doType,
+                ],
+                'where_condition' => 'and',
+                "paged" => "1",
+                "per_page" => "1"
+            ],
+            $this->_getFDocenteteSelectionSet(),
+            getError: $getError,
+        );
+        if (
+            is_null($fDocentetes) ||
+            is_string($fDocentetes)
+        ) {
+            return $fDocentetes;
+        }
+        if ($fDocentetes->data->fDocentetes->totalCount !== 1) {
+            return false;
+        }
+
+        return $fDocentetes->data->fDocentetes->items[0];
     }
 
     public function getFComptet(string $ctNum): StdClass|null
