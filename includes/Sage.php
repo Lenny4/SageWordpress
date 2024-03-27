@@ -127,6 +127,7 @@ final class Sage
         $this->twig->addFilter(new TwigFilter('disabled', static fn(bool $disabled) => disabled($disabled, true, false)));
         $this->twig->addFilter(new TwigFilter('bytesToString', static fn(array $bytes): string => implode('', array_map("chr", $bytes))));
         $this->twig->addFilter(new TwigFilter('wp_nonce_field', static fn(string $action) => wp_nonce_field($action)));
+        $this->twig->addFilter(new TwigFilter('wp_create_nonce', static fn(string $action) => wp_create_nonce($action)));
         $this->twig->addFunction(new TwigFunction('getTranslations', static fn(): array => SageTranslationUtils::getTranslations()));
         $this->twig->addFunction(new TwigFunction('getAllFilterType', static function (): array {
             $r = [];
@@ -520,8 +521,8 @@ final class Sage
                     }
                     // original WC_Meta_Box_Order_Data::output
                     echo $twig->render('woocommerce/metaBoxes/main.html.twig', [
-                        'doPieceIdentifier' => $fDocenteteIdentifier["doPiece"],
-                        'doTypeIdentifier' => $fDocenteteIdentifier["doType"],
+                        'doPieceIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doPiece"] : null,
+                        'doTypeIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doType"] : null,
                         'order' => $order,
                         'hasFDocentete' => $hasFDocentete,
                         'fDoclignes' => $fDoclignes,
@@ -576,6 +577,9 @@ final class Sage
                         return new WP_REST_Response(null, 404);
                     }
                     return new WP_REST_Response($fDocentetes, 200);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
                 },
             ]);
         });

@@ -243,6 +243,7 @@ jQuery(document).ready(function () {
         const inputDoPiece = e.target;
         const domContainer = jQuery(inputDoPiece).parent();
         const inputDoType = jQuery(domContainer).find('[name="sage-fdocentete-dotype"]');
+        const inputWpnonce = jQuery(domContainer).find('[name="sage-fdocentete-wpnonce"]');
         const successIcon = jQuery(domContainer).find(".dashicons-yes");
         const errorIcon = jQuery(domContainer).find(".dashicons-no");
 
@@ -252,13 +253,16 @@ jQuery(document).ready(function () {
         jQuery(inputDoType).val('');
         searchFDocentete = inputDoPiece.value;
         const currentSearch = inputDoPiece.value;
+        if (searchFDocentete.trim() === "") {
+            return;
+        }
         setTimeout(async () => {
             if (currentSearch !== searchFDocentete) {
                 return;
             }
             const spinner = jQuery(domContainer).find(".svg-spinner");
             jQuery(spinner).removeClass("hidden");
-            const response = await fetch("/wp-json/sage/v1/fdocentetes/" + encodeURIComponent(currentSearch));
+            const response = await fetch("/wp-json/sage/v1/fdocentetes/" + encodeURIComponent(currentSearch) + "?_wpnonce=" + jQuery(inputWpnonce).val());
             if (currentSearch !== searchFDocentete) {
                 return;
             }
