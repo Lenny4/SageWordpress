@@ -1,5 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block body %}
+    {% set orderId = order.get_id() %}
+    {% set wpnonce = 'wp_rest'|wp_create_nonce %}
     {% if hasFDocentete == false %}
         <label for="sage-fdocentete-dopiece">
             {{ 'Veuillez renseigner le N°pièce de la commande Sage'|trans }}
@@ -111,12 +113,26 @@
                             </td>
                             <td class="{% if display.showBorderX %} border-right {% endif %} {{ className }}">
                                 {% if showData %}
-                                    <div class="tooltip">
-                                        <span class="dashicons dashicons-no cursor-pointer" style="color: red"></span>
-                                        <div class="tooltiptext">
-                                            <p>{{ 'Ce produit n\'existe pas dans Wordpress. Veuillez cliquer sur la croix pour le créer.'|trans }}</p>
+                                    {% if fDocligneFormatted.postId is null %}
+                                        <div class="tooltip" data-import-farticle="{{ fDocligneFormatted.arRef }}"
+                                             data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}">
+                                            <span class="dashicons dashicons-no button"
+                                                  style="color: red; padding-right: 22px"></span>
+                                            <div class="tooltiptext">
+                                                <p>{{ 'Ce produit n\'existe pas dans Wordpress. Veuillez cliquer sur la croix pour le créer.'|trans }}</p>
+                                            </div>
                                         </div>
-                                    </div>
+                                    {% else %}
+                                        <div class="tooltip">
+                                            <a href="/wp-admin/post.php?post={{ fDocligneFormatted.postId }}&action=edit">
+                                                <span class="dashicons dashicons-visibility button"
+                                                      style="padding-right: 22px"></span>
+                                            </a>
+                                            <div class="tooltiptext">
+                                                {{ 'Voir l\'article Wordpress'|trans }}
+                                            </div>
+                                        </div>
+                                    {% endif %}
                                 {% endif %}
                             </td>
                         {% endfor %}
@@ -129,7 +145,8 @@
     align-items: center;
     justify-content: flex-end;
 ">
-                <button type="button" id="synchronise-order" data-nonce="{{ 'wp_rest'|wp_create_nonce }}"
+                <button type="button" id="synchronise-order" data-synchronise-order="{{ orderId }}"
+                        data-nonce="{{ wpnonce }}"
                         class="button button-primary">{{ 'Synchroniser la commande Sage avec Wordpress' }}</button>
                 <div class="tooltip">
                     <span class="dashicons dashicons-info"></span>

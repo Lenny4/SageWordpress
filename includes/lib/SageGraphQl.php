@@ -565,7 +565,13 @@ final class SageGraphQl
         ];
     }
 
-    public function getFDoclignes(string $doPiece, int $doType, bool $getError = false, bool $ignorePingApi = false): array|null|string
+    public function getFDoclignes(
+        string $doPiece,
+        int    $doType,
+        bool   $getError = false,
+        bool   $ignorePingApi = false,
+        bool   $addWordpressProductId = false,
+    ): array|null|string
     {
         if (!$this->pingApi && !$ignorePingApi) {
             return null;
@@ -599,8 +605,34 @@ final class SageGraphQl
         if (is_null($result) || is_string($result)) {
             return $result;
         }
+        $result = $result->data->fDoclignes->items;
+        global $wpdb;
+        if ($addWordpressProductId) {
+            $arRefs = array_values(array_unique(array_map(static function (stdClass $fDocligne) {
+                return $fDocligne->arRef;
+            }, $result)));
+            $r = $wpdb->get_results(
+                $wpdb->prepare(
+                    "
+SELECT post_id, meta_value
+FROM {$wpdb->postmeta}
+WHERE {$wpdb->postmeta}.meta_key = %s
+  AND {$wpdb->postmeta}.meta_value IN ('" . implode("','", $arRefs) . "')
+", [
+                    Sage::META_KEY_AR_REF,
+                ]));
+            foreach ($result as $fDocligne) {
+                $fDocligne->postId = null;
+                foreach ($r as $product) {
+                    if ($fDocligne->arRef === $product->meta_value) {
+                        $fDocligne->postId = $product->post_id;
+                        break;
+                    }
+                }
+            }
+        }
 
-        return $result->data->fDoclignes->items;
+        return $result;
     }
 
     private function _getFDocligneSelectionSet(): array

@@ -54,6 +54,7 @@ final class SageSettings
     private function __construct(public ?Sage $sage)
     {
         $sageSettings = $this;
+        $sageWoocommerce = $this->sage->sageWoocommerce;
         $this->sageEntityMenus = [
             new SageEntityMenu(
                 title: 'Clients',
@@ -125,25 +126,8 @@ final class SageSettings
 //                    ],
                 ],
                 actions: [
-                    'import_from_sage' => function (array $data) use ($sageSettings): string {
-                        $arRef = $data['arRef'];
-                        $fArticle = $sageSettings->sage->sageGraphQl->getFArticle($arRef);
-                        if (is_null($fArticle)) {
-                            return "<div class='error'>
-                        " . __("L'article n'a pas pu être importé", 'sage') . "
-                                </div>";
-                        }
-                        $articleId = $sageSettings->sage->sageWoocommerce->getWooCommerceIdArticle($arRef);
-                        $article = $sageSettings->sage->sageWoocommerce->convertSageArticleToWoocommerce($fArticle,
-                            current(array_filter($sageSettings->sageEntityMenus,
-                                static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_AR_REF
-                            ))
-                        );
-                        $url = '/wp-json/wc/v3/products';
-                        if (!is_null($articleId)) {
-                            $url .= '/' . $articleId;
-                        }
-                        [$response, $responseError] = $sageSettings->sage->createResource($url, is_null($articleId) ? 'POST' : 'PUT', $article);
+                    'import_from_sage' => function (array $data) use ($sageWoocommerce): string {
+                        [$response, $responseError] = $sageWoocommerce->importFArticleFromSage($data['arRef']);
                         if (is_string($responseError)) {
                             return $responseError;
                         }

@@ -310,4 +310,63 @@ jQuery(document).ready(function () {
         jQuery(errorIcon).addClass("hidden");
     });
     // endregion
+
+    // region import product from an order
+    jQuery(document).on('click', '[data-import-farticle]', async function (e) {
+        e.stopPropagation();
+        const blockDom = jQuery(e.target).closest("[id^='woocommerce-order']");
+        jQuery(blockDom).block({
+            message: null,
+            overlayCSS: {
+                background: '#fff',
+                opacity: 0.6
+            }
+        });
+        let target = e.target;
+        if (!jQuery(target).attr('data-import-farticle')) {
+            target = jQuery(target).closest('[data-import-farticle]');
+        }
+        const arRef = jQuery(target).attr('data-import-farticle');
+        const orderId = jQuery(target).attr('data-order-id');
+        const wpnonce = jQuery(target).attr('data-nonce');
+
+        const response = await fetch("/wp-json/sage/v1/farticle/" + arRef + "/import?_wpnonce=" + wpnonce + "&orderId=" + orderId);
+        jQuery(blockDom).unblock();
+        if (response.status === 200) {
+            const data = await response.json();
+            const blockInside = jQuery(target).closest(".inside");
+            jQuery(blockInside).html(data.html);
+        } else {
+            // todo toastr
+        }
+    });
+    // endregion
+
+    // region synchronise order
+    jQuery(document).on('click', '[data-synchronise-order]', async function (e) {
+        e.stopPropagation();
+        if (window.confirm('todo 2eme ')) {
+            const blockDom = jQuery(e.target).closest("[id^='woocommerce-order']");
+            jQuery(blockDom).block({
+                message: null,
+                overlayCSS: {
+                    background: '#fff',
+                    opacity: 0.6
+                }
+            });
+
+            const orderId = jQuery(e.target).attr('data-synchronise-order');
+            const wpnonce = jQuery(e.target).attr('data-nonce');
+            const response = await fetch("/wp-json/sage/v1/orders/" + orderId + "/sync?_wpnonce=" + wpnonce);
+            jQuery(blockDom).unblock();
+            if (response.status === 200) {
+                const data = await response.json();
+                const blockInside = jQuery(e.target).closest(".inside");
+                jQuery(blockInside).html(data.html);
+            } else {
+                // todo toastr
+            }
+        }
+    });
+    // endregion
 });

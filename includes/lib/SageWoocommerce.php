@@ -102,24 +102,6 @@ final class SageWoocommerce
         return self::$_instance;
     }
 
-    public function convertSageArticleToWoocommerce(StdClass $fArticle, SageEntityMenu $sageEntityMenu): array
-    {
-        $result = [
-            'name' => $fArticle->arDesign,
-            'meta_data' => [],
-        ];
-        foreach ($sageEntityMenu->getMetadata() as $metadata) {
-            $value = $metadata->getValue();
-            if (!is_null($value)) {
-                $result['meta_data'][] = [
-                    'key' => '_' . Sage::TOKEN . $metadata->getField(),
-                    'value' => $value($fArticle),
-                ];
-            }
-        }
-        return $result;
-    }
-
     public function convertSageUserToWoocommerce(StdClass $fComptet, ?int $userId, SageEntityMenu $sageEntityMenu): array|string
     {
         $email = explode(';', $fComptet->ctEmail)[0];
@@ -193,25 +175,6 @@ final class SageWoocommerce
             $result['password'] = bin2hex(random_bytes(5));
         }
         return $result;
-    }
-
-    public function getWooCommerceIdArticle(string $arRef): int|null
-    {
-        global $wpdb;
-        $r = $wpdb->get_results(
-            $wpdb->prepare(
-                "
-SELECT {$wpdb->posts}.ID
-FROM {$wpdb->posts}
-         INNER JOIN {$wpdb->postmeta} ON {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
-WHERE {$wpdb->posts}.post_type = 'product'
-  AND {$wpdb->postmeta}.meta_key = %s
-  AND {$wpdb->postmeta}.meta_value = %s
-", [Sage::META_KEY_AR_REF, $arRef]));
-        if (!empty($r)) {
-            return (int)$r[0]->ID;
-        }
-        return null;
     }
 
     public function populateMetaDatas(?array $data, array $fields, SageEntityMenu $sageEntityMenu): array|null
@@ -297,6 +260,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 $fDocenteteIdentifier["doType"],
                 getError: true,
                 ignorePingApi: $ignorePingApi,
+                addWordpressProductId: true,
             );
         }
         // original WC_Meta_Box_Order_Data::output
@@ -308,5 +272,63 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             'fDoclignes' => $fDoclignes,
             'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
         ]);
+    }
+
+    public function importFArticleFromSage(string $arRef): array
+    {
+        $fArticle = $this->sage->sageGraphQl->getFArticle($arRef);
+        if (is_null($fArticle)) {
+            return [null, "<div class='error'>
+                        " . __("L'article n'a pas pu être importé", 'sage') . "
+                                </div>"];
+        }
+        $articleId = $this->sage->sageWoocommerce->getWooCommerceIdArticle($arRef);
+        $article = $this->sage->sageWoocommerce->convertSageArticleToWoocommerce($fArticle,
+            current(array_filter($this->sage->settings->sageEntityMenus,
+                static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_AR_REF
+            ))
+        );
+        $url = '/wp-json/wc/v3/products';
+        if (!is_null($articleId)) {
+            $url .= '/' . $articleId;
+        }
+        return $this->sage->createResource($url, is_null($articleId) ? 'POST' : 'PUT', $article);
+    }
+
+    public function getWooCommerceIdArticle(string $arRef): int|null
+    {
+        global $wpdb;
+        $r = $wpdb->get_results(
+            $wpdb->prepare(
+                "
+SELECT {$wpdb->posts}.ID
+FROM {$wpdb->posts}
+         INNER JOIN {$wpdb->postmeta} ON {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+WHERE {$wpdb->posts}.post_type = 'product'
+  AND {$wpdb->postmeta}.meta_key = %s
+  AND {$wpdb->postmeta}.meta_value = %s
+", [Sage::META_KEY_AR_REF, $arRef]));
+        if (!empty($r)) {
+            return (int)$r[0]->ID;
+        }
+        return null;
+    }
+
+    public function convertSageArticleToWoocommerce(StdClass $fArticle, SageEntityMenu $sageEntityMenu): array
+    {
+        $result = [
+            'name' => $fArticle->arDesign,
+            'meta_data' => [],
+        ];
+        foreach ($sageEntityMenu->getMetadata() as $metadata) {
+            $value = $metadata->getValue();
+            if (!is_null($value)) {
+                $result['meta_data'][] = [
+                    'key' => '_' . Sage::TOKEN . $metadata->getField(),
+                    'value' => $value($fArticle),
+                ];
+            }
+        }
+        return $result;
     }
 }

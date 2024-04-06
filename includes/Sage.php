@@ -547,6 +547,20 @@ final class Sage
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
+            register_rest_route(Sage::TOKEN . '/v1', '/farticle/(?P<arRef>([^&]*))/import', [ // https://stackoverflow.com/a/10126995/6824121
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
+                    $arRef = $request['arRef'];
+                    [$response, $responseError] = $sageWoocommerce->importFArticleFromSage($arRef);
+                    $order = new Order($request['orderId']);
+                    return new WP_REST_Response([
+                        'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true)
+                    ], 200);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+$)', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageGraphQl) {
