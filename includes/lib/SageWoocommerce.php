@@ -283,17 +283,24 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         " . __("L'article n'a pas pu être importé", 'sage') . "
                                 </div>"];
         }
-        $articleId = $this->sage->sageWoocommerce->getWooCommerceIdArticle($arRef);
+        $articlePostId = $this->sage->sageWoocommerce->getWooCommerceIdArticle($arRef);
         $article = $this->sage->sageWoocommerce->convertSageArticleToWoocommerce($fArticle,
             current(array_filter($this->sage->settings->sageEntityMenus,
                 static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_AR_REF
             ))
         );
         $url = '/wp-json/wc/v3/products';
-        if (!is_null($articleId)) {
-            $url .= '/' . $articleId;
+        if (!is_null($articlePostId)) {
+            $url .= '/' . $articlePostId;
         }
-        [$response, $responseError] = $this->sage->createResource($url, is_null($articleId) ? 'POST' : 'PUT', $article);
+
+        [$response, $responseError] = $this->sage->createResource(
+            $url,
+            is_null($articlePostId) ? 'POST' : 'PUT',
+            $article,
+            Sage::META_KEY_AR_REF,
+            $arRef,
+        );
         $dismissNotice = "<button type='button' class='notice-dismiss sage-notice-dismiss'><span class='screen-reader-text'>" . __('Dismiss this notice.') . "</span></button>";
         if (is_string($responseError)) {
             $message = $responseError;
@@ -323,7 +330,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 "
 SELECT {$wpdb->posts}.ID
 FROM {$wpdb->posts}
-         INNER JOIN {$wpdb->postmeta} ON {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+         INNER JOIN {$wpdb->postmeta} ON {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID AND {$wpdb->posts}.post_status != 'trash'
 WHERE {$wpdb->posts}.post_type = 'product'
   AND {$wpdb->postmeta}.meta_key = %s
   AND {$wpdb->postmeta}.meta_value = %s

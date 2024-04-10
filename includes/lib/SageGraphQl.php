@@ -616,6 +616,7 @@ final class SageGraphQl
                     "
 SELECT post_id, meta_value
 FROM {$wpdb->postmeta}
+         INNER JOIN {$wpdb->posts} ON {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id AND {$wpdb->posts}.post_status != 'trash'
 WHERE {$wpdb->postmeta}.meta_key = %s
   AND {$wpdb->postmeta}.meta_value IN ('" . implode("','", $arRefs) . "')
 ", [

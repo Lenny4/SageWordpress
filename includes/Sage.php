@@ -678,7 +678,7 @@ final class Sage
         if (!is_null($userId)) {
             $url .= '/' . $userId;
         }
-        [$response, $responseError] = $this->createResource($url, is_null($userId) ? 'POST' : 'PUT', $user);
+        [$response, $responseError] = $this->createResource($url, is_null($userId) ? 'POST' : 'PUT', $user, null, null);
 
         if (is_string($responseError)) {
             return $responseError;
@@ -709,8 +709,17 @@ WHERE meta_key = %s
         return null;
     }
 
-    public function createResource(string $url, string $method, array $body): array
+    public function createResource(
+        string  $url,
+        string  $method,
+        array   $body,
+        ?string $deleteKey,
+        ?string $deleteValue,
+    ): array
     {
+        if (!is_null($deleteKey) && !is_null($deleteValue)) {
+            $this->deleteMetaTrashResource($deleteKey, $deleteValue);
+        }
         $response = SageRequest::selfRequest($url, [
             'headers' => [
                 'Content-Type' => 'application/json',
@@ -733,6 +742,22 @@ WHERE meta_key = %s
                                 </div>";
         }
         return [$response, $responseError];
+    }
+
+    public function deleteMetaTrashResource(string $key, string $value): void
+    {
+        global $wpdb;
+        $wpdb->query($wpdb->prepare("
+DELETE
+FROM {$wpdb->postmeta}
+WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
+                              FROM (SELECT * FROM {$wpdb->postmeta}) postmeta2
+                                       INNER JOIN {$wpdb->posts}
+                                                  ON {$wpdb->posts}.ID = postmeta2.post_id AND {$wpdb->posts}.post_status = 'trash'
+                              WHERE meta_key = %s
+                                AND meta_value = %s)
+  AND {$wpdb->postmeta}.meta_key LIKE '_" . self::TOKEN . "_%'
+        ", [$key, $value]));
     }
 
     public function createUserSage(int $userId, array $userdata): void
