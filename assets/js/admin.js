@@ -177,6 +177,12 @@ jQuery(document).ready(function () {
     });
     // endregion
 
+    // region remove notice dismissible
+    jQuery(document).on('click', '.sage-notice-dismiss', function (e) {
+        jQuery(e.target).closest('div.notice').remove();
+    });
+    // endregion
+
     // region filter form
     jQuery(document).on('click', '#add_filter', function (e) {
         addFilter();

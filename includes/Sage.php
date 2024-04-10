@@ -551,10 +551,14 @@ final class Sage
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $arRef = $request['arRef'];
-                    [$response, $responseError] = $sageWoocommerce->importFArticleFromSage($arRef);
+                    [$response, $responseError, $message] = $sageWoocommerce->importFArticleFromSage($arRef);
                     $order = new Order($request['orderId']);
                     return new WP_REST_Response([
-                        'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true)
+                        'html' => $sageWoocommerce->getMetaboxSage(
+                            $order,
+                            ignorePingApi: true,
+                            message: $message,
+                        )
                     ], 200);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {

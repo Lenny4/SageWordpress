@@ -1,5 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block body %}
+    {{ message | raw }}
     {% set orderId = order.get_id() %}
     {% set wpnonce = 'wp_rest'|wp_create_nonce %}
     {% if hasFDocentete == false %}

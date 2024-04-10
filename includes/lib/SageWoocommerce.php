@@ -242,7 +242,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $data;
     }
 
-    public function getMetaboxSage(Order $order, bool $ignorePingApi = false): string
+    public function getMetaboxSage(Order $order, bool $ignorePingApi = false, string $message = ''): string
     {
         $fDocenteteIdentifier = null;
         foreach ($order->get_meta_data() as $meta) {
@@ -265,6 +265,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         }
         // original WC_Meta_Box_Order_Data::output
         return $this->sage->twig->render('woocommerce/metaBoxes/main.html.twig', [
+            'message' => $message,
             'doPieceIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doPiece"] : null,
             'doTypeIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doType"] : null,
             'order' => $order,
@@ -292,7 +293,26 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         if (!is_null($articleId)) {
             $url .= '/' . $articleId;
         }
-        return $this->sage->createResource($url, is_null($articleId) ? 'POST' : 'PUT', $article);
+        [$response, $responseError] = $this->sage->createResource($url, is_null($articleId) ? 'POST' : 'PUT', $article);
+        $dismissNotice = "<button type='button' class='notice-dismiss sage-notice-dismiss'><span class='screen-reader-text'>" . __('Dismiss this notice.') . "</span></button>";
+        if (is_string($responseError)) {
+            $message = $responseError;
+        } else if ($response["response"]["code"] === 200) {
+            $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
+            $message = "<div class='notice notice-success is-dismissible'>
+                    <p>" . __('Article updated: ' . $body->name, 'sage') . "</p>
+                    $dismissNotice
+                            </div>";
+        } else if ($response["response"]["code"] === 201) {
+            $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
+            $message = "<div class='notice notice-success is-dismissible'>
+                    <p>" . __('Article created: ' . $body->name, 'sage') . "</p>
+                    $dismissNotice
+                            </div>";
+        } else {
+            $message = $response["body"];
+        }
+        return [$response, $responseError, $message];
     }
 
     public function getWooCommerceIdArticle(string $arRef): int|null

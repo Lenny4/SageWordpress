@@ -127,18 +127,8 @@ final class SageSettings
                 ],
                 actions: [
                     'import_from_sage' => function (array $data) use ($sageWoocommerce): string {
-                        [$response, $responseError] = $sageWoocommerce->importFArticleFromSage($data['arRef']);
-                        if (is_string($responseError)) {
-                            return $responseError;
-                        }
-                        if ($response["response"]["code"] === 200) {
-                            return "<div class='notice notice-success'>
-                        " . __('Article updated', 'sage') . "
-                                </div>";
-                        }
-                        return "<div class='notice notice-success'>
-                        " . __('Article created', 'sage') . "
-                                </div>";
+                        [$response, $responseError, $message] = $sageWoocommerce->importFArticleFromSage($data['arRef']);
+                        return $message;
                     }
                 ],
                 metadata: [
