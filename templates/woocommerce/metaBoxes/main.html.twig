@@ -141,21 +141,28 @@
                 {% endfor %}
             </table>
             {# endregion #}
-            <div class="mt-2" style="
+            {% if tasksSynchronizeOrder is empty %}
+                <p class="text-right">
+                    {{ 'La commande Wordpress est synchronisée avec Sage'|trans }}
+                    <span class="dashicons dashicons-yes" style="color: green"></span>
+                </p>
+            {% else %}
+                <div class="mt-2" style="
     display: flex;
     align-items: center;
     justify-content: flex-end;
 ">
-                <button type="button" id="synchronise-order" data-synchronise-order="{{ orderId }}"
-                        data-nonce="{{ wpnonce }}"
-                        class="button button-primary">{{ 'Synchroniser la commande Sage avec Wordpress' }}</button>
-                <div class="tooltip">
-                    <span class="dashicons dashicons-info"></span>
-                    <div class="tooltiptext">
-                        <p>{{ 'Explication de la synchronisation'|trans }}</p>
+                    <button type="button" id="synchronise-order" data-synchronise-order="{{ orderId }}"
+                            data-nonce="{{ wpnonce }}"
+                            class="button button-primary">{{ 'Synchroniser la commande Wordpress avec Sage'|trans }}</button>
+                    <div class="tooltip">
+                        <span class="dashicons dashicons-info"></span>
+                        <div class="tooltiptext" style="max-width: 300px; width: 300px">
+                            {% include 'woocommerce/metaBoxes/tasksSynchronizeOrder.html.twig' %}
+                        </div>
                     </div>
                 </div>
-            </div>
+            {% endif %}
         {% endif %}
     {% endif %}
 {% endblock %}

@@ -342,6 +342,11 @@ final class Sage
 
             return $fDoclignes;
         }));
+        $this->twig->addFunction(new TwigFunction('getProductChangeLabel', static function (stdClass $productChange, array $products) {
+            /** @var WC_Product $p */
+            $p = $products[$productChange->postId];
+            return $p->get_name();
+    }));
         // endregion
 
         register_activation_hook($this->file, function (): void {
@@ -539,6 +544,8 @@ final class Sage
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $order = new Order($request['id']);
+                    // todo synchronise order
+                    // $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $fDoclignes);
                     return new WP_REST_Response([
                         'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true)
                     ], 200);

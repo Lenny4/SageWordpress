@@ -626,7 +626,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 $fDocligne->postId = null;
                 foreach ($r as $product) {
                     if ($fDocligne->arRef === $product->meta_value) {
-                        $fDocligne->postId = $product->post_id;
+                        $fDocligne->postId = (int)$product->post_id;
                         break;
                     }
                 }

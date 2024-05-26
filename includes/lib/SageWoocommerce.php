@@ -6,9 +6,12 @@ use App\class\SageEntityMenu;
 use App\Sage;
 use App\SageSettings;
 use App\Utils\FDocenteteUtils;
+use App\Utils\OrderUtils;
 use Automattic\WooCommerce\Admin\Overrides\Order;
 use StdClass;
 use WC_Meta_Data;
+use WC_Order_Item;
+use WC_Order_Item_Product;
 use WC_Product;
 
 if (!defined('ABSPATH')) {
@@ -34,6 +37,26 @@ final class SageWoocommerce
 //        add_filter('woocommerce_variation_prices_regular_price', fn($price, $variation, $product) => $this->custom_variable_price($price, $variation, $product), 99, 3);
         // Handling price caching (see explanations at the end)
 //        add_filter('woocommerce_get_variation_prices_hash', fn($price_hash, $product, $for_display) => $this->add_price_multiplier_to_variation_prices_hash($price_hash, $product, $for_display), 99, 3);
+        // endregion
+
+        // region edit woocommerce product display
+        add_action('woocommerce_after_order_itemmeta', function (int $item_id, WC_Order_Item $item, ?WC_Product $product) {
+            if (
+                !($item instanceof WC_Order_Item_Product) ||
+                is_null($product)
+            ) {
+                return;
+            }
+            /** @var WC_Meta_Data[] $metaDatas */
+            $metaDatas = $product->get_meta_data();
+            foreach ($metaDatas as $metaData) {
+                $data = $metaData->get_data();
+                if ($data["key"] === Sage::META_KEY_AR_REF) {
+                    echo __('Sage ref', 'sage') . ': ' . $data["value"];
+                    break;
+                }
+            }
+        }, 10, 3);
         // endregion
 
         // region add column to product list
@@ -254,6 +277,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         }
         $hasFDocentete = !is_null($fDocenteteIdentifier);
         $fDoclignes = null;
+        $tasksSynchronizeOrder = [];
         if ($hasFDocentete) {
             $fDoclignes = $this->sage->sageGraphQl->getFDoclignes(
                 $fDocenteteIdentifier["doPiece"],
@@ -262,6 +286,11 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 ignorePingApi: $ignorePingApi,
                 addWordpressProductId: true,
             );
+            if (is_string($fDoclignes)) {
+                $message .= $fDoclignes;
+                $fDoclignes = [];
+            }
+            $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $fDoclignes);
         }
         // original WC_Meta_Box_Order_Data::output
         return $this->sage->twig->render('woocommerce/metaBoxes/main.html.twig', [
@@ -272,6 +301,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             'hasFDocentete' => $hasFDocentete,
             'fDoclignes' => $fDoclignes,
             'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
+            'tasksSynchronizeOrder' => $tasksSynchronizeOrder
         ]);
     }
 
@@ -357,5 +387,82 @@ WHERE {$wpdb->posts}.post_type = 'product'
             }
         }
         return $result;
+    }
+
+    private function getTasksSynchronizeOrder_Products(Order $order, array $fDoclignes): array
+    {
+        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php
+        $lineItems = array_values($order->get_items());
+
+        // region products
+        $nbLines = max(count($lineItems), count($fDoclignes));
+        $productChanges = [];
+        for ($i = 0; $i < $nbLines; $i++) {
+            $old = null;
+            if (isset($lineItems[$i])) {
+                $data = $lineItems[$i]->get_data();
+                $old = new stdClass();
+                $old->postId = $data["product_id"];
+                $old->quantity = $data["quantity"];
+            }
+            $new = null;
+            if (isset($fDoclignes[$i])) {
+                $new = new stdClass();
+                $new->postId = $fDoclignes[$i]->postId;
+                $new->quantity = (int)$fDoclignes[$i]->dlQte;
+            }
+            $change = null;
+            if (!is_null($new) && !is_null($old)) {
+                if ($new->postId !== $old->postId) {
+                    $change = OrderUtils::REPLACE_PRODUCT_ACTION;
+                } else if ($new->quantity !== $old->quantity) {
+                    $change = OrderUtils::CHANGE_QUANTITY_PRODUCT_ACTION;
+                }
+            } else if (is_null($new)) {
+                $change = OrderUtils::REMOVE_PRODUCT_ACTION;
+            } else if (is_null($old)) {
+                $change = OrderUtils::ADD_PRODUCT_ACTION;
+            }
+            $productChanges[$i] = [
+                'old' => $old,
+                'new' => $new,
+                'change' => $change,
+            ];
+        }
+        $productIds = [];
+        foreach ($productChanges as $productChange) {
+            $productIds[] = $productChange["old"]?->postId;
+            $productIds[] = $productChange["new"]?->postId;
+        }
+        $productIds = array_values(array_filter(array_unique($productIds)));
+        $products = wc_get_products(['include' => $productIds]); // https://github.com/woocommerce/woocommerce/wiki/wc_get_products-and-WC_Product_Query
+        $products = array_combine(array_map(static function (WC_Product $product) {
+            return $product->get_id();
+        }, $products), $products);
+        return [$productChanges, $products];
+    }
+
+    public function getTasksSynchronizeOrder(Order $order, array $fDoclignes): array
+    {
+        [$productChanges, $products] = $this->getTasksSynchronizeOrder_Products($order, $fDoclignes);
+
+        // region shipping
+        // todo
+        $lineItemsShipping = $order->get_items('shipping');
+        // endregion
+
+        // region addresses
+        // endregion
+
+        // region contact
+        // endregion
+
+        // region payment
+
+        // endregion
+        return [
+            'productChanges' => $productChanges,
+            'products' => $products,
+        ];
     }
 }
