@@ -1,34 +1,31 @@
 <?php
 
-use Rector\Config\RectorConfig;
-use Rector\Set\ValueObject\LevelSetList;
-use Rector\Set\ValueObject\SetList;
+declare(strict_types=1);
 
-return static function (RectorConfig $rectorConfig): void {
-    $rectorConfig->importNames();
-//    $rectorConfig->parallel(240); // https://github.com/rectorphp/rector/issues/7323
-    $rectorConfig->disableParallel(); // https://github.com/rectorphp/rector/issues/7323
-    $rectorConfig->paths([
+use Rector\Config\RectorConfig;
+
+return RectorConfig::configure()
+    // https://github.com/rectorphp/rector/blob/main/docs/auto_import_names.md
+    ->withImportNames()
+//    ->withoutParallel()
+    ->withPaths([
         __DIR__ . '/../../../wp-content/plugins/sage',
-    ]);
-    $rectorConfig->skip([
+    ])
+    ->withSkip([
         __DIR__ . '/../../../wp-content/plugins/sage/node_modules',
         __DIR__ . '/../../../wp-content/plugins/sage/vendor',
-    ]);
-
-// here we can define, what sets of rules will be applied
-// tip: use "SetList" class to autocomplete sets with your IDE
-    $rectorConfig->sets([
-        SetList::CODE_QUALITY,
-        SetList::DEAD_CODE,
-        LevelSetList::UP_TO_PHP_82,
-        SetList::CODING_STYLE,
-        SetList::STRICT_BOOLEANS,
-        SetList::GMAGICK_TO_IMAGICK,
-        SetList::NAMING,
-        SetList::PRIVATIZATION,
-        SetList::TYPE_DECLARATION,
-        SetList::EARLY_RETURN,
-        SetList::INSTANCEOF,
-    ]);
-};
+    ])
+    ->withPreparedSets(
+        deadCode: true,
+        codeQuality: true,
+        codingStyle: true,
+        typeDeclarations: true,
+        privatization: true,
+        naming: true,
+        instanceOf: true,
+        earlyReturn: true,
+        strictBooleans: true,
+    )
+    ->withPhpSets(
+        php82: true,
+    );
