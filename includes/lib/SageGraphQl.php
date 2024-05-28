@@ -547,13 +547,22 @@ final class SageGraphQl
         return $fDocentetes->data->fDocentetes->items;
     }
 
-    private function _getFDocenteteSelectionSet(): array
+    private function _getFDocenteteSelectionSet(
+        bool $getFDoclignes = false,
+        bool $getFraisExpedition = false
+    ): array
     {
-        return [
-            [
-                'name' => 'doType',
-                "type" => "IntOperationFilterInput",
-            ],
+        $intFields = ['doType'];
+        if ($getFraisExpedition) {
+            $intFields[] = 'fraisExpedition';
+        }
+        $result = [
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "IntOperationFilterInput",
+                ];
+            }, $intFields),
             ...array_map(static function (string $field) {
                 return [
                     "name" => $field,
@@ -563,6 +572,39 @@ final class SageGraphQl
                 'doPiece',
             ]),
         ];
+        if ($getFDoclignes) {
+            $result['fDoclignes'] = $this->_getFDocligneSelectionSet();
+        }
+        return $result;
+    }
+
+    private function addWordpressProductId(array $fDoclignes): array
+    {
+        global $wpdb;
+        $arRefs = array_values(array_unique(array_map(static function (stdClass $fDocligne) {
+            return $fDocligne->arRef;
+        }, $fDoclignes)));
+        $r = $wpdb->get_results(
+            $wpdb->prepare(
+                "
+SELECT post_id, meta_value
+FROM {$wpdb->postmeta}
+         INNER JOIN {$wpdb->posts} ON {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id AND {$wpdb->posts}.post_status != 'trash'
+WHERE {$wpdb->postmeta}.meta_key = %s
+  AND {$wpdb->postmeta}.meta_value IN ('" . implode("','", $arRefs) . "')
+", [
+                Sage::META_KEY_AR_REF,
+            ]));
+        foreach ($fDoclignes as $fDocligne) {
+            $fDocligne->postId = null;
+            foreach ($r as $product) {
+                if ($fDocligne->arRef === $product->meta_value) {
+                    $fDocligne->postId = (int)$product->post_id;
+                    break;
+                }
+            }
+        }
+        return $fDoclignes;
     }
 
     public function getFDoclignes(
@@ -606,31 +648,8 @@ final class SageGraphQl
             return $result;
         }
         $result = $result->data->fDoclignes->items;
-        global $wpdb;
         if ($addWordpressProductId) {
-            $arRefs = array_values(array_unique(array_map(static function (stdClass $fDocligne) {
-                return $fDocligne->arRef;
-            }, $result)));
-            $r = $wpdb->get_results(
-                $wpdb->prepare(
-                    "
-SELECT post_id, meta_value
-FROM {$wpdb->postmeta}
-         INNER JOIN {$wpdb->posts} ON {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id AND {$wpdb->posts}.post_status != 'trash'
-WHERE {$wpdb->postmeta}.meta_key = %s
-  AND {$wpdb->postmeta}.meta_value IN ('" . implode("','", $arRefs) . "')
-", [
-                    Sage::META_KEY_AR_REF,
-                ]));
-            foreach ($result as $fDocligne) {
-                $fDocligne->postId = null;
-                foreach ($r as $product) {
-                    if ($fDocligne->arRef === $product->meta_value) {
-                        $fDocligne->postId = (int)$product->post_id;
-                        break;
-                    }
-                }
-            }
+            $result = $this->addWordpressProductId($result);
         }
 
         return $result;
@@ -667,8 +686,19 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         ];
     }
 
-    public function getFDocentete(string $doPiece, int $doType, bool $getError = false): stdClass|null|false|string
+    public function getFDocentete(
+        string $doPiece,
+        int    $doType,
+        bool   $getError = false,
+        bool   $getFDoclignes = false,
+        bool   $getFraisExpedition = false,
+        bool   $ignorePingApi = false,
+        bool   $addWordpressProductId = false,
+    ): stdClass|null|false|string
     {
+        if (!$this->pingApi && !$ignorePingApi) {
+            return null;
+        }
         $fDocentetes = $this->searchEntities(
             SageEntityMenu::FDOCENTETE_ENTITY_NAME,
             [
@@ -688,7 +718,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 "paged" => "1",
                 "per_page" => "1"
             ],
-            $this->_getFDocenteteSelectionSet(),
+            $this->_getFDocenteteSelectionSet(getFDoclignes: $getFDoclignes, getFraisExpedition: $getFraisExpedition),
             getError: $getError,
         );
         if (
@@ -700,8 +730,12 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if ($fDocentetes->data->fDocentetes->totalCount !== 1) {
             return false;
         }
+        $result = $fDocentetes->data->fDocentetes->items[0];
+        if ($addWordpressProductId) {
+            $result->fDoclignes = $this->addWordpressProductId($result->fDoclignes);
+        }
 
-        return $fDocentetes->data->fDocentetes->items[0];
+        return $result;
     }
 
     public function getFComptet(string $ctNum): StdClass|null

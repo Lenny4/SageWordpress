@@ -276,21 +276,23 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             }
         }
         $hasFDocentete = !is_null($fDocenteteIdentifier);
-        $fDoclignes = null;
+        $fDocentete = null;
         $tasksSynchronizeOrder = [];
         if ($hasFDocentete) {
-            $fDoclignes = $this->sage->sageGraphQl->getFDoclignes(
+            $fDocentete = $this->sage->sageGraphQl->getFDocentete(
                 $fDocenteteIdentifier["doPiece"],
                 $fDocenteteIdentifier["doType"],
                 getError: true,
+                getFDoclignes: true,
+                getFraisExpedition: true,
                 ignorePingApi: $ignorePingApi,
                 addWordpressProductId: true,
             );
-            if (is_string($fDoclignes)) {
-                $message .= $fDoclignes;
-                $fDoclignes = [];
+            if (is_string($fDocentete)) {
+                $message .= $fDocentete;
+                $fDocentete = null;
             }
-            $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $fDoclignes);
+            $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $fDocentete);
         }
         // original WC_Meta_Box_Order_Data::output
         return $this->sage->twig->render('woocommerce/metaBoxes/main.html.twig', [
@@ -299,7 +301,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             'doTypeIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doType"] : null,
             'order' => $order,
             'hasFDocentete' => $hasFDocentete,
-            'fDoclignes' => $fDoclignes,
+            'fDocentete' => $fDocentete,
             'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
             'tasksSynchronizeOrder' => $tasksSynchronizeOrder
         ]);
@@ -435,20 +437,23 @@ WHERE {$wpdb->posts}.post_type = 'product'
             $productIds[] = $productChange["new"]?->postId;
         }
         $productIds = array_values(array_filter(array_unique($productIds)));
-        $products = wc_get_products(['include' => $productIds]); // https://github.com/woocommerce/woocommerce/wiki/wc_get_products-and-WC_Product_Query
-        $products = array_combine(array_map(static function (WC_Product $product) {
-            return $product->get_id();
-        }, $products), $products);
+        $products = [];
+        if (!empty($productIds)) {
+            $products = wc_get_products(['include' => $productIds]); // https://github.com/woocommerce/woocommerce/wiki/wc_get_products-and-WC_Product_Query
+            $products = array_combine(array_map(static function (WC_Product $product) {
+                return $product->get_id();
+            }, $products), $products);
+        }
         return [$productChanges, $products];
     }
 
-    public function getTasksSynchronizeOrder(Order $order, array $fDoclignes): array
+    public function getTasksSynchronizeOrder(Order $order, ?stdClass $fDocentete): array
     {
-        [$productChanges, $products] = $this->getTasksSynchronizeOrder_Products($order, $fDoclignes);
+        [$productChanges, $products] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete?->fDoclignes ?? []);
 
         // region shipping
-        // todo
         $lineItemsShipping = $order->get_items('shipping');
+        $t = 0;
         // endregion
 
         // region addresses

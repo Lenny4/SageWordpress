@@ -327,6 +327,7 @@ final class SageTranslationUtils
                 "doMotifDevis" => __("Motif devis perdus", 'sage'),
                 "doConversion" => __("doConversion", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId' => __("Wordpress ID", 'sage'),
+                "fraisExpedition" => __("Frais d'expedition", 'sage'),
             ],
             self::TRANS_FARTICLES => [
                 "arRef" => __("arRef", 'sage'),
