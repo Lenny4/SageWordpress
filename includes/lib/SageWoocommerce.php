@@ -284,7 +284,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 $fDocenteteIdentifier["doType"],
                 getError: true,
                 getFDoclignes: true,
-                getFraisExpedition: true,
+                getExpedition: true,
                 ignorePingApi: $ignorePingApi,
                 addWordpressProductId: true,
             );
@@ -302,6 +302,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             'order' => $order,
             'hasFDocentete' => $hasFDocentete,
             'fDocentete' => $fDocentete,
+            'currency' => get_woocommerce_currency(),
             'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
             'tasksSynchronizeOrder' => $tasksSynchronizeOrder
         ]);
@@ -453,7 +454,6 @@ WHERE {$wpdb->posts}.post_type = 'product'
 
         // region shipping
         $lineItemsShipping = $order->get_items('shipping');
-        $t = 0;
         // endregion
 
         // region addresses

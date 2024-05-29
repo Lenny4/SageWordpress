@@ -18,6 +18,7 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Throwable;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
+use Twig\Extra\Intl\IntlExtension;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
@@ -115,7 +116,6 @@ final class Sage
         }
 
         $this->twig = new Environment($filesystemLoader, $twigOptions);
-        $twig = $this->twig;
         if (WP_DEBUG) {
             // https://twig.symfony.com/doc/3.x/functions/dump.html
             $this->twig->addExtension(new DebugExtension());
@@ -346,7 +346,8 @@ final class Sage
             /** @var WC_Product $p */
             $p = $products[$productChange->postId];
             return $p->get_name();
-    }));
+        }));
+        $this->twig->addExtension(new IntlExtension());
         // endregion
 
         register_activation_hook($this->file, function (): void {

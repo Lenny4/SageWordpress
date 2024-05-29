@@ -697,7 +697,7 @@ final class SageSettings
 
                 $a = $dom->find('span.product-data-wrapper')[0];
                 echo str_replace($a->innerHtml(), ': <span style="display: initial" class="h4">' . $arRef . '</span>', $dom);
-            }, 'product', 'normal', 'high');
+            }, $screen, $context, 'high');
         }, 40); // woocommerce/includes/admin/class-wc-admin-meta-boxes.php => 40 > 30 : add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 30 );
 
         // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/

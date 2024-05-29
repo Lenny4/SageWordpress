@@ -45,6 +45,12 @@
                 {% set doTypes = getDoTypes(fDocentete.fDoclignes) %}
                 {% set fDocligneFormatteds = formatFDoclignes(fDocentete.fDoclignes, doTypes) %}
                 {% set colspan = 4 %}
+                <p>
+                    {{ 'Expédition'|trans ~ ': ' ~ fDocentete.doExpeditNavigation.eIntitule }}
+                    {% if fDocentete.fraisExpedition > 0 %}
+                        {{ fDocentete.fraisExpedition|format_currency(currency) }}
+                    {% endif %}
+                </p>
                 <table>
                     <tr>
                         {% for doType in doTypes %}

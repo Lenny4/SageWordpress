@@ -228,6 +228,31 @@ final class SageGraphQl
         return $result;
     }
 
+    private function _getFLivraisonSelectionSet(): array
+    {
+        return [
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'liIntitule',
+                'liAdresse',
+                'liComplement',
+                'liCodePostal',
+                'liPrincipal',
+                'liVille',
+                'liPays',
+                'liContact',
+                'liTelephone',
+                'liEmail',
+                'liAdresseFact',
+                'liCodeRegion',
+            ])
+        ];
+    }
+
     private function _getFComptetSelectionSet(): array
     {
         return [
@@ -250,27 +275,7 @@ final class SageGraphQl
                 'ctCodeRegion',
                 'nCatTarif',
             ]),
-            'fLivraisons' => [
-                ...array_map(static function (string $field) {
-                    return [
-                        "name" => $field,
-                        "type" => "StringOperationFilterInput",
-                    ];
-                }, [
-                    'liIntitule',
-                    'liAdresse',
-                    'liComplement',
-                    'liCodePostal',
-                    'liPrincipal',
-                    'liVille',
-                    'liPays',
-                    'liContact',
-                    'liTelephone',
-                    'liEmail',
-                    'liAdresseFact',
-                    'liCodeRegion',
-                ])
-            ],
+            'fLivraisons' => $this->_getFLivraisonSelectionSet(),
         ];
     }
 
@@ -549,11 +554,11 @@ final class SageGraphQl
 
     private function _getFDocenteteSelectionSet(
         bool $getFDoclignes = false,
-        bool $getFraisExpedition = false
+        bool $getExpedition = false
     ): array
     {
         $intFields = ['doType'];
-        if ($getFraisExpedition) {
+        if ($getExpedition) {
             $intFields[] = 'fraisExpedition';
         }
         $result = [
@@ -574,6 +579,9 @@ final class SageGraphQl
         ];
         if ($getFDoclignes) {
             $result['fDoclignes'] = $this->_getFDocligneSelectionSet();
+        }
+        if ($getExpedition) {
+            $result['doExpeditNavigation'] = $this->_getPExpeditionSelectionSet();
         }
         return $result;
     }
@@ -655,6 +663,20 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $result;
     }
 
+    private function _getPExpeditionSelectionSet(): array
+    {
+        return [
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'eIntitule',
+            ]),
+        ];
+    }
+
     private function _getFDocligneSelectionSet(): array
     {
         return [
@@ -691,7 +713,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         int    $doType,
         bool   $getError = false,
         bool   $getFDoclignes = false,
-        bool   $getFraisExpedition = false,
+        bool   $getExpedition = false,
         bool   $ignorePingApi = false,
         bool   $addWordpressProductId = false,
     ): stdClass|null|false|string
@@ -718,7 +740,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 "paged" => "1",
                 "per_page" => "1"
             ],
-            $this->_getFDocenteteSelectionSet(getFDoclignes: $getFDoclignes, getFraisExpedition: $getFraisExpedition),
+            $this->_getFDocenteteSelectionSet(getFDoclignes: $getFDoclignes, getExpedition: $getExpedition),
             getError: $getError,
         );
         if (
