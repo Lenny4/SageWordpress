@@ -12,9 +12,9 @@ use App\lib\SageWoocommerce;
 use App\Utils\FDocenteteUtils;
 use App\Utils\SageTranslationUtils;
 use Automattic\WooCommerce\Admin\Overrides\Order;
-use Lead\Dir\Dir;
 use StdClass;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Filesystem\Filesystem;
 use Throwable;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
@@ -374,7 +374,8 @@ final class Sage
                 // region delete twig cache
                 $dir = str_replace('sage.php', 'templates/cache', $this->file);
                 if (is_dir($dir)) {
-                    Dir::remove($dir, ['recursive' => true]);
+                    $filesystem = new Filesystem();
+                    $filesystem->remove([$dir]);
                 }
 
                 // endregion

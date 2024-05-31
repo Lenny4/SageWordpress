@@ -15,10 +15,7 @@
  * @author Alexandre Beaujour
  */
 
-use App\lib\SageGraphQl;
-use App\lib\SageWoocommerce;
 use App\Sage;
-use App\SageSettings;
 
 if (!defined('ABSPATH')) {
     exit;

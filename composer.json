@@ -11,10 +11,10 @@
     "gmostafa/php-graphql-client": "^1.13",
     "ext-curl": "*",
     "twig/twig": "^3.7",
-    "crysalead/dir": "^2.0",
     "symfony/cache": "^7.0",
     "paquettg/php-html-parser": "^3.0.0",
-    "twig/intl-extra": "^3.10"
+    "twig/intl-extra": "^3.10",
+    "symfony/filesystem": "^7.0"
   },
   "autoload": {
     "psr-4": {

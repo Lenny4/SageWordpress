@@ -394,7 +394,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
 
     private function getTasksSynchronizeOrder_Products(Order $order, array $fDoclignes): array
     {
-        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php
+        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:24
         $lineItems = array_values($order->get_items());
 
         // region products
@@ -448,13 +448,26 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return [$productChanges, $products];
     }
 
+    private function getTasksSynchronizeOrder_Shipping(Order $order, ?stdClass $fDocentete): array
+    {
+        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:27
+        $lineItemsShipping = $order->get_items('shipping');
+
+        // faire la différence entre pas de shipping (retrait en magasin) et shipping gratuit, dans les 2 cas ça vaut 0
+        //mais y'en a 1 ou il faut afficher le shipping et l'autre non
+
+        // todo return apply_filters( 'woocommerce_cart_shipping_method_full_label', $label, $method ); modifier le prix affiché au panier
+        // todo faire en JS: https://stackoverflow.com/a/6036392/6824121
+
+        $shippingChanges = [];
+
+        return $shippingChanges;
+    }
+
     public function getTasksSynchronizeOrder(Order $order, ?stdClass $fDocentete): array
     {
         [$productChanges, $products] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete?->fDoclignes ?? []);
-
-        // region shipping
-        $lineItemsShipping = $order->get_items('shipping');
-        // endregion
+        $shippingChanges = $this->getTasksSynchronizeOrder_Shipping($order, $fDocentete);
 
         // region addresses
         // endregion
@@ -462,9 +475,6 @@ WHERE {$wpdb->posts}.post_type = 'product'
         // region contact
         // endregion
 
-        // region payment
-
-        // endregion
         return [
             'productChanges' => $productChanges,
             'products' => $products,

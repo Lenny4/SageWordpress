@@ -1,3 +1,5 @@
+https://trello.com/b/t64T4Swz/sage-api
+
 https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password
 
 https://wordpress.stackexchange.com/questions/149212/how-to-create-pot-files-with-poedit
@@ -69,9 +71,3 @@ add_action('admin_head', function () {
 //            );
         });
 ```
-
-- Ajouter un bouton créer la commande dans Sage dans la liste et dans le détail de la commande
-
-- le site doit pouvoir marcher même si l'API est down (un utilisateur doit pouvoir ce connecter et passer commande)
-
-- logger tous les appels API en erreur
