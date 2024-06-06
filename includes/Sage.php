@@ -497,8 +497,8 @@ final class Sage
         }, accepted_args: 2);
         // endregion
 
-        $this->settings = SageSettings::instance($this);
         $this->sageGraphQl = SageGraphQl::instance($this);
+        $this->settings = SageSettings::instance($this);
         $this->sageWoocommerce = SageWoocommerce::instance($this);
 
         $sageGraphQl = $this->sageGraphQl;

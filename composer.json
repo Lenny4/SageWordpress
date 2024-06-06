@@ -14,7 +14,9 @@
     "symfony/cache": "^7.0",
     "paquettg/php-html-parser": "^3.0.0",
     "twig/intl-extra": "^3.10",
-    "symfony/filesystem": "^7.0"
+    "symfony/filesystem": "^7.0",
+    "symfony/string": "^7.1",
+    "symfony/translation-contracts": "^3.5"
   },
   "autoload": {
     "psr-4": {

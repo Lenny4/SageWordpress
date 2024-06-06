@@ -4,12 +4,12 @@ namespace App\class;
 
 use WC_Shipping_Method;
 
-class SageShippingMethod__id__ extends WC_Shipping_Method
+class SageShippingMethod__index__ extends WC_Shipping_Method
 {
     public function __construct()
     {
         parent::__construct();
-        $this->id = 'sage__id__';
+        $this->id = '__id__';
         $this->method_title = '__name__';
         $this->method_description = '__description__';
         $this->enabled = "yes";

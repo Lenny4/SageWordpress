@@ -13,6 +13,7 @@ use GraphQL\Mutation;
 use GraphQL\Query;
 use GraphQL\RawObject;
 use StdClass;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 use Throwable;
 
 if (!defined('ABSPATH')) {
@@ -403,6 +404,12 @@ final class SageGraphQl
             return $pExpeditions;
         }
 
+        if (is_array($pExpeditions->data->pExpeditions->items)) {
+            $slugger = new AsciiSlugger();
+            foreach ($pExpeditions->data->pExpeditions->items as $pExpedition) {
+                $pExpedition->slug = Sage::TOKEN . '-' . strtolower($slugger->slug($pExpedition->eIntitule));
+            }
+        }
         $this->pExpeditions = $pExpeditions->data->pExpeditions->items;
         return $this->pExpeditions;
     }
