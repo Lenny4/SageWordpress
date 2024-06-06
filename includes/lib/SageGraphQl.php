@@ -28,6 +28,8 @@ final class SageGraphQl
 
     private bool $pingApi = false;
 
+    private ?array $pExpeditions = null;
+
     private function __construct(public ?Sage $sage)
     {
         if (is_admin()) {
@@ -228,31 +230,6 @@ final class SageGraphQl
         return $result;
     }
 
-    private function _getFLivraisonSelectionSet(): array
-    {
-        return [
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
-                'liIntitule',
-                'liAdresse',
-                'liComplement',
-                'liCodePostal',
-                'liPrincipal',
-                'liVille',
-                'liPays',
-                'liContact',
-                'liTelephone',
-                'liEmail',
-                'liAdresseFact',
-                'liCodeRegion',
-            ])
-        ];
-    }
-
     private function _getFComptetSelectionSet(): array
     {
         return [
@@ -276,6 +253,31 @@ final class SageGraphQl
                 'nCatTarif',
             ]),
             'fLivraisons' => $this->_getFLivraisonSelectionSet(),
+        ];
+    }
+
+    private function _getFLivraisonSelectionSet(): array
+    {
+        return [
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'liIntitule',
+                'liAdresse',
+                'liComplement',
+                'liCodePostal',
+                'liPrincipal',
+                'liVille',
+                'liPays',
+                'liContact',
+                'liTelephone',
+                'liEmail',
+                'liAdresseFact',
+                'liCodeRegion',
+            ])
         ];
     }
 
@@ -374,40 +376,35 @@ final class SageGraphQl
         return $typeModel;
     }
 
-    public function getFArticle(string $arRef): StdClass|null
+    public function getPExpeditions(bool $getError = false): array|null|string
     {
-        $fArticle = $this->searchEntities(
-            SageEntityMenu::FARTICLE_ENTITY_NAME,
+        if (!is_null($this->pExpeditions)) {
+            return $this->pExpeditions;
+        }
+        $pExpeditions = $this->searchEntities(
+            SageEntityMenu::PEXPEDITION_ENTITY_NAME,
             [
                 "filter_field" => [
-                    "arRef"
+                    "eIntitule"
                 ],
                 "filter_type" => [
-                    "eq"
+                    "neq"
                 ],
                 "filter_value" => [
-                    $arRef
+                    ""
                 ],
                 "paged" => "1",
-                "per_page" => "1"
+                "per_page" => "50"
             ],
-            [
-                ...array_map(static function (string $field) {
-                    return [
-                        "name" => $field,
-                        "type" => "StringOperationFilterInput",
-                    ];
-                }, ['arRef', 'arDesign']),
-                [
-                    "name" => "prices",
-                ],
-            ]
+            $this->_getPExpeditionSelectionSet(),
+            getError: $getError,
         );
-        if (is_null($fArticle) || $fArticle->data->fArticles->totalCount !== 1) {
-            return null;
+        if (is_null($pExpeditions) || is_string($pExpeditions)) {
+            return $pExpeditions;
         }
 
-        return $fArticle->data->fArticles->items[0];
+        $this->pExpeditions = $pExpeditions->data->pExpeditions->items;
+        return $this->pExpeditions;
     }
 
     public function searchEntities(
@@ -525,6 +522,64 @@ final class SageGraphQl
         return [null, $defaultSortValue];
     }
 
+    private function _getPExpeditionSelectionSet(): array
+    {
+        return [
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "IntOperationFilterInput",
+                ];
+            }, [
+                'cbMarq'
+            ]),
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'eIntitule',
+            ]),
+        ];
+    }
+
+    public function getFArticle(string $arRef): StdClass|null
+    {
+        $fArticle = $this->searchEntities(
+            SageEntityMenu::FARTICLE_ENTITY_NAME,
+            [
+                "filter_field" => [
+                    "arRef"
+                ],
+                "filter_type" => [
+                    "eq"
+                ],
+                "filter_value" => [
+                    $arRef
+                ],
+                "paged" => "1",
+                "per_page" => "1"
+            ],
+            [
+                ...array_map(static function (string $field) {
+                    return [
+                        "name" => $field,
+                        "type" => "StringOperationFilterInput",
+                    ];
+                }, ['arRef', 'arDesign']),
+                [
+                    "name" => "prices",
+                ],
+            ]
+        );
+        if (is_null($fArticle) || $fArticle->data->fArticles->totalCount !== 1) {
+            return null;
+        }
+
+        return $fArticle->data->fArticles->items[0];
+    }
+
     public function getFDocentetes(string $doPiece, bool $getError = false): array|null|string
     {
         $fDocentetes = $this->searchEntities(
@@ -586,33 +641,35 @@ final class SageGraphQl
         return $result;
     }
 
-    private function addWordpressProductId(array $fDoclignes): array
+    private function _getFDocligneSelectionSet(): array
     {
-        global $wpdb;
-        $arRefs = array_values(array_unique(array_map(static function (stdClass $fDocligne) {
-            return $fDocligne->arRef;
-        }, $fDoclignes)));
-        $r = $wpdb->get_results(
-            $wpdb->prepare(
-                "
-SELECT post_id, meta_value
-FROM {$wpdb->postmeta}
-         INNER JOIN {$wpdb->posts} ON {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id AND {$wpdb->posts}.post_status != 'trash'
-WHERE {$wpdb->postmeta}.meta_key = %s
-  AND {$wpdb->postmeta}.meta_value IN ('" . implode("','", $arRefs) . "')
-", [
-                Sage::META_KEY_AR_REF,
-            ]));
-        foreach ($fDoclignes as $fDocligne) {
-            $fDocligne->postId = null;
-            foreach ($r as $product) {
-                if ($fDocligne->arRef === $product->meta_value) {
-                    $fDocligne->postId = (int)$product->post_id;
-                    break;
-                }
-            }
-        }
-        return $fDoclignes;
+        return [
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'doType',
+                'dlQte',
+                ...array_map(static function (string $field) {
+                    return 'dlQte' . $field;
+                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
+            ]),
+            ...array_map(static function (string $field) {
+                return [
+                    "name" => $field,
+                    "type" => "StringOperationFilterInput",
+                ];
+            }, [
+                'doPiece',
+                'arRef',
+                'dlDesign',
+                ...array_map(static function (string $field) {
+                    return 'dlPiece' . $field;
+                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
+            ]),
+        ];
     }
 
     public function getFDoclignes(
@@ -663,49 +720,33 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $result;
     }
 
-    private function _getPExpeditionSelectionSet(): array
+    private function addWordpressProductId(array $fDoclignes): array
     {
-        return [
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
-                'eIntitule',
-            ]),
-        ];
-    }
-
-    private function _getFDocligneSelectionSet(): array
-    {
-        return [
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
-                'doType',
-                'dlQte',
-                ...array_map(static function (string $field) {
-                    return 'dlQte' . $field;
-                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
-            ]),
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
-                'doPiece',
-                'arRef',
-                'dlDesign',
-                ...array_map(static function (string $field) {
-                    return 'dlPiece' . $field;
-                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
-            ]),
-        ];
+        global $wpdb;
+        $arRefs = array_values(array_unique(array_map(static function (stdClass $fDocligne) {
+            return $fDocligne->arRef;
+        }, $fDoclignes)));
+        $r = $wpdb->get_results(
+            $wpdb->prepare(
+                "
+SELECT post_id, meta_value
+FROM {$wpdb->postmeta}
+         INNER JOIN {$wpdb->posts} ON {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id AND {$wpdb->posts}.post_status != 'trash'
+WHERE {$wpdb->postmeta}.meta_key = %s
+  AND {$wpdb->postmeta}.meta_value IN ('" . implode("','", $arRefs) . "')
+", [
+                Sage::META_KEY_AR_REF,
+            ]));
+        foreach ($fDoclignes as $fDocligne) {
+            $fDocligne->postId = null;
+            foreach ($r as $product) {
+                if ($fDocligne->arRef === $product->meta_value) {
+                    $fDocligne->postId = (int)$product->post_id;
+                    break;
+                }
+            }
+        }
+        return $fDoclignes;
     }
 
     public function getFDocentete(

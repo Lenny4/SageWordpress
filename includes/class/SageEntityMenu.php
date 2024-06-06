@@ -24,6 +24,8 @@ final class SageEntityMenu
         SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
     ];
 
+    public const PEXPEDITION_ENTITY_NAME = 'pExpeditions';
+
     public const FDOCENTETE_ENTITY_NAME = 'fDocentetes';
 
     public const FDOCENTETE_TYPE_MODEL = 'FDocentete';

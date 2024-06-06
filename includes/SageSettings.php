@@ -4,11 +4,13 @@ namespace App;
 
 use App\class\SageEntityMenu;
 use App\class\SageEntityMetadata;
+use App\class\SageShippingMethod__id__;
 use App\enum\WebsiteEnum;
 use App\lib\SageRequest;
 use App\Utils\SageTranslationUtils;
 use DateTime;
 use PHPHtmlParser\Dom;
+use ReflectionClass;
 use stdClass;
 use WC_Product;
 use WP_Application_Passwords;
@@ -738,6 +740,43 @@ final class SageSettings
                 'product' => $product,
                 'pCattarifs' => $pCattarifs,
             ]);
+        });
+        // endregion
+
+        // region add sage shipping methods
+        add_filter('woocommerce_shipping_methods', static function () use ($sageSettings) {
+            $className = pathinfo((new ReflectionClass(SageShippingMethod__id__::class))->getFileName(), PATHINFO_FILENAME);
+            $result = [];
+            $pExpeditions = $sageSettings->sage->sageGraphQl->getPExpeditions(true);
+            if (is_string($pExpeditions) || is_null($pExpeditions)) {
+                if (is_string($pExpeditions)) {
+                    ?>
+                    <div class="error"><?= $pExpeditions ?></div>
+                    <?php
+                }
+                return [];
+            }
+            if (
+                $pExpeditions !== [] &&
+                !class_exists(str_replace('__id__', '0', $className))
+            ) {
+                preg_match(
+                    '/class ' . $className . '[\s\S]*/',
+                    file_get_contents(__DIR__ . '/class/' . $className . '.php'),
+                    $skeletonShippingMethod);
+                foreach ($pExpeditions as $i => $pExpedition) {
+                    $thisSkeletonShippingMethod = str_replace(
+                        ['__id__', '__name__', '__description__'],
+                        [$i, $pExpedition->eIntitule, $pExpedition->eIntitule],
+                        $skeletonShippingMethod[0]
+                    );
+                    eval($thisSkeletonShippingMethod);
+                }
+            }
+            foreach ($pExpeditions as $i => $pExpedition) {
+                $result['sage' . $i] = str_replace('__id__', $i, $className);
+            }
+            return $result;
         });
         // endregion
         // endregion
