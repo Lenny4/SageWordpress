@@ -2,35 +2,39 @@
 
 namespace App\class;
 
-use WC_Shipping_Method;
+use WC_Shipping_Free_Shipping;
 
-class SageShippingMethod__index__ extends WC_Shipping_Method
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// clone of: woocommerce/includes/shipping/free-shipping/class-wc-shipping-free-shipping.php
+class SageShippingMethod__index__ extends WC_Shipping_Free_Shipping
 {
-    public function __construct()
+    public function __construct($instance_id = 0)
     {
-        parent::__construct();
         $this->id = '__id__';
+        $this->instance_id = absint($instance_id);
         $this->method_title = '__name__';
         $this->method_description = '__description__';
-        $this->enabled = "yes";
         $this->supports = [
             'shipping-zones',
             'instance-settings',
             'instance-settings-modal',
         ];
+
         $this->init();
+        $this->after_init();
     }
 
-    /**
-     * Init user set variables.
-     */
-    public function init()
+    public function after_init(): void
     {
-        // Load the settings API
-        $this->init_form_fields(); // This is part of the settings API. Override the method to add your own settings
-        $this->init_settings(); // This is part of the settings API. Loads settings you previously init.
+        $this->instance_form_fields['title']['default'] = $this->method_title;
+        $this->instance_form_fields['requires']['title'] = $this->method_title . ' ' . __(' requires', 'sage');
+    }
 
-        // Save settings in admin if you have any defined
-        add_action('woocommerce_update_options_shipping_' . $this->id, [$this, 'process_admin_options']);
+    public static function enqueue_admin_js(): void
+    {
+        // nothing
     }
 }

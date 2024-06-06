@@ -375,4 +375,42 @@ jQuery(document).ready(function () {
         }
     });
     // endregion
+
+    // region shipping methods: woocommerce/includes/shipping/free-shipping/class-wc-shipping-free-shipping.php:250
+    function wcFreeShippingShowHideMinAmountField(el) {
+        const form = jQuery(el).closest('form');
+
+        const minAmountField = jQuery('[id^="woocommerce_"][id$="_min_amount"]', form).closest('fieldset');
+        const minAmountFieldLabel = minAmountField.prev();
+
+        const ignoreDiscountField = jQuery('[id^="woocommerce_"][id$="_ignore_discounts"]', form).closest('fieldset');
+        const ignoreDiscountFieldLabel = ignoreDiscountField.prev();
+
+        if ('coupon' === jQuery(el).val() || '' === jQuery(el).val()) {
+            minAmountField.hide();
+            minAmountFieldLabel.hide();
+
+            ignoreDiscountField.hide();
+            ignoreDiscountFieldLabel.hide();
+        } else {
+            minAmountField.show();
+            minAmountFieldLabel.show();
+
+            ignoreDiscountField.show();
+            ignoreDiscountFieldLabel.show();
+        }
+    }
+
+    jQuery(document.body).on('change', '[id^="woocommerce_"][id$="_requires"]', function () {
+        wcFreeShippingShowHideMinAmountField(this);
+    });
+
+    // Change while load.
+    jQuery('[id^="woocommerce_"][id$="_requires"]').trigger('change');
+    jQuery(document.body).on('wc_backbone_modal_loaded', function (evt, target) {
+        if ('wc-modal-shipping-method-settings' === target) {
+            wcFreeShippingShowHideMinAmountField(jQuery('#wc-backbone-modal-dialog [id^="woocommerce_"][id$="_requires"]', evt.currentTarget));
+        }
+    });
+    // endregion
 });
