@@ -31,6 +31,10 @@ final class SageGraphQl
 
     private ?array $pExpeditions = null;
 
+    private ?array $pCattarifs = null;
+
+    private ?array $fPays = null;
+
     private function __construct(public ?Sage $sage)
     {
         if (is_admin()) {
@@ -377,40 +381,58 @@ final class SageGraphQl
         return $typeModel;
     }
 
-    public function getPExpeditions(bool $getError = false): array|null|string
+    public function getPExpeditions(
+        bool $getError = false,
+        bool $getFromSage = false
+    ): array|null|string
     {
         if (!is_null($this->pExpeditions)) {
             return $this->pExpeditions;
         }
-        $pExpeditions = $this->searchEntities(
-            SageEntityMenu::PEXPEDITION_ENTITY_NAME,
-            [
-                "filter_field" => [
-                    "eIntitule"
+        $pExpeditions = null;
+        $optionName = Sage::TOKEN . '_pExpeditions';
+        if (!$getFromSage) {
+            $pExpeditions = get_option($optionName, null);
+            if (!is_null($pExpeditions)) {
+                $pExpeditions = json_decode($pExpeditions, false);
+            }
+        }
+        if (is_null($pExpeditions)) {
+            $pExpeditions = $this->searchEntities(
+                SageEntityMenu::PEXPEDITION_ENTITY_NAME,
+                [
+                    "filter_field" => [
+                        "eIntitule"
+                    ],
+                    "filter_type" => [
+                        "neq"
+                    ],
+                    "filter_value" => [
+                        ""
+                    ],
+                    "paged" => "1",
+                    "per_page" => "50"
                 ],
-                "filter_type" => [
-                    "neq"
-                ],
-                "filter_value" => [
-                    ""
-                ],
-                "paged" => "1",
-                "per_page" => "50"
-            ],
-            $this->_getPExpeditionSelectionSet(),
-            getError: $getError,
-        );
-        if (is_null($pExpeditions) || is_string($pExpeditions)) {
-            return $pExpeditions;
+                $this->_getPExpeditionSelectionSet(),
+                getError: $getError,
+            );
+            if (is_null($pExpeditions) || is_string($pExpeditions)) {
+                return $pExpeditions;
+            }
+
+            $pExpeditions = $pExpeditions->data->pExpeditions->items;
         }
 
-        if (is_array($pExpeditions->data->pExpeditions->items)) {
+        if (is_array($pExpeditions)) {
             $slugger = new AsciiSlugger();
-            foreach ($pExpeditions->data->pExpeditions->items as $pExpedition) {
+            foreach ($pExpeditions as $pExpedition) {
                 $pExpedition->slug = Sage::TOKEN . '-' . strtolower($slugger->slug($pExpedition->eIntitule));
             }
         }
-        $this->pExpeditions = $pExpeditions->data->pExpeditions->items;
+        $this->pExpeditions = $pExpeditions;
+        if ($getFromSage) {
+            update_option($optionName, json_encode($this->pExpeditions, JSON_THROW_ON_ERROR));
+        }
         return $this->pExpeditions;
     }
 
@@ -836,6 +858,9 @@ WHERE {$wpdb->postmeta}.meta_key = %s
 
     public function getPCattarifs($useCache = true): array
     {
+        if (!is_null($this->pCattarifs)) {
+            return $this->pCattarifs;
+        }
         $cacheName = SageEntityMenu::PCATTARIF_TYPE_MODEL;
         $pCattarifs = $this->searchEntities(
             SageEntityMenu::PCATTARIF_ENTITY_NAME,
@@ -870,11 +895,15 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         usort($result, static function (stdClass $a, stdClass $b) {
             return $a->cbIndice <=> $b->cbIndice;
         });
-        return $result;
+        $this->pCattarifs = $result;
+        return $this->pCattarifs;
     }
 
-    public function getFPays(): array
+    public function getFPays($useCache = true): array
     {
+        if (!is_null($this->fPays)) {
+            return $this->fPays;
+        }
         $cacheName = SageEntityMenu::FPAYS_TYPE_MODEL;
         $fPays = $this->searchEntities(
             SageEntityMenu::FPAYS_ENTITY_NAME,
@@ -893,8 +922,9 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                     'paCode',
                 ]),
             ],
-            $cacheName
+            $useCache ? $cacheName : null
         );
-        return is_null($fPays) ? [] : $fPays->data->fPays->items;
+        $this->fPays = is_null($fPays) ? [] : $fPays->data->fPays->items;
+        return $this->fPays;
     }
 }

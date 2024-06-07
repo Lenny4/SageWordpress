@@ -26,6 +26,8 @@ final class SageEntityMenu
 
     public const PEXPEDITION_ENTITY_NAME = 'pExpeditions';
 
+    public const PEXPEDITION_TYPE_MODEL = 'PExpedition';
+
     public const FDOCENTETE_ENTITY_NAME = 'fDocentetes';
 
     public const FDOCENTETE_TYPE_MODEL = 'FDocentete';

@@ -138,7 +138,7 @@ final class SageWoocommerce
         $fComptetAddress = Sage::createAddressWithFComptet($fComptet);
         $addressTypes = ['billing', 'shipping'];
         $address = [];
-        $fPays = $this->sage->sageGraphQl->getFPays();
+        $fPays = $this->sage->sageGraphQl->getFPays(false);
         foreach ($addressTypes as $addressType) {
             $thisAdress = current(array_filter($fComptet->fLivraisons, static function (StdClass $fLivraison) use ($addressType, $fComptetAddress) {
                 if ($addressType === 'billing') {
@@ -308,6 +308,95 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         ]);
     }
 
+    public function getTasksSynchronizeOrder(Order $order, ?stdClass $fDocentete): array
+    {
+        [$productChanges, $products] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete?->fDoclignes ?? []);
+        $shippingChanges = $this->getTasksSynchronizeOrder_Shipping($order, $fDocentete);
+
+        // region addresses
+        // endregion
+
+        // region contact
+        // endregion
+
+        return [
+            'productChanges' => $productChanges,
+            'products' => $products,
+        ];
+    }
+
+    private function getTasksSynchronizeOrder_Products(Order $order, array $fDoclignes): array
+    {
+        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:24
+        $lineItems = array_values($order->get_items());
+
+        // region products
+        $nbLines = max(count($lineItems), count($fDoclignes));
+        $productChanges = [];
+        for ($i = 0; $i < $nbLines; $i++) {
+            $old = null;
+            if (isset($lineItems[$i])) {
+                $data = $lineItems[$i]->get_data();
+                $old = new stdClass();
+                $old->postId = $data["product_id"];
+                $old->quantity = $data["quantity"];
+            }
+            $new = null;
+            if (isset($fDoclignes[$i])) {
+                $new = new stdClass();
+                $new->postId = $fDoclignes[$i]->postId;
+                $new->quantity = (int)$fDoclignes[$i]->dlQte;
+            }
+            $change = null;
+            if (!is_null($new) && !is_null($old)) {
+                if ($new->postId !== $old->postId) {
+                    $change = OrderUtils::REPLACE_PRODUCT_ACTION;
+                } else if ($new->quantity !== $old->quantity) {
+                    $change = OrderUtils::CHANGE_QUANTITY_PRODUCT_ACTION;
+                }
+            } else if (is_null($new)) {
+                $change = OrderUtils::REMOVE_PRODUCT_ACTION;
+            } else if (is_null($old)) {
+                $change = OrderUtils::ADD_PRODUCT_ACTION;
+            }
+            $productChanges[$i] = [
+                'old' => $old,
+                'new' => $new,
+                'change' => $change,
+            ];
+        }
+        $productIds = [];
+        foreach ($productChanges as $productChange) {
+            $productIds[] = $productChange["old"]?->postId;
+            $productIds[] = $productChange["new"]?->postId;
+        }
+        $productIds = array_values(array_filter(array_unique($productIds)));
+        $products = [];
+        if (!empty($productIds)) {
+            $products = wc_get_products(['include' => $productIds]); // https://github.com/woocommerce/woocommerce/wiki/wc_get_products-and-WC_Product_Query
+            $products = array_combine(array_map(static function (WC_Product $product) {
+                return $product->get_id();
+            }, $products), $products);
+        }
+        return [$productChanges, $products];
+    }
+
+    private function getTasksSynchronizeOrder_Shipping(Order $order, ?stdClass $fDocentete): array
+    {
+        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:27
+        $lineItemsShipping = $order->get_items('shipping');
+
+        // faire la différence entre pas de shipping (retrait en magasin) et shipping gratuit, dans les 2 cas ça vaut 0
+        //mais y'en a 1 ou il faut afficher le shipping et l'autre non
+
+        // todo return apply_filters( 'woocommerce_cart_shipping_method_full_label', $label, $method ); modifier le prix affiché au panier
+        // todo faire en JS: https://stackoverflow.com/a/6036392/6824121
+
+        $shippingChanges = [];
+
+        return $shippingChanges;
+    }
+
     public function importFArticleFromSage(string $arRef): array
     {
         $fArticle = $this->sage->sageGraphQl->getFArticle($arRef);
@@ -390,94 +479,5 @@ WHERE {$wpdb->posts}.post_type = 'product'
             }
         }
         return $result;
-    }
-
-    private function getTasksSynchronizeOrder_Products(Order $order, array $fDoclignes): array
-    {
-        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:24
-        $lineItems = array_values($order->get_items());
-
-        // region products
-        $nbLines = max(count($lineItems), count($fDoclignes));
-        $productChanges = [];
-        for ($i = 0; $i < $nbLines; $i++) {
-            $old = null;
-            if (isset($lineItems[$i])) {
-                $data = $lineItems[$i]->get_data();
-                $old = new stdClass();
-                $old->postId = $data["product_id"];
-                $old->quantity = $data["quantity"];
-            }
-            $new = null;
-            if (isset($fDoclignes[$i])) {
-                $new = new stdClass();
-                $new->postId = $fDoclignes[$i]->postId;
-                $new->quantity = (int)$fDoclignes[$i]->dlQte;
-            }
-            $change = null;
-            if (!is_null($new) && !is_null($old)) {
-                if ($new->postId !== $old->postId) {
-                    $change = OrderUtils::REPLACE_PRODUCT_ACTION;
-                } else if ($new->quantity !== $old->quantity) {
-                    $change = OrderUtils::CHANGE_QUANTITY_PRODUCT_ACTION;
-                }
-            } else if (is_null($new)) {
-                $change = OrderUtils::REMOVE_PRODUCT_ACTION;
-            } else if (is_null($old)) {
-                $change = OrderUtils::ADD_PRODUCT_ACTION;
-            }
-            $productChanges[$i] = [
-                'old' => $old,
-                'new' => $new,
-                'change' => $change,
-            ];
-        }
-        $productIds = [];
-        foreach ($productChanges as $productChange) {
-            $productIds[] = $productChange["old"]?->postId;
-            $productIds[] = $productChange["new"]?->postId;
-        }
-        $productIds = array_values(array_filter(array_unique($productIds)));
-        $products = [];
-        if (!empty($productIds)) {
-            $products = wc_get_products(['include' => $productIds]); // https://github.com/woocommerce/woocommerce/wiki/wc_get_products-and-WC_Product_Query
-            $products = array_combine(array_map(static function (WC_Product $product) {
-                return $product->get_id();
-            }, $products), $products);
-        }
-        return [$productChanges, $products];
-    }
-
-    private function getTasksSynchronizeOrder_Shipping(Order $order, ?stdClass $fDocentete): array
-    {
-        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:27
-        $lineItemsShipping = $order->get_items('shipping');
-
-        // faire la différence entre pas de shipping (retrait en magasin) et shipping gratuit, dans les 2 cas ça vaut 0
-        //mais y'en a 1 ou il faut afficher le shipping et l'autre non
-
-        // todo return apply_filters( 'woocommerce_cart_shipping_method_full_label', $label, $method ); modifier le prix affiché au panier
-        // todo faire en JS: https://stackoverflow.com/a/6036392/6824121
-
-        $shippingChanges = [];
-
-        return $shippingChanges;
-    }
-
-    public function getTasksSynchronizeOrder(Order $order, ?stdClass $fDocentete): array
-    {
-        [$productChanges, $products] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete?->fDoclignes ?? []);
-        $shippingChanges = $this->getTasksSynchronizeOrder_Shipping($order, $fDocentete);
-
-        // region addresses
-        // endregion
-
-        // region contact
-        // endregion
-
-        return [
-            'productChanges' => $productChanges,
-            'products' => $products,
-        ];
     }
 }

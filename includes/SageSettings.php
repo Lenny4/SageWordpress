@@ -743,17 +743,19 @@ final class SageSettings
         // endregion
 
         // region add sage shipping methods
-        add_filter('woocommerce_shipping_methods', static function () use ($sageSettings) {
-            $result = [];
+        add_filter('woocommerce_shipping_methods', static function (array $result) use ($sageSettings) {
             $className = pathinfo(str_replace('\\', '/', SageShippingMethod__index__::class), PATHINFO_FILENAME);
-            $pExpeditions = $sageSettings->sage->sageGraphQl->getPExpeditions(true);
+            $pExpeditions = $sageSettings->sage->sageGraphQl->getPExpeditions(
+                getError: true,
+                getFromSage: is_admin(), // on admin page
+            );
             if (is_string($pExpeditions) || is_null($pExpeditions)) {
                 if (is_string($pExpeditions)) {
                     ?>
                     <div class="error"><?= $pExpeditions ?></div>
                     <?php
                 }
-                return [];
+                return $result;
             }
             if (
                 $pExpeditions !== [] &&
@@ -770,7 +772,7 @@ final class SageSettings
                             $i,
                             $pExpedition->slug,
                             '[' . __('Sage', 'sage') . '] ' . $pExpedition->eIntitule,
-                            '[' . __('Sage', 'sage') . '] ' . $pExpedition->eIntitule,
+                            '<span style="font-weight: bold">[' . __('Sage', 'sage') . ']</span> ' . $pExpedition->eIntitule,
                         ],
                         $skeletonShippingMethod[0]
                     );
