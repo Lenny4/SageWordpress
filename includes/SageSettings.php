@@ -784,6 +784,32 @@ final class SageSettings
             }
             return $result;
         });
+        add_action('woocommerce_settings_shipping', static function () {
+            global $wpdb;
+            $r = $wpdb->get_results(
+                $wpdb->prepare("
+SELECT COUNT(instance_id) nbInstance
+FROM {$wpdb->prefix}woocommerce_shipping_zone_methods
+WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
+  AND is_enabled = 1
+"));
+            if ((int)$r[0]->nbInstance > 0) {
+                echo '
+<div class="notice notice-warning"><p>
+    <span style="display: block; margin: 0.5em 0.5em 0 0; clear: both;">
+        ' . __('Certain Mode(s) d’expédition qui ne proviennent pas de Sage sont activés. Cliquez sur "Désactiver" pour désactiver les modes d\'expéditions qui ne proviennent pas de Sage', 'sage') . '
+    </span>
+    <strong>
+    <span style="display: block; margin: 0.5em 0.5em 0 0; clear: both;">
+        <a href="https://caddy/wp-json/sage/v1/deactivate-shipping-zones?_wpnonce=' . wp_create_nonce('wp_rest') . '">
+        ' . __('Désactiver', 'sage') . '
+        </a>
+    </span>
+    </strong>
+</p></div>
+                ';
+            }
+        });
         // endregion
         // endregion
 

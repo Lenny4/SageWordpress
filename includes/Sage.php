@@ -597,6 +597,24 @@ final class Sage
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
+            register_rest_route(Sage::TOKEN . '/v1', '/deactivate-shipping-zones', [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) {
+                    global $wpdb;
+                    $wpdb->get_results($wpdb->prepare("
+UPDATE {$wpdb->prefix}woocommerce_shipping_zone_methods
+SET is_enabled = 0
+WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
+  AND is_enabled = 1
+"));
+                    $redirect = wp_get_referer();
+                    wp_redirect($redirect);
+                    exit();
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
         });
         // endregion
     }
