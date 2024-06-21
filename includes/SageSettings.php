@@ -137,14 +137,13 @@ final class SageSettings
                         return $fArticle->arRef;
                     }),
                     new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {
-                        return $fArticle->prices;
+                        return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
                     }),
                     new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) {
-                        $prices = json_decode($fArticle->prices, true, 512, JSON_THROW_ON_ERROR);
-                        usort($prices, static function (array $a, array $b) {
+                        usort($fArticle->prices, static function (array $a, array $b) {
                             return $b['PriceTtc'] <=> $a['PriceTtc'];
                         });
-                        return json_encode($prices[0]);
+                        return json_encode($fArticle->prices[0], JSON_THROW_ON_ERROR);
                     }),
                     new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
                         return (new DateTime())->format('Y-m-d H:i:s');

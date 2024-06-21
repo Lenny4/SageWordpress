@@ -154,6 +154,16 @@ final class SageGraphQl
         return $r;
     }
 
+    private function _formatOperationFilterInput(string $type, array $fields): array
+    {
+        return array_map(static function (string $field) use ($type) {
+            return [
+                "name" => $field,
+                "type" => $type,
+            ];
+        }, [$fields]);
+    }
+
     private function runQuery(Query|Mutation $gql, bool $getError = false): array|object|null|string
     {
         $client = $this->getClient();
@@ -238,12 +248,7 @@ final class SageGraphQl
     private function _getFComptetSelectionSet(): array
     {
         return [
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'ctNum',
                 'ctIntitule',
                 'ctEmail',
@@ -264,12 +269,7 @@ final class SageGraphQl
     private function _getFLivraisonSelectionSet(): array
     {
         return [
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'liIntitule',
                 'liAdresse',
                 'liComplement',
@@ -282,7 +282,7 @@ final class SageGraphQl
                 'liEmail',
                 'liAdresseFact',
                 'liCodeRegion',
-            ])
+            ]),
         ];
     }
 
@@ -554,22 +554,25 @@ final class SageGraphQl
     private function _getPExpeditionSelectionSet(): array
     {
         return [
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "IntOperationFilterInput",
-                ];
-            }, [
-                'cbMarq'
-            ]),
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
-                'eIntitule',
-            ]),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['cbMarq']),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['eIntitule']),
+            'arRefNavigation' => $this->_getFArticleSelectionSet(),
+        ];
+    }
+
+    private function _getFArticleSelectionSet(bool $forExpedition = false): array
+    {
+        if ($forExpedition) {
+            return [
+                ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['arRef']),
+            ];
+        }
+        return [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['arRef', 'arDesign']),
+            'prices' => [
+                ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['cbMarq']),
+                ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", ['priceHt', 'priceTtc']),
+            ],
         ];
     }
 
@@ -590,17 +593,7 @@ final class SageGraphQl
                 "paged" => "1",
                 "per_page" => "1"
             ],
-            [
-                ...array_map(static function (string $field) {
-                    return [
-                        "name" => $field,
-                        "type" => "StringOperationFilterInput",
-                    ];
-                }, ['arRef', 'arDesign']),
-                [
-                    "name" => "prices",
-                ],
-            ]
+            $this->_getFArticleSelectionSet(),
         );
         if (is_null($fArticle) || $fArticle->data->fArticles->totalCount !== 1) {
             return null;
@@ -646,20 +639,8 @@ final class SageGraphQl
             $intFields[] = 'fraisExpedition';
         }
         $result = [
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "IntOperationFilterInput",
-                ];
-            }, $intFields),
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
-                'doPiece',
-            ]),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [$intFields]),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['doPiece']),
         ];
         if ($getFDoclignes) {
             $result['fDoclignes'] = $this->_getFDocligneSelectionSet();
@@ -673,24 +654,14 @@ final class SageGraphQl
     private function _getFDocligneSelectionSet(): array
     {
         return [
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'doType',
                 'dlQte',
                 ...array_map(static function (string $field) {
                     return 'dlQte' . $field;
                 }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
             ]),
-            ...array_map(static function (string $field) {
-                return [
-                    "name" => $field,
-                    "type" => "StringOperationFilterInput",
-                ];
-            }, [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'doPiece',
                 'arRef',
                 'dlDesign',
@@ -912,12 +883,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 "per_page" => "300" // 197 countries exists
             ],
             [
-                ...array_map(static function (string $field) {
-                    return [
-                        "name" => $field,
-                        "type" => "StringOperationFilterInput",
-                    ];
-                }, [
+                ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                     'paIntitule',
                     'paCode',
                 ]),
