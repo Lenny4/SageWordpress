@@ -154,16 +154,6 @@ final class SageGraphQl
         return $r;
     }
 
-    private function _formatOperationFilterInput(string $type, array $fields): array
-    {
-        return array_map(static function (string $field) use ($type) {
-            return [
-                "name" => $field,
-                "type" => $type,
-            ];
-        }, [$fields]);
-    }
-
     private function runQuery(Query|Mutation $gql, bool $getError = false): array|object|null|string
     {
         $client = $this->getClient();
@@ -264,6 +254,16 @@ final class SageGraphQl
             ]),
             'fLivraisons' => $this->_getFLivraisonSelectionSet(),
         ];
+    }
+
+    private function _formatOperationFilterInput(string $type, array $fields): array
+    {
+        return array_map(static function (string $field) use ($type) {
+            return [
+                "name" => $field,
+                "type" => $type,
+            ];
+        }, $fields);
     }
 
     private function _getFLivraisonSelectionSet(): array
@@ -570,8 +570,14 @@ final class SageGraphQl
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['arRef', 'arDesign']),
             'prices' => [
-                ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['cbMarq']),
-                ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", ['priceHt', 'priceTtc']),
+                ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
+                    'priceHt',
+                    'priceTtc',
+                ]),
+                ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                    'nCatTarif',
+                    'nCatCompta'
+                ]),
             ],
         ];
     }
@@ -639,7 +645,7 @@ final class SageGraphQl
             $intFields[] = 'fraisExpedition';
         }
         $result = [
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [$intFields]),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", $intFields),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['doPiece']),
         ];
         if ($getFDoclignes) {
@@ -690,6 +696,7 @@ final class SageGraphQl
         $arguments = [
             'skip' => 0,
             'take' => 100,
+            'order' => new RawObject('{ dlNo: ASC }'),
             'where' => new RawObject("
 {
     or: [

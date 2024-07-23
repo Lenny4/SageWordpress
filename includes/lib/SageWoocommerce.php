@@ -40,10 +40,11 @@ final class SageWoocommerce
         // endregion
 
         // region edit woocommerce product display
-        add_action('woocommerce_after_order_itemmeta', function (int $item_id, WC_Order_Item $item, ?WC_Product $product) {
+        add_action('woocommerce_after_order_itemmeta', function (int $item_id, WC_Order_Item $item, WC_Product|bool|null $product) {
             if (
-                !($item instanceof WC_Order_Item_Product) ||
-                is_null($product)
+                is_bool($product) ||
+                is_null($product) ||
+                !($item instanceof WC_Order_Item_Product)
             ) {
                 return;
             }
@@ -99,15 +100,15 @@ final class SageWoocommerce
             if ($nCatTarifCbIndice !== '') {
                 $nCatTarifCbMarq = current(array_filter($pCattarifs, static fn(StdClass $pCattarif) => $pCattarif->cbIndice === (int)$nCatTarifCbIndice));
                 if ($nCatTarifCbMarq !== false) {
-                    $priceData = current(array_filter($pricesData, static fn(array $p) => $p['CbMarq'] === $nCatTarifCbMarq->cbMarq));
+                    $priceData = current(array_filter($pricesData, static fn(array $p) => $p['nCatTarif'] === $nCatTarifCbMarq->cbMarq));
                     if ($priceData !== false) {
-                        $price = $priceData["PriceTtc"];
+                        $price = $priceData["priceTtc"];
                     }
                 }
             }
             if (empty($price)) {
                 $allPrices = array_map(static function (array $priceData) {
-                    return $priceData['PriceTtc'];
+                    return $priceData['priceTtc'];
                 }, $pricesData);
                 $price = max($allPrices);
             }
@@ -320,6 +321,9 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         // endregion
 
         return [
+            'allProductsExistInWordpress' => $fDocentete && array_filter($fDocentete->fDoclignes, static function (stdClass $fDocligne) {
+                    return is_null($fDocligne->postId);
+                }) === [],
             'productChanges' => $productChanges,
             'products' => $products,
         ];
@@ -358,6 +362,9 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 $change = OrderUtils::REMOVE_PRODUCT_ACTION;
             } else if (is_null($old)) {
                 $change = OrderUtils::ADD_PRODUCT_ACTION;
+            }
+            if (is_null($old) && is_null($new->postId)) {
+                continue;
             }
             $productChanges[$i] = [
                 'old' => $old,

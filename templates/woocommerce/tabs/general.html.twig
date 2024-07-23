@@ -13,8 +13,8 @@
     {% for pCattarif in pCattarifs %}
         <tr>
             <td>{{ pCattarif.ctIntitule }}</td>
-            <td>{{ prices[pCattarif.cbMarq]['PriceHt']|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
-            <td>{{ prices[pCattarif.cbMarq]['PriceTtc']|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
+            <td>{{ prices[pCattarif.cbMarq]['priceHt']|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
+            <td>{{ prices[pCattarif.cbMarq]['priceTtc']|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
         </tr>
     {% endfor %}
     </tbody>

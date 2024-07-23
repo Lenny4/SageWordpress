@@ -147,12 +147,13 @@
                     {% endfor %}
                 </table>
             {% endif %}
-            {% if tasksSynchronizeOrder is empty %}
+            {% if tasksSynchronizeOrder.allProductsExistInWordpress == false %}
                 <p class="text-right">
-                    {{ 'La commande Wordpress est synchronisée avec Sage'|trans }}
-                    <span class="dashicons dashicons-yes" style="color: green"></span>
+                    {{ 'Certains produits ne sont pas encore importés dans Wordpress'|trans }}
+                    <span class="dashicons dashicons-no" style="color: red"></span>
                 </p>
-            {% else %}
+            {% endif %}
+            {% if tasksSynchronizeOrder.productChanges is not empty %}
                 <div class="mt-2" style="
     display: flex;
     align-items: center;
@@ -168,6 +169,12 @@
                         </div>
                     </div>
                 </div>
+            {% endif %}
+            {% if tasksSynchronizeOrder.productChanges is empty and tasksSynchronizeOrder.allProductsExistInWordpress %}
+                <p class="text-right">
+                    {{ 'La commande Wordpress est synchronisée avec Sage'|trans }}
+                    <span class="dashicons dashicons-yes" style="color: green"></span>
+                </p>
             {% endif %}
         {% endif %}
     {% endif %}

@@ -140,8 +140,8 @@ final class SageSettings
                         return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
                     }),
                     new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) {
-                        usort($fArticle->prices, static function (array $a, array $b) {
-                            return $b['PriceTtc'] <=> $a['PriceTtc'];
+                        usort($fArticle->prices, static function (StdClass $a, StdClass $b) {
+                            return $b->priceTtc <=> $a->priceTtc;
                         });
                         return json_encode($fArticle->prices[0], JSON_THROW_ON_ERROR);
                     }),
