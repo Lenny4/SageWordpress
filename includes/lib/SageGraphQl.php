@@ -426,7 +426,8 @@ final class SageGraphQl
         if (is_array($pExpeditions)) {
             $slugger = new AsciiSlugger();
             foreach ($pExpeditions as $pExpedition) {
-                $pExpedition->slug = Sage::TOKEN . '-' . strtolower($slugger->slug($pExpedition->eIntitule));
+                // necessary for filter `woocommerce_shipping_methods`
+                $pExpedition->slug = FDocenteteUtils::slugifyPExpeditionEIntitule($pExpedition->eIntitule);
             }
         }
         $this->pExpeditions = $pExpeditions;
@@ -570,13 +571,30 @@ final class SageGraphQl
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['arRef', 'arDesign']),
             'prices' => [
-                ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
-                    'priceHt',
-                    'priceTtc',
-                ]),
+                ...$this->_getPriceSelectionSet(),
                 ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                     'nCatTarif',
                     'nCatCompta'
+                ]),
+            ],
+        ];
+    }
+
+    private function _getPriceSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
+                'priceHt',
+                'priceTtc',
+            ]),
+            'taxes' => [
+                ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                    'taIntitule',
+                    'taCode',
+                ]),
+                ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
+                    'percent',
+                    'amount'
                 ]),
             ],
         ];
@@ -640,21 +658,25 @@ final class SageGraphQl
         bool $getExpedition = false
     ): array
     {
-        $intFields = ['doType'];
-        if ($getExpedition) {
-            $intFields[] = 'fraisExpedition';
-        }
         $result = [
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", $intFields),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['doType']),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['doPiece']),
         ];
+        if ($getExpedition) {
+            $result['doExpeditNavigation'] = $this->_getPExpeditionSelectionSet();
+            $result['fraisExpedition'] = $this->_getFraisExpeditionSelectionSet();
+        }
         if ($getFDoclignes) {
             $result['fDoclignes'] = $this->_getFDocligneSelectionSet();
         }
-        if ($getExpedition) {
-            $result['doExpeditNavigation'] = $this->_getPExpeditionSelectionSet();
-        }
         return $result;
+    }
+
+    private function _getFraisExpeditionSelectionSet(): array
+    {
+        return [
+            ...$this->_getPriceSelectionSet(),
+        ];
     }
 
     private function _getFDocligneSelectionSet(): array

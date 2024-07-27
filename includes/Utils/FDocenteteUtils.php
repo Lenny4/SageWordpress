@@ -2,6 +2,9 @@
 
 namespace App\Utils;
 
+use App\Sage;
+use Symfony\Component\String\Slugger\AsciiSlugger;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -28,5 +31,11 @@ final class FDocenteteUtils
     public static function getFdocligneMappingDoType(int $doType): string|null
     {
         return self::FDOCLIGNE_MAPPING_DO_TYPE[$doType] ?? null;
+    }
+
+    public static function slugifyPExpeditionEIntitule(string $eIntitule): string
+    {
+        $slugger = new AsciiSlugger();
+        return Sage::TOKEN . '-' . strtolower($slugger->slug($eIntitule));
     }
 }

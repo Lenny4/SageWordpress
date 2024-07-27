@@ -7,6 +7,7 @@ use App\Sage;
 use App\SageSettings;
 use App\Utils\FDocenteteUtils;
 use App\Utils\OrderUtils;
+use App\Utils\RoundUtils;
 use Automattic\WooCommerce\Admin\Overrides\Order;
 use StdClass;
 use WC_Meta_Data;
@@ -289,8 +290,10 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 ignorePingApi: $ignorePingApi,
                 addWordpressProductId: true,
             );
-            if (is_string($fDocentete)) {
-                $message .= $fDocentete;
+            if (is_string($fDocentete) || is_bool($fDocentete)) {
+                if (is_string($fDocentete)) {
+                    $message .= $fDocentete;
+                }
                 $fDocentete = null;
             }
             $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $fDocentete);
@@ -311,22 +314,29 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 
     public function getTasksSynchronizeOrder(Order $order, ?stdClass $fDocentete): array
     {
-        [$productChanges, $products] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete?->fDoclignes ?? []);
+        $result = [
+            'allProductsExistInWordpress' => true,
+            'syncChanges' => [],
+            'products' => [],
+        ];
+        if (!$fDocentete) {
+            return $result;
+        }
+        [$productChanges, $products] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete->fDoclignes ?? []);
         $shippingChanges = $this->getTasksSynchronizeOrder_Shipping($order, $fDocentete);
 
-        // region addresses
-        // endregion
-
         // region contact
+        // todo adresse de facturation
+        // todo adresse d'expédition
         // endregion
 
-        return [
-            'allProductsExistInWordpress' => $fDocentete && array_filter($fDocentete->fDoclignes, static function (stdClass $fDocligne) {
-                    return is_null($fDocligne->postId);
-                }) === [],
-            'productChanges' => $productChanges,
-            'products' => $products,
-        ];
+        $result['allProductsExistInWordpress'] = array_filter($fDocentete->fDoclignes, static function (stdClass $fDocligne) {
+                return is_null($fDocligne->postId);
+            }) === [];
+        $result['syncChanges'] = [...$productChanges, ...$shippingChanges];
+        $result['products'] = $products;
+
+        return $result;
     }
 
     private function getTasksSynchronizeOrder_Products(Order $order, array $fDoclignes): array
@@ -334,7 +344,6 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:24
         $lineItems = array_values($order->get_items());
 
-        // region products
         $nbLines = max(count($lineItems), count($fDoclignes));
         $productChanges = [];
         for ($i = 0; $i < $nbLines; $i++) {
@@ -355,8 +364,11 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             if (!is_null($new) && !is_null($old)) {
                 if ($new->postId !== $old->postId) {
                     $change = OrderUtils::REPLACE_PRODUCT_ACTION;
-                } else if ($new->quantity !== $old->quantity) {
-                    $change = OrderUtils::CHANGE_QUANTITY_PRODUCT_ACTION;
+                } else {
+                    if ($new->quantity !== $old->quantity) {
+                        $change = OrderUtils::CHANGE_QUANTITY_PRODUCT_ACTION;
+                    }
+                    // todo add a new change: CHANGE_PRICE_PRODUCT_ACTION
                 }
             } else if (is_null($new)) {
                 $change = OrderUtils::REMOVE_PRODUCT_ACTION;
@@ -388,20 +400,96 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$productChanges, $products];
     }
 
-    private function getTasksSynchronizeOrder_Shipping(Order $order, ?stdClass $fDocentete): array
+    private function getTasksSynchronizeOrder_Shipping(Order $order, stdClass $fDocentete): array
     {
-        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:27
-        $lineItemsShipping = $order->get_items('shipping');
-
-        // faire la différence entre pas de shipping (retrait en magasin) et shipping gratuit, dans les 2 cas ça vaut 0
-        //mais y'en a 1 ou il faut afficher le shipping et l'autre non
-
-        // todo return apply_filters( 'woocommerce_cart_shipping_method_full_label', $label, $method ); modifier le prix affiché au panier
-        // todo faire en JS: https://stackoverflow.com/a/6036392/6824121
-
+        $pExpeditions = $this->sage->sageGraphQl->getPExpeditions(
+            getError: true,
+            getFromSage: is_admin(), // on admin page
+        );
+        if (Sage::showErrors($pExpeditions)) {
+            return [];
+        }
         $shippingChanges = [];
 
+        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:27
+        $lineItemsShipping = array_values($order->get_items('shipping'));
+
+        $old = null;
+        // region new
+        $new = new stdClass();
+        $new->method_id = FDocenteteUtils::slugifyPExpeditionEIntitule($fDocentete->doExpeditNavigation->eIntitule);
+        $new->priceHt = RoundUtils::round($fDocentete->fraisExpedition->priceHt);
+        $new->priceTtc = RoundUtils::round($fDocentete->fraisExpedition->priceTtc);
+        $new->taxes = null;
+        if (!is_null($fDocentete->fraisExpedition->taxes)) {
+            $new->taxes = [];
+            foreach ($fDocentete->fraisExpedition->taxes as $taxe) {
+                $t = new stdClass();
+                $t->amount = RoundUtils::round($taxe->amount);
+                $new->taxes[] = $t;
+            }
+        }
+        // endregion
+
+        $foundSimilar = false;
+        if (!empty($lineItemsShipping)) {
+            foreach ($lineItemsShipping as $lineItemShipping) {
+                $data = $lineItemShipping->get_data();
+                $old = new stdClass();
+                $old->method_id = $data["method_id"];
+                $old->priceHt = RoundUtils::round($data["total"]);
+                $old->priceTtc = RoundUtils::round($old->priceHt + RoundUtils::round($data["total_tax"]));
+                $old->taxes = null;
+                if (!is_null($data["taxes"])) {
+                    $old->taxes = [];
+                    foreach ($data["taxes"]["total"] as $taxe) {
+                        $t = new stdClass();
+                        $t->amount = RoundUtils::round($taxe);
+                        $old->taxes[] = $t;
+                    }
+                }
+                if (json_encode($old, JSON_THROW_ON_ERROR) === json_encode($new, JSON_THROW_ON_ERROR)) {
+                    $foundSimilar = true;
+                } else {
+                    $shippingChanges[] = [
+                        'old' => $old,
+                        'new' => $new,
+                        'change' => OrderUtils::REMOVE_SHIPPING_ACTION,
+                    ];
+                }
+            }
+        }
+        if (!$foundSimilar) {
+            $shippingChanges[] = [
+                'old' => $old,
+                'new' => $new,
+                'change' => OrderUtils::ADD_SHIPPING_ACTION,
+            ];
+        }
+
+        // todo faire un check qui active la taxe dans woocommerce et synchronise les F_TAXE avec les taxes de wordpress
+
+        // todo must also check if the shipping adress is ok
+
+        // todo calculer le prix de la livraison pour afficher le prix sur le site
+        // todo return apply_filters( 'woocommerce_cart_shipping_method_full_label', $label, $method ); modifier le prix affiché au panier
+
+        // todo afficher le prix des articles en fonction de tous les paramètres
+
+        // todo pouvoir délier une commande wordpress d'une commande sage (garder l'historique des commandes auquels il a été lié)Do_Pi
+        // todo dans le cas ou le document de vente n'existe plus et qu'il n'a pas été délié il faut pouvoir le délier
+
         return $shippingChanges;
+    }
+
+    public function calculateFraisExpedition(Order $order): float
+    {
+        // todo implements
+        $pExpeditions = $this->sage->sageGraphQl->getPExpeditions(
+            getError: true,
+            getFromSage: is_admin(), // on admin page
+        );
+        return 0;
     }
 
     public function importFArticleFromSage(string $arRef): array

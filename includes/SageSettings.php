@@ -748,12 +748,7 @@ final class SageSettings
                 getError: true,
                 getFromSage: is_admin(), // on admin page
             );
-            if (is_string($pExpeditions) || is_null($pExpeditions)) {
-                if (is_string($pExpeditions)) {
-                    ?>
-                    <div class="error"><?= $pExpeditions ?></div>
-                    <?php
-                }
+            if (Sage::showErrors($pExpeditions)) {
                 return $result;
             }
             if (

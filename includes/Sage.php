@@ -352,9 +352,6 @@ final class Sage
 
         register_activation_hook($this->file, function (): void {
             $this->install();
-            // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
-            $this->init();
-            flush_rewrite_rules();
         });
 
         register_deactivation_hook($this->file, static function (): void {
@@ -367,18 +364,7 @@ final class Sage
                 array_key_exists('plugins', $hook_extra) &&
                 in_array('sage/sage.php', $hook_extra['plugins'], true)
             ) {
-                // region delete FilesystemAdapter cache
-                $cache = new FilesystemAdapter();
-                $cache->clear();
-                // endregion
-                // region delete twig cache
-                $dir = str_replace('sage.php', 'templates/cache', $this->file);
-                if (is_dir($dir)) {
-                    $filesystem = new Filesystem();
-                    $filesystem->remove([$dir]);
-                }
-
-                // endregion
+                $this->install();
             }
         }, 10, 2);
 
@@ -625,6 +611,23 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
     public function install(): void
     {
         update_option(self::TOKEN . '_version', $this->_version);
+        // region delete FilesystemAdapter cache
+        $cache = new FilesystemAdapter();
+        $cache->clear();
+        // endregion
+        // region delete twig cache
+        $dir = str_replace('sage.php', 'templates/cache', $this->file);
+        if (is_dir($dir)) {
+            $filesystem = new Filesystem();
+            $filesystem->remove([$dir]);
+        }
+        // endregion
+        // https://stackoverflow.com/q/4074477/6824121: we don't get errors here because wordpress doesn't allow to show error message on activation
+        $this->sageGraphQl->getPExpeditions(getFromSage: true);
+
+        // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
+        $this->init();
+        flush_rewrite_rules();
     }
 
     public function init(): void
@@ -890,6 +893,19 @@ WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
         $r->liCodeRegion = $fComptet->ctCodeRegion;
         $r->liAdresseFact = 0;
         return $r;
+    }
+
+    public static function showErrors(array|null|string $data): bool
+    {
+        if (is_string($data) || is_null($data)) {
+            if (is_string($data) && is_admin() /*on admin page*/) {
+                ?>
+                <div class="error"><?= $data ?></div>
+                <?php
+            }
+            return true;
+        }
+        return false;
     }
 
     /**

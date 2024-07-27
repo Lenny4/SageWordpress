@@ -46,9 +46,24 @@
                 {% set fDocligneFormatteds = formatFDoclignes(fDocentete.fDoclignes, doTypes) %}
                 {% set colspan = 4 %}
                 <p>
-                    {{ 'Expédition'|trans ~ ': ' ~ fDocentete.doExpeditNavigation.eIntitule }}
-                    {% if fDocentete.fraisExpedition > 0 %}
-                        {{ fDocentete.fraisExpedition|format_currency(currency) }}
+                    {{ 'Mode d\'expédition'|trans ~ ': ' ~ fDocentete.doExpeditNavigation.eIntitule }}
+                    todo utilisé pour calculer le prix de la livraison
+                </p>
+                <p>
+                    {{ 'Catégorie comptable'|trans ~ ': todo' }}
+                    todo utilisé pour calculer le prix de la livraison
+                </p>
+                <p>
+                    {{ 'Catégorie tarifaire'|trans ~ ': todo' }}
+                    todo utilisé pour calculer le prix de la livraison
+                </p>
+                <p>
+                    {{ 'Nombre de colis'|trans ~ ': todo' }}
+                </p>
+                <p>
+                    {{ 'Prix de la livraison'|trans }}
+                    {% if fDocentete.fraisExpedition.priceTtc > 0 %}
+                        {{ fDocentete.fraisExpedition.priceTtc|format_currency(currency) }}
                     {% endif %}
                 </p>
                 <table>
@@ -153,7 +168,7 @@
                     <span class="dashicons dashicons-no" style="color: red"></span>
                 </p>
             {% endif %}
-            {% if tasksSynchronizeOrder.productChanges is not empty %}
+            {% if tasksSynchronizeOrder.syncChanges is not empty %}
                 <div class="mt-2" style="
     display: flex;
     align-items: center;
@@ -170,7 +185,7 @@
                     </div>
                 </div>
             {% endif %}
-            {% if tasksSynchronizeOrder.productChanges is empty and tasksSynchronizeOrder.allProductsExistInWordpress %}
+            {% if tasksSynchronizeOrder.syncChanges is empty and tasksSynchronizeOrder.allProductsExistInWordpress %}
                 <p class="text-right">
                     {{ 'La commande Wordpress est synchronisée avec Sage'|trans }}
                     <span class="dashicons dashicons-yes" style="color: green"></span>
