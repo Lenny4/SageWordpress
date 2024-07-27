@@ -467,7 +467,9 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             ];
         }
 
-        // todo faire un check qui active la taxe dans woocommerce et synchronise les F_TAXE avec les taxes de wordpress
+        // todo faire un check qui active la taxe dans woocommerce et
+        // todo synchronise les F_TAXE avec les taxes de wordpress
+        // todo à chaque fois qu'on va sur la page des taxes de woocommerce il faut vérifier si elles sont sync et si elles ne le sont pas il faut afficher un bouton pour sync
 
         // todo must also check if the shipping adress is ok
 

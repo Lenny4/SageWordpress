@@ -3,6 +3,7 @@
 namespace App;
 
 use App\class\SageEntityMenu;
+use App\class\SageExpectedOption;
 use App\lib\SageAdminApi;
 use App\lib\SageGraphQl;
 use App\lib\SagePostType;
@@ -398,12 +399,13 @@ final class Sage
             $this->init();
         }, 0);
 
-        add_action('admin_init', static function (): void {
+        $sage = $this;
+        add_action('admin_init', static function () use ($sage): void {
             if (is_admin() && current_user_can('activate_plugins')) {
                 $allPlugins = get_plugins();
                 $pluginId = 'woocommerce/woocommerce.php';
                 $isWooCommerceInstalled = array_key_exists($pluginId, $allPlugins);
-                add_action('admin_notices', static function () use ($isWooCommerceInstalled, $pluginId): void {
+                add_action('admin_notices', static function () use ($isWooCommerceInstalled, $pluginId, $sage): void {
                     ?>
                     <div id="<?= Sage::TOKEN ?>_tasks" class="notice notice-info">
                         <p><span>Sage tasks.</span></p>
@@ -415,44 +417,19 @@ final class Sage
                                 <?= __('Sage plugin require WooCommerce to be installed.', 'sage') ?>
                             </p></div>
                         <?php
-                    }
-                    if ($isWooCommerceInstalled && !is_plugin_active($pluginId)) {
-                        ?>
-                        <div class="error"><p>
-                            <?= __('Sage plugin require WooCommerce to be activated.', 'sage') ?>
-                        </p>
-                        </div><?php
+                    } else {
+                        if (!is_plugin_active($pluginId)) {
+                            ?>
+                            <div class="error"><p>
+                                <?= __('Sage plugin require WooCommerce to be activated.', 'sage') ?>
+                            </p>
+                            </div><?php
+                        } else {
+                            $sage->showWrongOptions();
+                        }
                     }
                     if (array_key_exists(Sage::TOKEN . '_message', $_GET)) {
                         echo str_replace("\'", "'", $_GET[Sage::TOKEN . '_message']);
-                    }
-                    if (array_key_exists('page', $_GET) && str_starts_with($_GET['page'], Sage::TOKEN)) {
-                        $woocommerceEnableGuestCheckout = get_option('woocommerce_enable_guest_checkout');
-                        if ($woocommerceEnableGuestCheckout === 'yes') {
-                            ?>
-                            <div class="error"><p>
-                                <?= __('Veuillez désactiver l\'option dans Woocommerce:', 'sage') ?>
-                                <code>
-                                    <?= __('Allow customers to place orders without an account', 'woocommerce') ?>
-                                </code>
-                            </p>
-                            <p>
-                                <?= __("Lorsque cette option est activée vos clients ne sont pas obligés de se connecter à leurs comptes pour passer commande et il est donc impossible de créer automatiquement la commande passé dans Wordpress dans Sage.", 'sage') ?>
-                            </p>
-                            <form method="post" action="options.php" enctype="multipart/form-data">
-                                <input type="hidden" name="woocommerce_enable_guest_checkout" value="no">
-                                <input type="hidden" name="page_options" value="woocommerce_enable_guest_checkout"/>
-                                <input type="hidden" name="_wp_http_referer" value="<?= $_SERVER["REQUEST_URI"] ?>">
-                                <input type="hidden" name="action" value="update">
-                                <input type="hidden" name="option_page" value="options"/>
-                                <?php wp_nonce_field('options-options'); ?>
-                                <p class="submit">
-                                    <input name="Update" type="submit" class="button-primary"
-                                           value="<?= __('Mettre à jour', 'sage') ?>">
-                                </p>
-                            </form>
-                            </div><?php
-                        }
                     }
                     ?>
                     <?php
@@ -975,5 +952,68 @@ WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
     public function __wakeup()
     {
         _doing_it_wrong(__FUNCTION__, esc_html(__('Unserializing instances of sage is forbidden')), esc_attr($this->_version));
+    }
+
+    private function showWrongOptions(): void
+    {
+        $sageExpectedOptions = [
+            new SageExpectedOption(
+                optionName: 'woocommerce_enable_guest_checkout',
+                optionValue: 'no',
+                trans: __('Allow customers to place orders without an account', 'woocommerce'),
+                description: __("Lorsque cette option est activée vos clients ne sont pas obligés de se connecter à leurs comptes pour passer commande et il est donc impossible de créer automatiquement la commande passé dans Wordpress dans Sage.", 'sage'),
+            ),
+            new SageExpectedOption(
+                optionName: 'woocommerce_calc_taxes',
+                optionValue: 'yes',
+                trans: __( 'Enable tax rates and calculations', 'woocommerce' ),
+                description: __("Cette option doit être activé pour que le plugin Sage fonctionne correctement afin de récupérer les taxes directement renseignées dans Sage.", 'sage'),
+            ),
+        ];
+        /** @var SageExpectedOption[] $changes */
+        $changes = [];
+        foreach ($sageExpectedOptions as $sageExpectedOption) {
+            $optionName = $sageExpectedOption->getOptionName();
+            $expectedOptionValue = $sageExpectedOption->getOptionValue();
+            $value = get_option($optionName);
+            $sageExpectedOption->setCurrentOptionValue($value);
+            if ($value !== $expectedOptionValue) {
+                $changes[] = $sageExpectedOption;
+            }
+        }
+        if ($changes !== []) {
+            ?>
+            <div class="error">
+            <?php
+            $fieldsForm = '';
+            $optionNames = [];
+            foreach ($changes as $sageExpectedOption) {
+                $optionValue = $sageExpectedOption->getOptionValue();
+                echo "<div>" . __('Le plugin Sage a besoin de modifier l\'option', 'sage') . " <code>" .
+                    $sageExpectedOption->getTrans() . "</code> " . __('pour lui donner la valeur', 'sage') . " <code>" .
+                    $optionValue . "</code>
+<div class='tooltip'>
+        <span class='dashicons dashicons-info' style='padding-right: 22px'></span>
+        <div class='tooltiptext' style='right: 0'>" . $sageExpectedOption->getDescription() . "</div>
+    </div>
+</div>";
+                $optionName = $sageExpectedOption->getOptionName();
+                $fieldsForm .= '<input type="hidden" name="' . $optionName . '" value="' . $optionValue . '">';
+                $optionNames[] = $optionName;
+            } ?>
+            <form method="post" action="options.php" enctype="multipart/form-data">
+                <?= $fieldsForm ?>
+                <input type="hidden" name="page_options" value="<?= implode(',', $optionNames) ?>"/>
+                <input type="hidden" name="_wp_http_referer" value="<?= $_SERVER["REQUEST_URI"] ?>">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="option_page" value="options"/>
+                <?php wp_nonce_field('options-options'); ?>
+                <p class="submit">
+                    <input name="Update" type="submit" class="button-primary"
+                           value="<?= __('Mettre à jour', 'sage') ?>">
+                </p>
+            </form>
+            </div><?php
+        }
     }
 }
