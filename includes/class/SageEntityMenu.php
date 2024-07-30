@@ -67,6 +67,10 @@ final class SageEntityMenu
 
     public const FPAYS_TYPE_MODEL = 'FPay';
 
+    public const FTAXES_TYPE_MODEL = 'FTaxe';
+
+    public const FTAXES_ENTITY_NAME = 'fTaxes';
+
     /**
      * @param string[] $mandatoryFields
      * @param string[] $defaultFields

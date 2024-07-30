@@ -35,6 +35,8 @@ final class SageGraphQl
 
     private ?array $fPays = null;
 
+    private ?array $fTaxes = null;
+
     private function __construct(public ?Sage $sage)
     {
         if (is_admin()) {
@@ -448,8 +450,10 @@ final class SageGraphQl
         if (!is_null($cacheName)) {
             $cacheName = 'SearchEntities_' . $cacheName;
         }
-        if (!$this->pingApi && !is_null($cacheName)) {
-            $this->sage->cache->delete($cacheName);
+        if (!$this->pingApi) {
+            if (!is_null($cacheName)) {
+                $this->sage->cache->delete($cacheName);
+            }
             return null;
         }
 
@@ -921,5 +925,32 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         );
         $this->fPays = is_null($fPays) ? [] : $fPays->data->fPays->items;
         return $this->fPays;
+    }
+
+    public function getFTaxes($useCache = true): array
+    {
+        if (!is_null($this->fTaxes)) {
+            return $this->fTaxes;
+        }
+        $cacheName = SageEntityMenu::FTAXES_TYPE_MODEL;
+        $fTaxes = $this->searchEntities(
+            SageEntityMenu::FTAXES_ENTITY_NAME,
+            [
+                "paged" => "1",
+                "per_page" => "1000",
+            ],
+            [
+                ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                    'taCode',
+                ]),
+                ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
+                    'taTaux',
+                    'taNp',
+                ]),
+            ],
+            $useCache ? $cacheName : null
+        );
+        $this->fTaxes = is_null($fTaxes) ? [] : $fTaxes->data->fTaxes->items;
+        return $this->fTaxes;
     }
 }

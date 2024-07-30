@@ -8,10 +8,12 @@ use App\class\SageShippingMethod__index__;
 use App\enum\WebsiteEnum;
 use App\lib\SageRequest;
 use App\Utils\SageTranslationUtils;
+use App\Utils\TaxeUtils;
 use DateTime;
 use PHPHtmlParser\Dom;
 use stdClass;
 use WC_Product;
+use WC_Tax;
 use WP_Application_Passwords;
 use WP_Post;
 use WP_REST_Request;
@@ -741,6 +743,23 @@ final class SageSettings
         });
         // endregion
 
+        // region taxes
+        // woocommerce/includes/admin/settings/views/html-settings-tax.php
+        // woocommerce/includes/admin/views/html-admin-settings.php
+        add_action('woocommerce_sections_tax', static function () use ($sageSettings): void {
+            $sageSettings->updateTaxes();
+            if (array_key_exists('section', $_GET) && $_GET['section'] === Sage::TOKEN) {
+                ?>
+                <div class="notice notice-info">
+                    <p>
+                        <?= __("Veuillez ne pas modifier les taxes Sage manuellement ici, elles sont automatiquement mises à jour en fonction des taxes dans Sage ('Stucture' -> 'Comptabilité' -> 'Taux de taxes').", 'sage') ?>
+                    </p>
+                </div>
+                <?php
+            }
+        });
+        // endregion
+
         // region add sage shipping methods
         add_filter('woocommerce_shipping_methods', static function (array $result) use ($sageSettings) {
             $className = pathinfo(str_replace('\\', '/', SageShippingMethod__index__::class), PATHINFO_FILENAME);
@@ -1012,6 +1031,91 @@ WHERE meta_key = %s
         }
 
         return false;
+    }
+
+    public function updateTaxes(bool $showMessage = true): void
+    {
+        $taxes = WC_Tax::get_tax_rate_classes();
+        $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
+            return $taxe->slug === Sage::TOKEN;
+        }));
+        if ($taxe === false) {
+            WC_Tax::create_tax_class(__('Sage', 'sage'), Sage::TOKEN);
+            $taxes = WC_Tax::get_tax_rate_classes();
+            $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
+                return $taxe->slug === Sage::TOKEN;
+            }));
+        }
+        $rates = WC_Tax::get_rates_for_tax_class($taxe->slug);
+        $fTaxes = $this->sage->sageGraphQl->getFTaxes(false);
+        $taxeChanges = $this->getTaxesChanges($fTaxes, $rates);
+        $this->applyTaxesChanges($taxeChanges);
+        if ($showMessage && $taxeChanges !== []) {
+            ?>
+            <div class="notice notice-success is-dismissible">
+                <p><strong><?= __("Les taxes Sage ont été mises à jour.", 'sage') ?></strong></p>
+            </div>
+            <?php
+        }
+    }
+
+    private function getTaxesChanges(array $fTaxes, array $rates): array
+    {
+        $taxeChanges = [];
+        $compareFunction = function (stdClass $fTaxe, stdClass $rate) {
+            $taTaux = (float)($fTaxe->taNp === 0 ? 0 : $fTaxe->taTaux);
+            return
+                $fTaxe->taCode === $rate->tax_rate_name &&
+                $taTaux === (float)$rate->tax_rate &&
+                $rate->tax_rate_country === '' &&
+                $rate->postcode_count === 0 &&
+                $rate->city_count === 0;
+        };
+        foreach ($fTaxes as $fTaxe) {
+            $rate = current(array_filter($rates, static function (stdClass $rate) use ($compareFunction, $fTaxe) {
+                return $compareFunction($fTaxe, $rate);
+            }));
+            if ($rate === false) {
+                $taxeChanges[] = [
+                    'old' => null,
+                    'new' => $fTaxe,
+                    'change' => TaxeUtils::ADD_TAXE_ACTION,
+                ];
+            }
+        }
+        foreach ($rates as $rate) {
+            $fTaxe = current(array_filter($fTaxes, static function (stdClass $fTaxe) use ($compareFunction, $rate) {
+                return $compareFunction($fTaxe, $rate);
+            }));
+            if ($fTaxe === false) {
+                $taxeChanges[] = [
+                    'old' => $rate,
+                    'new' => null,
+                    'change' => TaxeUtils::REMOVE_TAXE_ACTION,
+                ];
+            }
+        }
+        return $taxeChanges;
+    }
+
+    private function applyTaxesChanges(array $taxeChanges): void
+    {
+        foreach ($taxeChanges as $taxeChange) {
+            if ($taxeChange["change"] === TaxeUtils::ADD_TAXE_ACTION) {
+                WC_Tax::_insert_tax_rate([
+                    "tax_rate_country" => "",
+                    "tax_rate_state" => "",
+                    "tax_rate" => $taxeChange["new"]->taNp === 0 ? 0 : (string)$taxeChange["new"]->taTaux,
+                    "tax_rate_name" => $taxeChange["new"]->taCode,
+                    "tax_rate_priority" => "1",
+                    "tax_rate_compound" => "0",
+                    "tax_rate_shipping" => "1",
+                    "tax_rate_class" => Sage::TOKEN
+                ]);
+            } else if ($taxeChange["change"] === TaxeUtils::REMOVE_TAXE_ACTION) {
+                WC_Tax::_delete_tax_rate($taxeChange["old"]->tax_rate_id);
+            }
+        }
     }
 
     /**

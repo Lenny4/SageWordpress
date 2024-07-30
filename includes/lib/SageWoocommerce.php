@@ -467,9 +467,10 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             ];
         }
 
-        // todo faire un check qui active la taxe dans woocommerce et
         // todo synchronise les F_TAXE avec les taxes de wordpress
         // todo à chaque fois qu'on va sur la page des taxes de woocommerce il faut vérifier si elles sont sync et si elles ne le sont pas il faut afficher un bouton pour sync
+
+        // todo https://github.com/StephenMiracle/frankenwp/tree/main/examples/debug
 
         // todo must also check if the shipping adress is ok
 
@@ -480,6 +481,10 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 
         // todo pouvoir délier une commande wordpress d'une commande sage (garder l'historique des commandes auquels il a été lié)Do_Pi
         // todo dans le cas ou le document de vente n'existe plus et qu'il n'a pas été délié il faut pouvoir le délier
+
+        // todo dans la page du compte d'un utilisateur ajouter bouton synchroniser avec sage ou affiché si c'est bien synchronisé avec Sage
+
+        // todo faire un cron qui regarde si une commande a été modifié dans Sage mais pas dans wordpress -> mettre à jour la commande wordpress
 
         return $shippingChanges;
     }
