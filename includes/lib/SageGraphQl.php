@@ -13,7 +13,6 @@ use GraphQL\Mutation;
 use GraphQL\Query;
 use GraphQL\RawObject;
 use StdClass;
-use Symfony\Component\String\Slugger\AsciiSlugger;
 use Throwable;
 
 if (!defined('ABSPATH')) {
@@ -421,12 +420,11 @@ final class SageGraphQl
             if (is_null($pExpeditions) || is_string($pExpeditions)) {
                 return $pExpeditions;
             }
-
+            $getFromSage = true;
             $pExpeditions = $pExpeditions->data->pExpeditions->items;
         }
 
         if (is_array($pExpeditions)) {
-            $slugger = new AsciiSlugger();
             foreach ($pExpeditions as $pExpedition) {
                 // necessary for filter `woocommerce_shipping_methods`
                 $pExpedition->slug = FDocenteteUtils::slugifyPExpeditionEIntitule($pExpedition->eIntitule);
@@ -597,7 +595,6 @@ final class SageGraphQl
                     'taCode',
                 ]),
                 ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
-                    'percent',
                     'amount'
                 ]),
             ],
@@ -860,46 +857,61 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $fComptet->data->fComptets->items[0];
     }
 
-    public function getPCattarifs($useCache = true): array
+    public function getPCattarifs($useCache = true, bool $getFromSage = false): array
     {
         if (!is_null($this->pCattarifs)) {
             return $this->pCattarifs;
         }
-        $cacheName = SageEntityMenu::PCATTARIF_TYPE_MODEL;
-        $pCattarifs = $this->searchEntities(
-            SageEntityMenu::PCATTARIF_ENTITY_NAME,
-            [
-                "filter_field" => [
-                    "ctIntitule"
-                ],
-                "filter_type" => [
-                    "neq"
-                ],
-                "filter_value" => [
-                    ''
-                ],
-                "paged" => "1",
-                "per_page" => "100"
-            ],
-            [
+        $pCattarifs = null;
+        $optionName = Sage::TOKEN . '_pCattarifs';
+        if (!$getFromSage) {
+            $pCattarifs = get_option($optionName, null);
+            if (!is_null($pCattarifs)) {
+                $pCattarifs = json_decode($pCattarifs, false);
+            }
+        }
+
+        if (is_null($pCattarifs)) {
+            $cacheName = SageEntityMenu::PCATTARIF_TYPE_MODEL;
+            $pCattarifs = $this->searchEntities(
+                SageEntityMenu::PCATTARIF_ENTITY_NAME,
                 [
-                    "name" => "cbMarq",
+                    "filter_field" => [
+                        "ctIntitule"
+                    ],
+                    "filter_type" => [
+                        "neq"
+                    ],
+                    "filter_value" => [
+                        ''
+                    ],
+                    "paged" => "1",
+                    "per_page" => "100"
                 ],
                 [
-                    "name" => "cbIndice",
+                    [
+                        "name" => "cbMarq",
+                    ],
+                    [
+                        "name" => "cbIndice",
+                    ],
+                    [
+                        "name" => "ctIntitule",
+                        "type" => "StringOperationFilterInput",
+                    ],
                 ],
-                [
-                    "name" => "ctIntitule",
-                    "type" => "StringOperationFilterInput",
-                ],
-            ],
-            $useCache ? $cacheName : null
-        );
-        $result = is_null($pCattarifs) ? [] : $pCattarifs->data->pCattarifs->items;
-        usort($result, static function (stdClass $a, stdClass $b) {
-            return $a->cbIndice <=> $b->cbIndice;
-        });
-        $this->pCattarifs = $result;
+                $useCache ? $cacheName : null
+            );
+            $getFromSage = true;
+            $pCattarifs = is_null($pCattarifs) ? [] : $pCattarifs->data->pCattarifs->items;
+            usort($pCattarifs, static function (stdClass $a, stdClass $b) {
+                return $a->cbIndice <=> $b->cbIndice;
+            });
+        }
+        $this->pCattarifs = $pCattarifs;
+        if ($getFromSage) {
+            update_option($optionName, json_encode($this->pCattarifs, JSON_THROW_ON_ERROR));
+        }
         return $this->pCattarifs;
     }
 
@@ -927,30 +939,49 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $this->fPays;
     }
 
-    public function getFTaxes($useCache = true): array
+    public function getFTaxes(
+        $useCache = true,
+        bool $getFromSage = false
+    ): array
     {
         if (!is_null($this->fTaxes)) {
             return $this->fTaxes;
         }
-        $cacheName = SageEntityMenu::FTAXES_TYPE_MODEL;
-        $fTaxes = $this->searchEntities(
-            SageEntityMenu::FTAXES_ENTITY_NAME,
-            [
-                "paged" => "1",
-                "per_page" => "1000",
-            ],
-            [
-                ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
-                    'taCode',
-                ]),
-                ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
-                    'taTaux',
-                    'taNp',
-                ]),
-            ],
-            $useCache ? $cacheName : null
-        );
-        $this->fTaxes = is_null($fTaxes) ? [] : $fTaxes->data->fTaxes->items;
+        $fTaxes = null;
+        $optionName = Sage::TOKEN . '_fTaxes';
+        if (!$getFromSage) {
+            $fTaxes = get_option($optionName, null);
+            if (!is_null($fTaxes)) {
+                $fTaxes = json_decode($fTaxes, false);
+            }
+        }
+
+        if (is_null($fTaxes)) {
+            $cacheName = SageEntityMenu::FTAXES_TYPE_MODEL;
+            $fTaxes = $this->searchEntities(
+                SageEntityMenu::FTAXES_ENTITY_NAME,
+                [
+                    "paged" => "1",
+                    "per_page" => "1000",
+                ],
+                [
+                    ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                        'taCode',
+                    ]),
+                    ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
+                        'taTaux',
+                        'taNp',
+                    ]),
+                ],
+                $useCache ? $cacheName : null
+            );
+            $getFromSage = true;
+            $fTaxes = is_null($fTaxes) ? [] : $fTaxes->data->fTaxes->items;
+        }
+        $this->fTaxes = $fTaxes;
+        if ($getFromSage) {
+            update_option($optionName, json_encode($this->fTaxes, JSON_THROW_ON_ERROR));
+        }
         return $this->fTaxes;
     }
 }
