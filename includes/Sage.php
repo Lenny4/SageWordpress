@@ -42,6 +42,7 @@ final class Sage
 {
     public final const TOKEN = 'sage';
 
+    public final const CACHE_LIFETIME = 3600;
     public final const META_KEY_AR_REF = '_' . self::TOKEN . '_arRef';
     public final const META_KEY_CT_NUM = '_' . self::TOKEN . '_ctNum';
 
@@ -99,7 +100,7 @@ final class Sage
         $dir = dirname($this->file);
         $this->dir = $dir;
 
-        $this->cache = new FilesystemAdapter();
+        $this->cache = new FilesystemAdapter(defaultLifetime: self::CACHE_LIFETIME);
 
         $this->assets_dir = trailingslashit($this->dir) . 'assets';
         $this->assets_url = esc_url(trailingslashit(plugins_url('/assets/', $this->file)));
@@ -247,6 +248,8 @@ final class Sage
                 }
                 $prices = json_decode($data["value"], true, 512, JSON_THROW_ON_ERROR);
                 foreach ($prices as $price) {
+                    // Catégorie comptable (nCatCompta): [Locale, Export, Métropole]
+                    // Catégorie tarifaire (nCatTarif): [Tarif GC, Tarif Remise, Prix public, Tarif Partenaire]
                     $r[$price['CbMarq']] = $price;
                 }
                 break;
@@ -589,8 +592,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
     {
         update_option(self::TOKEN . '_version', $this->_version);
         // region delete FilesystemAdapter cache
-        $cache = new FilesystemAdapter();
-        $cache->clear();
+        $this->cache->clear();
         // endregion
         // region delete twig cache
         $dir = str_replace('sage.php', 'templates/cache', $this->file);
@@ -879,15 +881,6 @@ WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
     public static function getArRef(int $postId): mixed
     {
         return get_post_meta($postId, self::META_KEY_AR_REF, true);
-    }
-
-    public static function getPCattarifs(): array
-    {
-        try {
-            return json_decode(get_option(Sage::TOKEN . '_pCattarifs'), false, 512, JSON_THROW_ON_ERROR);
-        } catch (Throwable) {
-            return [];
-        }
     }
 
     public static function getName(?string $intitule, ?string $contact): string

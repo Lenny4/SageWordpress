@@ -734,7 +734,7 @@ final class SageSettings
             if (!($product instanceof WC_Product)) {
                 return;
             }
-            $pCattarifs = Sage::getPCattarifs();
+            $pCattarifs = $sageSettings->sage->sageGraphQl->getPCattarifs(getFromSage: is_admin());
             echo $sageSettings->sage->twig->render('woocommerce/tabs.html.twig', [
                 'tabNames' => array_map(static fn(array $productTab): string => $productTab['name'], $productTabs),
                 'product' => $product,
@@ -1018,7 +1018,7 @@ WHERE meta_key = %s
             syncArticlesToWebsite: (bool)get_option(Sage::TOKEN . '_sync_articles_to_website'),
         );
         if (!is_null($stdClass)) {
-            $pCattarifs = $this->sage->sageGraphQl->getPCattarifs(false);
+            $pCattarifs = $this->sage->sageGraphQl->getPCattarifs(false, getFromSage: is_admin());
             update_option(Sage::TOKEN . '_pCattarifs', json_encode($pCattarifs, JSON_THROW_ON_ERROR));
             add_action('admin_notices', static function (): void {
                 ?>
@@ -1063,7 +1063,7 @@ WHERE meta_key = %s
     {
         $taxeChanges = [];
         $compareFunction = function (stdClass $fTaxe, stdClass $rate) {
-            $taTaux = (float)($fTaxe->taNp === 0 ? 0 : $fTaxe->taTaux);
+            $taTaux = (float)($fTaxe->taNp === 1 ? 0 : $fTaxe->taTaux);
             return
                 $fTaxe->taCode === $rate->tax_rate_name &&
                 $taTaux === (float)$rate->tax_rate &&
@@ -1105,7 +1105,7 @@ WHERE meta_key = %s
                 WC_Tax::_insert_tax_rate([
                     "tax_rate_country" => "",
                     "tax_rate_state" => "",
-                    "tax_rate" => $taxeChange["new"]->taNp === 0 ? 0 : (string)$taxeChange["new"]->taTaux,
+                    "tax_rate" => $taxeChange["new"]->taNp === 1 ? 0 : (string)$taxeChange["new"]->taTaux,
                     "tax_rate_name" => $taxeChange["new"]->taCode,
                     "tax_rate_priority" => "1",
                     "tax_rate_compound" => "0",
