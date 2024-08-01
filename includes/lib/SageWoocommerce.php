@@ -469,6 +469,8 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 
         // todo must also check if the shipping adress is ok
 
+        // todo au niveau des filtres d'entity pouvoir dire si c'est un select avec des données précises, exemple: Type de document
+
         // todo calculer le prix de la livraison pour afficher le prix sur le site
         // todo return apply_filters( 'woocommerce_cart_shipping_method_full_label', $label, $method ); modifier le prix affiché au panier
 
