@@ -3,5 +3,4 @@ vendor*
 .vscode
 .DS_Store
 .idea
-composer.lock
 templates/cache
