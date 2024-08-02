@@ -17,9 +17,9 @@ final class SageRequest
         array  $params,
     ): WP_Error|array
     {
-        $url = wp_nonce_url(
-            $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . $url
-            , 'wp_rest');
+        // https://developer.wordpress.org/rest-api/key-concepts/
+        // If you are using non-pretty permalinks, you should pass the REST API route as a query string parameter. The route http://oursite.com/wp-json/ in the example above would hence be http://oursite.com/?rest_route=/.
+        $url = wp_nonce_url($_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . '/index.php', 'wp_rest') . '&rest_route=' . urlencode($url);
         return (new WP_Http)->request($url, [
             'timeout' => 30,
             'cookies' => $_COOKIE,

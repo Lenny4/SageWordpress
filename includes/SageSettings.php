@@ -734,7 +734,7 @@ final class SageSettings
             if (!($product instanceof WC_Product)) {
                 return;
             }
-            $pCattarifs = $sageSettings->sage->sageGraphQl->getPCattarifs(getFromSage: is_admin());
+            $pCattarifs = $sageSettings->sage->sageGraphQl->getPCattarifs();
             echo $sageSettings->sage->twig->render('woocommerce/tabs.html.twig', [
                 'tabNames' => array_map(static fn(array $productTab): string => $productTab['name'], $productTabs),
                 'product' => $product,
@@ -765,7 +765,6 @@ final class SageSettings
             $className = pathinfo(str_replace('\\', '/', SageShippingMethod__index__::class), PATHINFO_FILENAME);
             $pExpeditions = $sageSettings->sage->sageGraphQl->getPExpeditions(
                 getError: true,
-                getFromSage: is_admin(), // on admin page
             );
             if (Sage::showErrors($pExpeditions)) {
                 return $result;
@@ -814,7 +813,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
     </span>
     <strong>
     <span style="display: block; margin: 0.5em 0.5em 0 0; clear: both;">
-        <a href="https://caddy/wp-json/sage/v1/deactivate-shipping-zones?_wpnonce=' . wp_create_nonce('wp_rest') . '">
+        <a href="https://caddy/index.php?rest_route=' . urlencode('/sage/v1/deactivate-shipping-zones') . '&_wpnonce=' . wp_create_nonce('wp_rest') . '">
         ' . __('Désactiver', 'sage') . '
         </a>
     </span>
@@ -981,17 +980,10 @@ WHERE meta_key = %s
             WP_Application_Passwords::delete_application_password($user_id, $currentPassword["uuid"]);
         }
 
-        $response = SageRequest::selfRequest('/wp-json/wp/v2/users/' . $user_id . '/application-passwords', [
-            'headers' => [
-                'Content-Length' => (string)strlen('name=' . $applicationPasswordOption),
-                'Content-Type' => 'application/x-www-form-urlencoded; charset=UTF-8',
-            ],
-            'method' => 'POST',
-            'body' => [
-                'name' => $applicationPasswordOption,
-            ],
+        $newApplicationPassword = WP_Application_Passwords::create_new_application_password($user_id, [
+            'name' => $applicationPasswordOption
         ]);
-        $newPassword = json_decode((string)$response["body"], true, 512, JSON_THROW_ON_ERROR)['password'];
+        $newPassword = $newApplicationPassword[0];
         update_option($applicationPasswordOption, $user_id);
         $this->createUpdateWebsite($user_id, $newPassword);
         return $newPassword;
@@ -1018,7 +1010,7 @@ WHERE meta_key = %s
             syncArticlesToWebsite: (bool)get_option(Sage::TOKEN . '_sync_articles_to_website'),
         );
         if (!is_null($stdClass)) {
-            $pCattarifs = $this->sage->sageGraphQl->getPCattarifs(false, getFromSage: is_admin());
+            $pCattarifs = $this->sage->sageGraphQl->getPCattarifs(useCache: false);
             update_option(Sage::TOKEN . '_pCattarifs', json_encode($pCattarifs, JSON_THROW_ON_ERROR));
             add_action('admin_notices', static function (): void {
                 ?>
@@ -1048,14 +1040,16 @@ WHERE meta_key = %s
         }
         $rates = WC_Tax::get_rates_for_tax_class($taxe->slug);
         $fTaxes = $this->sage->sageGraphQl->getFTaxes(false);
-        $taxeChanges = $this->getTaxesChanges($fTaxes, $rates);
-        $this->applyTaxesChanges($taxeChanges);
-        if ($showMessage && $taxeChanges !== []) {
-            ?>
-            <div class="notice notice-success is-dismissible">
-                <p><strong><?= __("Les taxes Sage ont été mises à jour.", 'sage') ?></strong></p>
-            </div>
-            <?php
+        if (!Sage::showErrors($fTaxes)) {
+            $taxeChanges = $this->getTaxesChanges($fTaxes, $rates);
+            $this->applyTaxesChanges($taxeChanges);
+            if ($showMessage && $taxeChanges !== []) {
+                ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><strong><?= __("Les taxes Sage ont été mises à jour.", 'sage') ?></strong></p>
+                </div>
+                <?php
+            }
         }
     }
 

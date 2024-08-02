@@ -601,9 +601,6 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             $filesystem->remove([$dir]);
         }
         // endregion
-        // https://stackoverflow.com/q/4074477/6824121: we don't get errors here because wordpress doesn't allow to show error message on activation
-        $this->sageGraphQl->getPExpeditions(getFromSage: true);
-        $this->settings->updateTaxes(showMessage: false);
 
         // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
         $this->init();
@@ -747,7 +744,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         if (is_string($user)) {
             return $user;
         }
-        $url = '/wp-json/wp/v2/users';
+        $url = '/wp/v2/users';
         if (!is_null($userId)) {
             $url .= '/' . $userId;
         }

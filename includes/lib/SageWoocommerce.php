@@ -90,7 +90,7 @@ final class SageWoocommerce
         }
         /** @var WC_Meta_Data[] $metaDatas */
         $metaDatas = $product->get_meta_data();
-        $pCattarifs = $this->sage->sageGraphQl->getPCattarifs(getFromSage: is_admin());
+        $pCattarifs = $this->sage->sageGraphQl->getPCattarifs();
         foreach ($metaDatas as $metaData) {
             $data = $metaData->get_data();
             if ($data["key"] !== '_' . Sage::TOKEN . '_prices') {
@@ -403,8 +403,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     private function getTasksSynchronizeOrder_Shipping(Order $order, stdClass $fDocentete): array
     {
         $pExpeditions = $this->sage->sageGraphQl->getPExpeditions(
-            getError: true,
-            getFromSage: is_admin(), // on admin page
+            getError: true, // on admin page
         );
         if (Sage::showErrors($pExpeditions)) {
             return [];
@@ -491,7 +490,6 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         // todo implements
         $pExpeditions = $this->sage->sageGraphQl->getPExpeditions(
             getError: true,
-            getFromSage: is_admin(), // on admin page
         );
         return 0;
     }
@@ -510,7 +508,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_AR_REF
             ))
         );
-        $url = '/wp-json/wc/v3/products';
+        $url = '/wc/v3/products';
         if (!is_null($articlePostId)) {
             $url .= '/' . $articlePostId;
         }

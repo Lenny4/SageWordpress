@@ -383,9 +383,9 @@ final class SageGraphQl
     }
 
     public function getPExpeditions(
-        bool $useCache = true,
-        bool $getFromSage = false,
-        bool $getError = false
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false
     ): array|null|string
     {
         if (!is_null($this->pExpeditions)) {
@@ -474,7 +474,7 @@ final class SageGraphQl
 
     private function getEntitiesAndSaveInOption(
         ?string $cacheName,
-        bool    $getFromSage,
+        ?bool   $getFromSage,
         string  $entityName,
         array   $queryParams,
         array   $selectionSets,
@@ -484,6 +484,9 @@ final class SageGraphQl
         $entities = null;
         $tryGetOption = false;
         $optionName = Sage::TOKEN . '_' . $entityName;
+        if (is_null($getFromSage)) {
+            $getFromSage = is_admin();
+        }
         if (!$getFromSage) {
             $entities = get_option($optionName, null);
             if (!is_null($entities)) {
@@ -842,9 +845,9 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     }
 
     public function getPCattarifs(
-        bool $useCache = true,
-        bool $getFromSage = false,
-        bool $getError = false
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false
     ): array|null|string
     {
         if (!is_null($this->pCattarifs)) {
@@ -892,9 +895,9 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     }
 
     public function getFPays(
-        bool $useCache = true,
-        bool $getFromSage = false,
-        bool $getError = false
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false
     ): array|null|string
     {
         if (!is_null($this->fPays)) {
@@ -929,9 +932,9 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     }
 
     public function getFTaxes(
-        bool $useCache = true,
-        bool $getFromSage = false,
-        bool $getError = false
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false
     ): array|null|string
     {
         if (!is_null($this->fTaxes)) {
