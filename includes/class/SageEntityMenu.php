@@ -71,6 +71,10 @@ final class SageEntityMenu
 
     public const FTAXES_ENTITY_NAME = 'fTaxes';
 
+    public const PCATCOMPTA_ENTITY_NAME = 'pCatcomptas';
+
+    public const PCATCOMPTA_TYPE_MODEL = 'PCatcompta';
+
     /**
      * @param string[] $mandatoryFields
      * @param string[] $defaultFields

@@ -7,6 +7,7 @@ use App\enum\WebsiteEnum;
 use App\Sage;
 use App\SageSettings;
 use App\Utils\FDocenteteUtils;
+use App\Utils\PCatComptaUtils;
 use Exception;
 use GraphQL\Client;
 use GraphQL\Mutation;
@@ -29,6 +30,8 @@ final class SageGraphQl
     private bool $pingApi = false;
 
     private ?array $pExpeditions = null;
+
+    private ?array $pCatComptas = null;
 
     private ?array $pCattarifs = null;
 
@@ -504,9 +507,9 @@ final class SageGraphQl
             );
             if (is_null($entities) || is_string($entities)) {
                 if (!$tryGetOption) {
-                    $entities = get_option($optionName, null);
-                    if (!is_null($entities)) {
-                        $entities = json_decode($entities, false, 512, JSON_THROW_ON_ERROR);
+                    $entitiesBdd = get_option($optionName, null);
+                    if ($entitiesBdd !== 'null' && $entitiesBdd !== null) {
+                        $entities = json_decode($entitiesBdd, false, 512, JSON_THROW_ON_ERROR);
                     }
                 }
             } else {
@@ -969,5 +972,65 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 'taNp',
             ]),
         ];
+    }
+
+    public function getPCatComptas(
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false
+    ): array|null|string
+    {
+        if (!is_null($this->pCatComptas)) {
+            return $this->pCatComptas;
+        }
+        $entityName = SageEntityMenu::PCATCOMPTA_ENTITY_NAME;
+        $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
+        $queryParams = [
+            "filter_field" => [],
+            "filter_type" => [],
+            "filter_value" => [],
+            "paged" => "1",
+            "per_page" => "1"
+        ];
+        $selectionSets = $this->_getPCatComptaSelectionSet();
+        $pCatComptas = $this->getEntitiesAndSaveInOption(
+            $cacheName,
+            $getFromSage,
+            $entityName,
+            $queryParams,
+            $selectionSets,
+            $getError,
+        );
+        if (!is_null($pCatComptas) && !is_string($pCatComptas)) {
+            $result = [];
+            $pos = 3;
+            foreach ($pCatComptas[0] as $key => $pCatCompta) {
+                if ($pCatCompta === '') {
+                    continue;
+                }
+                list($tiers, $i) = preg_split('/(?<=.{' . $pos . '})/', str_replace('caCompta', '', $key), 2);
+                $result[$tiers][(int)$i] = $pCatCompta;
+            }
+        } else {
+            $result = $pCatComptas;
+        }
+        $this->pCatComptas = $result;
+        return $this->pCatComptas;
+    }
+
+    private function _getPCatComptaSelectionSet(): array
+    {
+        $result = [];
+        foreach (PCatComptaUtils::ALL_TIERS_TYPE as $t) {
+            $result = [
+                ...$result,
+                ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                    ...array_map(static function (int $number) use ($t) {
+                        return 'caCompta' . $t . str_pad((string)$number, 2, '0', STR_PAD_LEFT);
+                    }, range(1, PCatComptaUtils::NB_TIERS_TYPE)),
+                ]),
+            ];
+        }
+        return $result;
     }
 }

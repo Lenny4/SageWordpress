@@ -1,20 +1,32 @@
 {% set prices = getPricesProduct(product) %}
 {% set currencySymbol = get_woocommerce_currency_symbol() %}
+
 <h1>{{ product.get_data()['name'] }}</h1>
 <table class="table-border">
     <thead>
     <tr>
-        <td>{{ 'Intitule'|trans }}</td>
-        <td>{{ 'HT'|trans }}</td>
-        <td>{{ 'TTC'|trans }}</td>
+        <td rowspan="2"></td>
+        {% for pCatCompta in pCatComptas %}
+            <td colspan="2">{{ pCatCompta }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        {% for pCatCompta in pCatComptas %}
+            {% for htTtc in htTtcs %}
+                <td>{{ htTtc|trans }}</td>
+            {% endfor %}
+        {% endfor %}
     </tr>
     </thead>
     <tbody>
     {% for pCattarif in pCattarifs %}
         <tr>
             <td>{{ pCattarif.ctIntitule }}</td>
-            <td>{{ prices[pCattarif.cbMarq]['priceHt']|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
-            <td>{{ prices[pCattarif.cbMarq]['priceTtc']|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
+            {% for pCatCompta in pCatComptas %}
+                {% for htTtc in htTtcs %}
+                    <td>{{ prices[pCattarif.cbMarq][loop.index + 1]['price'~htTtc]|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
+                {% endfor %}
+            {% endfor %}
         </tr>
     {% endfor %}
     </tbody>

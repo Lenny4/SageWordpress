@@ -16,7 +16,6 @@ use Automattic\WooCommerce\Admin\Overrides\Order;
 use StdClass;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Filesystem\Filesystem;
-use Throwable;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
 use Twig\Extra\Intl\IntlExtension;
@@ -250,7 +249,7 @@ final class Sage
                 foreach ($prices as $price) {
                     // Catégorie comptable (nCatCompta): [Locale, Export, Métropole]
                     // Catégorie tarifaire (nCatTarif): [Tarif GC, Tarif Remise, Prix public, Tarif Partenaire]
-                    $r[$price['CbMarq']] = $price;
+                    $r[$price["nCatTarif"]][$price["nCatCompta"]] = $price;
                 }
                 break;
             }
@@ -464,8 +463,8 @@ final class Sage
         // endregion
 
         $this->sageGraphQl = SageGraphQl::instance($this);
-        $this->settings = SageSettings::instance($this);
         $this->sageWoocommerce = SageWoocommerce::instance($this);
+        $this->settings = SageSettings::instance($this);
 
         $sageGraphQl = $this->sageGraphQl;
         $sageWoocommerce = $this->sageWoocommerce;
@@ -628,6 +627,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
 
     private function showWrongOptions(): void
     {
+        // todo ajouter une vérification qui check si la currency de Sage est la même que Wordpress
         $sageExpectedOptions = [
             new SageExpectedOption(
                 optionName: 'woocommerce_enable_guest_checkout',

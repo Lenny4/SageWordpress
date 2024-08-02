@@ -7,6 +7,7 @@ use App\class\SageEntityMetadata;
 use App\class\SageShippingMethod__index__;
 use App\enum\WebsiteEnum;
 use App\lib\SageRequest;
+use App\Utils\PCatComptaUtils;
 use App\Utils\SageTranslationUtils;
 use App\Utils\TaxeUtils;
 use DateTime;
@@ -730,15 +731,19 @@ final class SageSettings
         });
 
         add_action('woocommerce_product_data_panels', static function () use ($sageSettings, $productTabs): void { // Code to Add Data Panel to the Tab
+            // [$response, $responseError, $message] = $sageSettings->sage->sageWoocommerce->importFArticleFromSage(Sage::getArRef(get_the_ID()));
             $product = wc_get_product();
             if (!($product instanceof WC_Product)) {
                 return;
             }
             $pCattarifs = $sageSettings->sage->sageGraphQl->getPCattarifs();
+            $pCatComptas = $sageSettings->sage->sageGraphQl->getPCatComptas();
             echo $sageSettings->sage->twig->render('woocommerce/tabs.html.twig', [
                 'tabNames' => array_map(static fn(array $productTab): string => $productTab['name'], $productTabs),
                 'product' => $product,
                 'pCattarifs' => $pCattarifs,
+                'pCatComptas' => $pCatComptas[PCatComptaUtils::TIERS_TYPE_VEN],
+                'htTtcs' => ['Ht', 'Ttc'],
             ]);
         });
         // endregion
