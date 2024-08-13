@@ -278,8 +278,9 @@ jQuery(document).ready(function () {
             apiHostUrl = null;
         }
         if (apiHostUrl) {
-            console.log('start websocket', 'wss://' + apiHostUrl.host + '/Socket/ws');
-            const ws = new WebSocket('wss://' + apiHostUrl.host + '/ws')
+            const url = 'wss://' + apiHostUrl.host + '/ws';
+            console.log('start websocket', url);
+            const ws = new WebSocket(url)
             ws.onopen = () => {
                 console.log('ws.onopen')
                 ws.send('hello world')
