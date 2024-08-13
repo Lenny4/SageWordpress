@@ -515,7 +515,14 @@ final class SageGraphQl
                         $where[$queryParams["filter_field"][$k]] = [];
                     }
 
-                    $where[$queryParams["filter_field"][$k]][] = $queryParams["filter_type"][$k] . ': ' . $queryParams["filter_value"][$k];
+                    $v = $queryParams["filter_value"][$k];
+                    if (in_array($queryParams["filter_type"][$k], ['in', 'nin'])) {
+                        if (str_starts_with($v, '"') && str_ends_with($v, '"')) {
+                            $v = str_replace(',', '","', $v);
+                        }
+                        $v = '[' . $v . ']';
+                    }
+                    $where[$queryParams["filter_field"][$k]][] = $queryParams["filter_type"][$k] . ': ' . $v;
                 }
             }
 

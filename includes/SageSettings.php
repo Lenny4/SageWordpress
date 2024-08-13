@@ -550,7 +550,8 @@ final class SageSettings
                                 exit;
                             }
 
-                            $rawFields = get_option(Sage::TOKEN . '_' . $sageEntityMenu->getEntityName() . '_fields');
+                            $entityName = $sageEntityMenu->getEntityName();
+                            $rawFields = get_option(Sage::TOKEN . '_' . $entityName . '_fields');
                             if ($rawFields === false) {
                                 $rawFields = $sageEntityMenu->getDefaultFields();
                             }
@@ -561,22 +562,23 @@ final class SageSettings
                             $fields = [];
                             $inputFields = $sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType()) ?? [];
                             $transDomain = $sageEntityMenu->getTransDomain();
-                            foreach (
-                                array_unique([...$rawFields, ...$mandatoryFields])
-                                as $rawField) {
+                            $trans = SageTranslationUtils::getTranslations();
+                            foreach (array_unique([...$rawFields, ...$mandatoryFields]) as $rawField) {
+                                $f = [
+                                    'name' => $rawField,
+                                    'type' => 'StringOperationFilterInput',
+                                    'transDomain' => $transDomain,
+                                    'values' => null,
+                                ];
                                 if (array_key_exists($rawField, $inputFields)) {
-                                    $fields[] = [
-                                        'name' => $inputFields[$rawField]->name,
-                                        'type' => $inputFields[$rawField]->type->name,
-                                        'transDomain' => $transDomain,
-                                    ];
-                                } else {
-                                    $fields[] = [
-                                        'name' => $rawField,
-                                        'type' => 'StringOperationFilterInput',
-                                        'transDomain' => $transDomain,
-                                    ];
+                                    $f['name'] = $inputFields[$rawField]->name;
+                                    $f['type'] = $inputFields[$rawField]->type->name;
                                 }
+                                $v = $trans[$sageEntityMenu->getEntityName()][$rawField];
+                                if (is_array($v) && array_key_exists('values', $v)) {
+                                    $f['values'] = $v['values'];
+                                }
+                                $fields[] = $f;
                             }
 
                             if (!isset($queryParams['per_page'])) {

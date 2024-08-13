@@ -114,6 +114,46 @@ jQuery(document).ready(function () {
                 let chooseTypeOption = jQuery('<option value="' + option + '">' + typeName + '</option>').appendTo(chooseFilterTypeSelect);
             }
         }
+
+        showHideAvailableValues(container);
+    }
+
+    function applySelectedValue(container) {
+        let chooseValueInput = jQuery(container).find('input[name^="filter_value"]');
+        let chooseValueSelectInput = jQuery(container).find('select[data-filter-value-select]');
+        jQuery(chooseValueInput).val(jQuery(chooseValueSelectInput).val())
+    }
+
+    function showHideAvailableValues(container) {
+        let allFields = JSON.parse(jQuery('[data-all-fields]').attr("data-all-fields"));
+        let chooseValueInput = jQuery(container).find('input[name^="filter_value"]');
+        let field = jQuery(container).find('select[name^="filter_field"]').val();
+        let chooseFilterTypeSelect = jQuery(container).find('select[name^="filter_type["]');
+        let chooseFilterTypeSelectVal = jQuery(chooseFilterTypeSelect).val();
+
+        let multiple = "";
+        if (["in", "nin"].includes(chooseFilterTypeSelectVal)) {
+            multiple = "multiple"
+        }
+        const availableValues = allFields.find(x => x.name === field).values;
+        const chooseValueContainer = jQuery(chooseValueInput).parent();
+        jQuery(chooseValueContainer).find('select').remove();
+        if (availableValues !== null) {
+            const chooseValueSelectInput = jQuery('<select data-filter-value-select ' + multiple + '></select>').appendTo(chooseValueContainer);
+            // jQuery(chooseValueInput).hide(); // todo uncomment
+            const selectedValues = jQuery(chooseValueInput).val().split(',');
+            console.log(selectedValues)
+            for (const key in availableValues) {
+                let selected = "";
+                if (selectedValues.includes(key.toString())) {
+                    selected = 'selected="selected"'
+                }
+                const optionDom = jQuery('<option ' + selected + ' value="' + key + '">[' + key + ']: ' + availableValues[key] + '</option>').appendTo(chooseValueSelectInput);
+            }
+            applySelectedValue(container);
+        } else {
+            jQuery(chooseValueInput).show();
+        }
     }
 
     function initFiltersWithQueryParams() {
@@ -139,6 +179,7 @@ jQuery(document).ready(function () {
             onChangeField(newFilterContainer);
             jQuery(chooseFilterTypeSelect).val(value.type);
             jQuery(chooseValueInput).val(value.value);
+            onChangeField(newFilterContainer);
         }
         if (params.hasOwnProperty("where_condition")) {
             jQuery('#where_condition').val(params.where_condition)
@@ -190,6 +231,14 @@ jQuery(document).ready(function () {
 
     jQuery(document).on('change', 'select[name^="filter_field["]', function (e) {
         onChangeField(jQuery(e.target).closest(".filter-container"));
+    });
+
+    jQuery(document).on('change', 'select[name^="filter_type["]', function (e) {
+        showHideAvailableValues(jQuery(e.target).closest(".filter-container"));
+    });
+
+    jQuery(document).on('change', 'select[data-filter-value-select]', function (e) {
+        applySelectedValue(jQuery(e.target).closest(".filter-container"));
     });
 
     jQuery(document).on('change', 'select[name="per_page"]', function (e) {
