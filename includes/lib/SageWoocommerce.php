@@ -11,6 +11,7 @@ use App\Utils\RoundUtils;
 use Automattic\WooCommerce\Admin\Overrides\Order;
 use StdClass;
 use WC_Meta_Data;
+use WC_Order;
 use WC_Order_Item;
 use WC_Order_Item_Product;
 use WC_Product;
@@ -267,7 +268,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $data;
     }
 
-    public function getMetaboxSage(Order $order, bool $ignorePingApi = false, string $message = ''): string
+    public function getMetaboxSage(WC_Order $order, bool $ignorePingApi = false, string $message = ''): string
     {
         $fDocenteteIdentifier = null;
         foreach ($order->get_meta_data() as $meta) {
@@ -466,6 +467,8 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             ];
         }
 
+        // todo ajouter le bouton importer le document de vente dans Sage
+
         // todo must also check if the shipping adress is ok
 
         // todo calculer le prix de la livraison pour afficher le prix sur le site
@@ -490,11 +493,11 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return 0;
     }
 
-    public function importFArticleFromSage(string $arRef): array
+    public function importFArticleFromSage(string $arRef, bool $ignorePingApi = false): array
     {
-        $fArticle = $this->sage->sageGraphQl->getFArticle($arRef);
+        $fArticle = $this->sage->sageGraphQl->getFArticle($arRef, ignorePingApi: $ignorePingApi);
         if (is_null($fArticle)) {
-            return [null, "<div class='error'>
+            return [null, null, "<div class='error'>
                         " . __("L'article n'a pas pu être importé", 'sage') . "
                                 </div>"];
         }
@@ -522,13 +525,13 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         } else if ($response["response"]["code"] === 200) {
             $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
             $message = "<div class='notice notice-success is-dismissible'>
-                    <p>" . __('Article updated: ' . $body->name, 'sage') . "</p>
+                    <p>" . __('Article mis à jour: ' . $body->name, 'sage') . "</p>
                     $dismissNotice
                             </div>";
         } else if ($response["response"]["code"] === 201) {
             $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
             $message = "<div class='notice notice-success is-dismissible'>
-                    <p>" . __('Article created: ' . $body->name, 'sage') . "</p>
+                    <p>" . __('Article créé: ' . $body->name, 'sage') . "</p>
                     $dismissNotice
                             </div>";
         } else {

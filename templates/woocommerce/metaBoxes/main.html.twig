@@ -1,5 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block body %}
+    {% set flattenAllTranslations = flattenAllTranslations(allTranslations['fDocentetes']) %}
+
     {{ message | raw }}
     {% set orderId = order.get_id() %}
     {% set wpnonce = 'wp_rest'|wp_create_nonce %}
@@ -35,11 +37,11 @@
             </div>
         {% else %}
             <h2>
-                <strong>{{ allTranslations['fDocentetes']['doType']['values'][doTypeIdentifier] ~': n° '~ doPieceIdentifier }}</strong>
+                <strong>{{ flattenAllTranslations['doType']['values'][doTypeIdentifier] ~': n° '~ doPieceIdentifier }}</strong>
             </h2>
             {% if fDocentete.fDoclignes is empty %}
                 <p>
-                    {{ 'Le document de vente ['~allTranslations['fDocentetes']['doType']['values'][doTypeIdentifier]~' n° '~doPieceIdentifier~'] est vide.' |trans }}
+                    {{ 'Le document de vente ['~flattenAllTranslations['doType']['values'][doTypeIdentifier]~' n° '~doPieceIdentifier~'] est vide.' |trans }}
                 </p>
             {% else %}
                 {% set doTypes = getDoTypes(fDocentete.fDoclignes) %}
@@ -61,6 +63,9 @@
                     {{ 'Nombre de colis'|trans ~ ': todo' }}
                 </p>
                 <p>
+                    {{ 'Numéro client'|trans ~ ': todo' }}
+                </p>
+                <p>
                     {{ 'Prix de la livraison'|trans }}
                     {% if fDocentete.fraisExpedition.priceTtc > 0 %}
                         {{ fDocentete.fraisExpedition.priceTtc|format_currency(currency) }}
@@ -74,7 +79,7 @@
                             {% endif %}
                             <td class="text-center border-x border-y" colspan="{{ colspan }}">
                                 <strong>
-                                    {{ allTranslations['fDocentetes']['doType']['values'][doType] }}
+                                    {{ flattenAllTranslations['doType']['values'][doType] }}
                                 </strong>
                             </td>
                         {% endfor %}

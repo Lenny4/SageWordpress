@@ -23,6 +23,7 @@ use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 use WC_Meta_Data;
+use WC_Order;
 use WC_Product;
 use WP_Error;
 use WP_REST_Request;
@@ -493,7 +494,7 @@ final class Sage
         $sageWoocommerce = $this->sageWoocommerce;
         // region link wordpress order to sage order
         $screenId = 'woocommerce_page_wc-orders';
-        add_action('add_meta_boxes_' . $screenId, static function (Order $order) use ($screenId, $sageWoocommerce): void { // woocommerce/src/Internal/Admin/Orders/Edit.php: do_action( 'add_meta_boxes_' . $this->screen_id, $this->order );
+        add_action('add_meta_boxes_' . $screenId, static function (WC_Order $order) use ($screenId, $sageWoocommerce): void { // woocommerce/src/Internal/Admin/Orders/Edit.php: do_action( 'add_meta_boxes_' . $this->screen_id, $this->order );
             add_meta_box(
                 'woocommerce-order-' . self::TOKEN . '-main',
                 __('Sage', 'sage'),
@@ -548,7 +549,7 @@ final class Sage
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $arRef = $request['arRef'];
-                    [$response, $responseError, $message] = $sageWoocommerce->importFArticleFromSage($arRef);
+                    [$response, $responseError, $message] = $sageWoocommerce->importFArticleFromSage($arRef, ignorePingApi: true);
                     $order = new Order($request['orderId']);
                     return new WP_REST_Response([
                         'html' => $sageWoocommerce->getMetaboxSage(
@@ -565,7 +566,11 @@ final class Sage
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+$)', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageGraphQl) {
-                    $fDocentetes = $sageGraphQl->getFDocentetes(strtoupper(trim($request['doPiece'])), true);
+                    $fDocentetes = $sageGraphQl->getFDocentetes(
+                        strtoupper(trim($request['doPiece'])),
+                        getError: true,
+                        ignorePingApi: true
+                    );
                     if (is_string($fDocentetes)) {
                         return new WP_REST_Response([
                             'message' => $fDocentetes

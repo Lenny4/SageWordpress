@@ -435,6 +435,7 @@ final class SageGraphQl
         array   $queryParams,
         array   $selectionSets,
         bool    $getError,
+        bool    $ignorePingApi,
     ): array|null|string
     {
         $entities = null;
@@ -456,7 +457,8 @@ final class SageGraphQl
                 $queryParams,
                 $selectionSets,
                 $cacheName,
-                $getError
+                $getError,
+                $ignorePingApi
             );
             if (is_null($entities) || is_string($entities)) {
                 if (!$tryGetOption) {
@@ -481,13 +483,14 @@ final class SageGraphQl
         array   $queryParams,
         array   $selectionSets,
         ?string $cacheName = null,
-        bool    $getError = false
+        bool    $getError = false,
+        bool    $ignorePingApi = false,
     ): StdClass|null|string
     {
         if (!is_null($cacheName)) {
             $cacheName = 'SearchEntities_' . $cacheName;
         }
-        if (!$this->pingApi) {
+        if (!$this->pingApi && !$ignorePingApi) {
             if (!is_null($cacheName)) {
                 $this->sage->cache->delete($cacheName);
             }
@@ -603,7 +606,8 @@ final class SageGraphQl
     public function getPExpeditions(
         bool  $useCache = true,
         ?bool $getFromSage = null,
-        bool  $getError = false
+        bool  $getError = false,
+        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->pExpeditions)) {
@@ -632,6 +636,7 @@ final class SageGraphQl
             $queryParams,
             $selectionSets,
             $getError,
+            $ignorePingApi
         );
         if (is_array($pExpeditions)) {
             foreach ($pExpeditions as $pExpedition) {
@@ -690,7 +695,7 @@ final class SageGraphQl
         ];
     }
 
-    public function getFArticle(string $arRef): StdClass|null
+    public function getFArticle(string $arRef, bool $ignorePingApi = false): StdClass|null
     {
         $fArticle = $this->searchEntities(
             SageEntityMenu::FARTICLE_ENTITY_NAME,
@@ -708,6 +713,7 @@ final class SageGraphQl
                 "per_page" => "1"
             ],
             $this->_getFArticleSelectionSet(),
+            ignorePingApi: $ignorePingApi,
         );
         if (is_null($fArticle) || $fArticle->data->fArticles->totalCount !== 1) {
             return null;
@@ -716,7 +722,11 @@ final class SageGraphQl
         return $fArticle->data->fArticles->items[0];
     }
 
-    public function getFDocentetes(string $doPiece, bool $getError = false): array|null|string
+    public function getFDocentetes(
+        string $doPiece,
+        bool   $getError = false,
+        bool   $ignorePingApi = false,
+    ): array|null|string
     {
         $fDocentetes = $this->searchEntities(
             SageEntityMenu::FDOCENTETE_ENTITY_NAME,
@@ -735,6 +745,7 @@ final class SageGraphQl
             ],
             $this->_getFDocenteteSelectionSet(),
             getError: $getError,
+            ignorePingApi: $ignorePingApi,
         );
         if (is_null($fDocentetes) || is_string($fDocentetes)) {
             return $fDocentetes;
@@ -824,6 +835,7 @@ final class SageGraphQl
             ],
             $this->_getFDocenteteSelectionSet(getFDoclignes: $getFDoclignes, getExpedition: $getExpedition),
             getError: $getError,
+            ignorePingApi: $ignorePingApi,
         );
         if (
             is_null($fDocentetes) ||
@@ -871,7 +883,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $fDoclignes;
     }
 
-    public function getFComptet(string $ctNum): StdClass|null
+    public function getFComptet(string $ctNum, bool $ignorePingApi = false): StdClass|null
     {
         $fComptet = $this->searchEntities(
             SageEntityMenu::FCOMPTET_ENTITY_NAME,
@@ -888,7 +900,8 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 "paged" => "1",
                 "per_page" => "1"
             ],
-            $this->_getFComptetSelectionSet()
+            $this->_getFComptetSelectionSet(),
+            ignorePingApi: $ignorePingApi,
         );
         if (is_null($fComptet) || $fComptet->data->fComptets->totalCount !== 1) {
             return null;
@@ -900,7 +913,8 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     public function getPCattarifs(
         bool  $useCache = true,
         ?bool $getFromSage = null,
-        bool  $getError = false
+        bool  $getError = false,
+        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->pCattarifs)) {
@@ -930,6 +944,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
+            $ignorePingApi
         );
         return $this->pCattarifs;
     }
@@ -950,7 +965,8 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     public function getFPays(
         bool  $useCache = true,
         ?bool $getFromSage = null,
-        bool  $getError = false
+        bool  $getError = false,
+        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->fPays)) {
@@ -970,6 +986,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
+            $ignorePingApi
         );
         return $this->fPays;
     }
@@ -987,7 +1004,8 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     public function getFTaxes(
         bool  $useCache = true,
         ?bool $getFromSage = null,
-        bool  $getError = false
+        bool  $getError = false,
+        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->fTaxes)) {
@@ -1007,6 +1025,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
+            $ignorePingApi
         );
         return $this->fTaxes;
     }
@@ -1027,7 +1046,8 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     public function getPCatComptas(
         bool  $useCache = true,
         ?bool $getFromSage = null,
-        bool  $getError = false
+        bool  $getError = false,
+        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->pCatComptas)) {
@@ -1050,6 +1070,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
+            $ignorePingApi
         );
         if (!is_null($pCatComptas) && !is_string($pCatComptas)) {
             $result = [];
