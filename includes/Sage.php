@@ -627,7 +627,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
 
     private function showWrongOptions(): void
     {
-        // todo ajouter une vérification qui check si la currency de Sage est la même que Wordpress
+        $pDossier = $this->sageGraphQl->getPDossier();
         $sageExpectedOptions = [
             new SageExpectedOption(
                 optionName: 'woocommerce_enable_guest_checkout',
@@ -640,6 +640,12 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                 optionValue: 'yes',
                 trans: __('Enable tax rates and calculations', 'woocommerce'),
                 description: __("Cette option doit être activé pour que le plugin Sage fonctionne correctement afin de récupérer les taxes directement renseignées dans Sage.", 'sage'),
+            ),
+            new SageExpectedOption(
+                optionName: 'woocommerce_currency',
+                optionValue: $pDossier->nDeviseCompteNavigation->dCodeIso,
+                trans: __('Currency', 'woocommerce'),
+                description: __("La devise dans Wordpress n'est pas la même que dans Sage.", 'sage'),
             ),
         ];
         /** @var SageExpectedOption[] $changes */

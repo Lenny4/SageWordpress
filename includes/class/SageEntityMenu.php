@@ -75,6 +75,8 @@ final class SageEntityMenu
 
     public const PCATCOMPTA_TYPE_MODEL = 'PCatcompta';
 
+    public const PDOSSIER_ENTITY_NAME = 'pDossiers';
+
     /**
      * @param string[] $mandatoryFields
      * @param string[] $defaultFields

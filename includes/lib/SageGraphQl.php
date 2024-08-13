@@ -39,6 +39,8 @@ final class SageGraphQl
 
     private ?array $fTaxes = null;
 
+    private ?stdClass $pDossier = null;
+
     private function __construct(public ?Sage $sage)
     {
         if (is_admin()) {
@@ -385,32 +387,23 @@ final class SageGraphQl
         return $typeModel;
     }
 
-    public function getPExpeditions(
+    public function getPDossier(
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false
-    ): array|null|string
+    ): stdClass|null|string
     {
-        if (!is_null($this->pExpeditions)) {
-            return $this->pExpeditions;
+        if (!is_null($this->pDossier)) {
+            return $this->pDossier;
         }
-        $entityName = SageEntityMenu::PEXPEDITION_ENTITY_NAME;
+        $entityName = SageEntityMenu::PDOSSIER_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter_field" => [
-                "eIntitule"
-            ],
-            "filter_type" => [
-                "neq"
-            ],
-            "filter_value" => [
-                ""
-            ],
             "paged" => "1",
-            "per_page" => "50"
+            "per_page" => "1"
         ];
-        $selectionSets = $this->_getPExpeditionSelectionSet();
-        $pExpeditions = $this->getEntitiesAndSaveInOption(
+        $selectionSets = $this->_getPDossierSelectionSet();
+        $pDossier = $this->getEntitiesAndSaveInOption(
             $cacheName,
             $getFromSage,
             $entityName,
@@ -418,59 +411,19 @@ final class SageGraphQl
             $selectionSets,
             $getError,
         );
-        if (is_array($pExpeditions)) {
-            foreach ($pExpeditions as $pExpedition) {
-                // necessary for filter `woocommerce_shipping_methods`
-                $pExpedition->slug = FDocenteteUtils::slugifyPExpeditionEIntitule($pExpedition->eIntitule);
-            }
+        if (is_array($pDossier) && count($pDossier) === 1) {
+            $pDossier = $pDossier[0];
         }
-        $this->pExpeditions = $pExpeditions;
-        return $this->pExpeditions;
+        $this->pDossier = $pDossier;
+        return $this->pDossier;
     }
 
-    private function _getPExpeditionSelectionSet(): array
+    private function _getPDossierSelectionSet(): array
     {
         return [
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['cbMarq']),
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['eIntitule']),
-            'arRefNavigation' => $this->_getFArticleSelectionSet(),
-        ];
-    }
-
-    private function _getFArticleSelectionSet(bool $forExpedition = false): array
-    {
-        if ($forExpedition) {
-            return [
-                ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['arRef']),
-            ];
-        }
-        return [
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['arRef', 'arDesign']),
-            'prices' => [
-                ...$this->_getPriceSelectionSet(),
-                ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
-                    'nCatTarif',
-                    'nCatCompta'
-                ]),
-            ],
-        ];
-    }
-
-    private function _getPriceSelectionSet(): array
-    {
-        return [
-            ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
-                'priceHt',
-                'priceTtc',
-            ]),
-            'taxes' => [
-                ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
-                    'taIntitule',
-                    'taCode',
-                ]),
-                ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
-                    'amount'
-                ]),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['dRaisonSoc']),
+            'nDeviseCompteNavigation' => [
+                ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['dCodeIso']),
             ],
         ];
     }
@@ -638,6 +591,96 @@ final class SageGraphQl
         }
 
         return [null, $defaultSortValue];
+    }
+
+    public function getPExpeditions(
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false
+    ): array|null|string
+    {
+        if (!is_null($this->pExpeditions)) {
+            return $this->pExpeditions;
+        }
+        $entityName = SageEntityMenu::PEXPEDITION_ENTITY_NAME;
+        $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
+        $queryParams = [
+            "filter_field" => [
+                "eIntitule"
+            ],
+            "filter_type" => [
+                "neq"
+            ],
+            "filter_value" => [
+                ""
+            ],
+            "paged" => "1",
+            "per_page" => "50"
+        ];
+        $selectionSets = $this->_getPExpeditionSelectionSet();
+        $pExpeditions = $this->getEntitiesAndSaveInOption(
+            $cacheName,
+            $getFromSage,
+            $entityName,
+            $queryParams,
+            $selectionSets,
+            $getError,
+        );
+        if (is_array($pExpeditions)) {
+            foreach ($pExpeditions as $pExpedition) {
+                // necessary for filter `woocommerce_shipping_methods`
+                $pExpedition->slug = FDocenteteUtils::slugifyPExpeditionEIntitule($pExpedition->eIntitule);
+            }
+        }
+        $this->pExpeditions = $pExpeditions;
+        return $this->pExpeditions;
+    }
+
+    private function _getPExpeditionSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['cbMarq']),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['eIntitule']),
+            'arRefNavigation' => $this->_getFArticleSelectionSet(),
+        ];
+    }
+
+    private function _getFArticleSelectionSet(bool $forExpedition = false): array
+    {
+        if ($forExpedition) {
+            return [
+                ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['arRef']),
+            ];
+        }
+        return [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['arRef', 'arDesign']),
+            'prices' => [
+                ...$this->_getPriceSelectionSet(),
+                ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                    'nCatTarif',
+                    'nCatCompta'
+                ]),
+            ],
+        ];
+    }
+
+    private function _getPriceSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
+                'priceHt',
+                'priceTtc',
+            ]),
+            'taxes' => [
+                ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                    'taIntitule',
+                    'taCode',
+                ]),
+                ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
+                    'amount'
+                ]),
+            ],
+        ];
     }
 
     public function getFArticle(string $arRef): StdClass|null

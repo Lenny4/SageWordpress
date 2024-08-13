@@ -731,7 +731,6 @@ final class SageSettings
         });
 
         add_action('woocommerce_product_data_panels', static function () use ($sageSettings, $productTabs): void { // Code to Add Data Panel to the Tab
-            // [$response, $responseError, $message] = $sageSettings->sage->sageWoocommerce->importFArticleFromSage(Sage::getArRef(get_the_ID()));
             $product = wc_get_product();
             if (!($product instanceof WC_Product)) {
                 return;
