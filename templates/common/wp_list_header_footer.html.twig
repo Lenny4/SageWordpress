@@ -47,19 +47,6 @@
                         {% if transField == null %}
                             {{ 'Must create translation for field ' ~ field['name']|trans }}
                         {% endif %}
-
-                        {% if transField|gettype != 'string' %}
-                            <div class="tooltip">
-                                <span class="dashicons dashicons-info"></span>
-                                <div class="tooltiptext">
-                                    <ul style="margin: 0">
-                                        {% for index, value in transField['values'] %}
-                                            <li>{{ index }}: {{ value }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
-                        {% endif %}
                 </div>
             </th>
         {% endif %}

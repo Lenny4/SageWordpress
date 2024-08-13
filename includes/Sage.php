@@ -351,6 +351,29 @@ final class Sage
             return $p->get_name();
         }));
         $this->twig->addExtension(new IntlExtension());
+        $this->twig->addFunction(new TwigFunction('flattenAllTranslations', static function (array $allTranslations): array {
+            $flatten = function (array $values, array &$result = []) use (&$flatten) {
+                foreach ($values as $key => $value) {
+                    if (is_array($value)) {
+                        $flatten($value, $result);
+                    } else {
+                        $result[$key] = $value;
+                    }
+                }
+                return $result;
+            };
+            foreach ($allTranslations as $key => $allTranslation) {
+                if (
+                    is_array($allTranslation) &&
+                    array_key_exists('values', $allTranslation) &&
+                    is_array($allTranslation['values'])
+                ) {
+                    $allTranslations[$key]['values'] = $flatten($allTranslation['values']);
+                }
+            }
+
+            return $allTranslations;
+        }));
         // endregion
 
         register_activation_hook($this->file, function (): void {

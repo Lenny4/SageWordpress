@@ -124,6 +124,21 @@ jQuery(document).ready(function () {
         jQuery(chooseValueInput).val(jQuery(chooseValueSelectInput).val())
     }
 
+    function _displayOptionWithOptGroup(availableValues, dom, selectedValues) {
+        for (const key in availableValues) {
+            let selected = "";
+            if (selectedValues.includes(key.toString())) {
+                selected = 'selected="selected"'
+            }
+            if (typeof availableValues[key] === "string") {
+                const optionDom = jQuery('<option ' + selected + ' value="' + key + '">[' + key + ']: ' + availableValues[key] + '</option>').appendTo(dom);
+            } else {
+                const optGroupDom = jQuery('<optgroup label="' + key + '" />').appendTo(dom);
+                _displayOptionWithOptGroup(availableValues[key], optGroupDom, selectedValues)
+            }
+        }
+    }
+
     function showHideAvailableValues(container) {
         let allFields = JSON.parse(jQuery('[data-all-fields]').attr("data-all-fields"));
         let chooseValueInput = jQuery(container).find('input[name^="filter_value"]');
@@ -142,14 +157,7 @@ jQuery(document).ready(function () {
             const chooseValueSelectInput = jQuery('<select data-filter-value-select ' + multiple + '></select>').appendTo(chooseValueContainer);
             // jQuery(chooseValueInput).hide(); // todo uncomment
             const selectedValues = jQuery(chooseValueInput).val().split(',');
-            console.log(selectedValues)
-            for (const key in availableValues) {
-                let selected = "";
-                if (selectedValues.includes(key.toString())) {
-                    selected = 'selected="selected"'
-                }
-                const optionDom = jQuery('<option ' + selected + ' value="' + key + '">[' + key + ']: ' + availableValues[key] + '</option>').appendTo(chooseValueSelectInput);
-            }
+            _displayOptionWithOptGroup(availableValues, chooseValueSelectInput, selectedValues)
             applySelectedValue(container);
         } else {
             jQuery(chooseValueInput).show();
