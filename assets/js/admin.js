@@ -279,22 +279,22 @@ jQuery(document).ready(function () {
         }
         if (apiHostUrl) {
             console.log('start websocket', 'wss://' + apiHostUrl.host + '/Socket/ws');
-            const ws = new WebSocket('wss://' + apiHostUrl.host + '/Socket/ws')
+            const ws = new WebSocket('wss://' + apiHostUrl.host + '/ws')
             ws.onopen = () => {
-                console.log('ws opened on browser')
+                console.log('ws.onopen')
                 ws.send('hello world')
             }
 
             ws.onmessage = (message) => {
-                console.log(`message received`, message.data)
+                console.log(`ws.onmessage`, message.data)
             }
 
             ws.onerror = (evt) => {
-                console.log(evt)
+                console.log('ws.onerror', evt)
             }
 
             ws.onclose = (evt) => {
-                console.log(evt)
+                console.log('ws.onclose', evt)
             }
         }
     }
