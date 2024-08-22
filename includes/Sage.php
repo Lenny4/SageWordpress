@@ -257,7 +257,15 @@ final class Sage
             return $r;
         }));
         $this->twig->addFunction(new TwigFunction('get_woocommerce_currency_symbol', static function (): string {
-            return get_woocommerce_currency_symbol();
+            return html_entity_decode(get_woocommerce_currency_symbol());
+        }));
+        $this->twig->addFunction(new TwigFunction('order_get_currency', static function (): string {
+            return html_entity_decode(get_woocommerce_currency_symbol());
+        }));
+        $this->twig->addFunction(new TwigFunction('show_taxes_change', static function (array $taxes): string {
+            return implode(' | ', array_map(static function (array $taxe) {
+                return $taxe['code'] . ' => ' . $taxe['amount'];
+            }, $taxes));
         }));
         $this->twig->addFunction(new TwigFunction('getDoTypes', static function (array $fDoclignes): array {
             $result = [];
@@ -534,11 +542,21 @@ final class Sage
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/sync', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
-                    $order = new Order($request['id']);
-                    // todo synchronise order
-                    // $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $fDoclignes);
+                    $order = new WC_Order($request['id']);
+                    $fDocenteteIdentifier = $sageWoocommerce->getFDocenteteIdentifierFromOrder($order);
+                    $fDocentete = $sageWoocommerce->sage->sageGraphQl->getFDocentete(
+                        $fDocenteteIdentifier["doPiece"],
+                        $fDocenteteIdentifier["doType"],
+                        getError: true,
+                        getFDoclignes: true,
+                        getExpedition: true,
+                        ignorePingApi: true,
+                        addWordpressProductId: true,
+                    );
+                    $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $fDocentete);
+                    $message = $sageWoocommerce->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
                     return new WP_REST_Response([
-                        'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true)
+                        'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true, message: $message)
                     ], 200);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {

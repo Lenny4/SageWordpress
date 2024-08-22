@@ -8,7 +8,6 @@ use App\SageSettings;
 use App\Utils\FDocenteteUtils;
 use App\Utils\OrderUtils;
 use App\Utils\RoundUtils;
-use Automattic\WooCommerce\Admin\Overrides\Order;
 use StdClass;
 use WC_Meta_Data;
 use WC_Order;
@@ -270,14 +269,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 
     public function getMetaboxSage(WC_Order $order, bool $ignorePingApi = false, string $message = ''): string
     {
-        $fDocenteteIdentifier = null;
-        foreach ($order->get_meta_data() as $meta) {
-            $data = $meta->get_data();
-            if ($data['key'] === '_' . Sage::TOKEN . '_identifier') {
-                $fDocenteteIdentifier = json_decode($data['value'], true, 512, JSON_THROW_ON_ERROR);
-                break;
-            }
-        }
+        $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
         $hasFDocentete = !is_null($fDocenteteIdentifier);
         $fDocentete = null;
         $tasksSynchronizeOrder = [];
@@ -313,7 +305,20 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         ]);
     }
 
-    public function getTasksSynchronizeOrder(Order $order, ?stdClass $fDocentete): array
+    public function getFDocenteteIdentifierFromOrder(WC_Order $order): array|null
+    {
+        $fDocenteteIdentifier = null;
+        foreach ($order->get_meta_data() as $meta) {
+            $data = $meta->get_data();
+            if ($data['key'] === '_' . Sage::TOKEN . '_identifier') {
+                $fDocenteteIdentifier = json_decode($data['value'], true, 512, JSON_THROW_ON_ERROR);
+                break;
+            }
+        }
+        return $fDocenteteIdentifier;
+    }
+
+    public function getTasksSynchronizeOrder(WC_Order $order, ?stdClass $fDocentete): array
     {
         $result = [
             'allProductsExistInWordpress' => true,
@@ -340,41 +345,63 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $result;
     }
 
-    private function getTasksSynchronizeOrder_Products(Order $order, array $fDoclignes): array
+    private function getTasksSynchronizeOrder_Products(WC_Order $order, array $fDoclignes): array
     {
         // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:24
         $lineItems = array_values($order->get_items());
 
         $nbLines = max(count($lineItems), count($fDoclignes));
         $productChanges = [];
+        [$taxe, $rates] = $this->sage->settings->getWordpressTaxes();
         for ($i = 0; $i < $nbLines; $i++) {
             $old = null;
             if (isset($lineItems[$i])) {
                 $data = $lineItems[$i]->get_data();
                 $old = new stdClass();
+                $old->itemId = $data["id"];
                 $old->postId = $data["product_id"];
                 $old->quantity = $data["quantity"];
+                $old->linePriceHt = (float)$data["total"];
+                $old->taxes = [];
+                $taxeNumber = 1;
+                foreach ($data["taxes"]["total"] as $idRate => $amount) {
+                    $old->taxes[$taxeNumber] = ['code' => $rates[$idRate]->tax_rate_name, 'amount' => (float)$amount];
+                    $taxeNumber++;
+                }
             }
             $new = null;
             if (isset($fDoclignes[$i])) {
                 $new = new stdClass();
                 $new->postId = $fDoclignes[$i]->postId;
                 $new->quantity = (int)$fDoclignes[$i]->dlQte;
+                $new->linePriceHt = (float)$fDoclignes[$i]->dlMontantHt;
+                $new->taxes = [];
+                foreach (FDocenteteUtils::ALL_TAXES as $taxeNumber) {
+                    $code = $fDoclignes[$i]->{'dlCodeTaxe' . $taxeNumber};
+                    if (!is_null($code)) {
+                        $new->taxes[$taxeNumber] = ['code' => $fDoclignes[$i]->{'dlCodeTaxe' . $taxeNumber}, 'amount' => (float)$fDoclignes[$i]->{'dlMontantTaxe' . $taxeNumber}];
+                    }
+                }
             }
-            $change = null;
+            $changes = [];
             if (!is_null($new) && !is_null($old)) {
                 if ($new->postId !== $old->postId) {
-                    $change = OrderUtils::REPLACE_PRODUCT_ACTION;
+                    $changes[] = OrderUtils::REPLACE_PRODUCT_ACTION;
                 } else {
                     if ($new->quantity !== $old->quantity) {
-                        $change = OrderUtils::CHANGE_QUANTITY_PRODUCT_ACTION;
+                        $changes[] = OrderUtils::CHANGE_QUANTITY_PRODUCT_ACTION;
                     }
-                    // todo add a new change: CHANGE_PRICE_PRODUCT_ACTION
+                    if ($new->linePriceHt !== $old->linePriceHt) {
+                        $changes[] = OrderUtils::CHANGE_PRICE_PRODUCT_ACTION;
+                    }
+                    if ($new->taxes !== $old->taxes) {
+                        $changes[] = OrderUtils::CHANGE_TAXES_PRODUCT_ACTION;
+                    }
                 }
             } else if (is_null($new)) {
-                $change = OrderUtils::REMOVE_PRODUCT_ACTION;
+                $changes[] = OrderUtils::REMOVE_PRODUCT_ACTION;
             } else if (is_null($old)) {
-                $change = OrderUtils::ADD_PRODUCT_ACTION;
+                $changes[] = OrderUtils::ADD_PRODUCT_ACTION;
             }
             if (is_null($old) && is_null($new->postId)) {
                 continue;
@@ -382,7 +409,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $productChanges[$i] = [
                 'old' => $old,
                 'new' => $new,
-                'change' => $change,
+                'changes' => $changes,
             ];
         }
         $productIds = [];
@@ -401,7 +428,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$productChanges, $products];
     }
 
-    private function getTasksSynchronizeOrder_Shipping(Order $order, stdClass $fDocentete): array
+    private function getTasksSynchronizeOrder_Shipping(WC_Order $order, stdClass $fDocentete): array
     {
         $pExpeditions = $this->sage->sageGraphQl->getPExpeditions(
             getError: true, // on admin page
@@ -418,6 +445,9 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         // region new
         $new = new stdClass();
         $new->method_id = FDocenteteUtils::slugifyPExpeditionEIntitule($fDocentete->doExpeditNavigation->eIntitule);
+        $new->name = current(array_filter($pExpeditions, static function (stdClass $pExpedition) use ($new) {
+            return $pExpedition->slug === $new->method_id;
+        }))->eIntitule;
         $new->priceHt = RoundUtils::round($fDocentete->fraisExpedition->priceHt);
         $new->priceTtc = RoundUtils::round($fDocentete->fraisExpedition->priceTtc);
         $new->taxes = null;
@@ -437,6 +467,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 $data = $lineItemShipping->get_data();
                 $old = new stdClass();
                 $old->method_id = $data["method_id"];
+                $old->name = $data["method_title"];
                 $old->priceHt = RoundUtils::round($data["total"]);
                 $old->priceTtc = RoundUtils::round($old->priceHt + RoundUtils::round($data["total_tax"]));
                 $old->taxes = null;
@@ -454,7 +485,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     $shippingChanges[] = [
                         'old' => $old,
                         'new' => $new,
-                        'change' => OrderUtils::REMOVE_SHIPPING_ACTION,
+                        'changes' => [OrderUtils::REMOVE_SHIPPING_ACTION],
                     ];
                 }
             }
@@ -463,7 +494,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $shippingChanges[] = [
                 'old' => $old,
                 'new' => $new,
-                'change' => OrderUtils::ADD_SHIPPING_ACTION,
+                'changes' => [OrderUtils::ADD_SHIPPING_ACTION],
             ];
         }
 
@@ -484,7 +515,103 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $shippingChanges;
     }
 
-    public function calculateFraisExpedition(Order $order): float
+    public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): string
+    {
+        $message = '';
+        foreach ($tasksSynchronizeOrder["syncChanges"] as $syncChange) {
+            foreach ($syncChange['changes'] as $change) {
+                switch ($change) {
+                    case OrderUtils::ADD_PRODUCT_ACTION:
+                        $message .= $this->addProductToOrder($order, $syncChange["new"]->postId, $syncChange["new"]->quantity, $syncChange["new"]);
+                        break;
+                    case OrderUtils::CHANGE_PRICE_PRODUCT_ACTION:
+                        $message .= $this->changePriceProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->linePriceHt);
+                        break;
+                    case OrderUtils::CHANGE_TAXES_PRODUCT_ACTION:
+                        $message .= $this->changeTaxesProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->taxes);
+                        break;
+                    case OrderUtils::ADD_SHIPPING_ACTION:
+                        $t = 0;
+                        break;
+                    case OrderUtils::REMOVE_SHIPPING_ACTION:
+                        $t = 0;
+                        break;
+                    default:
+                        $message .= "<div class='notice notice-error is-dismissible'>
+                    <p>" . __('Aucune action défini pour', 'sage') . ": " . print_r($syncChange['changes'], true) . "</p>
+                    </div>";
+                }
+            }
+        }
+        return $message;
+    }
+
+    private function changePriceProductOrder(WC_Order $order, int $itemId, float $linePriceHt): string
+    {
+        $lineItems = array_values($order->get_items());
+        foreach ($lineItems as $lineItem) {
+            if ($lineItem->get_id() === $itemId) {
+                $lineItem->set_props([
+                    'subtotal' => (string)$linePriceHt, // subtotal is what the price should be, if higher than total difference will be display as discount (Before discount)
+                    'total' => (string)$linePriceHt,
+                ]);
+                $lineItem->save();
+                break;
+            }
+        }
+        return '';
+    }
+
+    private function changeTaxesProductOrder(WC_Order $order, int $itemId, array $taxes, int $errorMissingTax = 0): string
+    {
+        $message = '';
+        $lineItems = array_values($order->get_items());
+
+        [$taxe, $rates] = $this->sage->settings->getWordpressTaxes();
+        foreach ($lineItems as $lineItem) {
+            if ($lineItem->get_id() === $itemId) {
+                $result = ['total' => [], 'subtotal' => []];
+                foreach ($taxes as $taxe) {
+                    $rate = current(array_filter($rates, static function (stdClass $rate) use ($taxe) {
+                        return $rate->tax_rate_name === $taxe['code'];
+                    }));
+                    if ($rate === false) {
+                        if ($errorMissingTax === 0) {
+                            $errorMissingTax++;
+                            $this->sage->settings->updateTaxes();
+                            return $this->changeTaxesProductOrder($order, $itemId, $taxes, $errorMissingTax);
+                        }
+                        $message .= "<div class='notice notice-error is-dismissible'>
+                    <p>" . __('Il semblerait que la taxe ' . $taxe['code'] . ' soit manquante.', 'sage') . "</p>
+                    </div>";
+                        continue;
+                    }
+                    $result['total'][$rate->tax_rate_id] = $taxe['amount'];
+                    $result['subtotal'][$rate->tax_rate_id] = $taxe['amount'];
+                }
+                $lineItem->set_props([
+                    'taxes' => $result
+                ]);
+                $lineItem->save();
+                $lineItem->calculate_taxes();
+                break;
+            }
+        }
+        return $message;
+    }
+
+    private function addProductToOrder(WC_Order $order, int $productId, int $quantity, stdClass $new): string
+    {
+        $message = '';
+        $qty = wc_stock_amount($quantity);
+        $product = wc_get_product($productId);
+        $itemId = $order->add_product($product, $qty);
+        $message .= $this->changePriceProductOrder($order, $itemId, $new->linePriceHt);
+        $message .= $this->changeTaxesProductOrder($order, $itemId, $new->taxes);
+        return $message;
+    }
+
+    public function calculateFraisExpedition(WC_Order $order): float
     {
         // todo implements
         $pExpeditions = $this->sage->sageGraphQl->getPExpeditions(

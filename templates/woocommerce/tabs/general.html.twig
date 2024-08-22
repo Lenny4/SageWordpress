@@ -2,32 +2,41 @@
 {% set currencySymbol = get_woocommerce_currency_symbol() %}
 
 <h1>{{ product.get_data()['name'] }}</h1>
-<table class="table-border table-padding">
-    <thead>
-    <tr>
-        <td rowspan="2"></td>
-        {% for pCatCompta in pCatComptas %}
-            <td colspan="2">{{ pCatCompta }}</td>
-        {% endfor %}
-    </tr>
-    <tr>
-        {% for pCatCompta in pCatComptas %}
-            {% for htTtc in htTtcs %}
-                <td>{{ htTtc|trans }}</td>
-            {% endfor %}
-        {% endfor %}
-    </tr>
-    </thead>
-    <tbody>
-    {% for pCattarif in pCattarifs %}
+<div style="overflow-x:auto;">
+    <table class="table-border table-padding">
+        <thead>
         <tr>
-            <td>{{ pCattarif.ctIntitule }}</td>
+            <td rowspan="3" colspan="2" style="border-top: none;border-left: none;"></td>
+            <td colspan="{{ pCatComptas|length * 2 }}" class="text-center">{{ 'Catégorie comptable'|trans }}</td>
+        </tr>
+        <tr>
+            {% for pCatCompta in pCatComptas %}
+                <td colspan="2" class="text-center">{{ pCatCompta }}</td>
+            {% endfor %}
+        </tr>
+        <tr>
             {% for pCatCompta in pCatComptas %}
                 {% for htTtc in htTtcs %}
-                    <td>{{ prices[pCattarif.cbMarq][loop.index + 1]['price'~htTtc]|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
+                    <td class="text-center">{{ htTtc|trans }}</td>
                 {% endfor %}
             {% endfor %}
         </tr>
-    {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+        {% for pCattarif in pCattarifs %}
+            <tr>
+                {% if loop.first %}
+                    <td rowspan="{{ pCattarifs|length }}">{{ 'Catégorie tarifaire'|trans }}</td>
+                {% endif %}
+                <td>{{ pCattarif.ctIntitule }}</td>
+                {% for htTtc in htTtcs %}
+                    {% for pCatCompta in pCatComptas %}
+                        <td>
+                            {{ prices[pCattarif.cbMarq][loop.index]['price'~htTtc]|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
+                    {% endfor %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

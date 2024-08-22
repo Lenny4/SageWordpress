@@ -390,7 +390,8 @@ final class SageGraphQl
     public function getPDossier(
         bool  $useCache = true,
         ?bool $getFromSage = null,
-        bool  $getError = false
+        bool  $getError = false,
+        bool  $ignorePingApi = false
     ): stdClass|null|string
     {
         if (!is_null($this->pDossier)) {
@@ -410,6 +411,7 @@ final class SageGraphQl
             $queryParams,
             $selectionSets,
             $getError,
+            $ignorePingApi,
         );
         if (is_array($pDossier) && count($pDossier) === 1) {
             $pDossier = $pDossier[0];
@@ -783,7 +785,19 @@ final class SageGraphQl
     private function _getFDocligneSelectionSet(): array
     {
         return [
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+            ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
+                'dlMontantHt',
+                // 'dlMontantTtc', // don't use dlMontantTtc because it applies ignored taxe
+            ]),
+            ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
+                ...array_map(static function (string $field) {
+                    return 'dlCodeTaxe' . $field;
+                }, FDocenteteUtils::ALL_TAXES),
+                ...array_map(static function (string $field) {
+                    return 'dlMontantTaxe' . $field;
+                }, FDocenteteUtils::ALL_TAXES),
+            ]),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                 'doType',
                 'dlQte',
                 ...array_map(static function (string $field) {

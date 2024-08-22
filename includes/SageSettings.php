@@ -1033,18 +1033,7 @@ WHERE meta_key = %s
 
     public function updateTaxes(bool $showMessage = true): void
     {
-        $taxes = WC_Tax::get_tax_rate_classes();
-        $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
-            return $taxe->slug === Sage::TOKEN;
-        }));
-        if ($taxe === false) {
-            WC_Tax::create_tax_class(__('Sage', 'sage'), Sage::TOKEN);
-            $taxes = WC_Tax::get_tax_rate_classes();
-            $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
-                return $taxe->slug === Sage::TOKEN;
-            }));
-        }
-        $rates = WC_Tax::get_rates_for_tax_class($taxe->slug);
+        [$taxe, $rates] = $this->getWordpressTaxes();
         $fTaxes = $this->sage->sageGraphQl->getFTaxes(false);
         if (!Sage::showErrors($fTaxes)) {
             $taxeChanges = $this->getTaxesChanges($fTaxes, $rates);
@@ -1057,6 +1046,23 @@ WHERE meta_key = %s
                 <?php
             }
         }
+    }
+
+    public function getWordpressTaxes(): array
+    {
+        $taxes = WC_Tax::get_tax_rate_classes();
+        $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
+            return $taxe->slug === Sage::TOKEN;
+        }));
+        if ($taxe === false) {
+            WC_Tax::create_tax_class(__('Sage', 'sage'), Sage::TOKEN);
+            $taxes = WC_Tax::get_tax_rate_classes();
+            $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
+                return $taxe->slug === Sage::TOKEN;
+            }));
+        }
+        $rates = WC_Tax::get_rates_for_tax_class($taxe->slug);
+        return [$taxe, $rates];
     }
 
     private function getTaxesChanges(array $fTaxes, array $rates): array

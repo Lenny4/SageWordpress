@@ -1,19 +1,31 @@
+{% set currencySymbol = order_get_currency(order) %}
+
 {% if tasksSynchronizeOrder.syncChanges is defined %}
     <ul>
         {% for syncChange in tasksSynchronizeOrder.syncChanges %}
-            <li>
-                {% if syncChange.change == 'replace_product_action' %}
-                    {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.old, tasksSynchronizeOrder.products) ~'"'~'va être remplacé par'|trans ~ ' "'~getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products)~'".' }}
-                {% elseif syncChange.change == 'add_product_action' %}
-                    {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'"'~'va être ajouté.'|trans }}
-                {% elseif syncChange.change == 'remove_product_action' %}
-                    {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'" '~'va être supprimé.'|trans }}
-                {% elseif syncChange.change == 'change_quantity_product_action' %}
-                    {{ 'La quantité du produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'" '~'va passer de '~syncChange.old.quantity~' '~'à'~' '~ syncChange.new.quantity ~'.'|trans }}
-                {% else %}
-                    {{ syncChange.change }}
-                {% endif %}
-            </li>
+            {% for change in syncChange.changes %}
+                <li>
+                    {% if change == 'replace_product_action' %}
+                        {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.old, tasksSynchronizeOrder.products) ~'"'~'va être remplacé par'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~ '".' }}
+                    {% elseif change == 'add_product_action' %}
+                        {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'"'~'va être ajouté.'|trans }}
+                    {% elseif change == 'remove_product_action' %}
+                        {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'" '~'va être supprimé.'|trans }}
+                    {% elseif change == 'change_quantity_product_action' %}
+                        {{ 'La quantité du produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'" '~'va passer de '~syncChange.old.quantity~' '~'à'~' '~ syncChange.new.quantity ~'.'|trans }}
+                    {% elseif change == 'change_price_product_action' %}
+                        {{ 'Le prix de la ligne du produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'" '~'va passer de '~syncChange.old.linePriceHt|number_format(2, ',', ' ')~ currencySymbol|raw ~' '~'à'~' '~ syncChange.new.linePriceHt|number_format(2, ',', ' ') ~currencySymbol|raw~'.'|trans }}
+                    {% elseif change == 'change_taxes_product_action' %}
+                        {{ 'Les taxes de la ligne du produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'" '~'vont êtres mises à jour ('~show_taxes_change(syncChange.new.taxes)~').'|trans }}
+                    {% elseif change == 'remove_shipping_action' %}
+                        {{ 'L\'expédition '|trans ~ syncChange.old.name ~ ' va être supprimée.' }}
+                    {% elseif change == 'add_shipping_action' %}
+                        {{ 'L\'expédition '|trans ~ syncChange.new.name ~ ' va être ajoutée.' }}
+                    {% else %}
+                        {{ change }}
+                    {% endif %}
+                </li>
+            {% endfor %}
         {% endfor %}
     </ul>
 {% endif %}

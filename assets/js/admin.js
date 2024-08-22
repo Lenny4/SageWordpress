@@ -430,6 +430,8 @@ jQuery(document).ready(function () {
             } else {
                 // todo toastr
             }
+            // woocommerce/assets/js/admin/meta-boxes-order.js .on( 'wc_order_items_reload', this.reload_items )
+            jQuery("#woocommerce-order-items").trigger("wc_order_items_reload");
         }
     });
     // endregion

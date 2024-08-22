@@ -28,6 +28,8 @@ final class FDocenteteUtils
         self::VENTE_LIVRAISON => 'Bl',
     ];
 
+    public const ALL_TAXES = [1, 2, 3];
+
     public static function getFdocligneMappingDoType(int $doType): string|null
     {
         return self::FDOCLIGNE_MAPPING_DO_TYPE[$doType] ?? null;
