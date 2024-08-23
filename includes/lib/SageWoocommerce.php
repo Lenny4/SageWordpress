@@ -13,6 +13,7 @@ use WC_Meta_Data;
 use WC_Order;
 use WC_Order_Item;
 use WC_Order_Item_Product;
+use WC_Order_Item_Tax;
 use WC_Product;
 
 if (!defined('ABSPATH')) {
@@ -371,8 +372,11 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             }
             $new = null;
             if (isset($fDoclignes[$i])) {
+                // todo vérifier si la colonne ecotaxe dans F_DOCLIGNE est prise en compte
                 $new = new stdClass();
                 $new->postId = $fDoclignes[$i]->postId;
+                $new->arRef = $fDoclignes[$i]->arRef;
+                $new->fDocligneLabel = $fDoclignes[$i]->dlDesign;
                 $new->quantity = (int)$fDoclignes[$i]->dlQte;
                 $new->linePriceHt = (float)$fDoclignes[$i]->dlMontantHt;
                 $new->taxes = [];
@@ -394,7 +398,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     if ($new->linePriceHt !== $old->linePriceHt) {
                         $changes[] = OrderUtils::CHANGE_PRICE_PRODUCT_ACTION;
                     }
-                    if ($new->taxes !== $old->taxes) {
+                    if (array_values($new->taxes) !== array_values($old->taxes)) {
                         $changes[] = OrderUtils::CHANGE_TAXES_PRODUCT_ACTION;
                     }
                 }
@@ -402,9 +406,6 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 $changes[] = OrderUtils::REMOVE_PRODUCT_ACTION;
             } else if (is_null($old)) {
                 $changes[] = OrderUtils::ADD_PRODUCT_ACTION;
-            }
-            if (is_null($old) && is_null($new->postId)) {
-                continue;
             }
             $productChanges[$i] = [
                 'old' => $old,
@@ -530,6 +531,9 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     case OrderUtils::CHANGE_TAXES_PRODUCT_ACTION:
                         $message .= $this->changeTaxesProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->taxes);
                         break;
+                    case OrderUtils::REPLACE_PRODUCT_ACTION:
+                        $t = 0;
+                        break;
                     case OrderUtils::ADD_SHIPPING_ACTION:
                         $t = 0;
                         break;
@@ -566,6 +570,11 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     {
         $message = '';
         $lineItems = array_values($order->get_items());
+        $orderItemTaxes = $order->get_taxes();
+        $orderItemTaxesRateId = array_map(static function (WC_Order_Item_Tax $orderItemTax) {
+            return $orderItemTax->get_rate_id();
+        }, $orderItemTaxes);
+        $orderId = $order->get_id();
 
         [$taxe, $rates] = $this->sage->settings->getWordpressTaxes();
         foreach ($lineItems as $lineItem) {
@@ -586,24 +595,39 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     </div>";
                         continue;
                     }
-                    $result['total'][$rate->tax_rate_id] = $taxe['amount'];
-                    $result['subtotal'][$rate->tax_rate_id] = $taxe['amount'];
+                    $result['total'][$rate->tax_rate_id] = (string)$taxe['amount'];
+                    $result['subtotal'][$rate->tax_rate_id] = (string)$taxe['amount'];
+
+                    if (!in_array((int)$rate->tax_rate_id, $orderItemTaxesRateId, true)) {
+                        // woocommerce/includes/class-wc-ajax.php public static function add_order_tax
+                        $orderItemTax = new WC_Order_Item_Tax();
+                        $orderItemTax->set_rate($rate->tax_rate_id);
+                        $orderItemTax->set_order_id($orderId);
+                        $orderItemTax->save();
+                    }
                 }
                 $lineItem->set_props([
                     'taxes' => $result
                 ]);
                 $lineItem->save();
-                $lineItem->calculate_taxes();
                 break;
             }
         }
         return $message;
     }
 
-    private function addProductToOrder(WC_Order $order, int $productId, int $quantity, stdClass $new): string
+    private function addProductToOrder(WC_Order $order, ?int $productId, int $quantity, stdClass $new): string
     {
         $message = '';
         $qty = wc_stock_amount($quantity);
+        if (is_null($new->postId)) {
+            [$response, $responseError, $message2] = $this->importFArticleFromSage($new->arRef, ignorePingApi: true);
+            if ($response["response"]["code"] !== 201) {
+                return $message2;
+            }
+            $productId = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR)->id;
+        }
+
         $product = wc_get_product($productId);
         $itemId = $order->add_product($product, $qty);
         $message .= $this->changePriceProductOrder($order, $itemId, $new->linePriceHt);

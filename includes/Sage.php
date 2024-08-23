@@ -355,6 +355,12 @@ final class Sage
             return $fDoclignes;
         }));
         $this->twig->addFunction(new TwigFunction('getProductChangeLabel', static function (stdClass $productChange, array $products) {
+            if (!array_key_exists($productChange->postId, $products)) {
+                if (!empty($productChange->fDocligneLabel)) {
+                    return $productChange->fDocligneLabel;
+                }
+                return 'undefined';
+            }
             /** @var WC_Product $p */
             $p = $products[$productChange->postId];
             return $p->get_name();
@@ -851,14 +857,18 @@ WHERE meta_key = %s
         ]);
         $responseError = null;
         if ($response instanceof WP_Error) {
-            $responseError = "<div class=error>
+            $responseError = "<div class='notice notice-error is-dismissible'>
                                 <pre>" . $response->get_error_code() . "</pre>
                                 <pre>" . $response->get_error_message() . "</pre>
                                 </div>";
         }
 
-        if (!in_array($response["response"]["code"], [200, 201], true)) {
-            $responseError = "<div class=error>
+        if ($response instanceof WP_Error) {
+            $responseError = "<div class='notice notice-error is-dismissible'>
+                                <pre>" . json_encode($response, JSON_THROW_ON_ERROR) . "</pre>
+                                </div>";
+        } else if (!in_array($response["response"]["code"], [200, 201], true)) {
+            $responseError = "<div class='notice notice-error is-dismissible'>
                                 <pre>" . $response['response']['code'] . "</pre>
                                 <pre>" . $response['body'] . "</pre>
                                 </div>";
