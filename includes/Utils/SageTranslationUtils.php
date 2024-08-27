@@ -336,6 +336,9 @@ final class SageTranslationUtils
                 "doConversion" => __("doConversion", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId' => __("Wordpress ID", 'sage'),
                 "fraisExpedition" => __("Frais d'expedition", 'sage'),
+                "dlMontantTaxe1" => __("dlMontantTaxe1", 'sage'),
+                "dlMontantTaxe2" => __("dlMontantTaxe2", 'sage'),
+                "dlMontantTaxe3" => __("dlMontantTaxe3", 'sage'),
             ],
             self::TRANS_FARTICLES => [
                 "arRef" => __("arRef", 'sage'),

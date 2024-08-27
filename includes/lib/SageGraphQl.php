@@ -693,6 +693,9 @@ final class SageGraphQl
                 ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
                     'amount'
                 ]),
+                ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                    'taxeNumber'
+                ]),
             ],
         ];
     }
