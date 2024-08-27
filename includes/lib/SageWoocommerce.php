@@ -330,8 +330,10 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         if (!$fDocentete) {
             return $result;
         }
-        [$productChanges, $products] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete->fDoclignes ?? []);
-        $shippingChanges = $this->getTasksSynchronizeOrder_Shipping($order, $fDocentete);
+        [$productChanges, $products, $taxeCodesProduct] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete->fDoclignes ?? []);
+        [$shippingChanges, $taxeCodesShipping] = $this->getTasksSynchronizeOrder_Shipping($order, $fDocentete);
+        $taxeCodesProduct = array_values(array_unique([...$taxeCodesProduct, ...$taxeCodesShipping]));
+        $taxesChanges = $this->getTasksSynchronizeOrder_Taxes($order, $taxeCodesProduct);
 
         // region contact
         // todo adresse de facturation
@@ -341,14 +343,36 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $result['allProductsExistInWordpress'] = array_filter($fDocentete->fDoclignes, static function (stdClass $fDocligne) {
                 return is_null($fDocligne->postId);
             }) === [];
-        $result['syncChanges'] = [...$productChanges, ...$shippingChanges];
+        $result['syncChanges'] = [...$productChanges, ...$shippingChanges, ...$taxesChanges];
         $result['products'] = $products;
 
         return $result;
     }
 
+    private function getTasksSynchronizeOrder_Taxes(WC_Order $order, array $new): array
+    {
+        $taxesChanges = [];
+        $old = array_values(array_map(static function (WC_Order_Item_Tax $wcOrderItemTax) {
+            return $wcOrderItemTax->get_label();
+        }, $order->get_taxes()));
+        $changes = [];
+        [$toRemove, $toAdd] = $this->getToRemoveToAddTaxes($order, $old, $new);
+        if (count($toRemove) > 0 || count($toAdd) > 0) {
+            $changes[] = OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION;
+        }
+        if (!empty($changes)) {
+            $taxesChanges[] = [
+                'old' => $old,
+                'new' => $new,
+                'changes' => $changes,
+            ];
+        }
+        return $taxesChanges;
+    }
+
     private function getTasksSynchronizeOrder_Products(WC_Order $order, array $fDoclignes): array
     {
+        $taxeCodes = [];
         // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:24
         $lineItems = array_values($order->get_items());
 
@@ -373,7 +397,6 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             }
             $new = null;
             if (isset($fDoclignes[$i])) {
-                // todo vérifier si la colonne ecotaxe dans F_DOCLIGNE est prise en compte
                 $new = new stdClass();
                 $new->postId = $fDoclignes[$i]->postId;
                 $new->arRef = $fDoclignes[$i]->arRef;
@@ -384,6 +407,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 foreach (FDocenteteUtils::ALL_TAXES as $taxeNumber) {
                     $code = $fDoclignes[$i]->{'dlCodeTaxe' . $taxeNumber};
                     if (!is_null($code)) {
+                        $taxeCodes[] = $fDoclignes[$i]->{'dlCodeTaxe' . $taxeNumber};
                         $new->taxes[$taxeNumber] = ['code' => $fDoclignes[$i]->{'dlCodeTaxe' . $taxeNumber}, 'amount' => (float)$fDoclignes[$i]->{'dlMontantTaxe' . $taxeNumber}];
                     }
                 }
@@ -427,11 +451,12 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 return $product->get_id();
             }, $products), $products);
         }
-        return [$productChanges, $products];
+        return [$productChanges, $products, $taxeCodes];
     }
 
     private function getTasksSynchronizeOrder_Shipping(WC_Order $order, stdClass $fDocentete): array
     {
+        $taxeCodes = [];
         [$taxe, $rates] = $this->sage->settings->getWordpressTaxes();
         $pExpeditions = $this->sage->sageGraphQl->getPExpeditions(
             getError: true, // on admin page
@@ -456,6 +481,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $new->taxes = [];
         if (!is_null($fDocentete->fraisExpedition->taxes)) {
             foreach ($fDocentete->fraisExpedition->taxes as $taxe) {
+                $taxeCodes[] = $taxe->taCode;
                 $new->taxes[$taxe->taxeNumber] = ['code' => $taxe->taCode, 'amount' => (float)$taxe->amount];
             }
         }
@@ -511,7 +537,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 
         // todo faire un cron qui regarde si une commande a été modifié dans Sage mais pas dans wordpress -> mettre à jour la commande wordpress
 
-        return $shippingChanges;
+        return [$shippingChanges, $taxeCodes];
     }
 
     public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): string
@@ -538,7 +564,8 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     case OrderUtils::REMOVE_SHIPPING_ACTION:
                         $t = 0;
                         break;
-                    case OrderUtils::REMOVE_WC_ORDER_ITEM_TAX_ACTION:
+                    case OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION:
+                        $message .= $this->updateWcOrderItemTaxToOrder($order, $syncChange["old"], $syncChange["new"]);
                         $t = 0;
                         break;
                     default:
@@ -745,5 +772,44 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $itemId = $order->add_shipping($wcShippingRate);
 
         return $message;
+    }
+
+    private function updateWcOrderItemTaxToOrder(WC_Order $order, array $old, array $new): string
+    {
+        $message = '';
+        $orderId = $order->get_id();
+        [$toRemove, $toAdd] = $this->getToRemoveToAddTaxes($order, $old, $new);
+        [$t, $rates] = $this->sage->settings->getWordpressTaxes();
+        foreach ($toAdd as $codeToAdd) {
+            $rate = current(array_filter($rates, static function (stdClass $rate) use ($codeToAdd) {
+                return $rate->tax_rate_name === $codeToAdd;
+            }));
+            $orderItemTax = new WC_Order_Item_Tax();
+            $orderItemTax->set_rate($rate->tax_rate_id);
+            $orderItemTax->set_order_id($orderId);
+            $orderItemTax->save();
+        }
+        if (!empty($toRemove)) {
+            $wcOrderItemTaxs = $order->get_taxes();
+            foreach ($toRemove as $codeRemove) {
+                foreach ($wcOrderItemTaxs as $wcOrderItemTax) {
+                    if ($wcOrderItemTax->get_label() === $codeRemove) {
+                        $wcOrderItemTax->delete();
+                        break;
+                    }
+                }
+            }
+        }
+        return $message;
+    }
+
+    private function getToRemoveToAddTaxes(WC_Order $order, array $old, array $new): array
+    {
+        $toRemove = array_diff($old, $new);
+        $current = array_values(array_map(static function (WC_Order_Item_Tax $wcOrderItemTax) {
+            return $wcOrderItemTax->get_label();
+        }, $order->get_taxes()));
+        $toAdd = array_diff($new, $current);
+        return [$toRemove, $toAdd];
     }
 }

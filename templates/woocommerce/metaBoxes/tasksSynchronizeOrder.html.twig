@@ -21,6 +21,8 @@
                         {{ 'L\'expédition '|trans ~ syncChange.old.name ~ ' va être supprimée.' }}
                     {% elseif change == 'add_shipping_action' %}
                         {{ 'L\'expédition '|trans ~ syncChange.new.name ~ ' va être ajoutée.' }}
+                    {% elseif change == 'update_wc_order_item_tax_action' %}
+                        {{ 'Les codes de taxes vont être mis à jour.' }}
                     {% else %}
                         {{ change }}
                     {% endif %}

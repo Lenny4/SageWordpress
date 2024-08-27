@@ -18,5 +18,5 @@ final class OrderUtils
     public const ADD_SHIPPING_ACTION = 'add_shipping_action';
     public const REMOVE_SHIPPING_ACTION = 'remove_shipping_action';
 
-    public const REMOVE_WC_ORDER_ITEM_TAX_ACTION = 'remove_wc_order_item_tax_action';
+    public const UPDATE_WC_ORDER_ITEM_TAX_ACTION = 'update_wc_order_item_tax_action';
 }
