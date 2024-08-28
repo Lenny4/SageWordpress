@@ -557,7 +557,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$shippingChanges, $taxeCodes];
     }
 
-    public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): string
+    public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): array
     {
         $message = '';
         $syncChanges = $tasksSynchronizeOrder["syncChanges"];
@@ -587,6 +587,8 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         $message .= $this->changeTaxesProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->taxes, $alreadyAddedTaxes);
                         break;
                     case OrderUtils::REPLACE_PRODUCT_ACTION:
+                        // todo faire ça
+                        $t = 0;
                         break;
                     case OrderUtils::ADD_SHIPPING_ACTION:
                         $message .= $this->addShippingToOrder($order, $syncChange["new"], $alreadyAddedTaxes);
@@ -608,10 +610,12 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $message .= $this->removeDuplicateWcOrderItemTaxToOrder($order);
 
         // region woocommerce/includes/admin/wc-admin-functions.php:455 function wc_save_order_items
+        $order = new WC_Order($order->get_id()); // to refresh order with data in bdd
+        $order->update_taxes();
         $order->calculate_totals(false);
         // endregion
 
-        return $message;
+        return [$message, $order];
     }
 
     private function changePriceProductOrder(WC_Order $order, int $itemId, float $linePriceHt): string

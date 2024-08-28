@@ -560,10 +560,10 @@ final class Sage
                         addWordpressProductId: true,
                     );
                     $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $fDocentete);
-                    $message = $sageWoocommerce->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
+                    [$message, $order] = $sageWoocommerce->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
-                        'html' => $sageWoocommerce->getMetaboxSage(new WC_Order($request['id']), ignorePingApi: true, message: $message)
+                        'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true, message: $message)
                     ], 200);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
