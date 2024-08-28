@@ -5,6 +5,7 @@
     {{ message | raw }}
     {% set orderId = order.get_id() %}
     {% set wpnonce = 'wp_rest'|wp_create_nonce %}
+    <div data-order-data data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}"></div>
     {% if hasFDocentete == false %}
         <label for="sage-fdocentete-dopiece">
             {{ 'Veuillez renseigner le N°pièce de la commande Sage'|trans }}
@@ -179,8 +180,7 @@
     align-items: center;
     justify-content: flex-end;
 ">
-                    <button type="button" id="synchronise-order" data-synchronise-order="{{ orderId }}"
-                            data-nonce="{{ wpnonce }}"
+                    <button type="button" id="synchronise-order" data-synchronise-order
                             class="button button-primary">{{ 'Synchroniser la commande Wordpress avec Sage'|trans }}</button>
                     <div class="tooltip">
                         <span class="dashicons dashicons-info"></span>

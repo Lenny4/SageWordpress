@@ -194,6 +194,33 @@ jQuery(document).ready(function () {
         }
     }
 
+    async function synchroniseWordpressOrderWithSage() {
+        const blockDom = jQuery("[id^='woocommerce-order-sage']");
+        jQuery(blockDom).block({
+            message: null,
+            overlayCSS: {
+                background: '#fff',
+                opacity: 0.6
+            }
+        });
+
+        const dataDom = jQuery(blockDom).find('[data-order-data]');
+        const orderId = jQuery(dataDom).attr('data-order-id');
+        const wpnonce = jQuery(dataDom).attr('data-nonce');
+        const response = await fetch("/wp-json/sage/v1/orders/" + orderId + "/sync?_wpnonce=" + wpnonce);
+        jQuery(blockDom).unblock();
+        if (response.status === 200) {
+            const data = await response.json();
+            const blockInside = jQuery(blockDom).find(".inside");
+            jQuery(blockInside).html(data.html);
+        } else {
+            // todo toastr
+        }
+
+        // woocommerce/assets/js/admin/meta-boxes-order.js .on( 'wc_order_items_reload', this.reload_items )
+        jQuery("#woocommerce-order-items").trigger("wc_order_items_reload");
+    }
+
     // region data-2-select-target
     jQuery(document).on('click', '[data-2-select-target] option', function (e) {
         let thisSelect = jQuery(e.target).closest('select');
@@ -410,28 +437,7 @@ jQuery(document).ready(function () {
     jQuery(document).on('click', '[data-synchronise-order]', async function (e) {
         e.stopPropagation();
         if (window.confirm('todo 2eme ')) {
-            const blockDom = jQuery(e.target).closest("[id^='woocommerce-order']");
-            jQuery(blockDom).block({
-                message: null,
-                overlayCSS: {
-                    background: '#fff',
-                    opacity: 0.6
-                }
-            });
-
-            const orderId = jQuery(e.target).attr('data-synchronise-order');
-            const wpnonce = jQuery(e.target).attr('data-nonce');
-            const response = await fetch("/wp-json/sage/v1/orders/" + orderId + "/sync?_wpnonce=" + wpnonce);
-            jQuery(blockDom).unblock();
-            if (response.status === 200) {
-                const data = await response.json();
-                const blockInside = jQuery(e.target).closest(".inside");
-                jQuery(blockInside).html(data.html);
-            } else {
-                // todo toastr
-            }
-            // woocommerce/assets/js/admin/meta-boxes-order.js .on( 'wc_order_items_reload', this.reload_items )
-            jQuery("#woocommerce-order-items").trigger("wc_order_items_reload");
+            synchroniseWordpressOrderWithSage();
         }
     });
     // endregion
@@ -463,6 +469,10 @@ jQuery(document).ready(function () {
 
     jQuery(document.body).on('change', '[id^="woocommerce_"][id$="_requires"]', function () {
         wcFreeShippingShowHideMinAmountField(this);
+    });
+
+    jQuery(document.body).on('order-totals-recalculate-complete', function () {
+        synchroniseWordpressOrderWithSage();
     });
 
     // Change while load.

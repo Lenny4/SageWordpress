@@ -572,31 +572,30 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             }
             return 0;
         });
+        $alreadyAddedTaxes = [];
         foreach ($tasksSynchronizeOrder["syncChanges"] as $syncChange) {
             foreach ($syncChange['changes'] as $change) {
                 // todo use $order->add_order_note ?
                 switch ($change) {
                     case OrderUtils::ADD_PRODUCT_ACTION:
-                        $message .= $this->addProductToOrder($order, $syncChange["new"]->postId, $syncChange["new"]->quantity, $syncChange["new"]);
+                        $message .= $this->addProductToOrder($order, $syncChange["new"]->postId, $syncChange["new"]->quantity, $syncChange["new"], $alreadyAddedTaxes);
                         break;
                     case OrderUtils::CHANGE_PRICE_PRODUCT_ACTION:
                         $message .= $this->changePriceProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->linePriceHt);
                         break;
                     case OrderUtils::CHANGE_TAXES_PRODUCT_ACTION:
-                        $message .= $this->changeTaxesProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->taxes);
+                        $message .= $this->changeTaxesProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->taxes, $alreadyAddedTaxes);
                         break;
                     case OrderUtils::REPLACE_PRODUCT_ACTION:
-                        // todo faire ça
-                        $t = 0;
                         break;
                     case OrderUtils::ADD_SHIPPING_ACTION:
-                        $message .= $this->addShippingToOrder($order, $syncChange["new"]);
+                        $message .= $this->addShippingToOrder($order, $syncChange["new"], $alreadyAddedTaxes);
                         break;
                     case OrderUtils::REMOVE_SHIPPING_ACTION:
                         $message .= $this->removeShippingToOrder($order, $syncChange["old"]->id);
                         break;
                     case OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION:
-                        $message .= $this->updateWcOrderItemTaxToOrder($order, $syncChange["new"]);
+                        $message .= $this->updateWcOrderItemTaxToOrder($order, $syncChange["new"], $alreadyAddedTaxes);
                         break;
                     default:
                         $message .= "<div class='notice notice-error is-dismissible'>
@@ -609,10 +608,8 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $message .= $this->removeDuplicateWcOrderItemTaxToOrder($order);
 
         // region woocommerce/includes/admin/wc-admin-functions.php:455 function wc_save_order_items
-        $order->update_taxes();
         $order->calculate_totals(false);
         // endregion
-
 
         return $message;
     }
@@ -633,13 +630,16 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return '';
     }
 
-    private function changeTaxesProductOrder(WC_Order $order, int $itemId, array $taxes): string
+    private function changeTaxesProductOrder(WC_Order $order, int $itemId, array $taxes, array &$alreadyAddedTaxes): string
     {
         $message = '';
         $lineItems = array_values($order->get_items());
 
         foreach ($lineItems as $lineItem) {
             if ($lineItem->get_id() === $itemId) {
+                foreach ($taxes as $taxe) {
+                    $alreadyAddedTaxes[] = $taxe['code'];
+                }
                 $lineItem->set_props([
                     'taxes' => $this->formatTaxes($order, $taxes, $message)
                 ]);
@@ -688,7 +688,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $result;
     }
 
-    private function addProductToOrder(WC_Order $order, ?int $productId, int $quantity, stdClass $new): string
+    private function addProductToOrder(WC_Order $order, ?int $productId, int $quantity, stdClass $new, array &$alreadyAddedTaxes): string
     {
         $message = '';
         $qty = wc_stock_amount($quantity);
@@ -703,7 +703,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $product = wc_get_product($productId);
         $itemId = $order->add_product($product, $qty);
         $message .= $this->changePriceProductOrder($order, $itemId, $new->linePriceHt);
-        $message .= $this->changeTaxesProductOrder($order, $itemId, $new->taxes);
+        $message .= $this->changeTaxesProductOrder($order, $itemId, $new->taxes, $alreadyAddedTaxes);
         return $message;
     }
 
@@ -800,8 +800,11 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return $result;
     }
 
-    private function addShippingToOrder(WC_Order $order, stdClass $new): string
+    private function addShippingToOrder(WC_Order $order, stdClass $new, array &$alreadyAddedTaxes): string
     {
+        foreach ($new->taxes as $taxe) {
+            $alreadyAddedTaxes[] = $taxe['code'];
+        }
         $message = '';
         $wcShippingRate = new WC_Shipping_Rate();
         $wcShippingRate->set_label($new->name);
@@ -813,11 +816,12 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return $message;
     }
 
-    private function updateWcOrderItemTaxToOrder(WC_Order $order, array $new): string
+    private function updateWcOrderItemTaxToOrder(WC_Order $order, array $new, array $alreadyAddedTaxes): string
     {
         $message = '';
         $orderId = $order->get_id();
         [$toRemove, $toAdd] = $this->getToRemoveToAddTaxes($order, $new);
+        $toAdd = array_diff($toAdd, $alreadyAddedTaxes);
         [$t, $rates] = $this->sage->settings->getWordpressTaxes();
         foreach ($toAdd as $codeToAdd) {
             $rate = current(array_filter($rates, static function (stdClass $rate) use ($codeToAdd) {
@@ -846,7 +850,6 @@ WHERE {$wpdb->posts}.post_type = 'product'
     {
         $message = '';
         $wcOrderItemTaxs = array_values($order->get_taxes());
-        $needSave = false;
         foreach ($wcOrderItemTaxs as $i => $wcOrderItemTax) {
             $hasDuplicate = false;
             for ($y = $i + 1, $yMax = count($wcOrderItemTaxs); $y < $yMax; $y++) {
@@ -856,12 +859,8 @@ WHERE {$wpdb->posts}.post_type = 'product'
                 }
             }
             if ($hasDuplicate) {
-                $needSave = true;
                 $wcOrderItemTax->delete();
             }
-        }
-        if ($needSave) {
-            $order->save();
         }
         return $message;
     }
