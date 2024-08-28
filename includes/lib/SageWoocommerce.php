@@ -356,7 +356,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             return $wcOrderItemTax->get_label();
         }, $order->get_taxes()));
         $changes = [];
-        [$toRemove, $toAdd] = $this->getToRemoveToAddTaxes($order, $old, $new);
+        [$toRemove, $toAdd] = $this->getToRemoveToAddTaxes($order, $new);
         if (count($toRemove) > 0 || count($toAdd) > 0) {
             $changes[] = OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION;
         }
@@ -432,11 +432,13 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             } else if (is_null($old)) {
                 $changes[] = OrderUtils::ADD_PRODUCT_ACTION;
             }
-            $productChanges[$i] = [
-                'old' => $old,
-                'new' => $new,
-                'changes' => $changes,
-            ];
+            if (!empty($changes)) {
+                $productChanges[$i] = [
+                    'old' => $old,
+                    'new' => $new,
+                    'changes' => $changes,
+                ];
+            }
         }
         $productIds = [];
         foreach ($productChanges as $productChange) {
@@ -488,6 +490,16 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         // endregion
 
         $foundSimilar = false;
+        $formatFunction = function (stdClass $oldOrNew) {
+            $oldOrNew->taxes = array_filter($oldOrNew->taxes, static function (array $taxe) {
+                return $taxe['amount'] > 0;
+            });
+            usort($oldOrNew->taxes, static function (array $a, array $b) {
+                return strcmp($a['code'], $b['code']);
+            });
+            $oldOrNew->taxes = array_values($oldOrNew->taxes);
+            return $oldOrNew;
+        };
         if (!empty($lineItemsShipping)) {
             foreach ($lineItemsShipping as $lineItemShipping) {
                 $data = $lineItemShipping->get_data();
@@ -504,9 +516,14 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         $taxeNumber++;
                     }
                 }
-                if (json_encode($old, JSON_THROW_ON_ERROR) === json_encode($new, JSON_THROW_ON_ERROR)) {
+                if (
+                    json_encode($formatFunction($old), JSON_THROW_ON_ERROR) ===
+                    json_encode($formatFunction($new), JSON_THROW_ON_ERROR)
+                    && !$foundSimilar
+                ) {
                     $foundSimilar = true;
                 } else {
+                    $old->id = $lineItemShipping->get_id();
                     $shippingChanges[] = [
                         'old' => $old,
                         'new' => $new,
@@ -543,8 +560,21 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): string
     {
         $message = '';
+        $syncChanges = $tasksSynchronizeOrder["syncChanges"];
+        usort($syncChanges, static function (array $a, array $b) {
+            $lastA = in_array(OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION, $a['changes'], true);
+            $lastB = in_array(OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION, $b['changes'], true);
+            if ($lastA && !$lastB) {
+                return 1;
+            }
+            if (!$lastA && $lastB) {
+                return -1;
+            }
+            return 0;
+        });
         foreach ($tasksSynchronizeOrder["syncChanges"] as $syncChange) {
             foreach ($syncChange['changes'] as $change) {
+                // todo use $order->add_order_note ?
                 switch ($change) {
                     case OrderUtils::ADD_PRODUCT_ACTION:
                         $message .= $this->addProductToOrder($order, $syncChange["new"]->postId, $syncChange["new"]->quantity, $syncChange["new"]);
@@ -556,17 +586,17 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         $message .= $this->changeTaxesProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->taxes);
                         break;
                     case OrderUtils::REPLACE_PRODUCT_ACTION:
+                        // todo faire ça
                         $t = 0;
                         break;
                     case OrderUtils::ADD_SHIPPING_ACTION:
                         $message .= $this->addShippingToOrder($order, $syncChange["new"]);
                         break;
                     case OrderUtils::REMOVE_SHIPPING_ACTION:
-                        $t = 0;
+                        $message .= $this->removeShippingToOrder($order, $syncChange["old"]->id);
                         break;
                     case OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION:
-                        $message .= $this->updateWcOrderItemTaxToOrder($order, $syncChange["old"], $syncChange["new"]);
-                        $t = 0;
+                        $message .= $this->updateWcOrderItemTaxToOrder($order, $syncChange["new"]);
                         break;
                     default:
                         $message .= "<div class='notice notice-error is-dismissible'>
@@ -575,6 +605,15 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 }
             }
         }
+
+        $message .= $this->removeDuplicateWcOrderItemTaxToOrder($order);
+
+        // region woocommerce/includes/admin/wc-admin-functions.php:455 function wc_save_order_items
+        $order->update_taxes();
+        $order->calculate_totals(false);
+        // endregion
+
+
         return $message;
     }
 
@@ -774,11 +813,11 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return $message;
     }
 
-    private function updateWcOrderItemTaxToOrder(WC_Order $order, array $old, array $new): string
+    private function updateWcOrderItemTaxToOrder(WC_Order $order, array $new): string
     {
         $message = '';
         $orderId = $order->get_id();
-        [$toRemove, $toAdd] = $this->getToRemoveToAddTaxes($order, $old, $new);
+        [$toRemove, $toAdd] = $this->getToRemoveToAddTaxes($order, $new);
         [$t, $rates] = $this->sage->settings->getWordpressTaxes();
         foreach ($toAdd as $codeToAdd) {
             $rate = current(array_filter($rates, static function (stdClass $rate) use ($codeToAdd) {
@@ -795,7 +834,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
                 foreach ($wcOrderItemTaxs as $wcOrderItemTax) {
                     if ($wcOrderItemTax->get_label() === $codeRemove) {
                         $wcOrderItemTax->delete();
-                        break;
+                        // no break because can have multiple same label
                     }
                 }
             }
@@ -803,13 +842,53 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return $message;
     }
 
-    private function getToRemoveToAddTaxes(WC_Order $order, array $old, array $new): array
+    private function removeDuplicateWcOrderItemTaxToOrder(WC_Order $order): string
     {
-        $toRemove = array_diff($old, $new);
+        $message = '';
+        $wcOrderItemTaxs = array_values($order->get_taxes());
+        $needSave = false;
+        foreach ($wcOrderItemTaxs as $i => $wcOrderItemTax) {
+            $hasDuplicate = false;
+            for ($y = $i + 1, $yMax = count($wcOrderItemTaxs); $y < $yMax; $y++) {
+                if ($wcOrderItemTax->get_label() === $wcOrderItemTaxs[$y]->get_label()) {
+                    $hasDuplicate = true;
+                    break;
+                }
+            }
+            if ($hasDuplicate) {
+                $needSave = true;
+                $wcOrderItemTax->delete();
+            }
+        }
+        if ($needSave) {
+            $order->save();
+        }
+        return $message;
+    }
+
+    private function getToRemoveToAddTaxes(WC_Order $order, array $new): array
+    {
         $current = array_values(array_map(static function (WC_Order_Item_Tax $wcOrderItemTax) {
             return $wcOrderItemTax->get_label();
         }, $order->get_taxes()));
+        $toRemove = array_diff($current, $new);
         $toAdd = array_diff($new, $current);
         return [$toRemove, $toAdd];
+    }
+
+    private function removeShippingToOrder(WC_Order $order, int $id): string
+    {
+        $message = '';
+        $lineItemsShipping = array_values($order->get_items('shipping'));
+        if (!empty($lineItemsShipping)) {
+            foreach ($lineItemsShipping as $lineItemShipping) {
+                if ($lineItemShipping->get_id() === $id) {
+                    $order->remove_item($id);
+                    $order->save();
+                    break;
+                }
+            }
+        }
+        return $message;
     }
 }
