@@ -609,10 +609,10 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         $message .= $this->updateWcOrderItemTaxToOrder($order, $syncChange["new"], $alreadyAddedTaxes);
                         break;
                     case OrderUtils::REMOVE_PRODUCT_ACTION:
-                        $t = 0;
+                        $message .= $this->removeProductOrder($order, $syncChange["old"]->itemId);
                         break;
                     case OrderUtils::CHANGE_QUANTITY_PRODUCT_ACTION:
-                        $t = 0;
+                        $message .= $this->changeQuantityProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->quantity);
                         break;
                     default:
                         $message .= "<div class='notice notice-error is-dismissible'>
@@ -911,6 +911,20 @@ WHERE {$wpdb->posts}.post_type = 'product'
                         // no break because can have multiple same label
                     }
                 }
+            }
+        }
+        return $message;
+    }
+
+    private function removeProductOrder(WC_Order $order, int $itemId): string
+    {
+        $message = '';
+        $lineItems = array_values($order->get_items());
+
+        foreach ($lineItems as $lineItem) {
+            if ($lineItem->get_id() === $itemId) {
+                $lineItem->delete();
+                break;
             }
         }
         return $message;
