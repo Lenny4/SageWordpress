@@ -332,6 +332,8 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         }
         [$productChanges, $products, $taxeCodesProduct] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete->fDoclignes ?? []);
         [$shippingChanges, $taxeCodesShipping] = $this->getTasksSynchronizeOrder_Shipping($order, $fDocentete);
+        $feeChanges = $this->getTasksSynchronizeOrder_Fee($order);
+        $couponChanges = $this->getTasksSynchronizeOrder_Coupon($order);
         $taxeCodesProduct = array_values(array_unique([...$taxeCodesProduct, ...$taxeCodesShipping]));
         $taxesChanges = $this->getTasksSynchronizeOrder_Taxes($order, $taxeCodesProduct);
 
@@ -343,7 +345,13 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $result['allProductsExistInWordpress'] = array_filter($fDocentete->fDoclignes, static function (stdClass $fDocligne) {
                 return is_null($fDocligne->postId);
             }) === [];
-        $result['syncChanges'] = [...$productChanges, ...$shippingChanges, ...$taxesChanges];
+        $result['syncChanges'] = [
+            ...$productChanges,
+            ...$shippingChanges,
+            ...$taxesChanges,
+            ...$feeChanges,
+            ...$couponChanges,
+        ];
         $result['products'] = $products;
 
         return $result;
@@ -536,6 +544,46 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$shippingChanges, $taxeCodes];
     }
 
+    private function getTasksSynchronizeOrder_Fee(WC_Order $order): array
+    {
+        $feeChanges = [];
+        $lineItemsFee = array_values($order->get_items('fee'));
+        foreach ($lineItemsFee as $lineItemFee) {
+            $old = new stdClass();
+            $old->id = $lineItemFee->get_id();
+            $old->name = $lineItemFee->get_name();
+            $new = null;
+            $feeChanges[] = [
+                'old' => $old,
+                'new' => $new,
+                'changes' => [
+                    OrderUtils::REMOVE_FEE_ACTION,
+                ],
+            ];
+        }
+        return $feeChanges;
+    }
+
+    private function getTasksSynchronizeOrder_Coupon(WC_Order $order): array
+    {
+        $couponChanges = [];
+        $coupons = $order->get_coupons();
+        foreach ($coupons as $coupon) {
+            $old = new stdClass();
+            $old->id = $coupon->get_id();
+            $old->name = $coupon->get_name();
+            $new = null;
+            $couponChanges[] = [
+                'old' => $old,
+                'new' => $new,
+                'changes' => [
+                    OrderUtils::REMOVE_COUPON_ACTION,
+                ],
+            ];
+        }
+        return $couponChanges;
+    }
+
     private function getTasksSynchronizeOrder_Taxes(WC_Order $order, array $new): array
     {
         $taxesChanges = [];
@@ -613,6 +661,12 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         break;
                     case OrderUtils::CHANGE_QUANTITY_PRODUCT_ACTION:
                         $message .= $this->changeQuantityProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->quantity);
+                        break;
+                    case OrderUtils::REMOVE_FEE_ACTION:
+                        $message .= $this->removeFeeOrder($order, $syncChange["old"]->id);
+                        break;
+                    case OrderUtils::REMOVE_COUPON_ACTION:
+                        $message .= $this->removeCouponOrder($order, $syncChange["old"]->id);
                         break;
                     default:
                         $message .= "<div class='notice notice-error is-dismissible'>
@@ -925,6 +979,30 @@ WHERE {$wpdb->posts}.post_type = 'product'
             if ($lineItem->get_id() === $itemId) {
                 $lineItem->delete();
                 break;
+            }
+        }
+        return $message;
+    }
+
+    private function removeFeeOrder(WC_Order $order, int $id): string
+    {
+        $message = '';
+        $lineItemsFee = array_values($order->get_items('fee'));
+        foreach ($lineItemsFee as $lineItemFee) {
+            if ($lineItemFee->get_id() === $id) {
+                $lineItemFee->delete();
+            }
+        }
+        return $message;
+    }
+
+    private function removeCouponOrder(WC_Order $order, int $id): string
+    {
+        $message = '';
+        $coupons = $order->get_coupons();
+        foreach ($coupons as $coupon) {
+            if ($coupon->get_id() === $id) {
+                $coupon->delete();
             }
         }
         return $message;

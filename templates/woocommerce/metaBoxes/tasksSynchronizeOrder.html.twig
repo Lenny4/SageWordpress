@@ -23,6 +23,10 @@
                         {{ 'L\'expédition '|trans ~ syncChange.new.name ~ ' va être ajoutée.' }}
                     {% elseif change == 'update_wc_order_item_tax_action' %}
                         {{ 'Les codes de taxes vont être mis à jour.' }}
+                    {% elseif change == 'remove_fee_action' %}
+                        {{ 'Le frais "'~syncChange.old.name~'" va être supprimé.' }}
+                    {% elseif change == 'remove_coupon_action' %}
+                        {{ 'Le coupon "'~syncChange.old.name~'" va être supprimé.' }}
                     {% else %}
                         {{ change }}
                     {% endif %}
