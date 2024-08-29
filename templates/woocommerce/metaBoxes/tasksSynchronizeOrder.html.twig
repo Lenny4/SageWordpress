@@ -10,7 +10,7 @@
                     {% elseif change == 'add_product_action' %}
                         {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'"'~'va être ajouté.'|trans }}
                     {% elseif change == 'remove_product_action' %}
-                        {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'" '~'va être supprimé.'|trans }}
+                        {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.old, tasksSynchronizeOrder.products) ~'" '~'va être supprimé.'|trans }}
                     {% elseif change == 'change_quantity_product_action' %}
                         {{ 'La quantité du produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'" '~'va passer de '~syncChange.old.quantity~' '~'à'~' '~ syncChange.new.quantity ~'.'|trans }}
                     {% elseif change == 'change_price_product_action' %}

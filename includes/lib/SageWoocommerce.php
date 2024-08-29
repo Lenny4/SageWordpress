@@ -349,27 +349,6 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $result;
     }
 
-    private function getTasksSynchronizeOrder_Taxes(WC_Order $order, array $new): array
-    {
-        $taxesChanges = [];
-        $old = array_values(array_map(static function (WC_Order_Item_Tax $wcOrderItemTax) {
-            return $wcOrderItemTax->get_label();
-        }, $order->get_taxes()));
-        $changes = [];
-        [$toRemove, $toAdd] = $this->getToRemoveToAddTaxes($order, $new);
-        if (count($toRemove) > 0 || count($toAdd) > 0) {
-            $changes[] = OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION;
-        }
-        if (!empty($changes)) {
-            $taxesChanges[] = [
-                'old' => $old,
-                'new' => $new,
-                'changes' => $changes,
-            ];
-        }
-        return $taxesChanges;
-    }
-
     private function getTasksSynchronizeOrder_Products(WC_Order $order, array $fDoclignes): array
     {
         $taxeCodes = [];
@@ -557,6 +536,37 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$shippingChanges, $taxeCodes];
     }
 
+    private function getTasksSynchronizeOrder_Taxes(WC_Order $order, array $new): array
+    {
+        $taxesChanges = [];
+        $old = array_values(array_map(static function (WC_Order_Item_Tax $wcOrderItemTax) {
+            return $wcOrderItemTax->get_label();
+        }, $order->get_taxes()));
+        $changes = [];
+        [$toRemove, $toAdd] = $this->getToRemoveToAddTaxes($order, $new);
+        if (count($toRemove) > 0 || count($toAdd) > 0) {
+            $changes[] = OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION;
+        }
+        if (!empty($changes)) {
+            $taxesChanges[] = [
+                'old' => $old,
+                'new' => $new,
+                'changes' => $changes,
+            ];
+        }
+        return $taxesChanges;
+    }
+
+    private function getToRemoveToAddTaxes(WC_Order $order, array $new): array
+    {
+        $current = array_values(array_map(static function (WC_Order_Item_Tax $wcOrderItemTax) {
+            return $wcOrderItemTax->get_label();
+        }, $order->get_taxes()));
+        $toRemove = array_diff($current, $new);
+        $toAdd = array_diff($new, $current);
+        return [$toRemove, $toAdd];
+    }
+
     public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): array
     {
         $message = '';
@@ -587,8 +597,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         $message .= $this->changeTaxesProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->taxes, $alreadyAddedTaxes);
                         break;
                     case OrderUtils::REPLACE_PRODUCT_ACTION:
-                        // todo faire ça
-                        $t = 0;
+                        $message .= $this->replaceProductToOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->postId, $syncChange["new"]->quantity, $syncChange["new"], $alreadyAddedTaxes);
                         break;
                     case OrderUtils::ADD_SHIPPING_ACTION:
                         $message .= $this->addShippingToOrder($order, $syncChange["new"], $alreadyAddedTaxes);
@@ -598,6 +607,12 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         break;
                     case OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION:
                         $message .= $this->updateWcOrderItemTaxToOrder($order, $syncChange["new"], $alreadyAddedTaxes);
+                        break;
+                    case OrderUtils::REMOVE_PRODUCT_ACTION:
+                        $t = 0;
+                        break;
+                    case OrderUtils::CHANGE_QUANTITY_PRODUCT_ACTION:
+                        $t = 0;
                         break;
                     default:
                         $message .= "<div class='notice notice-error is-dismissible'>
@@ -618,80 +633,6 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$message, $order];
     }
 
-    private function changePriceProductOrder(WC_Order $order, int $itemId, float $linePriceHt): string
-    {
-        $lineItems = array_values($order->get_items());
-        foreach ($lineItems as $lineItem) {
-            if ($lineItem->get_id() === $itemId) {
-                $lineItem->set_props([
-                    'subtotal' => (string)$linePriceHt, // subtotal is what the price should be, if higher than total difference will be display as discount (Before discount)
-                    'total' => (string)$linePriceHt,
-                ]);
-                $lineItem->save();
-                break;
-            }
-        }
-        return '';
-    }
-
-    private function changeTaxesProductOrder(WC_Order $order, int $itemId, array $taxes, array &$alreadyAddedTaxes): string
-    {
-        $message = '';
-        $lineItems = array_values($order->get_items());
-
-        foreach ($lineItems as $lineItem) {
-            if ($lineItem->get_id() === $itemId) {
-                foreach ($taxes as $taxe) {
-                    $alreadyAddedTaxes[] = $taxe['code'];
-                }
-                $lineItem->set_props([
-                    'taxes' => $this->formatTaxes($order, $taxes, $message)
-                ]);
-                $lineItem->save();
-                break;
-            }
-        }
-        return $message;
-    }
-
-    private function formatTaxes(WC_Order $order, array $taxes, string &$message, int $errorMissingTax = 0): array
-    {
-        $orderId = $order->get_id();
-        $orderItemTaxes = $order->get_taxes();
-        $orderItemTaxesRateId = array_map(static function (WC_Order_Item_Tax $orderItemTax) {
-            return $orderItemTax->get_rate_id();
-        }, $orderItemTaxes);
-        [$t, $rates] = $this->sage->settings->getWordpressTaxes();
-        $result = ['total' => [], 'subtotal' => []];
-        foreach ($taxes as $taxe) {
-            $rate = current(array_filter($rates, static function (stdClass $rate) use ($taxe) {
-                return $rate->tax_rate_name === $taxe['code'];
-            }));
-            if ($rate === false) {
-                if ($errorMissingTax === 0) {
-                    $errorMissingTax++;
-                    $this->sage->settings->updateTaxes();
-                    return $this->formatTaxes($order, $taxes, $message, $errorMissingTax);
-                }
-                $message .= "<div class='notice notice-error is-dismissible'>
-                    <p>" . __('Il semblerait que la taxe ' . $taxe['code'] . ' soit manquante.', 'sage') . "</p>
-                    </div>";
-                continue;
-            }
-            $result['total'][$rate->tax_rate_id] = (string)$taxe['amount'];
-            $result['subtotal'][$rate->tax_rate_id] = (string)$taxe['amount'];
-
-            if (!in_array((int)$rate->tax_rate_id, $orderItemTaxesRateId, true)) {
-                // woocommerce/includes/class-wc-ajax.php public static function add_order_tax
-                $orderItemTax = new WC_Order_Item_Tax();
-                $orderItemTax->set_rate($rate->tax_rate_id);
-                $orderItemTax->set_order_id($orderId);
-                $orderItemTax->save();
-            }
-        }
-        return $result;
-    }
-
     private function addProductToOrder(WC_Order $order, ?int $productId, int $quantity, stdClass $new, array &$alreadyAddedTaxes): string
     {
         $message = '';
@@ -706,18 +647,8 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 
         $product = wc_get_product($productId);
         $itemId = $order->add_product($product, $qty);
-        $message .= $this->changePriceProductOrder($order, $itemId, $new->linePriceHt);
-        $message .= $this->changeTaxesProductOrder($order, $itemId, $new->taxes, $alreadyAddedTaxes);
+        $message .= $this->updateProductOrder($order, $itemId, $new, $alreadyAddedTaxes);
         return $message;
-    }
-
-    public function calculateFraisExpedition(WC_Order $order): float
-    {
-        // todo implements
-        $pExpeditions = $this->sage->sageGraphQl->getPExpeditions(
-            getError: true,
-        );
-        return 0;
     }
 
     public function importFArticleFromSage(string $arRef, bool $ignorePingApi = false): array
@@ -804,6 +735,125 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return $result;
     }
 
+    private function updateProductOrder(WC_Order $order, int $itemId, stdClass $new, array &$alreadyAddedTaxes): string
+    {
+        $message = $this->changeQuantityProductOrder($order, $itemId, $new->quantity, false);
+        $message .= $this->changePriceProductOrder($order, $itemId, $new->linePriceHt, false);
+        $message .= $this->changeTaxesProductOrder($order, $itemId, $new->taxes, $alreadyAddedTaxes);
+        return $message;
+    }
+
+    private function changeQuantityProductOrder(WC_Order $order, int $itemId, int $quantity, bool $save = true): string
+    {
+        $message = '';
+        $lineItems = array_values($order->get_items());
+
+        foreach ($lineItems as $lineItem) {
+            if ($lineItem->get_id() === $itemId) {
+                $lineItem->set_quantity($quantity);
+                if ($save) {
+                    $lineItem->save();
+                }
+                break;
+            }
+        }
+        return $message;
+    }
+
+    private function changePriceProductOrder(WC_Order $order, int $itemId, float $linePriceHt, bool $save = true): string
+    {
+        $lineItems = array_values($order->get_items());
+        foreach ($lineItems as $lineItem) {
+            if ($lineItem->get_id() === $itemId) {
+                $lineItem->set_props([
+                    'subtotal' => (string)$linePriceHt, // subtotal is what the price should be, if higher than total difference will be display as discount (Before discount)
+                    'total' => (string)$linePriceHt,
+                ]);
+                if ($save) {
+                    $lineItem->save();
+                }
+                break;
+            }
+        }
+        return '';
+    }
+
+    private function changeTaxesProductOrder(WC_Order $order, int $itemId, array $taxes, array &$alreadyAddedTaxes, bool $save = true): string
+    {
+        $message = '';
+        $lineItems = array_values($order->get_items());
+
+        foreach ($lineItems as $lineItem) {
+            if ($lineItem->get_id() === $itemId) {
+                foreach ($taxes as $taxe) {
+                    $alreadyAddedTaxes[] = $taxe['code'];
+                }
+                $lineItem->set_taxes($this->formatTaxes($order, $taxes, $message));
+                if ($save) {
+                    $lineItem->save();
+                }
+                break;
+            }
+        }
+        return $message;
+    }
+
+    private function formatTaxes(WC_Order $order, array $taxes, string &$message, int $errorMissingTax = 0): array
+    {
+        $orderId = $order->get_id();
+        $orderItemTaxes = $order->get_taxes();
+        $orderItemTaxesRateId = array_map(static function (WC_Order_Item_Tax $orderItemTax) {
+            return $orderItemTax->get_rate_id();
+        }, $orderItemTaxes);
+        [$t, $rates] = $this->sage->settings->getWordpressTaxes();
+        $result = ['total' => [], 'subtotal' => []];
+        foreach ($taxes as $taxe) {
+            $rate = current(array_filter($rates, static function (stdClass $rate) use ($taxe) {
+                return $rate->tax_rate_name === $taxe['code'];
+            }));
+            if ($rate === false) {
+                if ($errorMissingTax === 0) {
+                    $errorMissingTax++;
+                    $this->sage->settings->updateTaxes();
+                    return $this->formatTaxes($order, $taxes, $message, $errorMissingTax);
+                }
+                $message .= "<div class='notice notice-error is-dismissible'>
+                    <p>" . __('Il semblerait que la taxe ' . $taxe['code'] . ' soit manquante.', 'sage') . "</p>
+                    </div>";
+                continue;
+            }
+            $result['total'][$rate->tax_rate_id] = (string)$taxe['amount'];
+            $result['subtotal'][$rate->tax_rate_id] = (string)$taxe['amount'];
+
+            if (!in_array((int)$rate->tax_rate_id, $orderItemTaxesRateId, true)) {
+                // woocommerce/includes/class-wc-ajax.php public static function add_order_tax
+                $orderItemTax = new WC_Order_Item_Tax();
+                $orderItemTax->set_rate($rate->tax_rate_id);
+                $orderItemTax->set_order_id($orderId);
+                $orderItemTax->save();
+            }
+        }
+        return $result;
+    }
+
+    private function replaceProductToOrder(WC_Order $order, int $itemId, int $productId, int $quantity, stdClass $new, array &$alreadyAddedTaxes): string
+    {
+        $message = '';
+        $lineItems = array_values($order->get_items());
+        foreach ($lineItems as $lineItem) {
+            if ($lineItem->get_id() === $itemId) {
+                foreach ($new->taxes as $taxe) {
+                    $alreadyAddedTaxes[] = $taxe['code'];
+                }
+                $lineItem->set_product(new WC_Product($productId));
+                $message .= $this->updateProductOrder($order, $itemId, $new, $alreadyAddedTaxes);
+                break;
+            }
+        }
+
+        return $message;
+    }
+
     private function addShippingToOrder(WC_Order $order, stdClass $new, array &$alreadyAddedTaxes): string
     {
         foreach ($new->taxes as $taxe) {
@@ -817,6 +867,22 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $wcShippingRate->set_taxes($this->formatTaxes($order, $new->taxes, $message));
         $itemId = $order->add_shipping($wcShippingRate);
 
+        return $message;
+    }
+
+    private function removeShippingToOrder(WC_Order $order, int $id): string
+    {
+        $message = '';
+        $lineItemsShipping = array_values($order->get_items('shipping'));
+        if (!empty($lineItemsShipping)) {
+            foreach ($lineItemsShipping as $lineItemShipping) {
+                if ($lineItemShipping->get_id() === $id) {
+                    $order->remove_item($id);
+                    $order->save();
+                    break;
+                }
+            }
+        }
         return $message;
     }
 
@@ -869,29 +935,12 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return $message;
     }
 
-    private function getToRemoveToAddTaxes(WC_Order $order, array $new): array
+    public function calculateFraisExpedition(WC_Order $order): float
     {
-        $current = array_values(array_map(static function (WC_Order_Item_Tax $wcOrderItemTax) {
-            return $wcOrderItemTax->get_label();
-        }, $order->get_taxes()));
-        $toRemove = array_diff($current, $new);
-        $toAdd = array_diff($new, $current);
-        return [$toRemove, $toAdd];
-    }
-
-    private function removeShippingToOrder(WC_Order $order, int $id): string
-    {
-        $message = '';
-        $lineItemsShipping = array_values($order->get_items('shipping'));
-        if (!empty($lineItemsShipping)) {
-            foreach ($lineItemsShipping as $lineItemShipping) {
-                if ($lineItemShipping->get_id() === $id) {
-                    $order->remove_item($id);
-                    $order->save();
-                    break;
-                }
-            }
-        }
-        return $message;
+        // todo implements
+        $pExpeditions = $this->sage->sageGraphQl->getPExpeditions(
+            getError: true,
+        );
+        return 0;
     }
 }
