@@ -766,7 +766,10 @@ final class SageGraphQl
     {
         $result = [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['doType']),
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['doPiece']),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'doPiece',
+                'doTiers',
+            ]),
         ];
         if ($getExpedition) {
             $result['doExpeditNavigation'] = $this->_getPExpeditionSelectionSet();

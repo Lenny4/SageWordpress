@@ -752,8 +752,13 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
     {
         echo $this->twig->render('user/formMetaFields.html.twig', [
             'user' => $user,
-            'ctNum' => get_user_meta($user->ID, self::META_KEY_CT_NUM, true),
+            'ctNum' => $this->getUserWordpressIdForSage($user->ID),
         ]);
+    }
+
+    public function getUserWordpressIdForSage(int $userId)
+    {
+        return get_user_meta($userId, self::META_KEY_CT_NUM, true);
     }
 
     public function saveCustomerMetaFields(int $userId): void
@@ -763,7 +768,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             return;
         }
         if ($_POST[$queryParam]) {
-            $message = $this->importUserFromSage($_POST[$queryParam], $userId);
+            [$userId, $message] = $this->importUserFromSage($_POST[$queryParam], $userId);
             if ($message) {
                 $redirect = add_query_arg(Sage::TOKEN . '_message', urlencode($message), wp_get_referer());
                 wp_redirect($redirect);
@@ -772,10 +777,10 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         }
     }
 
-    public function importUserFromSage(string $ctNum, ?int $shouldBeUserId = null, ?stdClass $fComptet = null): string
+    public function importUserFromSage(string $ctNum, ?int $shouldBeUserId = null, ?stdClass $fComptet = null, bool $ignorePingApi = false): array
     {
         if (is_null($fComptet)) {
-            $fComptet = $this->sageGraphQl->getFComptet($ctNum);
+            $fComptet = $this->sageGraphQl->getFComptet($ctNum, ignorePingApi: $ignorePingApi);
         }
         $ctNum = $fComptet->ctNum;
         if (is_null($fComptet)) {
@@ -788,9 +793,9 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             if (is_null($userId)) {
                 $userId = $shouldBeUserId;
             } else if ($userId !== $shouldBeUserId) {
-                return "<div class='error'>
+                return [null, "<div class='error'>
                         " . __("Ce numéro de compte Sage est déjà assigné à un utilisateur Wordpress", 'sage') . "
-                                </div>";
+                                </div>"];
             }
         }
         $user = $this->sageWoocommerce->convertSageUserToWoocommerce(
@@ -801,7 +806,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             ))
         );
         if (is_string($user)) {
-            return $user;
+            return [null, $user];
         }
         $url = '/wp/v2/users';
         if (!is_null($userId)) {
@@ -810,16 +815,17 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         [$response, $responseError] = $this->createResource($url, is_null($userId) ? 'POST' : 'PUT', $user, null, null);
 
         if (is_string($responseError)) {
-            return $responseError;
+            return [null, $responseError];
         }
+        $userId = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR)->id;
         if ($response["response"]["code"] === 200) {
-            return "<div class='notice notice-success'>
+            return [$userId, "<div class='notice notice-success'>
                         " . __('User updated', 'sage') . "
-                                </div>";
+                                </div>"];
         }
-        return "<div class='notice notice-success'>
+        return [$userId, "<div class='notice notice-success'>
                         " . __('User created', 'sage') . "
-                                </div>";
+                                </div>"];
     }
 
     public function getUserIdWithCtNum(string $ctNum): int|null

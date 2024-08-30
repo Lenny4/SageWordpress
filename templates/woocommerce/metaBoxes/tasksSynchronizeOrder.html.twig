@@ -27,6 +27,8 @@
                         {{ 'Le frais "'~syncChange.old.name~'" va être supprimé.' }}
                     {% elseif change == 'remove_coupon_action' %}
                         {{ 'Le coupon "'~syncChange.old.name~'" va être supprimé.' }}
+                    {% elseif change == 'change_customer_action' %}
+                        {{ 'Le client va être mis à jour ["'~syncChange.new.ctNum~'"].' }}
                     {% else %}
                         {{ change }}
                     {% endif %}

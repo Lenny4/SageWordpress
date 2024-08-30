@@ -23,4 +23,6 @@ final class OrderUtils
     public const REMOVE_FEE_ACTION = 'remove_fee_action';
 
     public const REMOVE_COUPON_ACTION = 'remove_coupon_action';
+
+    public const CHANGE_CUSTOMER_ACTION = 'change_customer_action';
 }

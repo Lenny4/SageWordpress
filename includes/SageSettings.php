@@ -74,7 +74,8 @@ final class SageSettings
                 actions: [
                     'import_from_sage' => static function (array $data) use ($sageSettings): string {
                         $ctNum = $data['ctNum'];
-                        return $sageSettings->sage->importUserFromSage($ctNum);
+                        [$userId, $message] = $sageSettings->sage->importUserFromSage($ctNum);
+                        return $message;
                     }
                 ],
                 metadata: [
@@ -899,8 +900,8 @@ WHERE meta_key = %s
             $columns['sage'] = __("Sage", 'sage');
             return $columns;
         });
-        add_filter('manage_users_custom_column', static function (string $val, string $columnName, int $userId): string {
-            return get_user_meta($userId, Sage::META_KEY_CT_NUM, true) ?? '';
+        add_filter('manage_users_custom_column', static function (string $val, string $columnName, int $userId) use ($sageSettings): string {
+            return $sageSettings->sage->getUserWordpressIdForSage($userId) ?? '';
         }, accepted_args: 3);
         // endregion
         // endregion

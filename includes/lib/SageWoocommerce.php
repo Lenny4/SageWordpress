@@ -336,6 +336,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $couponChanges = $this->getTasksSynchronizeOrder_Coupon($order);
         $taxeCodesProduct = array_values(array_unique([...$taxeCodesProduct, ...$taxeCodesShipping]));
         $taxesChanges = $this->getTasksSynchronizeOrder_Taxes($order, $taxeCodesProduct);
+        $userChanges = $this->getTasksSynchronizeOrder_User($order, $fDocentete);
 
         // region contact
         // todo adresse de facturation
@@ -351,6 +352,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             ...$taxesChanges,
             ...$feeChanges,
             ...$couponChanges,
+            ...$userChanges,
         ];
         $result['products'] = $products;
 
@@ -615,6 +617,29 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$toRemove, $toAdd];
     }
 
+    private function getTasksSynchronizeOrder_User(WC_Order $order, stdClass $fDocentete): array
+    {
+        $userChanges = [];
+        $orderUserId = $order->get_user_id();
+        $ctNum = $fDocentete->doTiers;
+        $expectedUserId = $this->sage->getUserIdWithCtNum($ctNum);
+        if ($expectedUserId !== $orderUserId) {
+            $old = new stdClass();
+            $old->userId = $orderUserId;
+            $new = new stdClass();
+            $new->userId = $expectedUserId;
+            $new->ctNum = $ctNum;
+            $userChanges[] = [
+                'old' => $old,
+                'new' => $new,
+                'changes' => [
+                    OrderUtils::CHANGE_CUSTOMER_ACTION
+                ],
+            ];
+        }
+        return $userChanges;
+    }
+
     public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): array
     {
         $message = '';
@@ -667,6 +692,9 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         break;
                     case OrderUtils::REMOVE_COUPON_ACTION:
                         $message .= $this->removeCouponOrder($order, $syncChange["old"]->id);
+                        break;
+                    case OrderUtils::CHANGE_CUSTOMER_ACTION:
+                        $message .= $this->changeCustomerOrder($order, $syncChange["new"]);
                         break;
                     default:
                         $message .= "<div class='notice notice-error is-dismissible'>
@@ -1005,6 +1033,24 @@ WHERE {$wpdb->posts}.post_type = 'product'
                 $coupon->delete();
             }
         }
+        return $message;
+    }
+
+    private function changeCustomerOrder(WC_Order $order, stdClass $new): string
+    {
+        $message = '';
+        $userId = $new->userId;
+        if (is_null($userId)) {
+            [$userId, $message] = $this->sage->importUserFromSage($new->ctNum, ignorePingApi: true);
+            if (!is_numeric($userId)) {
+                return $message;
+            }
+        }
+        $order->set_customer_id($userId);
+        $order->save();
+
+        // todo change default facturation and shipping and apply it to order
+
         return $message;
     }
 
