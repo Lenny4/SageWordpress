@@ -506,6 +506,7 @@ final class Sage
 
         $sageGraphQl = $this->sageGraphQl;
         $sageWoocommerce = $this->sageWoocommerce;
+        $settings = $this->settings;
         // region link wordpress order to sage order
         $screenId = 'woocommerce_page_wc-orders';
         add_action('add_meta_boxes_' . $screenId, static function (WC_Order $order) use ($screenId, $sageWoocommerce): void { // woocommerce/src/Internal/Admin/Orders/Edit.php: do_action( 'add_meta_boxes_' . $this->screen_id, $this->order );
@@ -544,7 +545,7 @@ final class Sage
         // endregion
 
         // region api endpoint
-        add_action('rest_api_init', static function () use ($sageWoocommerce, $sageGraphQl) {
+        add_action('rest_api_init', static function () use ($sageWoocommerce, $sageGraphQl, $settings) {
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/sync', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
@@ -628,6 +629,21 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     $redirect = wp_get_referer();
                     wp_redirect($redirect);
                     exit();
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
+            register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/meta-box-order', [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($settings) {
+                    // this include import woocommerce_wp_text_input
+                    include_once __DIR__ . '/../../woocommerce/includes/admin/wc-meta-box-functions.php';
+                    $order = new WC_Order($request['id']);
+                    $html = $settings->getMetaBoxOrder($order);
+                    return new WP_REST_Response([
+                        'html' => $html
+                    ], 200);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);

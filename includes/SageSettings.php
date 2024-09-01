@@ -13,6 +13,8 @@ use App\Utils\TaxeUtils;
 use DateTime;
 use PHPHtmlParser\Dom;
 use stdClass;
+use WC_Meta_Box_Order_Data;
+use WC_Order;
 use WC_Product;
 use WC_Tax;
 use WP_Application_Passwords;
@@ -683,28 +685,15 @@ final class SageSettings
         add_filter(Sage::TOKEN . '_menu_settings', static fn(array $settings = []): array => $settings);
 
         // region WooCommerce
-        add_action('add_meta_boxes', static function (): void { // remove [Product type | virtual | downloadable] add product arRef
-            $arRef = Sage::getArRef(get_the_ID());
-            if (empty($arRef)) {
-                return;
+        add_action('add_meta_boxes', static function (string $screen, mixed $obj) use ($sageSettings): void { // remove [Product type | virtual | downloadable] add product arRef
+            if ($screen === 'product') {
+                global $wp_meta_boxes;
+                $sageSettings->showMetaBoxProduct($wp_meta_boxes, $screen);
+            } else if ($screen === 'woocommerce_page_wc-orders') {
+                global $wp_meta_boxes;
+                $sageSettings->showMetaBoxOrder($wp_meta_boxes, $screen);
             }
-
-            global $wp_meta_boxes;
-            $id = 'woocommerce-product-data';
-            $screen = 'product';
-            $context = 'normal';
-            $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
-            remove_meta_box($id, $screen, $context);
-            add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $wpPost) use ($arRef, $callback): void {
-                ob_start();
-                $callback($wpPost);
-                $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
-                $dom->loadStr(ob_get_clean());
-
-                $a = $dom->find('span.product-data-wrapper')[0];
-                echo str_replace($a->innerHtml(), ': <span style="display: initial" class="h4">' . $arRef . '</span>', $dom);
-            }, $screen, $context, 'high');
-        }, 40); // woocommerce/includes/admin/class-wc-admin-meta-boxes.php => 40 > 30 : add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 30 );
+        }, 40, 2); // woocommerce/includes/admin/class-wc-admin-meta-boxes.php => 40 > 30 : add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 30 );
 
         // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
         $productTabs = [
@@ -938,6 +927,8 @@ WHERE meta_key = %s
         return $objectFields;
     }
 
+    // woocommerce/includes/admin/class-wc-admin-meta-boxes.php:134 add_meta_box( 'woocommerce-product-data
+
     private function addWebsiteSageApi(): void
     {
         if (
@@ -968,6 +959,8 @@ WHERE meta_key = %s
             $newPassword = $this->createApplicationPassword($user_id, $applicationPasswordOption);
         }
     }
+
+    // woocommerce/src/Internal/Admin/Orders/Edit.php:78 add_meta_box( 'woocommerce-order-data'
 
     private function isApiAuthenticated(): bool
     {
@@ -1030,6 +1023,66 @@ WHERE meta_key = %s
         }
 
         return false;
+    }
+
+    private function showMetaBoxProduct(array $wp_meta_boxes, string $screen): void
+    {
+        $arRef = Sage::getArRef(get_the_ID());
+        if (empty($arRef)) {
+            return;
+        }
+
+        $id = 'woocommerce-product-data';
+        $context = 'normal';
+        remove_meta_box($id, $screen, $context);
+
+        $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
+        add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $wpPost) use ($arRef, $callback): void {
+            ob_start();
+            $callback($wpPost);
+            $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
+            $dom->loadStr(ob_get_clean());
+
+            $a = $dom->find('span.product-data-wrapper')[0];
+            echo str_replace($a->innerHtml(), ': <span style="display: initial" class="h4">' . $arRef . '</span>', $dom);
+        }, $screen, $context, 'high');
+    }
+
+    private function showMetaBoxOrder(array $wp_meta_boxes, string $screen): void
+    {
+        $settings = $this;
+        $id = 'woocommerce-order-data';
+        $context = 'normal';
+        remove_meta_box($id, $screen, $context);
+
+        $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
+        add_meta_box($id, sprintf(__('%s data', 'woocommerce'), __('Order', 'woocommerce')), static function (WC_Order $order) use ($callback, $settings): void {
+            echo $settings->getMetaBoxOrder($order, $callback);
+        }, $screen, $context, 'high');
+    }
+
+    public function getMetaBoxOrder(WC_Order $order, ?callable $callback = null): string
+    {
+        ob_start();
+        if (is_null($callback)) {
+            WC_Meta_Box_Order_Data::output($order);
+        } else {
+            $callback($order);
+        }
+        $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
+        $dom->loadStr(ob_get_clean());
+        $fDocenteteIdentifier = $this->sage->sageWoocommerce->getFDocenteteIdentifierFromOrder($order);
+        $translations = SageTranslationUtils::getTranslations();
+        if (!empty($fDocenteteIdentifier)) {
+            $a = $dom->find('.woocommerce-order-data__heading')[0];
+            $title = $a->innerHtml();
+            return str_replace($title, $title . '['
+                . $translations["fDocentetes"]["doType"]["values"][__("Documents des ventes", 'sage')][$fDocenteteIdentifier["doType"]]
+                . ': n° '
+                . $fDocenteteIdentifier["doPiece"]
+                . ']', $dom);
+        }
+        return $dom;
     }
 
     public function updateTaxes(bool $showMessage = true): void

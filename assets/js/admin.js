@@ -164,6 +164,14 @@ jQuery(document).ready(function () {
         }
     }
 
+    function getOrderIdWpnonce() {
+        const blockDom = jQuery("[id^='woocommerce-order-sage']");
+        const dataDom = jQuery(blockDom).find('[data-order-data]');
+        const orderId = jQuery(dataDom).attr('data-order-id');
+        const wpnonce = jQuery(dataDom).attr('data-nonce');
+        return [orderId, wpnonce];
+    }
+
     function initFiltersWithQueryParams() {
         jQuery("#all_filter_container .skeleton").remove();
         let params = Object.fromEntries((new URLSearchParams(window.location.search)).entries());
@@ -203,10 +211,7 @@ jQuery(document).ready(function () {
                 opacity: 0.6
             }
         });
-
-        const dataDom = jQuery(blockDom).find('[data-order-data]');
-        const orderId = jQuery(dataDom).attr('data-order-id');
-        const wpnonce = jQuery(dataDom).attr('data-nonce');
+        const [orderId, wpnonce] = getOrderIdWpnonce();
         const response = await fetch("/wp-json/sage/v1/orders/" + orderId + "/sync?_wpnonce=" + wpnonce);
         jQuery(blockDom).unblock();
         if (response.status === 200) {
@@ -219,6 +224,29 @@ jQuery(document).ready(function () {
 
         // woocommerce/assets/js/admin/meta-boxes-order.js .on( 'wc_order_items_reload', this.reload_items )
         jQuery("#woocommerce-order-items").trigger("wc_order_items_reload");
+        reloadWooCommerceOrderDataBox();
+    }
+
+    async function reloadWooCommerceOrderDataBox() {
+        const blockDom = jQuery("#woocommerce-order-data");
+        jQuery(blockDom).block({
+            message: null,
+            overlayCSS: {
+                background: '#fff',
+                opacity: 0.6
+            }
+        });
+        const [orderId, wpnonce] = getOrderIdWpnonce();
+        const response = await fetch("/wp-json/sage/v1/orders/" + orderId + "/meta-box-order?_wpnonce=" + wpnonce);
+        jQuery(blockDom).unblock();
+        if (response.status === 200) {
+            const data = await response.json();
+            const blockInside = jQuery(blockDom).find(".inside");
+            jQuery(blockInside).html(data.html);
+            jQuery(document.body).trigger('wc-enhanced-select-init');// woocommerce/assets/js/admin/wc-enhanced-select.js
+        } else {
+            // todo toastr
+        }
     }
 
     // region data-2-select-target
