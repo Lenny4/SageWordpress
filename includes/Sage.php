@@ -1004,6 +1004,7 @@ WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
         $r->liPrincipal = 0;
         $r->liVille = $fComptet->ctVille;
         $r->liPays = $fComptet->ctPays;
+        $r->liPaysCode = $fComptet->ctPaysCode;
         $r->liContact = $fComptet->ctContact;
         $r->liTelephone = $fComptet->ctTelephone;
         $r->liEmail = $fComptet->ctEmail;

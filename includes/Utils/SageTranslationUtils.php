@@ -34,6 +34,7 @@ final class SageTranslationUtils
                 "ctVille" => __("Ville", 'sage'),
                 "ctCodeRegion" => __("Code region", 'sage'),
                 "ctPays" => __("Pays", 'sage'),
+                "ctPaysCode" => __("Code pays", 'sage'),
                 "ctRaccourci" => __("Raccourci", 'sage'),
                 "btNum" => __("btNum", 'sage'),
                 "nDevise" => __("nDevise", 'sage'),

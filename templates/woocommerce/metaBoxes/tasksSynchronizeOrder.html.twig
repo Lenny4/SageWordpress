@@ -29,6 +29,14 @@
                         {{ 'Le coupon "'~syncChange.old.name~'" va être supprimé.' }}
                     {% elseif change == 'change_customer_action' %}
                         {{ 'Le client va être mis à jour ["'~syncChange.new.ctNum~'"].' }}
+                    {% elseif change == 'change_user_action_billing' %}
+                        {{ 'L\'adresse de facturation par défaut de l\'utilisateur va être mise à jour.' }}
+                    {% elseif change == 'change_user_action_shipping' %}
+                        {{ 'L\'adresse de livraison par défaut de l\'utilisateur va être mise à jour.' }}
+                    {% elseif change == 'change_order_address_type_action_billing' %}
+                        {{ 'L\'adresse de facturation de la commande va être mise à jour.' }}
+                    {% elseif change == 'change_order_address_type_action_shipping' %}
+                        {{ 'L\'adresse de livraison de la commande va être mise à jour.' }}
                     {% else %}
                         {{ change }}
                     {% endif %}

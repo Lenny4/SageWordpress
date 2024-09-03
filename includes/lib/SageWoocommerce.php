@@ -600,9 +600,9 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $userChanges = [];
         $userMetaWordpress = get_user_meta($userId);
         $userSage = $this->convertSageUserToWoocommerce($fComptet, userId: $userId);
-        $old = new stdClass();
-        $new = new stdClass();
         foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
+            $old = new stdClass();
+            $new = new stdClass();
             $fields = [];
             foreach ($userMetaWordpress as $key => $value) {
                 if (str_starts_with($key, $addressType)) {
@@ -691,7 +691,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 $addressType . '_city' => $thisAddress->liVille,
                 $addressType . '_postcode' => $thisAddress->liCodePostal,
                 $addressType . '_state' => $thisAddress->liCodeRegion,
-                $addressType . '_country' => $fPay !== false ? $fPay->paCode : $thisAddress->liPays,
+                $addressType . '_country' => $fPay !== false ? $fPay->paCode : $thisAddress->liPaysCode,
                 $addressType . '_phone' => $thisAddress->liTelephone,
                 $addressType . '_email' => $thisAddress->liEmail,
                 // endregion
@@ -739,7 +739,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 "city" => "%pVille",
                 "postcode" => "%pCodePostal",
                 "state" => "%pCodeRegion",
-                "country" => "%pPays",
+                "country" => "%pPaysCode",
                 "phone" => "%pTelephone",
             ];
             if ($type === OrderUtils::BILLING_ADDRESS_TYPE) {
@@ -824,6 +824,16 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     case OrderUtils::CHANGE_CUSTOMER_ACTION:
                         $message .= $this->changeCustomerOrder($order, $syncChange["new"]);
                         break;
+                    case OrderUtils::CHANGE_USER_ACTION . '_' . OrderUtils::BILLING_ADDRESS_TYPE:
+                    case OrderUtils::CHANGE_USER_ACTION . '_' . OrderUtils::SHIPPING_ADDRESS_TYPE:
+                        $message .= $this->updateUserMetas($order, $syncChange["new"]);
+                        break;
+                    case OrderUtils::CHANGE_ORDER_ADDRESS_TYPE_ACTION . '_' . OrderUtils::BILLING_ADDRESS_TYPE:
+                        $message .= $this->updateOrderMetas($order, $syncChange["new"], OrderUtils::BILLING_ADDRESS_TYPE);
+                        break;
+                    case OrderUtils::CHANGE_ORDER_ADDRESS_TYPE_ACTION . '_' . OrderUtils::SHIPPING_ADDRESS_TYPE:
+                        $message .= $this->updateOrderMetas($order, $syncChange["new"], OrderUtils::SHIPPING_ADDRESS_TYPE);
+                        break;
                     default:
                         $message .= "<div class='notice notice-error is-dismissible'>
                     <p>" . __('Aucune action défini pour', 'sage') . ": " . print_r($syncChange['changes'], true) . "</p>
@@ -841,6 +851,26 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         // endregion
 
         return [$message, $order];
+    }
+
+    private function updateOrderMetas(WC_Order $order, stdClass $new, string $addressType): string
+    {
+        $message = '';
+        foreach ((array)$new as $key => $value) {
+            $order->{'set_' . $addressType . '_' . $key}($value);
+        }
+        $order->save();
+        return $message;
+    }
+
+    private function updateUserMetas(WC_Order $order, stdClass $new): string
+    {
+        $message = '';
+        $userId = $order->get_user_id();
+        foreach ((array)$new as $key => $value) {
+            update_user_meta($userId, $key, $value);
+        }
+        return $message;
     }
 
     private function addProductToOrder(WC_Order $order, ?int $productId, int $quantity, stdClass $new, array &$alreadyAddedTaxes): string
