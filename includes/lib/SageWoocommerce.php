@@ -129,81 +129,6 @@ final class SageWoocommerce
         return self::$_instance;
     }
 
-    public function convertSageUserToWoocommerce(StdClass $fComptet, ?int $userId, SageEntityMenu $sageEntityMenu): array|string
-    {
-        $email = explode(';', $fComptet->ctEmail)[0];
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return "<div class=error>" . __("L'adresse email n'est pas au bon format [email: '" . $email . "']", 'sage') . "</div>";
-        }
-        $mailExistsUserId = email_exists($email);
-        if ($mailExistsUserId !== false && $mailExistsUserId !== $userId) {
-            return "<div class=error>" . __('This email address [' . $email . '] is already registered for user id: ' . $mailExistsUserId . '.', 'woocommerce') . "</div>";
-        }
-        $fComptetAddress = Sage::createAddressWithFComptet($fComptet);
-        $addressTypes = ['billing', 'shipping'];
-        $address = [];
-        $fPays = $this->sage->sageGraphQl->getFPays(false);
-        foreach ($addressTypes as $addressType) {
-            $thisAdress = current(array_filter($fComptet->fLivraisons, static function (StdClass $fLivraison) use ($addressType, $fComptetAddress) {
-                if ($addressType === 'billing') {
-                    return $fLivraison->liAdresseFact === 1;
-                }
-                return $fLivraison->liPrincipal === 1;
-            }));
-            if ($thisAdress === false) {
-                $thisAdress = $fComptetAddress;
-            }
-            $address[$addressType] = $thisAdress;
-        }
-        $meta = [];
-        foreach ($sageEntityMenu->getMetadata() as $metadata) {
-            $value = $metadata->getValue();
-            if (!is_null($value)) {
-                $meta['_' . Sage::TOKEN . $metadata->getField()] = $value($fComptet);
-            }
-        }
-        foreach ($addressTypes as $addressType) {
-            $thisAddress = $address[$addressType];
-            [$firstName, $lastName] = Sage::getFirstNameLastName(
-                intitule: $thisAddress->liIntitule,
-                contact: $thisAddress->liContact
-            );
-            $fPay = current(array_filter($fPays, static fn(StdClass $fPay) => $fPay->paIntitule === $thisAddress->liPays));
-            $meta = [
-                ...$meta,
-                // region woocommerce (got from: woocommerce/includes/class-wc-privacy-erasers.php)
-                $addressType . '_first_name' => $firstName,
-                $addressType . '_last_name' => $lastName,
-                $addressType . '_company' => Sage::getName(intitule: $thisAddress->liIntitule, contact: $thisAddress->liContact),
-                $addressType . '_address_1' => $thisAddress->liAdresse,
-                $addressType . '_address_2' => $thisAddress->liComplement,
-                $addressType . '_city' => $thisAddress->liVille,
-                $addressType . '_postcode' => $thisAddress->liCodePostal,
-                $addressType . '_state' => $thisAddress->liCodeRegion,
-                $addressType . '_country' => $fPay !== false ? $fPay->paCode : $thisAddress->liPays,
-                $addressType . '_phone' => $thisAddress->liTelephone,
-                $addressType . '_email' => $thisAddress->liEmail,
-                // endregion
-            ];
-        }
-        [$firstName, $lastName] = Sage::getFirstNameLastName(
-            intitule: $fComptet->ctIntitule,
-            contact: $fComptet->ctContact
-        );
-        $result = [
-            'name' => Sage::getName(intitule: $fComptet->ctIntitule, contact: $fComptet->ctContact), // Display name for the user
-            'first_name' => $firstName, // First name for the user
-            'last_name' => $lastName, // Last name for the user
-            'email' => $email, // The email address for the user
-            'meta' => $meta,
-        ];
-        if (is_null($userId)) {
-            $result['username'] = $fComptet->ctNum;
-            $result['password'] = bin2hex(random_bytes(5));
-        }
-        return $result;
-    }
-
     public function populateMetaDatas(?array $data, array $fields, SageEntityMenu $sageEntityMenu): array|null
     {
         if (empty($data)) {
@@ -284,6 +209,8 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 getExpedition: true,
                 ignorePingApi: $ignorePingApi,
                 addWordpressProductId: true,
+                getUser: true,
+                getLivraison: true,
             );
             if (is_string($fDocentete) || is_bool($fDocentete)) {
                 if (is_string($fDocentete)) {
@@ -320,41 +247,62 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $fDocenteteIdentifier;
     }
 
-    public function getTasksSynchronizeOrder(WC_Order $order, ?stdClass $fDocentete): array
+    public function getTasksSynchronizeOrder(
+        WC_Order  $order,
+        ?stdClass $fDocentete,
+        bool      $allChanges = true,
+        bool      $getProductChanges = false,
+        bool      $getShippingChanges = false,
+        bool      $getFeeChanges = false,
+        bool      $getCouponChanges = false,
+        bool      $getTaxesChanges = false,
+        bool      $getUserChanges = false,
+    ): array
     {
         $result = [
             'allProductsExistInWordpress' => true,
             'syncChanges' => [],
             'products' => [],
         ];
+        $taxeCodesProduct = [];
+        $taxeCodesShipping = [];
         if (!$fDocentete) {
             return $result;
         }
-        [$productChanges, $products, $taxeCodesProduct] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete->fDoclignes ?? []);
-        [$shippingChanges, $taxeCodesShipping] = $this->getTasksSynchronizeOrder_Shipping($order, $fDocentete);
-        $feeChanges = $this->getTasksSynchronizeOrder_Fee($order);
-        $couponChanges = $this->getTasksSynchronizeOrder_Coupon($order);
-        $taxeCodesProduct = array_values(array_unique([...$taxeCodesProduct, ...$taxeCodesShipping]));
-        $taxesChanges = $this->getTasksSynchronizeOrder_Taxes($order, $taxeCodesProduct);
-        $userChanges = $this->getTasksSynchronizeOrder_User($order, $fDocentete);
-
-        // region contact
-        // todo adresse de facturation
-        // todo adresse d'expédition
-        // endregion
+        if ($allChanges || $getProductChanges || $getTaxesChanges) {
+            [$productChanges, $products, $taxeCodesProduct] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete->fDoclignes ?? []);
+            $result['products'] = $products;
+            if ($getProductChanges) {
+                $result['syncChanges'] = [...$result['syncChanges'], ...$productChanges];
+            }
+        }
+        if ($allChanges || $getShippingChanges || $getTaxesChanges) {
+            [$shippingChanges, $taxeCodesShipping] = $this->getTasksSynchronizeOrder_Shipping($order, $fDocentete);
+            if ($getShippingChanges) {
+                $result['syncChanges'] = [...$result['syncChanges'], ...$shippingChanges];
+            }
+        }
+        if ($allChanges || $getFeeChanges) {
+            $feeChanges = $this->getTasksSynchronizeOrder_Fee($order);
+            $result['syncChanges'] = [...$result['syncChanges'], ...$feeChanges];
+        }
+        if ($allChanges || $getCouponChanges) {
+            $couponChanges = $this->getTasksSynchronizeOrder_Coupon($order);
+            $result['syncChanges'] = [...$result['syncChanges'], ...$couponChanges];
+        }
+        if ($allChanges || $getTaxesChanges) {
+            $taxeCodesProduct = array_values(array_unique([...$taxeCodesProduct, ...$taxeCodesShipping]));
+            $taxesChanges = $this->getTasksSynchronizeOrder_Taxes($order, $taxeCodesProduct);
+            $result['syncChanges'] = [...$result['syncChanges'], ...$taxesChanges];
+        }
+        if ($allChanges || $getUserChanges) {
+            $userChanges = $this->getTasksSynchronizeOrder_User($order, $fDocentete);
+            $result['syncChanges'] = [...$result['syncChanges'], ...$userChanges];
+        }
 
         $result['allProductsExistInWordpress'] = array_filter($fDocentete->fDoclignes, static function (stdClass $fDocligne) {
                 return is_null($fDocligne->postId);
             }) === [];
-        $result['syncChanges'] = [
-            ...$productChanges,
-            ...$shippingChanges,
-            ...$taxesChanges,
-            ...$feeChanges,
-            ...$couponChanges,
-            ...$userChanges,
-        ];
-        $result['products'] = $products;
 
         return $result;
     }
@@ -636,8 +584,188 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     OrderUtils::CHANGE_CUSTOMER_ACTION
                 ],
             ];
+        } else if (!is_null($orderUserId)) {
+            $userChanges = [...$userChanges, ...$this->getUserChanges($orderUserId, $fDocentete->doTiersNavigation)];
+            $userChanges = [...$userChanges, ...$this->getOrderAddressTypeChanges(
+                $order,
+                $fDocentete->doTiersNavigation,
+                $fDocentete->cbLiNoNavigation
+            )];
         }
         return $userChanges;
+    }
+
+    private function getUserChanges(int $userId, stdClass $fComptet): array
+    {
+        $userChanges = [];
+        $userMetaWordpress = get_user_meta($userId);
+        $userSage = $this->convertSageUserToWoocommerce($fComptet, userId: $userId);
+        $old = new stdClass();
+        $new = new stdClass();
+        foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
+            $fields = [];
+            foreach ($userMetaWordpress as $key => $value) {
+                if (str_starts_with($key, $addressType)) {
+                    $fields[] = $key;
+                }
+            }
+            foreach ($userSage["meta"] as $key => $value) {
+                if (str_starts_with($key, $addressType)) {
+                    $fields[] = $key;
+                }
+            }
+            $fields = array_values(array_unique($fields));
+            foreach ($fields as $field) {
+                if ($userMetaWordpress[$field][0] !== $userSage["meta"][$field]) {
+                    $old->{$field} = $userMetaWordpress[$field][0];
+                    $new->{$field} = $userSage["meta"][$field];
+                }
+            }
+            if ((array)$new !== []) {
+                $userChanges[] = [
+                    'old' => $old,
+                    'new' => $new,
+                    'changes' => [
+                        OrderUtils::CHANGE_USER_ACTION . '_' . $addressType
+                    ],
+                ];
+            }
+        }
+        return $userChanges;
+    }
+
+    public function convertSageUserToWoocommerce(
+        StdClass $fComptet,
+        ?int     $userId = null,
+    ): array|string
+    {
+        $email = explode(';', $fComptet->ctEmail)[0];
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return "<div class=error>" . __("L'adresse email n'est pas au bon format [email: '" . $email . "']", 'sage') . "</div>";
+        }
+        $mailExistsUserId = email_exists($email);
+        if ($mailExistsUserId !== false && $mailExistsUserId !== $userId) {
+            return "<div class=error>" . __('This email address [' . $email . '] is already registered for user id: ' . $mailExistsUserId . '.', 'woocommerce') . "</div>";
+        }
+        $fComptetAddress = Sage::createAddressWithFComptet($fComptet);
+        $addressTypes = ['billing', 'shipping'];
+        $address = [];
+        $fPays = $this->sage->sageGraphQl->getFPays(false);
+        foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
+            $thisAdress = current(array_filter($fComptet->fLivraisons, static function (StdClass $fLivraison) use ($addressType, $fComptetAddress) {
+                if ($addressType === OrderUtils::BILLING_ADDRESS_TYPE) {
+                    return $fLivraison->liAdresseFact === 1;
+                }
+                return $fLivraison->liPrincipal === 1;
+            }));
+            if ($thisAdress === false) {
+                $thisAdress = $fComptetAddress;
+            }
+            $address[$addressType] = $thisAdress;
+        }
+        $meta = [];
+        $sageEntityMenu = current(array_filter($this->sage->settings->sageEntityMenus,
+            static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_CT_NUM
+        ));
+        foreach ($sageEntityMenu->getMetadata() as $metadata) {
+            $value = $metadata->getValue();
+            if (!is_null($value)) {
+                $meta['_' . Sage::TOKEN . $metadata->getField()] = $value($fComptet);
+            }
+        }
+        foreach ($addressTypes as $addressType) {
+            $thisAddress = $address[$addressType];
+            [$firstName, $lastName] = Sage::getFirstNameLastName(
+                $thisAddress->liIntitule,
+                $thisAddress->liContact
+            );
+            $fPay = current(array_filter($fPays, static fn(StdClass $fPay) => $fPay->paIntitule === $thisAddress->liPays));
+            $meta = [
+                ...$meta,
+                // region woocommerce (got from: woocommerce/includes/class-wc-privacy-erasers.php)
+                $addressType . '_first_name' => $firstName,
+                $addressType . '_last_name' => $lastName,
+                $addressType . '_company' => Sage::getName(intitule: $thisAddress->liIntitule, contact: $thisAddress->liContact),
+                $addressType . '_address_1' => $thisAddress->liAdresse,
+                $addressType . '_address_2' => $thisAddress->liComplement,
+                $addressType . '_city' => $thisAddress->liVille,
+                $addressType . '_postcode' => $thisAddress->liCodePostal,
+                $addressType . '_state' => $thisAddress->liCodeRegion,
+                $addressType . '_country' => $fPay !== false ? $fPay->paCode : $thisAddress->liPays,
+                $addressType . '_phone' => $thisAddress->liTelephone,
+                $addressType . '_email' => $thisAddress->liEmail,
+                // endregion
+            ];
+        }
+        [$firstName, $lastName] = Sage::getFirstNameLastName(
+            $fComptet->ctIntitule,
+            $fComptet->ctContact
+        );
+        $result = [
+            'name' => Sage::getName(intitule: $fComptet->ctIntitule, contact: $fComptet->ctContact), // Display name for the user
+            'first_name' => $firstName, // First name for the user
+            'last_name' => $lastName, // Last name for the user
+            'email' => $email, // The email address for the user
+            'meta' => $meta,
+        ];
+        if (is_null($userId)) {
+            $result['username'] = $fComptet->ctNum;
+            $result['password'] = bin2hex(random_bytes(5));
+        }
+        return $result;
+    }
+
+    private function getOrderAddressTypeChanges(WC_Order $order, stdClass $fComptet, stdClass $fLivraison): array
+    {
+        $addressTypeChanges = [];
+        $addressTypes = [
+            OrderUtils::BILLING_ADDRESS_TYPE => ['obj' => $fComptet, 'prefix' => 'ct'],
+            OrderUtils::SHIPPING_ADDRESS_TYPE => ['obj' => $fLivraison, 'prefix' => 'li'],
+        ];
+        foreach ($addressTypes as $type => $data) {
+            $old = new stdClass();
+            $new = new stdClass();
+            $obj = $data['obj'];
+            $prefix = $data['prefix'];
+            [$firstName, $lastName] = Sage::getFirstNameLastName($obj->{$prefix . 'Contact'}, $obj->{$prefix . 'Intitule'});
+            $obj->firstName = $firstName;
+            $obj->lastName = $lastName;
+            $fieldMaps = [
+                "first_name" => "firstName",
+                "last_name" => "lastName",
+                "company" => "%pIntitule",
+                "address_1" => "%pAdresse",
+                "address_2" => "%pComplement",
+                "city" => "%pVille",
+                "postcode" => "%pCodePostal",
+                "state" => "%pCodeRegion",
+                "country" => "%pPays",
+                "phone" => "%pTelephone",
+            ];
+            if ($type === OrderUtils::BILLING_ADDRESS_TYPE) {
+                $fieldMaps['email'] = "%pEmail";
+            }
+            foreach ($fieldMaps as $key1 => $key2) {
+                $key2 = str_replace('%p', $prefix, $key2);
+                if (
+                    ($oldValue = $order->{'get_' . $type . '_' . $key1}()) !==
+                    $obj->{$key2}
+                ) {
+                    $old->{$key1} = $oldValue;
+                    $new->{$key1} = $obj->{$key2};
+                }
+            }
+            if ((array)$new !== []) {
+                $addressTypeChanges[] = [
+                    'old' => $old,
+                    'new' => $new,
+                    'changes' => [
+                        OrderUtils::CHANGE_ORDER_ADDRESS_TYPE_ACTION . '_' . $type,
+                    ],
+                ];
+            }
+        }
+        return $addressTypeChanges;
     }
 
     public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): array
@@ -1049,7 +1177,29 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $order->set_customer_id($userId);
         $order->save();
 
-        // todo change default facturation and shipping and apply it to order
+        $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
+        $fDocentete = $this->sage->sageGraphQl->getFDocentete(
+            $fDocenteteIdentifier["doPiece"],
+            $fDocenteteIdentifier["doType"],
+            getError: true,
+            getFDoclignes: true,
+            getExpedition: true,
+            ignorePingApi: true,
+            addWordpressProductId: true,
+            getUser: true,
+            getLivraison: true,
+        );
+
+        if (!is_string($fDocentete)) {
+            $this->applyTasksSynchronizeOrder($order, $this->getTasksSynchronizeOrder(
+                $order,
+                $fDocentete,
+                allChanges: false,
+                getUserChanges: true,
+            ));
+        } else {
+            $message .= $fDocentete;
+        }
 
         return $message;
     }

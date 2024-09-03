@@ -2,7 +2,6 @@
 
 namespace App;
 
-use App\class\SageEntityMenu;
 use App\class\SageExpectedOption;
 use App\lib\SageAdminApi;
 use App\lib\SageGraphQl;
@@ -559,6 +558,8 @@ final class Sage
                         getExpedition: true,
                         ignorePingApi: true,
                         addWordpressProductId: true,
+                        getUser: true,
+                        getLivraison: true,
                     );
                     $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $fDocentete);
                     [$message, $order] = $sageWoocommerce->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
@@ -793,17 +794,22 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         }
     }
 
-    public function importUserFromSage(string $ctNum, ?int $shouldBeUserId = null, ?stdClass $fComptet = null, bool $ignorePingApi = false): array
+    public function importUserFromSage(
+        string    $ctNum,
+        ?int      $shouldBeUserId = null,
+        ?stdClass $fComptet = null,
+        bool      $ignorePingApi = false
+    ): array
     {
         if (is_null($fComptet)) {
             $fComptet = $this->sageGraphQl->getFComptet($ctNum, ignorePingApi: $ignorePingApi);
         }
-        $ctNum = $fComptet->ctNum;
         if (is_null($fComptet)) {
-            return "<div class='error'>
+            return [null, "<div class='error'>
                         " . __("Le compte Sage n'a pas pu être importé", 'sage') . "
-                                </div>";
+                                </div>"];
         }
+        $ctNum = $fComptet->ctNum;
         $userId = $this->getUserIdWithCtNum($ctNum);
         if (!is_null($shouldBeUserId)) {
             if (is_null($userId)) {
@@ -817,9 +823,6 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         $user = $this->sageWoocommerce->convertSageUserToWoocommerce(
             $fComptet,
             $userId,
-            current(array_filter($this->settings->sageEntityMenus,
-                static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_CT_NUM
-            ))
         );
         if (is_string($user)) {
             return [null, $user];
@@ -976,21 +979,19 @@ WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
         return $name;
     }
 
-    public static function getFirstNameLastName(?string $intitule, ?string $contact): array
+    // https://stackoverflow.com/a/31330346/6824121
+    public static function getFirstNameLastName(...$fullNames): array
     {
-        $names = $contact;
-        if (empty($names)) {
-            $names = $intitule;
+        foreach ($fullNames as $fullName) {
+            if (empty($fullName)) {
+                continue;
+            }
+            $fullName = trim($fullName);
+            $lastName = (!str_contains($fullName, ' ')) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $fullName);
+            $firstName = trim(preg_replace('#' . preg_quote($lastName, '#') . '#', '', $fullName));
+            return [$firstName, $lastName];
         }
-        $names = explode(' ', $names);
-        $firstName = '';
-        $lastName = '';
-        if (!empty($names)) {
-            $firstName = $names[0];
-            $names[0] = "";
-            $lastName = implode(' ', $names);
-        }
-        return [$firstName, $lastName];
+        return ['', ''];
     }
 
     public static function createAddressWithFComptet(StdClass $fComptet): StdClass

@@ -761,7 +761,9 @@ final class SageGraphQl
 
     private function _getFDocenteteSelectionSet(
         bool $getFDoclignes = false,
-        bool $getExpedition = false
+        bool $getExpedition = false,
+        bool $getUser = false,
+        bool $getLivraison = false,
     ): array
     {
         $result = [
@@ -777,6 +779,12 @@ final class SageGraphQl
         }
         if ($getFDoclignes) {
             $result['fDoclignes'] = $this->_getFDocligneSelectionSet();
+        }
+        if ($getUser) {
+            $result['doTiersNavigation'] = $this->_getFComptetSelectionSet();
+        }
+        if ($getLivraison) {
+            $result['cbLiNoNavigation'] = $this->_getFLivraisonSelectionSet();
         }
         return $result;
     }
@@ -829,6 +837,8 @@ final class SageGraphQl
         bool   $getExpedition = false,
         bool   $ignorePingApi = false,
         bool   $addWordpressProductId = false,
+        bool   $getUser = false,
+        bool   $getLivraison = false,
     ): stdClass|null|false|string
     {
         if (!$this->pingApi && !$ignorePingApi) {
@@ -853,7 +863,12 @@ final class SageGraphQl
                 "paged" => "1",
                 "per_page" => "1"
             ],
-            $this->_getFDocenteteSelectionSet(getFDoclignes: $getFDoclignes, getExpedition: $getExpedition),
+            $this->_getFDocenteteSelectionSet(
+                getFDoclignes: $getFDoclignes,
+                getExpedition: $getExpedition,
+                getUser: $getUser,
+                getLivraison: $getLivraison,
+            ),
             getError: $getError,
             ignorePingApi: $ignorePingApi,
         );

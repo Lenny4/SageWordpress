@@ -25,4 +25,15 @@ final class OrderUtils
     public const REMOVE_COUPON_ACTION = 'remove_coupon_action';
 
     public const CHANGE_CUSTOMER_ACTION = 'change_customer_action';
+
+    public const CHANGE_USER_ACTION = 'change_user_action';
+
+    public const CHANGE_ORDER_ADDRESS_TYPE_ACTION = 'change_order_address_type_action';
+
+    public const BILLING_ADDRESS_TYPE = 'billing';
+    public const SHIPPING_ADDRESS_TYPE = 'shipping';
+    public const ALL_ADDRESS_TYPE = [
+        self::BILLING_ADDRESS_TYPE,
+        self::SHIPPING_ADDRESS_TYPE,
+    ];
 }
