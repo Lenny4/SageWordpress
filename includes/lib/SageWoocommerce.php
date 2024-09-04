@@ -910,6 +910,12 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $url .= '/' . $articlePostId;
         }
 
+        // cannot create an article without request
+        // ========================================
+        // created with: (new WC_REST_Products_Controller())->create_item($request);
+        // woocommerce/includes/rest-api/Controllers/Version3/class-wc-rest-crud-controller.php : public function create_item( $request )
+        // which extends
+        // woocommerce/includes/rest-api/Controllers/Version3/class-wc-rest-products-controller.php
         [$response, $responseError] = $this->sage->createResource(
             $url,
             is_null($articlePostId) ? 'POST' : 'PUT',

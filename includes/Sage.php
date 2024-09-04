@@ -827,17 +827,21 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         if (is_string($user)) {
             return [null, $user];
         }
-        $url = '/wp/v2/users';
-        if (!is_null($userId)) {
-            $url .= '/' . $userId;
+        $newUser = is_null($userId);
+        if ($newUser) {
+            $userId = wp_create_user($user["username"], $user["password"], $user["email"]);
         }
-        [$response, $responseError] = $this->createResource($url, is_null($userId) ? 'POST' : 'PUT', $user, null, null);
-
-        if (is_string($responseError)) {
-            return [null, $responseError];
+        if ($userId instanceof WP_Error) {
+            return [null, "<div class='notice notice-error is-dismissible'>
+                                <pre>" . $userId->get_error_code() . "</pre>
+                                <pre>" . $userId->get_error_message() . "</pre>
+                                </div>"];
         }
-        $userId = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR)->id;
-        if ($response["response"]["code"] === 200) {
+        wp_update_user(['ID' => $userId, ...$user]);
+        foreach ($user["meta"] as $key => $value) {
+            update_user_meta($userId, $key, $value);
+        }
+        if (!$newUser) {
             return [$userId, "<div class='notice notice-success'>
                         " . __('User updated', 'sage') . "
                                 </div>"];
