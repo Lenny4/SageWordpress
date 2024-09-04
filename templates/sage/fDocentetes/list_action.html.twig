@@ -1,0 +1,28 @@
+<div class="tooltip">
+    <a href="{{ getUrlWithParam('action', {
+        'type': 'import_from_sage',
+        'data': {
+            'doPiece': item.doPiece,
+            'doType': item.doType
+        }
+    }|json_encode()) }}">
+        <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
+    </a>
+    <div class="tooltiptext" style="right: 0">
+        {% if item._sage_postId != null %}
+            {{ 'Mettre à jour le document'|trans }}
+        {% else %}
+            {{ 'Importer le document'|trans }}
+        {% endif %}
+    </div>
+</div>
+{% if item._sage_postId != null %}
+    <div class="tooltip">
+        <a href="/wp-admin/admin.php?page=wc-orders&action=edit&id={{ item._sage_postId }}">
+            <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>
+        </a>
+        <div class="tooltiptext" style="right: 0">
+            {{ 'Voir la commande Wordpress'|trans }}
+        </div>
+    </div>
+{% endif %}

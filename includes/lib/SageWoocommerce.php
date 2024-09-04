@@ -141,25 +141,25 @@ final class SageWoocommerce
             return str_starts_with($field['name'], SageSettings::PREFIX_META_DATA);
         }));
         $mandatoryField = $sageEntityMenu->getMandatoryFields()[0];
-        $ids = array_map(static function (array $entity) use ($mandatoryField) {
-            return $entity[$mandatoryField];
-        }, $data["data"][$entityName]["items"]);
+        $getIdentifier = $sageEntityMenu->getGetIdentifier();
+        if (is_null($getIdentifier)) {
+            $getIdentifier = static function (array $entity) use ($mandatoryField) {
+                return $entity[$mandatoryField];
+            };
+        }
+        $ids = array_map($getIdentifier, $data["data"][$entityName]["items"]);
 
         $metaKeyIdentifier = $sageEntityMenu->getMetaKeyIdentifier();
+        $metaTable = $sageEntityMenu->getMetaTable();
+        $metaColumnIdentifier = $sageEntityMenu->getMetaColumnIdentifier();
         global $wpdb;
-        $table = $wpdb->postmeta;
-        $idColumn = 'post_id';
-        if ($metaKeyIdentifier === Sage::META_KEY_CT_NUM) {
-            $table = $wpdb->usermeta;
-            $idColumn = 'user_id';
-        }
         $temps = $wpdb->get_results("
-SELECT " . $table . "2." . $idColumn . " post_id, " . $table . "2.meta_value, " . $table . "2.meta_key
-FROM " . $table . "
-         LEFT JOIN " . $table . " " . $table . "2 ON " . $table . "2." . $idColumn . " = " . $table . "." . $idColumn . "
-WHERE " . $table . ".meta_value IN ('" . implode("','", $ids) . "')
-  AND " . $table . "2.meta_key IN ('" . implode("','", [$metaKeyIdentifier, ...$fieldNames]) . "')
-ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
+SELECT " . $metaTable . "2." . $metaColumnIdentifier . " post_id, " . $metaTable . "2.meta_value, " . $metaTable . "2.meta_key
+FROM " . $metaTable . "
+         LEFT JOIN " . $metaTable . " " . $metaTable . "2 ON " . $metaTable . "2." . $metaColumnIdentifier . " = " . $metaTable . "." . $metaColumnIdentifier . "
+WHERE " . $metaTable . ".meta_value IN ('" . implode("','", $ids) . "')
+  AND " . $metaTable . "2.meta_key IN ('" . implode("','", [$metaKeyIdentifier, ...$fieldNames]) . "')
+ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 ");
         $results = [];
         $mapping = [];
@@ -186,8 +186,9 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             }
             if ($includePostId) {
                 $item['_' . Sage::TOKEN . '_postId'] = null;
-                if (array_key_exists($item[$mandatoryField], $mapping)) {
-                    $item['_' . Sage::TOKEN . '_postId'] = $mapping[$item[$mandatoryField]];
+                $key = $getIdentifier($item);
+                if (array_key_exists($key, $mapping)) {
+                    $item['_' . Sage::TOKEN . '_postId'] = $mapping[$key];
                 }
             }
         }
@@ -239,7 +240,7 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $fDocenteteIdentifier = null;
         foreach ($order->get_meta_data() as $meta) {
             $data = $meta->get_data();
-            if ($data['key'] === '_' . Sage::TOKEN . '_identifier') {
+            if ($data['key'] === Sage::META_KEY_IDENTIFIER) {
                 $fDocenteteIdentifier = json_decode($data['value'], true, 512, JSON_THROW_ON_ERROR);
                 break;
             }
@@ -478,8 +479,6 @@ ORDER BY " . $table . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         }
 
         // todo ajouter le bouton importer le document de vente dans Sage
-
-        // todo must also check if the shipping adress is ok
 
         // todo calculer le prix de la livraison pour afficher le prix sur le site
         // todo return apply_filters( 'woocommerce_cart_shipping_method_full_label', $label, $method ); modifier le prix affiché au panier

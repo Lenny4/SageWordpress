@@ -61,6 +61,7 @@ final class SageSettings
     {
         $sageSettings = $this;
         $sageWoocommerce = $this->sage->sageWoocommerce;
+        global $wpdb;
         $this->sageEntityMenus = [
             new SageEntityMenu(
                 title: 'Clients',
@@ -93,6 +94,8 @@ final class SageSettings
                     new SageEntityMetadata(field: '_postId', value: null),
                 ],
                 metaKeyIdentifier: Sage::META_KEY_CT_NUM,
+                metaTable: $wpdb->usermeta,
+                metaColumnIdentifier: 'user_id',
             ),
             new SageEntityMenu(
                 title: 'Documents',
@@ -101,13 +104,27 @@ final class SageSettings
                 typeModel: SageEntityMenu::FDOCENTETE_TYPE_MODEL,
                 defaultSortField: SageEntityMenu::FDOCENTETE_DEFAULT_SORT,
                 defaultFields: SageEntityMenu::FDOCENTETE_DEFAULT_FIELDS,
-                mandatoryFields: ['doPiece', 'doType'],
+                mandatoryFields: [
+                    'doPiece',
+                    'doType',
+                ],
                 filterType: SageEntityMenu::FDOCENTETE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FDOCENTETES,
                 options: [],
-                actions: [],
-                metadata: [],
-                metaKeyIdentifier: '',
+                actions: [
+                    'import_from_sage' => static function (array $data) use ($sageSettings): string {
+                        return '';
+                    }
+                ],
+                metadata: [
+                    new SageEntityMetadata(field: '_postId', value: null),
+                ],
+                metaKeyIdentifier: Sage::META_KEY_IDENTIFIER,
+                metaTable: 'wp_wc_orders_meta',
+                metaColumnIdentifier: 'order_id',
+                getIdentifier: static function (array $entity) {
+                    return json_encode(['doPiece' => $entity["doPiece"], 'doType' => $entity["doType"]], JSON_THROW_ON_ERROR);
+                },
             ),
             new SageEntityMenu(
                 title: 'Articles',
@@ -116,10 +133,7 @@ final class SageSettings
                 typeModel: SageEntityMenu::FARTICLE_TYPE_MODEL,
                 defaultSortField: SageEntityMenu::FARTICLE_DEFAULT_SORT,
                 defaultFields: SageEntityMenu::FARTICLE_DEFAULT_FIELDS,
-                mandatoryFields: [
-                    'arRef',
-                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId'
-                ],
+                mandatoryFields: ['arRef'],
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
                 options: [
@@ -157,6 +171,8 @@ final class SageSettings
                     new SageEntityMetadata(field: '_postId', value: null),
                 ],
                 metaKeyIdentifier: Sage::META_KEY_AR_REF,
+                metaTable: $wpdb->postmeta,
+                metaColumnIdentifier: 'post_id',
             ),
         ];
         // Initialise settings.

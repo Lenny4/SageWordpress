@@ -44,6 +44,7 @@ final class Sage
     public final const CACHE_LIFETIME = 3600;
     public final const META_KEY_AR_REF = '_' . self::TOKEN . '_arRef';
     public final const META_KEY_CT_NUM = '_' . self::TOKEN . '_ctNum';
+    public final const META_KEY_IDENTIFIER = '_' . self::TOKEN . '_identifier';
 
     /**
      * The single instance of sage.
@@ -533,7 +534,7 @@ final class Sage
                     (int)$_POST[Sage::TOKEN . '-fdocentete-dotype']
                 );
                 if ($fDocentete instanceof stdClass) {
-                    $order->update_meta_data('_' . Sage::TOKEN . '_identifier', json_encode([
+                    $order->update_meta_data(Sage::META_KEY_IDENTIFIER, json_encode([
                         'doPiece' => $fDocentete->doPiece,
                         'doType' => $fDocentete->doType,
                     ], JSON_THROW_ON_ERROR));

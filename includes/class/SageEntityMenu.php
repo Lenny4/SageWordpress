@@ -4,6 +4,7 @@ namespace App\class;
 
 use App\Sage;
 use App\SageSettings;
+use Closure;
 
 final class SageEntityMenu
 {
@@ -40,6 +41,7 @@ final class SageEntityMenu
         'doPiece',
         'doType',
         'doDate',
+        SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
     ];
 
     public const FDOCLIGNE_ENTITY_NAME = 'fDoclignes';
@@ -83,19 +85,22 @@ final class SageEntityMenu
      * @param SageEntityMetadata[] $metadata
      */
     public function __construct(
-        private string $title,
-        private string $description,
-        private string $entityName,
-        private string $typeModel,
-        private string $defaultSortField,
-        private array  $defaultFields,
-        private array  $mandatoryFields,
-        private string $filterType,
-        private string $transDomain,
-        private array  $options,
-        private array  $actions,
-        private array  $metadata,
-        private string $metaKeyIdentifier,
+        private string  $title,
+        private string  $description,
+        private string  $entityName,
+        private string  $typeModel,
+        private string  $defaultSortField,
+        private array   $defaultFields,
+        private array   $mandatoryFields,
+        private string  $filterType,
+        private string  $transDomain,
+        private array   $options,
+        private array   $actions,
+        private array   $metadata,
+        private string  $metaKeyIdentifier,
+        private string  $metaTable,
+        private string  $metaColumnIdentifier,
+        private ?Closure $getIdentifier = null,
     )
     {
     }
@@ -240,6 +245,39 @@ final class SageEntityMenu
     public function setMetaKeyIdentifier(string $metaKeyIdentifier): self
     {
         $this->metaKeyIdentifier = $metaKeyIdentifier;
+        return $this;
+    }
+
+    public function getGetIdentifier(): ?Closure
+    {
+        return $this->getIdentifier;
+    }
+
+    public function setGetIdentifier(?Closure $getIdentifier): self
+    {
+        $this->getIdentifier = $getIdentifier;
+        return $this;
+    }
+
+    public function getMetaTable(): string
+    {
+        return $this->metaTable;
+    }
+
+    public function setMetaTable(string $metaTable): self
+    {
+        $this->metaTable = $metaTable;
+        return $this;
+    }
+
+    public function getMetaColumnIdentifier(): string
+    {
+        return $this->metaColumnIdentifier;
+    }
+
+    public function setMetaColumnIdentifier(string $metaColumnIdentifier): self
+    {
+        $this->metaColumnIdentifier = $metaColumnIdentifier;
         return $this;
     }
 }
