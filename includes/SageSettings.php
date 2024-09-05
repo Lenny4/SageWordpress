@@ -69,7 +69,14 @@ final class SageSettings
                 entityName: SageEntityMenu::FCOMPTET_ENTITY_NAME,
                 typeModel: SageEntityMenu::FCOMPTET_TYPE_MODEL,
                 defaultSortField: SageEntityMenu::FCOMPTET_DEFAULT_SORT,
-                defaultFields: SageEntityMenu::FCOMPTET_DEFAULT_FIELDS,
+                defaultFields: [
+                    'ctNum',
+                    'ctIntitule',
+                    'ctContact',
+                    'ctEmail',
+                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update',
+                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
+                ],
                 mandatoryFields: ['ctNum'],
                 filterType: SageEntityMenu::FCOMPTET_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
@@ -103,8 +110,15 @@ final class SageSettings
                 entityName: SageEntityMenu::FDOCENTETE_ENTITY_NAME,
                 typeModel: SageEntityMenu::FDOCENTETE_TYPE_MODEL,
                 defaultSortField: SageEntityMenu::FDOCENTETE_DEFAULT_SORT,
-                defaultFields: SageEntityMenu::FDOCENTETE_DEFAULT_FIELDS,
+                defaultFields: [
+                    'doDomaine',
+                    'doPiece',
+                    'doType',
+                    'doDate',
+                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
+                ],
                 mandatoryFields: [
+                    'doDomaine', // to show import in sage button on not
                     'doPiece',
                     'doType',
                 ],
@@ -113,6 +127,8 @@ final class SageSettings
                 options: [],
                 actions: [
                     'import_from_sage' => static function (array $data) use ($sageSettings): string {
+//                        $ctNum = $data['ctNum'];
+//                        [$userId, $message] = $sageSettings->sage->importUserFromSage($ctNum);
                         return '';
                     }
                 ],
@@ -132,7 +148,12 @@ final class SageSettings
                 entityName: SageEntityMenu::FARTICLE_ENTITY_NAME,
                 typeModel: SageEntityMenu::FARTICLE_TYPE_MODEL,
                 defaultSortField: SageEntityMenu::FARTICLE_DEFAULT_SORT,
-                defaultFields: SageEntityMenu::FARTICLE_DEFAULT_FIELDS,
+                defaultFields: [
+                    'arRef',
+                    'arDesign',
+                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update',
+                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
+                ],
                 mandatoryFields: ['arRef'],
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,

@@ -270,33 +270,39 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         if (!$fDocentete) {
             return $result;
         }
-        if ($allChanges || $getProductChanges || $getTaxesChanges) {
+        $getProductChanges = $allChanges || $getProductChanges;
+        $getShippingChanges = $allChanges || $getShippingChanges;
+        $getFeeChanges = $allChanges || $getFeeChanges;
+        $getCouponChanges = $allChanges || $getCouponChanges;
+        $getTaxesChanges = $allChanges || $getTaxesChanges;
+        $getUserChanges = $allChanges || $getUserChanges;
+        if ($getProductChanges || $getTaxesChanges) {
             [$productChanges, $products, $taxeCodesProduct] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete->fDoclignes ?? []);
             $result['products'] = $products;
             if ($getProductChanges) {
                 $result['syncChanges'] = [...$result['syncChanges'], ...$productChanges];
             }
         }
-        if ($allChanges || $getShippingChanges || $getTaxesChanges) {
+        if ($getShippingChanges || $getTaxesChanges) {
             [$shippingChanges, $taxeCodesShipping] = $this->getTasksSynchronizeOrder_Shipping($order, $fDocentete);
             if ($getShippingChanges) {
                 $result['syncChanges'] = [...$result['syncChanges'], ...$shippingChanges];
             }
         }
-        if ($allChanges || $getFeeChanges) {
+        if ($getFeeChanges) {
             $feeChanges = $this->getTasksSynchronizeOrder_Fee($order);
             $result['syncChanges'] = [...$result['syncChanges'], ...$feeChanges];
         }
-        if ($allChanges || $getCouponChanges) {
+        if ($getCouponChanges) {
             $couponChanges = $this->getTasksSynchronizeOrder_Coupon($order);
             $result['syncChanges'] = [...$result['syncChanges'], ...$couponChanges];
         }
-        if ($allChanges || $getTaxesChanges) {
+        if ($getTaxesChanges) {
             $taxeCodesProduct = array_values(array_unique([...$taxeCodesProduct, ...$taxeCodesShipping]));
             $taxesChanges = $this->getTasksSynchronizeOrder_Taxes($order, $taxeCodesProduct);
             $result['syncChanges'] = [...$result['syncChanges'], ...$taxesChanges];
         }
-        if ($allChanges || $getUserChanges) {
+        if ($getUserChanges) {
             $userChanges = $this->getTasksSynchronizeOrder_User($order, $fDocentete);
             $result['syncChanges'] = [...$result['syncChanges'], ...$userChanges];
         }

@@ -169,7 +169,16 @@ final class SageTranslationUtils
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId' => __("Wordpress ID", 'sage'),
             ],
             self::TRANS_FDOCENTETES => [
-                "doDomaine" => __("Domaine (cf. énumérateur DomaineType).", 'sage'),
+                "doDomaine" => [
+                    'label' => __("Domaine (cf. énumérateur DomaineType).", 'sage'),
+                    'values' => [
+                        '0' => __("Vente", 'sage'),
+                        '1' => __("Achat", 'sage'),
+                        '2' => __("Stock", 'sage'),
+                        '3' => __("Ticket", 'sage'),
+                        '4' => __("Interne", 'sage'),
+                    ],
+                ],
                 "doType" => [
                     'label' => __("Type du document (cf. énumérateur DocumentType)", 'sage'),
                     'values' => [

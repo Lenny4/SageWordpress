@@ -16,15 +16,6 @@ final class SageEntityMenu
 
     public const FCOMPTET_FILTER_TYPE = 'FComptetFilterInput';
 
-    public const FCOMPTET_DEFAULT_FIELDS = [
-        'ctNum',
-        'ctIntitule',
-        'ctContact',
-        'ctEmail',
-        SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update',
-        SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
-    ];
-
     public const PEXPEDITION_ENTITY_NAME = 'pExpeditions';
 
     public const PEXPEDITION_TYPE_MODEL = 'PExpedition';
@@ -37,13 +28,6 @@ final class SageEntityMenu
 
     public const FDOCENTETE_FILTER_TYPE = 'FDocenteteFilterInput';
 
-    public const FDOCENTETE_DEFAULT_FIELDS = [
-        'doPiece',
-        'doType',
-        'doDate',
-        SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
-    ];
-
     public const FDOCLIGNE_ENTITY_NAME = 'fDoclignes';
 
     public const FARTICLE_ENTITY_NAME = 'fArticles';
@@ -53,13 +37,6 @@ final class SageEntityMenu
     public const FARTICLE_DEFAULT_SORT = 'arRef';
 
     public const FARTICLE_FILTER_TYPE = 'FArticleFilterInput';
-
-    public const FARTICLE_DEFAULT_FIELDS = [
-        'arRef',
-        'arDesign',
-        SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update',
-        SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
-    ];
 
     public const PCATTARIF_ENTITY_NAME = 'pCattarifs';
 
