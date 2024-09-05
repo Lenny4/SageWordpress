@@ -126,17 +126,16 @@ final class SageSettings
                 transDomain: SageTranslationUtils::TRANS_FDOCENTETES,
                 options: [],
                 actions: [
-                    'import_from_sage' => static function (array $data) use ($sageSettings): string {
-//                        $ctNum = $data['ctNum'];
-//                        [$userId, $message] = $sageSettings->sage->importUserFromSage($ctNum);
-                        return '';
+                    'import_from_sage' => static function (array $data) use ($sageWoocommerce): string {
+                        [$orderId, $message] = $sageWoocommerce->importOrderFromSage($data['doPiece'], $data['doType']);
+                        return $message;
                     }
                 ],
                 metadata: [
                     new SageEntityMetadata(field: '_postId', value: null),
                 ],
                 metaKeyIdentifier: Sage::META_KEY_IDENTIFIER,
-                metaTable: 'wp_wc_orders_meta',
+                metaTable: $wpdb->prefix . 'wc_orders_meta',
                 metaColumnIdentifier: 'order_id',
                 getIdentifier: static function (array $entity) {
                     return json_encode(['doPiece' => $entity["doPiece"], 'doType' => $entity["doType"]], JSON_THROW_ON_ERROR);

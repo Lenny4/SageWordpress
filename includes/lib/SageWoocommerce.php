@@ -16,6 +16,7 @@ use WC_Order_Item_Product;
 use WC_Order_Item_Tax;
 use WC_Product;
 use WC_Shipping_Rate;
+use WP_Error;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -653,7 +654,6 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             return "<div class=error>" . __('This email address [' . $email . '] is already registered for user id: ' . $mailExistsUserId . '.', 'woocommerce') . "</div>";
         }
         $fComptetAddress = Sage::createAddressWithFComptet($fComptet);
-        $addressTypes = ['billing', 'shipping'];
         $address = [];
         $fPays = $this->sage->sageGraphQl->getFPays(false);
         foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
@@ -678,7 +678,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 $meta['_' . Sage::TOKEN . $metadata->getField()] = $value($fComptet);
             }
         }
-        foreach ($addressTypes as $addressType) {
+        foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
             $thisAddress = $address[$addressType];
             [$firstName, $lastName] = Sage::getFirstNameLastName(
                 $thisAddress->liIntitule,
@@ -752,12 +752,16 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             }
             foreach ($fieldMaps as $key1 => $key2) {
                 $key2 = str_replace('%p', $prefix, $key2);
+                $objValue = $obj->{$key2};
+                if ($key1 === 'email') {
+                    $objValue = Sage::getValidWordpressMail($objValue);
+                }
                 if (
                     ($oldValue = $order->{'get_' . $type . '_' . $key1}()) !==
-                    $obj->{$key2}
+                    $objValue
                 ) {
                     $old->{$key1} = $oldValue;
-                    $new->{$key1} = $obj->{$key2};
+                    $new->{$key1} = $objValue;
                 }
             }
             if ((array)$new !== []) {
@@ -771,6 +775,89 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             }
         }
         return $addressTypeChanges;
+    }
+
+    public function importOrderFromSage(
+        string    $doPiece,
+        int       $doType,
+        ?int      $shouldBeOrderId = null,
+        ?stdClass $fDocentete = null,
+        bool      $ignorePingApi = false
+    ): array
+    {
+        if (is_null($fDocentete)) {
+            $fDocentete = $this->sage->sageGraphQl->getFDocentete(
+                $doPiece,
+                $doType,
+                getError: true,
+                getFDoclignes: true,
+                getExpedition: true,
+                ignorePingApi: $ignorePingApi,
+                addWordpressProductId: true,
+                getUser: true,
+                getLivraison: true
+            );
+        }
+        if (is_null($fDocentete) || $fDocentete === false) {
+            return [null, "<div class='error'>
+                        " . __("Le document de vente Sage n'a pas pu être importé", 'sage') . "
+                                </div>"];
+        }
+        $orderId = $this->getOrderIdWithDoPieceDoType($doPiece, $doType);
+        if (!is_null($shouldBeOrderId)) {
+            if (is_null($orderId)) {
+                $orderId = $shouldBeOrderId;
+            } else if ($orderId !== $shouldBeOrderId) {
+                return [null, "<div class='error'>
+                        " . __("Ce document de vente Sage est déjà assigné à une commande Wordpress", 'sage') . "
+                                </div>"];
+            }
+        }
+        $newOrder = false;
+        if (is_null($orderId)) {
+            $newOrder = true;
+            $order = wc_create_order();
+            if ($order instanceof WP_Error) {
+                return [null, "<div class='notice notice-error is-dismissible'>
+                                <pre>" . $order->get_error_code() . "</pre>
+                                <pre>" . $order->get_error_message() . "</pre>
+                                </div>"];
+            }
+            $order->update_meta_data(Sage::META_KEY_IDENTIFIER, json_encode([
+                'doPiece' => $fDocentete->doPiece,
+                'doType' => $fDocentete->doType,
+            ], JSON_THROW_ON_ERROR));
+            $order->save();
+            $orderId = $order->get_id();
+        } else {
+            $order = wc_get_order($orderId);
+        }
+        [$message, $order] = $this->applyTasksSynchronizeOrder($order, $this->getTasksSynchronizeOrder($order, $fDocentete));
+
+        if (!$newOrder) {
+            return [$orderId, $message . "<div class='notice notice-success'>
+                        " . __('La commande a été mise à jour', 'sage') . "
+                                </div>"];
+        }
+        return [$orderId, $message . "<div class='notice notice-success'>
+                        " . __('La commande a été créée', 'sage') . "
+                                </div>"];
+    }
+
+    public function getOrderIdWithDoPieceDoType(string $doPiece, int $doType): int|null
+    {
+        global $wpdb;
+        $r = $wpdb->get_results(
+            $wpdb->prepare("
+SELECT order_id
+FROM " . $wpdb->prefix . "wc_orders_meta
+WHERE meta_key = %s
+  AND meta_value = %s
+", [Sage::META_KEY_IDENTIFIER, json_encode(['doPiece' => $doPiece, 'doType' => $doType], JSON_THROW_ON_ERROR)]));
+        if (!empty($r)) {
+            return (int)$r[0]->order_id;
+        }
+        return null;
     }
 
     public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): array
@@ -856,26 +943,6 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         // endregion
 
         return [$message, $order];
-    }
-
-    private function updateOrderMetas(WC_Order $order, stdClass $new, string $addressType): string
-    {
-        $message = '';
-        foreach ((array)$new as $key => $value) {
-            $order->{'set_' . $addressType . '_' . $key}($value);
-        }
-        $order->save();
-        return $message;
-    }
-
-    private function updateUserMetas(WC_Order $order, stdClass $new): string
-    {
-        $message = '';
-        $userId = $order->get_user_id();
-        foreach ((array)$new as $key => $value) {
-            update_user_meta($userId, $key, $value);
-        }
-        return $message;
     }
 
     private function addProductToOrder(WC_Order $order, ?int $productId, int $quantity, stdClass $new, array &$alreadyAddedTaxes): string
@@ -1116,7 +1183,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $wcShippingRate->set_id($new->method_id);
         $wcShippingRate->set_cost($new->priceHt);
         $wcShippingRate->set_taxes($this->formatTaxes($order, $new->taxes, $message));
-        $itemId = $order->add_shipping($wcShippingRate);
+        $itemId = $order->add_shipping($wcShippingRate); // todo deprecated
 
         return $message;
     }
@@ -1242,6 +1309,29 @@ WHERE {$wpdb->posts}.post_type = 'product'
             $message .= $fDocentete;
         }
 
+        return $message;
+    }
+
+    private function updateUserMetas(WC_Order $order, stdClass $new): string
+    {
+        $message = '';
+        $userId = $order->get_user_id();
+        foreach ((array)$new as $key => $value) {
+            update_user_meta($userId, $key, $value);
+        }
+        return $message;
+    }
+
+    private function updateOrderMetas(WC_Order $order, stdClass $new, string $addressType): string
+    {
+        $message = '';
+        foreach ((array)$new as $key => $value) {
+            if ($key === 'email') {
+                $value = Sage::getValidWordpressMail($value);
+            }
+            $order->{'set_' . $addressType . '_' . $key}($value);
+        }
+        $order->save();
         return $message;
     }
 

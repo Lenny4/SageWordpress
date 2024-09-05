@@ -868,61 +868,6 @@ WHERE meta_key = %s
         return null;
     }
 
-    public function createResource(
-        string  $url,
-        string  $method,
-        array   $body,
-        ?string $deleteKey,
-        ?string $deleteValue,
-    ): array
-    {
-        if (!is_null($deleteKey) && !is_null($deleteValue)) {
-            $this->deleteMetaTrashResource($deleteKey, $deleteValue);
-        }
-        $response = SageRequest::selfRequest($url, [
-            'headers' => [
-                'Content-Type' => 'application/json',
-            ],
-            'method' => $method,
-            'body' => json_encode($body, JSON_THROW_ON_ERROR),
-        ]);
-        $responseError = null;
-        if ($response instanceof WP_Error) {
-            $responseError = "<div class='notice notice-error is-dismissible'>
-                                <pre>" . $response->get_error_code() . "</pre>
-                                <pre>" . $response->get_error_message() . "</pre>
-                                </div>";
-        }
-
-        if ($response instanceof WP_Error) {
-            $responseError = "<div class='notice notice-error is-dismissible'>
-                                <pre>" . json_encode($response, JSON_THROW_ON_ERROR) . "</pre>
-                                </div>";
-        } else if (!in_array($response["response"]["code"], [200, 201], true)) {
-            $responseError = "<div class='notice notice-error is-dismissible'>
-                                <pre>" . $response['response']['code'] . "</pre>
-                                <pre>" . $response['body'] . "</pre>
-                                </div>";
-        }
-        return [$response, $responseError];
-    }
-
-    public function deleteMetaTrashResource(string $key, string $value): void
-    {
-        global $wpdb;
-        $wpdb->query($wpdb->prepare("
-DELETE
-FROM {$wpdb->postmeta}
-WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
-                              FROM (SELECT * FROM {$wpdb->postmeta}) postmeta2
-                                       INNER JOIN {$wpdb->posts}
-                                                  ON {$wpdb->posts}.ID = postmeta2.post_id AND {$wpdb->posts}.post_status = 'trash'
-                              WHERE meta_key = %s
-                                AND meta_value = %s)
-  AND {$wpdb->postmeta}.meta_key LIKE '_" . self::TOKEN . "_%'
-        ", [$key, $value]));
-    }
-
     public function createUserSage(int $userId, array $userdata): void
     {
         $userMetaProp = SageSettings::PREFIX_META_DATA;
@@ -971,6 +916,21 @@ WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
     public static function getArRef(int $postId): mixed
     {
         return get_post_meta($postId, self::META_KEY_AR_REF, true);
+    }
+
+    public static function getValidWordpressMail(?string $value): string|null
+    {
+        if (is_null($value)) {
+            return null;
+        }
+        if (empty($value = trim($value))) {
+            return null;
+        }
+        $emails = explode(';', $value);
+        if (!filter_var(($email = trim($emails[0])), FILTER_VALIDATE_EMAIL)) {
+            return null;
+        }
+        return $email;
     }
 
     public static function getName(?string $intitule, ?string $contact): string
@@ -1029,6 +989,61 @@ WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
             return true;
         }
         return false;
+    }
+
+    public function createResource(
+        string  $url,
+        string  $method,
+        array   $body,
+        ?string $deleteKey,
+        ?string $deleteValue,
+    ): array
+    {
+        if (!is_null($deleteKey) && !is_null($deleteValue)) {
+            $this->deleteMetaTrashResource($deleteKey, $deleteValue);
+        }
+        $response = SageRequest::selfRequest($url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+            'method' => $method,
+            'body' => json_encode($body, JSON_THROW_ON_ERROR),
+        ]);
+        $responseError = null;
+        if ($response instanceof WP_Error) {
+            $responseError = "<div class='notice notice-error is-dismissible'>
+                                <pre>" . $response->get_error_code() . "</pre>
+                                <pre>" . $response->get_error_message() . "</pre>
+                                </div>";
+        }
+
+        if ($response instanceof WP_Error) {
+            $responseError = "<div class='notice notice-error is-dismissible'>
+                                <pre>" . json_encode($response, JSON_THROW_ON_ERROR) . "</pre>
+                                </div>";
+        } else if (!in_array($response["response"]["code"], [200, 201], true)) {
+            $responseError = "<div class='notice notice-error is-dismissible'>
+                                <pre>" . $response['response']['code'] . "</pre>
+                                <pre>" . $response['body'] . "</pre>
+                                </div>";
+        }
+        return [$response, $responseError];
+    }
+
+    public function deleteMetaTrashResource(string $key, string $value): void
+    {
+        global $wpdb;
+        $wpdb->query($wpdb->prepare("
+DELETE
+FROM {$wpdb->postmeta}
+WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
+                              FROM (SELECT * FROM {$wpdb->postmeta}) postmeta2
+                                       INNER JOIN {$wpdb->posts}
+                                                  ON {$wpdb->posts}.ID = postmeta2.post_id AND {$wpdb->posts}.post_status = 'trash'
+                              WHERE meta_key = %s
+                                AND meta_value = %s)
+  AND {$wpdb->postmeta}.meta_key LIKE '_" . self::TOKEN . "_%'
+        ", [$key, $value]));
     }
 
     /**
