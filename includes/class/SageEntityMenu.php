@@ -85,21 +85,64 @@ final class SageEntityMenu
      * @param SageEntityMetadata[] $metadata
      */
     public function __construct(
+        /**
+         * Title displayed in left menu and settings
+         */
         private string  $title,
+        /**
+         * Description displayed in the settings
+         */
         private string  $description,
+        /**
+         * Field to request this entity in GraphQL
+         */
         private string  $entityName,
+        /**
+         * Model of this entity in GraphQL
+         */
         private string  $typeModel,
         private string  $defaultSortField,
+        /**
+         * Default fields selected in settings wp-admin/admin.php?page=sage_settings&tab=fDocentetes
+         */
         private array   $defaultFields,
+        /**
+         * Fields that we must request even if they are not selected in the fields to show
+         * these fields allow to identify this entity
+         */
         private array   $mandatoryFields,
+        /**
+         * Filter type of this entity in GraphQL
+         */
         private string  $filterType,
         private string  $transDomain,
+        /**
+         * Further options to show besides "Fields to show" and "Default per page"
+         */
         private array   $options,
+        /**
+         * Callback which can be trigger by button in the list view templates/sage/fDocentetes/list_action.html.twig
+         */
         private array   $actions,
+        /**
+         * Callback which transform data of Sage entity to the metadata
+         */
         private array   $metadata,
+        /**
+         * Meta key which give the identifier value
+         */
         private string  $metaKeyIdentifier,
+        /**
+         * Meta table to use
+         */
         private string  $metaTable,
+        /**
+         * Column in the meta table to use to identify
+         */
         private string  $metaColumnIdentifier,
+        /**
+         * Can be use if the Sage entity has multiple column as id
+         */
         private ?Closure $getIdentifier = null,
     )
     {

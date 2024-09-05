@@ -64,7 +64,7 @@ final class SageSettings
         global $wpdb;
         $this->sageEntityMenus = [
             new SageEntityMenu(
-                title: 'Clients',
+                title: __("Clients", 'sage'),
                 description: __("Gestion des clients.", 'sage'),
                 entityName: SageEntityMenu::FCOMPTET_ENTITY_NAME,
                 typeModel: SageEntityMenu::FCOMPTET_TYPE_MODEL,
@@ -98,7 +98,7 @@ final class SageSettings
                 metaColumnIdentifier: 'user_id',
             ),
             new SageEntityMenu(
-                title: 'Documents',
+                title: __("Documents", 'sage'),
                 description: __("Gestion Commerciale / Menu Traitement / Documents des ventes, des achats, des stocks et internes / Fenêtre Document", 'sage'),
                 entityName: SageEntityMenu::FDOCENTETE_ENTITY_NAME,
                 typeModel: SageEntityMenu::FDOCENTETE_TYPE_MODEL,
@@ -127,7 +127,7 @@ final class SageSettings
                 },
             ),
             new SageEntityMenu(
-                title: 'Articles',
+                title: __("Articles", 'sage'),
                 description: __("Gestion des articles", 'sage'),
                 entityName: SageEntityMenu::FARTICLE_ENTITY_NAME,
                 typeModel: SageEntityMenu::FARTICLE_TYPE_MODEL,
