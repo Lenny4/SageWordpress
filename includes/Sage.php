@@ -389,6 +389,17 @@ final class Sage
 
             return $allTranslations;
         }));
+        $this->twig->addFunction(new TwigFunction('getFilterInput', static function (array $fields, string $prop) {
+            foreach ($fields as $field) {
+                if ($field['name'] === $prop) {
+                    return $field['type'];
+                }
+            }
+            return null;
+        }));
+        $this->twig->addFilter(new TwigFilter('wpDate', static function (string $date): string {
+            return date_i18n(wc_date_format(), strtotime($date)) . ' ' . date_i18n(wc_time_format(), strtotime($date));
+        }));
         // endregion
 
         register_activation_hook($this->file, function (): void {

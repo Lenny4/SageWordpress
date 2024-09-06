@@ -103,7 +103,11 @@ jQuery(document).ready(function () {
         jQuery(chooseFilterTypeSelect).find('option').each((function (index, option) {
             oldOptions.push(jQuery(option).val());
         }));
-        const newOptions = allFilterType[allFields.find(x => x.name === field).type];
+        const filterType = allFields.find(x => x.name === field).type;
+        if (filterType === 'DateTimeOperationFilterInput') {
+            jQuery(chooseValueInput).prop("type", "date");
+        }
+        const newOptions = allFilterType[filterType];
         if (JSON.stringify(oldOptions) !== JSON.stringify(newOptions)) {
             jQuery(chooseFilterTypeSelect).html('');
             for (let option of newOptions) {
