@@ -10,26 +10,26 @@
         </label>
         <input id="cb-select-all-{{ name }}" type="checkbox">
     </td>
-    {% for field in fields %}
-        {% if field['name']|replace({'metaData': ""}) not in hideFields %}
-            <th scope="col" id="{{ field['name'] }}"
-                class="manage-column column-{{ field['name'] }} sortable {% if sortField == field['name'] %} sorted {% endif %} {{ sortValue }}"
-                abbr="{{ field['name'] }}"
+    {% for showField in showFields %}
+        {% if showField['name']|replace({'metaData': ""}) not in hideFields %}
+            <th scope="col" id="{{ showField['name'] }}"
+                class="manage-column column-{{ showField['name'] }} sortable {% if sortField == showField['name'] %} sorted {% endif %} {{ sortValue }}"
+                abbr="{{ showField['name'] }}"
             >
                 <div style="display: flex;align-items: center;">
-                    {% set transField = allTranslations[field['transDomain']][field['name']] %}
+                    {% set transField = allTranslations[showField['transDomain']][showField['name']] %}
                     {% set transFieldHasValues = transField|gettype != 'string' %}
                     {% if transField|gettype != 'string' %}
                         {% set transFieldLabel = transField['label'] %}
                     {% else %}
                         {% set transFieldLabel = transField %}
                     {% endif %}
-                    {% set isMetaDataField = field.name starts with 'metaData' %}
+                    {% set isMetaDataField = showField.name starts with 'metaData' %}
                     {% if isMetaDataField == false %}
-                    {% if sortField == field['name'] %}
-                    <a href="{{ getUrlWithParam('sort', '{"'~field['name']~'":"'~otherSort~'"}') }}">
+                    {% if sortField == showField['name'] %}
+                    <a href="{{ getUrlWithParam('sort', '{"'~showField['name']~'":"'~otherSort~'"}') }}">
                         {% else %}
-                        <a href="{{ getUrlWithParam('sort', '{"'~field['name']~'":"asc"}') }}">
+                        <a href="{{ getUrlWithParam('sort', '{"'~showField['name']~'":"asc"}') }}">
                             {% endif %}
                             {% endif %}
                             <span>{{ transFieldLabel }}</span>
@@ -45,7 +45,7 @@
                         {% endif %}
 
                         {% if transField == null %}
-                            {{ 'Must create translation for field ' ~ field['name']|trans }}
+                            {{ 'Must create translation for field ' ~ showField['name']|trans }}
                         {% endif %}
                 </div>
             </th>

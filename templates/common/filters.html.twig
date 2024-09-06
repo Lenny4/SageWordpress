@@ -11,7 +11,7 @@
             <input style="margin-bottom: 0.5rem" type="button" id="add_filter" class="button"
                    value="{{ 'Add filter'|trans }}">
             <div data-all-filter-type="{{ getAllFilterType()|json_encode }}"></div>
-            <div data-all-fields="{{ (fields|removeFields(hideFields))|json_encode }}"></div>
+            <div data-all-fields="{{ (filterFields|removeFields(hideFields))|json_encode }}"></div>
             <div id="all_filter_container">
                 {% if queryParams['filter_field'] is defined %}
                     {% for i in 1..queryParams['filter_field']|length %}

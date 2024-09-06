@@ -17,7 +17,7 @@
                 <input type="checkbox" name="{{ sageEntityMenu.entityName }}[]"
                        id="{{ sageEntityMenu.entityName }}_{{ entityIdentifier }}" value="{{ entityIdentifier }}">
             </th>
-            {% for prop, value in item|sortByFields(fields) %}
+            {% for prop, value in item|sortByFields(showFields) %}
                 {% if prop not in hideFields %}
                     <td data-colname="{{ prop }}">
                         {% if value is iterable %}

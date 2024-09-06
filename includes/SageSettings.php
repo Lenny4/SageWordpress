@@ -395,22 +395,32 @@ final class SageSettings
                 ],
             ];
             foreach ($this->sageEntityMenus as $sageEntityMenu) {
+                $fieldOptions = $this->getFieldsForEntity($sageEntityMenu);
+                $defaultFields = $sageEntityMenu->getDefaultFields();
                 $options = [
                     [
-                        'id' => $sageEntityMenu->getEntityName() . '_fields',
-                        'label' => __('Fields to show', 'sage'),
-                        'description' => __('Please select the fields to show on the table.', 'sage'),
+                        'id' => $sageEntityMenu->getEntityName() . '_show_fields',
+                        'label' => __('Champs à montrer', 'sage'),
+                        'description' => __('Veuillez sélectionner les champs à afficher sur le tableau.', 'sage'),
                         'type' => '2_select_multi',
-                        'options' => $this->getFieldsForEntity($sageEntityMenu),
-                        'default' => $sageEntityMenu->getDefaultFields(),
+                        'options' => $fieldOptions,
+                        'default' => $defaultFields,
                     ],
                     [
                         'id' => $sageEntityMenu->getEntityName() . '_perPage',
-                        'label' => __('Default per page', 'sage'),
-                        'description' => __('Please select the number of rows to show on the table.', 'sage'),
+                        'label' => __('Nombre d\'élément par défaut par page', 'sage'),
+                        'description' => __('Veuillez sélectionner le nombre de lignes à afficher sur le tableau.', 'sage'),
                         'type' => 'select',
                         'options' => array_combine(self::$paginationRange, self::$paginationRange),
                         'default' => (string)self::$defaultPagination
+                    ],
+                    [
+                        'id' => $sageEntityMenu->getEntityName() . '_filter_fields',
+                        'label' => __('Champs pouvant être filtrés', 'sage'),
+                        'description' => __('Veuillez sélectionner les champs pouvant servir à filter vos résultats.', 'sage'),
+                        'type' => '2_select_multi',
+                        'options' => $fieldOptions,
+                        'default' => $defaultFields,
                     ],
                     ...$sageEntityMenu->getOptions(),
                 ];
@@ -590,34 +600,50 @@ final class SageSettings
                             }
 
                             $entityName = $sageEntityMenu->getEntityName();
-                            $rawFields = get_option(Sage::TOKEN . '_' . $entityName . '_fields');
-                            if ($rawFields === false) {
-                                $rawFields = $sageEntityMenu->getDefaultFields();
+                            $rawShowFields = get_option(Sage::TOKEN . '_' . $entityName . '_show_fields');
+                            $rawFilterFields = get_option(Sage::TOKEN . '_' . $entityName . '_filter_fields');
+                            if ($rawShowFields === false) {
+                                $rawShowFields = $sageEntityMenu->getDefaultFields();
+                            }
+                            if ($rawFilterFields === false) {
+                                $rawFilterFields = $sageEntityMenu->getDefaultFields();
                             }
 
                             $mandatoryFields = $sageEntityMenu->getMandatoryFields();
-                            $hideFields = [...array_diff($mandatoryFields, $rawFields)];
-                            $rawFields = array_unique([...$rawFields, ...$hideFields]);
-                            $fields = [];
+                            $hideFields = [...array_diff($mandatoryFields, $rawShowFields)];
+                            $rawShowFields = array_unique([...$rawShowFields, ...$hideFields]);
+                            $showFields = [];
+                            $filterFields = [];
                             $inputFields = $sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType()) ?? [];
                             $transDomain = $sageEntityMenu->getTransDomain();
                             $trans = SageTranslationUtils::getTranslations();
-                            foreach (array_unique([...$rawFields, ...$mandatoryFields]) as $rawField) {
-                                $f = [
-                                    'name' => $rawField,
-                                    'type' => 'StringOperationFilterInput',
-                                    'transDomain' => $transDomain,
-                                    'values' => null,
-                                ];
-                                if (array_key_exists($rawField, $inputFields)) {
-                                    $f['name'] = $inputFields[$rawField]->name;
-                                    $f['type'] = $inputFields[$rawField]->type->name;
+                            foreach ([
+                                         [
+                                             'rawFields' => array_unique([...$rawShowFields, ...$mandatoryFields]),
+                                             'array' => &$showFields,
+                                         ],
+                                         [
+                                             'rawFields' => $rawFilterFields,
+                                             'array' => &$filterFields,
+                                         ]
+                                     ] as $fieldType) {
+                                foreach ($fieldType['rawFields'] as $rawField) {
+                                    $f = [
+                                        'name' => $rawField,
+                                        'type' => 'StringOperationFilterInput',
+                                        'transDomain' => $transDomain,
+                                        'values' => null,
+                                    ];
+                                    if (array_key_exists($rawField, $inputFields)) {
+                                        $f['name'] = $inputFields[$rawField]->name;
+                                        $f['type'] = $inputFields[$rawField]->type->name;
+                                    }
+                                    $v = $trans[$sageEntityMenu->getEntityName()][$rawField];
+                                    if (is_array($v) && array_key_exists('values', $v)) {
+                                        $f['values'] = $v['values'];
+                                    }
+                                    $fieldType['array'][] = $f;
                                 }
-                                $v = $trans[$sageEntityMenu->getEntityName()][$rawField];
-                                if (is_array($v) && array_key_exists('values', $v)) {
-                                    $f['values'] = $v['values'];
-                                }
-                                $fields[] = $f;
                             }
 
                             if (!isset($queryParams['per_page'])) {
@@ -628,16 +654,17 @@ final class SageSettings
                             }
 
                             $data = json_decode(json_encode($sageSettings->sage->sageGraphQl
-                                ->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $fields)
+                                ->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $showFields)
                                 , JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
-                            $data = $sageSettings->sage->sageWoocommerce->populateMetaDatas($data, $fields, $sageEntityMenu);
+                            $data = $sageSettings->sage->sageWoocommerce->populateMetaDatas($data, $showFields, $sageEntityMenu);
                             $hideFields = array_map(static function (string $hideField) {
                                 return str_replace(SageSettings::PREFIX_META_DATA, '', $hideField);
                             }, $hideFields);
                             echo $sageSettings->sage->twig->render('sage/' . $sageEntityMenu->getEntityName() . '/index.html.twig', [
                                 'queryParams' => $queryParams,
                                 'data' => $data,
-                                'fields' => $fields,
+                                'showFields' => $showFields,
+                                'filterFields' => $filterFields,
                                 'hideFields' => $hideFields,
                                 'sageEntityMenu' => $sageEntityMenu,
                             ]);

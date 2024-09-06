@@ -175,7 +175,7 @@ final class SageTranslationUtils
                         '0' => __("Vente", 'sage'),
                         '1' => __("Achat", 'sage'),
                         '2' => __("Stock", 'sage'),
-                        '3' => __("Ticket", 'sage'),
+                        // '3' => __("Ticket", 'sage'),
                         '4' => __("Interne", 'sage'),
                     ],
                 ],
