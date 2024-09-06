@@ -1,6 +1,3 @@
 #!/bin/sh
-if [ ! "$(docker-compose ps -q wordpress)" ]; then
-   echo "Unable to connect to docker container. Have you run 'docker-compose up -d' ?"
-else
-   docker-compose exec wordpress $@
-fi
+
+docker-compose exec wordpress $@

@@ -1,0 +1,6 @@
+node*
+vendor*
+.vscode
+.DS_Store
+.idea
+templates/cache

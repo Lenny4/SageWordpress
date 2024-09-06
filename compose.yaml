@@ -1,0 +1,30 @@
+services:
+
+  caddy:
+    container_name: wordpress
+    build:
+      context: .
+    restart: always
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - db
+    ports:
+      - 80:80
+      - 443:443
+
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: exampledb
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    ports:
+      - 3306:3306
+    volumes:
+      - dbmysql:/var/lib/mysql
+
+volumes:
+  dbmysql:
