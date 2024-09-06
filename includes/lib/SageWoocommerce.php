@@ -13,9 +13,9 @@ use WC_Meta_Data;
 use WC_Order;
 use WC_Order_Item;
 use WC_Order_Item_Product;
+use WC_Order_Item_Shipping;
 use WC_Order_Item_Tax;
 use WC_Product;
-use WC_Shipping_Rate;
 use WP_Error;
 
 if (!defined('ABSPATH')) {
@@ -1123,7 +1123,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $orderItemTaxesRateId = array_map(static function (WC_Order_Item_Tax $orderItemTax) {
             return $orderItemTax->get_rate_id();
         }, $orderItemTaxes);
-        [$t, $rates] = $this->sage->settings->getWordpressTaxes();
+        [$taxe, $rates] = $this->sage->settings->getWordpressTaxes();
         $result = ['total' => [], 'subtotal' => []];
         foreach ($taxes as $taxe) {
             $rate = current(array_filter($rates, static function (stdClass $rate) use ($taxe) {
@@ -1174,17 +1174,19 @@ WHERE {$wpdb->posts}.post_type = 'product'
 
     private function addShippingToOrder(WC_Order $order, stdClass $new, array &$alreadyAddedTaxes): string
     {
+        $message = '';
         foreach ($new->taxes as $taxe) {
             $alreadyAddedTaxes[] = $taxe['code'];
         }
-        $message = '';
-        $wcShippingRate = new WC_Shipping_Rate();
-        $wcShippingRate->set_label($new->name);
-        $wcShippingRate->set_id($new->method_id);
-        $wcShippingRate->set_cost($new->priceHt);
-        $wcShippingRate->set_taxes($this->formatTaxes($order, $new->taxes, $message));
-        $itemId = $order->add_shipping($wcShippingRate); // todo deprecated
-
+        $item = new WC_Order_Item_Shipping();
+        $item->set_props(array(
+            'method_title' => $new->name,
+            'method_id' => $new->method_id,
+            'total' => wc_format_decimal($new->priceHt),
+            'taxes' => $this->formatTaxes($order, $new->taxes, $message),
+        ));
+        $order->add_item($item);
+        $order->save();
         return $message;
     }
 
@@ -1210,7 +1212,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $orderId = $order->get_id();
         [$toRemove, $toAdd] = $this->getToRemoveToAddTaxes($order, $new);
         $toAdd = array_diff($toAdd, $alreadyAddedTaxes);
-        [$t, $rates] = $this->sage->settings->getWordpressTaxes();
+        [$taxe, $rates] = $this->sage->settings->getWordpressTaxes();
         foreach ($toAdd as $codeToAdd) {
             $rate = current(array_filter($rates, static function (stdClass $rate) use ($codeToAdd) {
                 return $rate->tax_rate_name === $codeToAdd;
