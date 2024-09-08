@@ -1,14 +1,14 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-    <div class="wrap">
-        <h1 class="wp-heading-inline">
-            {{ 'Articles' | trans }}
-        </h1>
-{#        <a href="{{ getUrlWithParam('tab', 'new') }}" class="page-title-action">{{ 'Add New'|trans }}</a>#}
-        <hr class="wp-header-end">
-        <h2 class="screen-reader-text">{{ 'Filter articles list'|trans }}</h2>
-        {% include 'common/filters.html.twig' %}
-        {% include 'common/lists.html.twig' %}
-        <div class="clear"></div>
-    </div>
+  <div class="wrap">
+    <h1 class="wp-heading-inline">
+      {{ 'Articles' | trans }}
+    </h1>
+    {#        <a href="{{ getUrlWithParam('tab', 'new') }}" class="page-title-action">{{ 'Add New'|trans }}</a> #}
+    <hr class="wp-header-end">
+    <h2 class="screen-reader-text">{{ 'Filter articles list'|trans }}</h2>
+    {% include 'common/filters.html.twig' %}
+    {% include 'common/lists.html.twig' %}
+    <div class="clear"></div>
+  </div>
 {% endblock %}

@@ -289,101 +289,101 @@ final class SageSettings
                             'placeholder' => __($wpdb->dbpassword, 'sage')
                         ],
                         /** region available options types
-                        [
-                            'id' => 'text_field',
-                            'label' => __('Some Text', 'sage'),
-                            'description' => __('This is a standard text field.', 'sage'),
-                            'type' => 'text',
-                            'default' => '',
-                            'placeholder' => __('Placeholder text', 'sage')
-                        ],
-                        [
-                            'id' => 'password_field',
-                            'label' => __('A Password', 'sage'),
-                            'description' => __('This is a standard password field.', 'sage'),
-                            'type' => 'password',
-                            'default' => '',
-                            'placeholder' => __('Placeholder text', 'sage')
-                        ],
-                        [
-                            'id' => 'secret_text_field',
-                            'label' => __('Some Secret Text', 'sage'),
-                            'description' => __('This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved.', 'sage'),
-                            'type' => 'text_secret',
-                            'default' => '',
-                            'placeholder' => __('Placeholder text', 'sage')
-                        ],
-                        [
-                            'id' => 'text_block',
-                            'label' => __('A Text Block', 'sage'),
-                            'description' => __('This is a standard text area.', 'sage'),
-                            'type' => 'textarea',
-                            'default' => '',
-                            'placeholder' => __('Placeholder text for this textarea', 'sage')
-                        ],
-                        [
-                            'id' => 'single_checkbox',
-                            'label' => __('An Option', 'sage'),
-                            'description' => __("A standard checkbox - if you save this option as checked then it will store the option as 'on', otherwise it will be an empty string.", 'sage'),
-                            'type' => 'checkbox',
-                            'default' => ''
-                        ],
-                        [
-                            'id' => 'select_box',
-                            'label' => __('A Select Box', 'sage'),
-                            'description' => __('A standard select box.', 'sage'),
-                            'type' => 'select',
-                            'options' => ['drupal' => 'Drupal', 'joomla' => 'Joomla', 'wordpress' => 'WordPress'],
-                            'default' => 'wordpress'
-                        ],
-                        [
-                            'id' => 'radio_buttons',
-                            'label' => __('Some Options', 'sage'),
-                            'description' => __('A standard set of radio buttons.', 'sage'),
-                            'type' => 'radio',
-                            'options' => ['superman' => 'Superman', 'batman' => 'Batman', 'ironman' => 'Iron Man'],
-                            'default' => 'batman'
-                        ],
-                        [
-                            'id' => 'multiple_checkboxes',
-                            'label' => __('Some Items', 'sage'),
-                            'description' => __('You can select multiple items and they will be stored as an array.', 'sage'),
-                            'type' => 'checkbox_multi',
-                            'options' =>
-                                ['square' => 'Square', 'circle' => 'Circle', 'rectangle' => 'Rectangle', 'triangle' => 'Triangle'],
-                            'default' => ['circle', 'triangle']
-                        ],
-                        [
-                            'id' => 'number_field',
-                            'label' => __('A Number', 'sage'),
-                            'description' => __('This is a standard number field - if this field contains anything other than numbers then the form will not be submitted.', 'sage'),
-                            'type' => 'number',
-                            'default' => '',
-                            'placeholder' => __('42', 'sage')
-                        ],
-                        [
-                            'id' => 'colour_picker',
-                            'label' => __('Pick a colour', 'sage'),
-                            'description' => __("This uses WordPress' built-in colour picker - the option is stored as the colour's hex code.", 'sage'),
-                            'type' => 'color',
-                            'default' => '#21759B'
-                        ],
-                        [
-                            'id' => 'an_image',
-                            'label' => __('An Image', 'sage'),
-                            'description' => __('This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons.', 'sage'),
-                            'type' => 'image',
-                            'default' => '',
-                            'placeholder' => ''
-                        ],
-                        [
-                            'id' => 'multi_select_box',
-                            'label' => __('A Multi-Select Box', 'sage'),
-                            'description' => __('A standard multi-select box - the saved data is stored as an array.', 'sage'),
-                            'type' => 'select_multi',
-                            'options' => ['linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows'],
-                            'default' => ['linux']
-                        ],
+                         * [
+                         * 'id' => 'text_field',
+                         * 'label' => __('Some Text', 'sage'),
+                         * 'description' => __('This is a standard text field.', 'sage'),
+                         * 'type' => 'text',
+                         * 'default' => '',
+                         * 'placeholder' => __('Placeholder text', 'sage')
+                         * ],
+                         * [
+                         * 'id' => 'password_field',
+                         * 'label' => __('A Password', 'sage'),
+                         * 'description' => __('This is a standard password field.', 'sage'),
+                         * 'type' => 'password',
+                         * 'default' => '',
+                         * 'placeholder' => __('Placeholder text', 'sage')
+                         * ],
+                         * [
+                         * 'id' => 'secret_text_field',
+                         * 'label' => __('Some Secret Text', 'sage'),
+                         * 'description' => __('This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved.', 'sage'),
+                         * 'type' => 'text_secret',
+                         * 'default' => '',
+                         * 'placeholder' => __('Placeholder text', 'sage')
+                         * ],
+                         * [
+                         * 'id' => 'text_block',
+                         * 'label' => __('A Text Block', 'sage'),
+                         * 'description' => __('This is a standard text area.', 'sage'),
+                         * 'type' => 'textarea',
+                         * 'default' => '',
+                         * 'placeholder' => __('Placeholder text for this textarea', 'sage')
+                         * ],
+                         * [
+                         * 'id' => 'single_checkbox',
+                         * 'label' => __('An Option', 'sage'),
+                         * 'description' => __("A standard checkbox - if you save this option as checked then it will store the option as 'on', otherwise it will be an empty string.", 'sage'),
+                         * 'type' => 'checkbox',
+                         * 'default' => ''
+                         * ],
+                         * [
+                         * 'id' => 'select_box',
+                         * 'label' => __('A Select Box', 'sage'),
+                         * 'description' => __('A standard select box.', 'sage'),
+                         * 'type' => 'select',
+                         * 'options' => ['drupal' => 'Drupal', 'joomla' => 'Joomla', 'wordpress' => 'WordPress'],
+                         * 'default' => 'wordpress'
+                         * ],
+                         * [
+                         * 'id' => 'radio_buttons',
+                         * 'label' => __('Some Options', 'sage'),
+                         * 'description' => __('A standard set of radio buttons.', 'sage'),
+                         * 'type' => 'radio',
+                         * 'options' => ['superman' => 'Superman', 'batman' => 'Batman', 'ironman' => 'Iron Man'],
+                         * 'default' => 'batman'
+                         * ],
+                         * [
+                         * 'id' => 'multiple_checkboxes',
+                         * 'label' => __('Some Items', 'sage'),
+                         * 'description' => __('You can select multiple items and they will be stored as an array.', 'sage'),
+                         * 'type' => 'checkbox_multi',
+                         * 'options' =>
+                         * ['square' => 'Square', 'circle' => 'Circle', 'rectangle' => 'Rectangle', 'triangle' => 'Triangle'],
+                         * 'default' => ['circle', 'triangle']
+                         * ],
+                         * [
+                         * 'id' => 'number_field',
+                         * 'label' => __('A Number', 'sage'),
+                         * 'description' => __('This is a standard number field - if this field contains anything other than numbers then the form will not be submitted.', 'sage'),
+                         * 'type' => 'number',
+                         * 'default' => '',
+                         * 'placeholder' => __('42', 'sage')
+                         * ],
+                         * [
+                         * 'id' => 'colour_picker',
+                         * 'label' => __('Pick a colour', 'sage'),
+                         * 'description' => __("This uses WordPress' built-in colour picker - the option is stored as the colour's hex code.", 'sage'),
+                         * 'type' => 'color',
+                         * 'default' => '#21759B'
+                         * ],
+                         * [
+                         * 'id' => 'an_image',
+                         * 'label' => __('An Image', 'sage'),
+                         * 'description' => __('This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons.', 'sage'),
+                         * 'type' => 'image',
+                         * 'default' => '',
+                         * 'placeholder' => ''
+                         * ],
+                         * [
+                         * 'id' => 'multi_select_box',
+                         * 'label' => __('A Multi-Select Box', 'sage'),
+                         * 'description' => __('A standard multi-select box - the saved data is stored as an array.', 'sage'),
+                         * 'type' => 'select_multi',
+                         * 'options' => ['linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows'],
+                         * 'default' => ['linux']
+                         * ],
                          **/
                     ]
                 ],
@@ -1017,33 +1017,13 @@ WHERE meta_key = %s
         }
     }
 
-    /**
-     * We specifically set the default value in bdd in case between an upgrade we change the default value.
-     * This way the user we keep the previous value if he never changed it.
-     */
-    public function applyDefaultSageEntityMenuOptions(bool $force = false): void
-    {
-        $optionNames = [];
-        foreach ($this->sageEntityMenus as $sageEntityMenu) {
-            foreach ($sageEntityMenu->getOptions() as $option) {
-                $optionNames[Sage::TOKEN . '_' . $option['id']] = $option['default'];
-            }
-        }
-        $options = get_options(array_keys($optionNames));
-        foreach ($options as $option => $value) {
-            if ($force || $value === false) {
-                update_option($option, $optionNames[$option]);
-            }
-        }
-    }
-
-    // woocommerce/src/Internal/Admin/Orders/Edit.php:78 add_meta_box( 'woocommerce-order-data'
-
     private function isApiAuthenticated(): bool
     {
         $response = SageRequest::apiRequest('/Website/' . $_SERVER['HTTP_HOST'] . '/Authorization');
         return $response === 'true';
     }
+
+    // woocommerce/src/Internal/Admin/Orders/Edit.php:78 add_meta_box( 'woocommerce-order-data'
 
     /**
      * https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password
@@ -1092,7 +1072,7 @@ WHERE meta_key = %s
             add_action('admin_notices', static function (): void {
                 ?>
                 <div class="notice notice-success is-dismissible"><p><?=
-                        __('Successfully connected to API.', 'sage')
+                        __('Connexion réussie à l\'API.', 'sage')
                         ?></p></div>
                 <?php
             });
@@ -1271,6 +1251,26 @@ WHERE meta_key = %s
         }
 
         return self::$_instance;
+    }
+
+    /**
+     * We specifically set the default value in bdd in case between an upgrade we change the default value.
+     * This way the user we keep the previous value if he never changed it.
+     */
+    public function applyDefaultSageEntityMenuOptions(bool $force = false): void
+    {
+        $optionNames = [];
+        foreach ($this->sageEntityMenus as $sageEntityMenu) {
+            foreach ($sageEntityMenu->getOptions() as $option) {
+                $optionNames[Sage::TOKEN . '_' . $option['id']] = $option['default'];
+            }
+        }
+        $options = get_options(array_keys($optionNames));
+        foreach ($options as $option => $value) {
+            if ($force || $value === false) {
+                update_option($option, $optionNames[$option]);
+            }
+        }
     }
 
     /**

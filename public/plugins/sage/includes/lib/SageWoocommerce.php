@@ -716,9 +716,10 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             'meta' => $meta,
         ];
         if (is_null($userId)) {
-            $result['username'] = $fComptet->ctNum;
+            $result['username'] = $this->sage->getAvailableUserName($fComptet->ctNum);
             $result['password'] = bin2hex(random_bytes(5));
         }
+
         return $result;
     }
 
@@ -836,13 +837,14 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         }
         [$message, $order] = $this->applyTasksSynchronizeOrder($order, $this->getTasksSynchronizeOrder($order, $fDocentete));
 
+        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "admin.php?page=wc-orders&action=edit&id=" . $orderId . "'>" . __("Voir la commande", 'sage') . "</a></span></strong>";
         if (!$newOrder) {
             return [$orderId, $message . "<div class='notice notice-success'>
-                        " . __('La commande a été mise à jour', 'sage') . "
+                        " . __('La commande a été mise à jour', 'sage') . $url . "
                                 </div>"];
         }
         return [$orderId, $message . "<div class='notice notice-success'>
-                        " . __('La commande a été créée', 'sage') . "
+                        " . __('La commande a été créée', 'sage') . $url . "
                                 </div>"];
     }
 
@@ -998,18 +1000,21 @@ WHERE meta_key = %s
             $arRef,
         );
         $dismissNotice = "<button type='button' class='notice-dismiss sage-notice-dismiss'><span class='screen-reader-text'>" . __('Dismiss this notice.') . "</span></button>";
+        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "post.php?post=%id%&action=edit'>" . __("Voir l'article", 'sage') . "</a></span></strong>";
         if (is_string($responseError)) {
             $message = $responseError;
         } else if ($response["response"]["code"] === 200) {
             $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
+            $url = str_replace('%id%', $body->id, $url);
             $message = "<div class='notice notice-success is-dismissible'>
-                    <p>" . __('Article mis à jour: ' . $body->name, 'sage') . "</p>
+                    <p>" . __('Article mis à jour: ' . $body->name, 'sage') . "</p>" . $url . "
                     $dismissNotice
                             </div>";
         } else if ($response["response"]["code"] === 201) {
             $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
+            $url = str_replace('%id%', $body->id, $url);
             $message = "<div class='notice notice-success is-dismissible'>
-                    <p>" . __('Article créé: ' . $body->name, 'sage') . "</p>
+                    <p>" . __('Article créé: ' . $body->name, 'sage') . "</p>" . $url . "
                     $dismissNotice
                             </div>";
         } else {

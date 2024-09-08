@@ -400,6 +400,9 @@ final class Sage
         $this->twig->addFilter(new TwigFilter('wpDate', static function (string $date): string {
             return date_i18n(wc_date_format(), strtotime($date)) . ' ' . date_i18n(wc_time_format(), strtotime($date));
         }));
+        $this->twig->addFunction(new TwigFunction('get_admin_url', static function (): string {
+            return get_admin_url();
+        }));
         // endregion
 
         register_activation_hook($this->file, function (): void {
@@ -856,13 +859,15 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         foreach ($user["meta"] as $key => $value) {
             update_user_meta($userId, $key, $value);
         }
+
+        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "user-edit.php?user_id=" . $userId . "'>" . __("Voir l'utilisateur", 'sage') . "</a></span></strong>";
         if (!$newUser) {
             return [$userId, "<div class='notice notice-success'>
-                        " . __('User updated', 'sage') . "
+                        " . __('L\'utilisateur a été modifié', 'sage') . $url . "
                                 </div>"];
         }
         return [$userId, "<div class='notice notice-success'>
-                        " . __('User created', 'sage') . "
+                        " . __('L\'utilisateur a été créé', 'sage') . $url . "
                                 </div>"];
     }
 
@@ -958,7 +963,6 @@ WHERE meta_key = %s
         return $name;
     }
 
-    // https://stackoverflow.com/a/31330346/6824121
     public static function getFirstNameLastName(...$fullNames): array
     {
         foreach ($fullNames as $fullName) {
@@ -972,6 +976,8 @@ WHERE meta_key = %s
         }
         return ['', ''];
     }
+
+    // https://stackoverflow.com/a/31330346/6824121
 
     public static function createAddressWithFComptet(StdClass $fComptet): StdClass
     {
@@ -1003,6 +1009,33 @@ WHERE meta_key = %s
             return true;
         }
         return false;
+    }
+
+    public function getAvailableUserName(string $ctNum): string
+    {
+        global $wpdb;
+        $r = $wpdb->get_results(
+            $wpdb->prepare("
+SELECT user_login
+FROM {$wpdb->users}
+WHERE user_login LIKE %s
+", [$ctNum . '%']));
+        if (!empty($r)) {
+            $names = array_map(static function (stdClass $user) {
+                return $user->user_login;
+            }, $r);
+            $result = null;
+            $i = 1;
+            while (is_null($result)) {
+                $newName = $ctNum . $i;
+                if (!in_array($newName, $names, true)) {
+                    $result = $newName;
+                }
+                $i++;
+            }
+            return $result;
+        }
+        return $ctNum;
     }
 
     public function createResource(

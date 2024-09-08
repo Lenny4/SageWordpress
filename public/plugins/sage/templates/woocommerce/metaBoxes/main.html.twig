@@ -1,201 +1,201 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-    {% set flattenAllTranslations = flattenAllTranslations(allTranslations['fDocentetes']) %}
+  {% set flattenAllTranslations = flattenAllTranslations(allTranslations['fDocentetes']) %}
 
-    {{ message | raw }}
-    {% set orderId = order.get_id() %}
-    {% set wpnonce = 'wp_rest'|wp_create_nonce %}
-    <div data-order-data data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}"></div>
-    {% if hasFDocentete == false %}
-        <label for="sage-fdocentete-dopiece">
-            {{ 'Veuillez renseigner le N°pièce de la commande Sage'|trans }}
-        </label>
-        <div style="position: relative">
-            <input name="sage-fdocentete-dopiece" style="padding-right: 20px" id="sage-fdocentete-dopiece" type="text"
-                   size="20"
-                   value="">
-            <input name="sage-fdocentete-dotype" id="sage-fdocentete-dotype" type="hidden">
-            <input name="sage-fdocentete-wpnonce" id="sage-fdocentete-wpnonce" type="hidden"
-                   value="{{ 'wp_rest'|wp_create_nonce }}">
-            <svg class="svg-spinner hidden" viewBox="0 0 50 50">
-                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
-            </svg>
-            <span class="dashicons dashicons-yes endDashiconsInput hidden" style="color: green"></span>
-            <span class="dashicons dashicons-no endDashiconsInput hidden" style="color: red"></span>
-        </div>
+  {{ message | raw }}
+  {% set orderId = order.get_id() %}
+  {% set wpnonce = 'wp_rest'|wp_create_nonce %}
+  <div data-order-data data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}"></div>
+  {% if hasFDocentete == false %}
+    <label for="sage-fdocentete-dopiece">
+      {{ 'Veuillez renseigner le N°pièce de la commande Sage'|trans }}
+    </label>
+    <div style="position: relative">
+      <input name="sage-fdocentete-dopiece" style="padding-right: 20px" id="sage-fdocentete-dopiece" type="text"
+             size="20"
+             value="">
+      <input name="sage-fdocentete-dotype" id="sage-fdocentete-dotype" type="hidden">
+      <input name="sage-fdocentete-wpnonce" id="sage-fdocentete-wpnonce" type="hidden"
+             value="{{ 'wp_rest'|wp_create_nonce }}">
+      <svg class="svg-spinner hidden" viewBox="0 0 50 50">
+        <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+      </svg>
+      <span class="dashicons dashicons-yes endDashiconsInput hidden" style="color: green"></span>
+      <span class="dashicons dashicons-no endDashiconsInput hidden" style="color: red"></span>
+    </div>
+  {% else %}
+    {% if fDocentete|gettype == 'string' %}
+      <div class="notice notice-error">
+        <p>
+          {{ fDocentete }}
+        </p>
+      </div>
+    {% elseif fDocentete is null %}
+      <div class="notice notice-error">
+        <p>
+          {{ 'Une erreur s\'est produite lors de la récupération du document de vente' |trans }}
+        </p>
+      </div>
     {% else %}
-        {% if fDocentete|gettype == 'string' %}
-            <div class="notice notice-error">
-                <p>
-                    {{ fDocentete }}
-                </p>
-            </div>
-        {% elseif fDocentete is null %}
-            <div class="notice notice-error">
-                <p>
-                    {{ 'Une erreur s\'est produite lors de la récupération du document de vente' |trans }}
-                </p>
-            </div>
-        {% else %}
-            <h2>
-                <strong>{{ flattenAllTranslations['doType']['values'][doTypeIdentifier] ~': n° '~ doPieceIdentifier }}</strong>
-            </h2>
-            {% if fDocentete.fDoclignes is empty %}
-                <p>
-                    {{ 'Le document de vente ['~flattenAllTranslations['doType']['values'][doTypeIdentifier]~' n° '~doPieceIdentifier~'] est vide.' |trans }}
-                </p>
-            {% else %}
-                {% set doTypes = getDoTypes(fDocentete.fDoclignes) %}
-                {% set fDocligneFormatteds = formatFDoclignes(fDocentete.fDoclignes, doTypes) %}
-                {% set colspan = 4 %}
-                <p>
-                    {{ 'Mode d\'expédition'|trans ~ ': ' ~ fDocentete.doExpeditNavigation.eIntitule }}
-                    todo utilisé pour calculer le prix de la livraison
-                </p>
-                <p>
-                    {{ 'Catégorie comptable'|trans ~ ': todo' }}
-                    todo utilisé pour calculer le prix de la livraison
-                </p>
-                <p>
-                    {{ 'Catégorie tarifaire'|trans ~ ': todo' }}
-                    todo utilisé pour calculer le prix de la livraison
-                </p>
-                <p>
-                    {{ 'Nombre de colis'|trans ~ ': todo' }}
-                </p>
-                <p>
-                    {{ 'Numéro client'|trans ~ ': todo' }}
-                </p>
-                <p>
-                    {{ 'Prix de la livraison'|trans }}
-                    {% if fDocentete.fraisExpedition.priceTtc > 0 %}
-                        {{ fDocentete.fraisExpedition.priceTtc|format_currency(currency) }}
+      <h2>
+        <strong>{{ flattenAllTranslations['doType']['values'][doTypeIdentifier] ~': n° '~ doPieceIdentifier }}</strong>
+      </h2>
+      {% if fDocentete.fDoclignes is empty %}
+        <p>
+          {{ 'Le document de vente ['~flattenAllTranslations['doType']['values'][doTypeIdentifier]~' n° '~doPieceIdentifier~'] est vide.' |trans }}
+        </p>
+      {% else %}
+        {% set doTypes = getDoTypes(fDocentete.fDoclignes) %}
+        {% set fDocligneFormatteds = formatFDoclignes(fDocentete.fDoclignes, doTypes) %}
+        {% set colspan = 4 %}
+        <p>
+          {{ 'Mode d\'expédition'|trans ~ ': ' ~ fDocentete.doExpeditNavigation.eIntitule }}
+          todo utilisé pour calculer le prix de la livraison
+        </p>
+        <p>
+          {{ 'Catégorie comptable'|trans ~ ': todo' }}
+          todo utilisé pour calculer le prix de la livraison
+        </p>
+        <p>
+          {{ 'Catégorie tarifaire'|trans ~ ': todo' }}
+          todo utilisé pour calculer le prix de la livraison
+        </p>
+        <p>
+          {{ 'Nombre de colis'|trans ~ ': todo' }}
+        </p>
+        <p>
+          {{ 'Numéro client'|trans ~ ': todo' }}
+        </p>
+        <p>
+          {{ 'Prix de la livraison'|trans }}
+          {% if fDocentete.fraisExpedition.priceTtc > 0 %}
+            {{ fDocentete.fraisExpedition.priceTtc|format_currency(currency) }}
+          {% endif %}
+        </p>
+        <table>
+          <tr>
+            {% for doType in doTypes %}
+              {% if loop.first == false %}
+                <td class="td-separator"></td>
+              {% endif %}
+              <td class="text-center border-x border-y" colspan="{{ colspan }}">
+                <strong>
+                  {{ flattenAllTranslations['doType']['values'][doType] }}
+                </strong>
+              </td>
+            {% endfor %}
+          </tr>
+          <tr class="pt-1">
+            {% for doType in doTypes %}
+              {% if loop.first == false %}
+                <td class="td-separator"></td>
+              {% endif %}
+              <td></td>
+            {% endfor %}
+          </tr>
+          {% for fDocligneFormatted in fDocligneFormatteds %}
+            <tr>
+              {% for display in fDocligneFormatted.display %}
+                {% if loop.first == false %}
+                  <td class="td-separator"></td>
+                {% endif %}
+                <td colspan="{{ colspan }}"
+                    class="text-center {% if display.showDoPiece or display.showBorderX %} border-x {% endif %} {% if display.showDoPiece %} border-y {% endif %}">
+                  {% if display.showDoPiece %}
+                    {{ display.doPiece }}
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+            <tr>
+              {% for doType, display in fDocligneFormatted.display %}
+                {% if loop.first == false %}
+                  <td class="td-separator">
+                    {% if display.showArrow %}
+                      <span class="dashicons dashicons-arrow-right-alt"></span>
                     {% endif %}
-                </p>
-                <table>
-                    <tr>
-                        {% for doType in doTypes %}
-                            {% if loop.first == false %}
-                                <td class="td-separator"></td>
-                            {% endif %}
-                            <td class="text-center border-x border-y" colspan="{{ colspan }}">
-                                <strong>
-                                    {{ flattenAllTranslations['doType']['values'][doType] }}
-                                </strong>
-                            </td>
-                        {% endfor %}
-                    </tr>
-                    <tr class="pt-1">
-                        {% for doType in doTypes %}
-                            {% if loop.first == false %}
-                                <td class="td-separator"></td>
-                            {% endif %}
-                            <td></td>
-                        {% endfor %}
-                    </tr>
-                    {% for fDocligneFormatted in fDocligneFormatteds %}
-                        <tr>
-                            {% for display in fDocligneFormatted.display %}
-                                {% if loop.first == false %}
-                                    <td class="td-separator"></td>
-                                {% endif %}
-                                <td colspan="{{ colspan }}"
-                                    class="text-center {% if display.showDoPiece or display.showBorderX %} border-x {% endif %} {% if display.showDoPiece %} border-y {% endif %}">
-                                    {% if display.showDoPiece %}
-                                        {{ display.doPiece }}
-                                    {% endif %}
-                                </td>
-                            {% endfor %}
-                        </tr>
-                        <tr>
-                            {% for doType, display in fDocligneFormatted.display %}
-                                {% if loop.first == false %}
-                                    <td class="td-separator">
-                                        {% if display.showArrow %}
-                                            <span class="dashicons dashicons-arrow-right-alt"></span>
-                                        {% endif %}
-                                    </td>
-                                {% endif %}
-                                {% set showData = doType == fDocligneFormatted.doType and display.doPiece != '' %}
-                                {% set className = '' %}
-                                {% if display.showBorderBottom != '' %}
-                                    {% set className = className ~ ' border-bottom' %}
-                                {% endif %}
-                                {% if showData %}
-                                    {% set className = className ~ ' pr-1' %}
-                                {% endif %}
-                                <td class="{% if display.showBorderX %} border-left {% endif %} {{ className }}">
-                                    {% if showData %}
-                                        {{ display.dlQte }}
-                                    {% endif %}
-                                </td>
-                                <td class="{{ className }}">
-                                    {% if display.doPiece != '' %}
-                                        {{ fDocligneFormatted.arRef }}
-                                    {% endif %}
-                                </td>
-                                <td class="{{ className }}">
-                                    {% if showData %}
-                                        {{ fDocligneFormatted.dlDesign }}
-                                    {% endif %}
-                                </td>
-                                <td class="{% if display.showBorderX %} border-right {% endif %} {{ className }}">
-                                    {% if showData %}
-                                        {% if fDocligneFormatted.postId is null %}
-                                            <div class="tooltip" data-import-farticle="{{ fDocligneFormatted.arRef }}"
-                                                 data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}">
+                  </td>
+                {% endif %}
+                {% set showData = doType == fDocligneFormatted.doType and display.doPiece != '' %}
+                {% set className = '' %}
+                {% if display.showBorderBottom != '' %}
+                  {% set className = className ~ ' border-bottom' %}
+                {% endif %}
+                {% if showData %}
+                  {% set className = className ~ ' pr-1' %}
+                {% endif %}
+                <td class="{% if display.showBorderX %} border-left {% endif %} {{ className }}">
+                  {% if showData %}
+                    {{ display.dlQte }}
+                  {% endif %}
+                </td>
+                <td class="{{ className }}">
+                  {% if display.doPiece != '' %}
+                    {{ fDocligneFormatted.arRef }}
+                  {% endif %}
+                </td>
+                <td class="{{ className }}">
+                  {% if showData %}
+                    {{ fDocligneFormatted.dlDesign }}
+                  {% endif %}
+                </td>
+                <td class="{% if display.showBorderX %} border-right {% endif %} {{ className }}">
+                  {% if showData %}
+                    {% if fDocligneFormatted.postId is null %}
+                      <div class="tooltip" data-import-farticle="{{ fDocligneFormatted.arRef }}"
+                           data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}">
                                             <span class="dashicons dashicons-no button"
                                                   style="color: red; padding-right: 22px"></span>
-                                                <div class="tooltiptext">
-                                                    <p>{{ 'Ce produit n\'existe pas dans Wordpress. Veuillez cliquer sur la croix pour le créer.'|trans }}</p>
-                                                </div>
-                                            </div>
-                                        {% else %}
-                                            <div class="tooltip">
-                                                <a href="/wp-admin/post.php?post={{ fDocligneFormatted.postId }}&action=edit">
+                        <div class="tooltiptext">
+                          <p>{{ 'Ce produit n\'existe pas dans Wordpress. Veuillez cliquer sur la croix pour le créer.'|trans }}</p>
+                        </div>
+                      </div>
+                    {% else %}
+                      <div class="tooltip">
+                        <a href="{{ get_admin_url() }}post.php?post={{ fDocligneFormatted.postId }}&action=edit">
                                                 <span class="dashicons dashicons-visibility button"
                                                       style="padding-right: 22px"></span>
-                                                </a>
-                                                <div class="tooltiptext">
-                                                    {{ 'Voir l\'article Wordpress'|trans }}
-                                                </div>
-                                            </div>
-                                        {% endif %}
-                                    {% endif %}
-                                </td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </table>
-            {% endif %}
-            {% if tasksSynchronizeOrder.allProductsExistInWordpress == false %}
-                <p class="text-right">
-                    {{ 'Certains produits ne sont pas encore importés dans Wordpress'|trans }}
-                    <span class="dashicons dashicons-no" style="color: red"></span>
-                </p>
-            {% endif %}
-            {% if tasksSynchronizeOrder.syncChanges is not empty %}
-                <div class="mt-2" style="
+                        </a>
+                        <div class="tooltiptext">
+                          {{ 'Voir l\'article Wordpress'|trans }}
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </table>
+      {% endif %}
+      {% if tasksSynchronizeOrder.allProductsExistInWordpress == false %}
+        <p class="text-right">
+          {{ 'Certains produits ne sont pas encore importés dans Wordpress'|trans }}
+          <span class="dashicons dashicons-no" style="color: red"></span>
+        </p>
+      {% endif %}
+      {% if tasksSynchronizeOrder.syncChanges is not empty %}
+        <div class="mt-2" style="
     display: flex;
     align-items: center;
     justify-content: flex-end;
 ">
-                    <button type="button" id="synchronise-order" data-synchronise-order
-                            class="button button-primary">{{ 'Synchroniser la commande Wordpress avec Sage'|trans }}</button>
-                    <div class="tooltip">
-                        <span class="dashicons dashicons-info"></span>
-                        <div class="tooltiptext" style="max-width: 300px; width: 300px">
-                            {% include 'woocommerce/metaBoxes/tasksSynchronizeOrder.html.twig' %}
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-            {% if tasksSynchronizeOrder.syncChanges is empty and tasksSynchronizeOrder.allProductsExistInWordpress %}
-                <p class="text-right">
-                    {{ 'La commande Wordpress est synchronisée avec Sage'|trans }}
-                    <span class="dashicons dashicons-yes" style="color: green"></span>
-                </p>
-            {% endif %}
-        {% endif %}
+          <button type="button" id="synchronise-order" data-synchronise-order
+                  class="button button-primary">{{ 'Synchroniser la commande Wordpress avec Sage'|trans }}</button>
+          <div class="tooltip">
+            <span class="dashicons dashicons-info"></span>
+            <div class="tooltiptext" style="max-width: 300px; width: 300px">
+              {% include 'woocommerce/metaBoxes/tasksSynchronizeOrder.html.twig' %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+      {% if tasksSynchronizeOrder.syncChanges is empty and tasksSynchronizeOrder.allProductsExistInWordpress %}
+        <p class="text-right">
+          {{ 'La commande Wordpress est synchronisée avec Sage'|trans }}
+          <span class="dashicons dashicons-yes" style="color: green"></span>
+        </p>
+      {% endif %}
     {% endif %}
+  {% endif %}
 {% endblock %}
