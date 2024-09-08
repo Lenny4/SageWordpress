@@ -288,6 +288,7 @@ final class SageSettings
                             'default' => $wpdb->dbpassword,
                             'placeholder' => __($wpdb->dbpassword, 'sage')
                         ],
+                        /** region available options types
                         [
                             'id' => 'text_field',
                             'label' => __('Some Text', 'sage'),
@@ -383,6 +384,7 @@ final class SageSettings
                             'options' => ['linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows'],
                             'default' => ['linux']
                         ],
+                         **/
                     ]
                 ],
             ];
@@ -1012,6 +1014,26 @@ WHERE meta_key = %s
             !$this->isApiAuthenticated()
         ) {
             $newPassword = $this->createApplicationPassword($user_id, $applicationPasswordOption);
+        }
+    }
+
+    /**
+     * We specifically set the default value in bdd in case between an upgrade we change the default value.
+     * This way the user we keep the previous value if he never changed it.
+     */
+    public function applyDefaultSageEntityMenuOptions(bool $force = false): void
+    {
+        $optionNames = [];
+        foreach ($this->sageEntityMenus as $sageEntityMenu) {
+            foreach ($sageEntityMenu->getOptions() as $option) {
+                $optionNames[Sage::TOKEN . '_' . $option['id']] = $option['default'];
+            }
+        }
+        $options = get_options(array_keys($optionNames));
+        foreach ($options as $option => $value) {
+            if ($force || $value === false) {
+                update_option($option, $optionNames[$option]);
+            }
         }
     }
 

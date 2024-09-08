@@ -682,6 +682,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             $filesystem->remove([$dir]);
         }
         // endregion
+        $this->settings->applyDefaultSageEntityMenuOptions();
 
         // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
         $this->init();
