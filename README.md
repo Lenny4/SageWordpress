@@ -1,3 +1,9 @@
+Api key: AD23A964-B01D-4BDB-93FF-B46940EA74B4
+Api host url: 192.168.1.50
+Wordpress host url: https://caddy
+Wordpress db host: 192.168.1.44
+
+
 https://trello.com/b/t64T4Swz/sage-api
 
 https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password

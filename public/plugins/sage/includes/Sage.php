@@ -724,7 +724,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                 description: __("Cette option doit être activé pour que le plugin Sage fonctionne correctement afin de récupérer les taxes directement renseignées dans Sage.", 'sage'),
             ),
         ];
-        if (!is_null($pDossier->nDeviseCompteNavigation->dCodeIso)) {
+        if (!is_null($pDossier?->nDeviseCompteNavigation?->dCodeIso)) {
             $sageExpectedOptions[] = new SageExpectedOption(
                 optionName: 'woocommerce_currency',
                 optionValue: $pDossier->nDeviseCompteNavigation->dCodeIso,

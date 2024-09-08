@@ -80,7 +80,22 @@ final class SageSettings
                 mandatoryFields: ['ctNum'],
                 filterType: SageEntityMenu::FCOMPTET_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
-                options: [],
+                options: [
+                    [
+                        'id' => 'auto_create_sage_account',
+                        'label' => __('Automatically create Sage account', 'sage'),
+                        'description' => __("Lorsqu'un utilisateur créé un compte dans Wordpress un compte client est automatiquement créé dans Sage.", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => 'on'
+                    ],
+                    [
+                        'id' => 'auto_send_mail_import_sage_account',
+                        'label' => __('Automatically send email to reset password', 'sage'),
+                        'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => 'on'
+                    ],
+                ],
                 actions: [
                     'import_from_sage' => static function (array $data) use ($sageSettings): string {
                         $ctNum = $data['ctNum'];
@@ -156,16 +171,7 @@ final class SageSettings
                 mandatoryFields: ['arRef'],
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
-                options: [
-                    // exemple
-//                    [
-//                        'id' => SageEntityMenu::FARTICLE_ENTITY_NAME . '_something',
-//                        'label' => __('The label', 'sage'),
-//                        'description' => __('Description.', 'sage'),
-//                        'type' => 'checkbox',
-//                        'default' => ''
-//                    ],
-                ],
+                options: [],
                 actions: [
                     'import_from_sage' => function (array $data) use ($sageWoocommerce): string {
                         [$response, $responseError, $message] = $sageWoocommerce->importFArticleFromSage($data['arRef']);
@@ -281,20 +287,6 @@ final class SageSettings
                             'type' => 'text',
                             'default' => $wpdb->dbpassword,
                             'placeholder' => __($wpdb->dbpassword, 'sage')
-                        ],
-                        [
-                            'id' => 'auto_create_sage_account',
-                            'label' => __('Automatically create Sage account', 'sage'),
-                            'description' => __("Lorsqu'un utilisateur créé un compte dans Wordpress un compte client est automatiquement créé dans Sage.", 'sage'),
-                            'type' => 'checkbox',
-                            'default' => 'on'
-                        ],
-                        [
-                            'id' => 'auto_send_mail_import_sage_account',
-                            'label' => __('Automatically send email to reset password', 'sage'),
-                            'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", 'sage'),
-                            'type' => 'checkbox',
-                            'default' => 'on'
                         ],
                         [
                             'id' => 'text_field',
