@@ -2,5 +2,7 @@
 {% set apiHostUrl = getApiHostUrl() %}
 <div data-sage-translation="{{ allTranslations|json_encode }}"></div>
 <div data-sage-api-host-url="{{ apiHostUrl }}"></div>
+<div data-sage-default-filters="{{ getDefaultFilters()|json_encode }}"></div>
+<div data-sage-admin-url="{{ get_admin_url() }}"></div>
 {% block body %}
 {% endblock %}

@@ -485,8 +485,6 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             ];
         }
 
-        // todo ajouter le bouton importer le document de vente dans Sage
-
         // todo pouvoir mettre des filtres par défaut dans la liste des documents
 
         // todo calculer le prix de la livraison pour afficher le prix sur le site
@@ -839,11 +837,11 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 
         $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "admin.php?page=wc-orders&action=edit&id=" . $orderId . "'>" . __("Voir la commande", 'sage') . "</a></span></strong>";
         if (!$newOrder) {
-            return [$orderId, $message . "<div class='notice notice-success'>
+            return [$orderId, $message . "<div class='notice notice-success is-dismissible'>
                         " . __('La commande a été mise à jour', 'sage') . $url . "
                                 </div>"];
         }
-        return [$orderId, $message . "<div class='notice notice-success'>
+        return [$orderId, $message . "<div class='notice notice-success is-dismissible'>
                         " . __('La commande a été créée', 'sage') . $url . "
                                 </div>"];
     }

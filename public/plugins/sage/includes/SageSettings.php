@@ -101,7 +101,10 @@ final class SageSettings
                         $ctNum = $data['ctNum'];
                         [$userId, $message] = $sageSettings->sage->importUserFromSage($ctNum);
                         return $message;
-                    }
+                    },
+                    'set_default_filter' => static function (string $data) use ($sageSettings): string {
+                        return $sageSettings->setDefaultFilter($data, $_GET);
+                    },
                 ],
                 metadata: [
                     new SageEntityMetadata(field: '_ctNum', value: static function (StdClass $fComptet) {
@@ -144,7 +147,10 @@ final class SageSettings
                     'import_from_sage' => static function (array $data) use ($sageWoocommerce): string {
                         [$orderId, $message] = $sageWoocommerce->importOrderFromSage($data['doPiece'], $data['doType']);
                         return $message;
-                    }
+                    },
+                    'set_default_filter' => static function (string $data) use ($sageSettings): string {
+                        return $sageSettings->setDefaultFilter($data, $_GET);
+                    },
                 ],
                 metadata: [
                     new SageEntityMetadata(field: '_postId', value: null),
@@ -176,7 +182,10 @@ final class SageSettings
                     'import_from_sage' => function (array $data) use ($sageWoocommerce): string {
                         [$response, $responseError, $message] = $sageWoocommerce->importFArticleFromSage($data['arRef']);
                         return $message;
-                    }
+                    },
+                    'set_default_filter' => static function (string $data) use ($sageSettings): string {
+                        return $sageSettings->setDefaultFilter($data, $_GET);
+                    },
                 ],
                 metadata: [
                     new SageEntityMetadata(field: '_arRef', value: static function (StdClass $fArticle) {
@@ -589,6 +598,12 @@ final class SageSettings
                                 $message = $sageEntityMenu->getActions()[$action["type"]]($action["data"]);
                                 $redirect = remove_query_arg('action', wp_get_referer());
                                 $redirect = add_query_arg(Sage::TOKEN . '_message', urlencode($message), $redirect);
+                                foreach ($queryParams as $key => $value) {
+                                    if ($key === 'action') {
+                                        continue;
+                                    }
+                                    $redirect = add_query_arg($key, $value, $redirect);
+                                }
                                 wp_redirect($redirect);
                                 exit;
                             }
@@ -951,6 +966,21 @@ WHERE meta_key = %s
         }, accepted_args: 3);
         // endregion
         // endregion
+    }
+
+    private function setDefaultFilter(string $entityName, array $queryParams): string
+    {
+        $result = [];
+        foreach ($queryParams as $key => $value) {
+            if (!str_starts_with($key, 'filter_')) {
+                continue;
+            }
+            $result[$key] = $value;
+        }
+        update_option(Sage::TOKEN . '_default_filter_' . $entityName, $result);
+        return "<div class='notice notice-success is-dismissible'>
+                        " . __('Le filtre par défaut a été mis à jour.', 'sage') . "
+                                </div>";
     }
 
     private function getFieldsForEntity(SageEntityMenu $sageEntityMenu): array
