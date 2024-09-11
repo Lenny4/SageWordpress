@@ -523,7 +523,6 @@ final class Sage
             return get_admin_url();
         }));
         $this->twig->addFunction(new TwigFunction('getDefaultFilters', static function () use ($settings): array {
-
             return array_map(static function (SageEntityMenu $sageEntityMenu) {
                 $entityName = $sageEntityMenu->getEntityName();
                 return [

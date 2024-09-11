@@ -1,5 +1,6 @@
 jQuery(document).ready(function () {
   let allFilterContainer = jQuery("#filters_container");
+  let siteUrl = jQuery("[data-sage-site-url]").attr('data-sage-site-url');
   let translationString = jQuery("[data-sage-translation]").attr('data-sage-translation');
   let translations = [];
   if (translationString) {
@@ -216,7 +217,7 @@ jQuery(document).ready(function () {
       }
     });
     const [orderId, wpnonce] = getOrderIdWpnonce();
-    const response = await fetch("/wp-json/sage/v1/orders/" + orderId + "/sync?_wpnonce=" + wpnonce);
+    const response = await fetch(siteUrl + "/index.php?rest_route=" + encodeURI("/sage/v1/orders/" + orderId + "/sync") + "&_wpnonce=" + wpnonce);
     jQuery(blockDom).unblock();
     if (response.status === 200) {
       const data = await response.json();
@@ -241,7 +242,7 @@ jQuery(document).ready(function () {
       }
     });
     const [orderId, wpnonce] = getOrderIdWpnonce();
-    const response = await fetch("/wp-json/sage/v1/orders/" + orderId + "/meta-box-order?_wpnonce=" + wpnonce);
+    const response = await fetch(siteUrl + "/index.php?rest_route=" + encodeURI("/sage/v1/orders/" + orderId + "/meta-box-order") + "&_wpnonce=" + wpnonce);
     jQuery(blockDom).unblock();
     if (response.status === 200) {
       const data = await response.json();
@@ -385,7 +386,7 @@ jQuery(document).ready(function () {
       }
       const spinner = jQuery(domContainer).find(".svg-spinner");
       jQuery(spinner).removeClass("hidden");
-      const response = await fetch("/wp-json/sage/v1/fdocentetes/" + encodeURIComponent(currentSearch) + "?_wpnonce=" + jQuery(inputWpnonce).val());
+      const response = await fetch(siteUrl + "/index.php?rest_route=" + encodeURI("/sage/v1/fdocentetes/" + encodeURIComponent(currentSearch)) + "&_wpnonce=" + jQuery(inputWpnonce).val());
       if (currentSearch !== searchFDocentete) {
         return;
       }
@@ -453,7 +454,7 @@ jQuery(document).ready(function () {
     const orderId = jQuery(target).attr('data-order-id');
     const wpnonce = jQuery(target).attr('data-nonce');
 
-    const response = await fetch("/wp-json/sage/v1/farticle/" + arRef + "/import?_wpnonce=" + wpnonce + "&orderId=" + orderId);
+    const response = await fetch(siteUrl + "/index.php?rest_route=" + encodeURI("/sage/v1/farticle/" + arRef + "/import") + "&_wpnonce" + wpnonce + "&orderId=" + orderId);
     jQuery(blockDom).unblock();
     if (response.status === 200) {
       const data = await response.json();

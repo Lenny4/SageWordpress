@@ -881,7 +881,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
     </span>
     <strong>
     <span style="display: block; margin: 0.5em 0.5em 0 0; clear: both;">
-        <a href="https://caddy/index.php?rest_route=' . urlencode('/sage/v1/deactivate-shipping-zones') . '&_wpnonce=' . wp_create_nonce('wp_rest') . '">
+        <a href="' . get_site_url() . '/index.php?rest_route=' . urlencode('/' . Sage::TOKEN . '/v1/deactivate-shipping-zones') . '&_wpnonce=' . wp_create_nonce('wp_rest') . '">
         ' . __('Désactiver', 'sage') . '
         </a>
     </span>

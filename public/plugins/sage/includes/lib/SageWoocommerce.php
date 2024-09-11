@@ -485,13 +485,11 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             ];
         }
 
-        // todo pouvoir mettre des filtres par défaut dans la liste des documents
+        // todo pouvoir délier une commande wordpress d'une commande sage (garder l'historique des commandes auquels il a été lié)Do_Pi
+        // todo dans le cas ou le document de vente n'existe plus et qu'il n'a pas été délié il faut pouvoir le délier
 
         // todo calculer le prix de la livraison pour afficher le prix sur le site
         // todo return apply_filters( 'woocommerce_cart_shipping_method_full_label', $label, $method ); modifier le prix affiché au panier
-
-        // todo pouvoir délier une commande wordpress d'une commande sage (garder l'historique des commandes auquels il a été lié)Do_Pi
-        // todo dans le cas ou le document de vente n'existe plus et qu'il n'a pas été délié il faut pouvoir le délier
 
         // todo dans la page du compte d'un utilisateur ajouter bouton synchroniser avec sage ou affiché si c'est bien synchronisé avec Sage
 
