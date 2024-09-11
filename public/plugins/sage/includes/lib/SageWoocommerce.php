@@ -238,11 +238,8 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 getUser: true,
                 getLivraison: true,
             );
-            if (is_string($fDocentete) || is_bool($fDocentete)) {
-                if (is_string($fDocentete)) {
-                    $message .= $fDocentete;
-                }
-                $fDocentete = null;
+            if (is_string($fDocentete)) {
+                $message .= $fDocentete;
             }
             $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $fDocentete);
         }
@@ -261,15 +258,15 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     }
 
     public function getTasksSynchronizeOrder(
-        WC_Order  $order,
-        ?stdClass $fDocentete,
-        bool      $allChanges = true,
-        bool      $getProductChanges = false,
-        bool      $getShippingChanges = false,
-        bool      $getFeeChanges = false,
-        bool      $getCouponChanges = false,
-        bool      $getTaxesChanges = false,
-        bool      $getUserChanges = false,
+        WC_Order            $order,
+        stdClass|false|null $fDocentete,
+        bool                $allChanges = true,
+        bool                $getProductChanges = false,
+        bool                $getShippingChanges = false,
+        bool                $getFeeChanges = false,
+        bool                $getCouponChanges = false,
+        bool                $getTaxesChanges = false,
+        bool                $getUserChanges = false,
     ): array
     {
         $result = [
@@ -495,9 +492,6 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 'changes' => [OrderUtils::ADD_SHIPPING_ACTION],
             ];
         }
-
-        // todo pouvoir délier une commande wordpress d'une commande sage (garder l'historique des commandes auquels il a été lié)Do_Pi
-        // todo dans le cas ou le document de vente n'existe plus et qu'il n'a pas été délié il faut pouvoir le délier
 
         // todo calculer le prix de la livraison pour afficher le prix sur le site
         // todo return apply_filters( 'woocommerce_cart_shipping_method_full_label', $label, $method ); modifier le prix affiché au panier

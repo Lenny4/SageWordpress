@@ -30,12 +30,14 @@
           {{ fDocentete }}
         </p>
       </div>
-    {% elseif fDocentete is null %}
+    {% elseif fDocentete is null or fDocentete == false %}
       <div class="notice notice-error">
         <p>
           {{ 'Une erreur s\'est produite lors de la récupération du document de vente' |trans }}
         </p>
       </div>
+      <button type="button" id="desynchronize-order" data-desynchronize-order
+              class="button">{{ 'Désynchroniser la commande Wordpress avec Sage'|trans }}</button>
     {% else %}
       <h2>
         <strong>{{ flattenAllTranslations['doType']['values'][doTypeIdentifier] ~': n° '~ doPieceIdentifier }}</strong>
