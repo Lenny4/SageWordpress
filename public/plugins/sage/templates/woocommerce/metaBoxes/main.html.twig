@@ -168,34 +168,45 @@
           {% endfor %}
         </table>
       {% endif %}
-      {% if tasksSynchronizeOrder.allProductsExistInWordpress == false %}
-        <p class="text-right">
-          {{ 'Certains produits ne sont pas encore importés dans Wordpress'|trans }}
-          <span class="dashicons dashicons-no" style="color: red"></span>
-        </p>
-      {% endif %}
-      {% if tasksSynchronizeOrder.syncChanges is not empty %}
-        <div class="mt-2" style="
+      <div class="mt-2" style="
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+">
+        <button type="button" id="desynchronize-order" data-desynchronize-order
+                class="button">{{ 'Désynchroniser la commande Wordpress avec Sage'|trans }}</button>
+        <div>
+          {% if tasksSynchronizeOrder.allProductsExistInWordpress == false %}
+            <p class="text-right">
+              {{ 'Certains produits ne sont pas encore importés dans Wordpress'|trans }}
+              <span class="dashicons dashicons-no" style="color: red"></span>
+            </p>
+          {% endif %}
+          {% if tasksSynchronizeOrder.syncChanges is not empty %}
+            <div style="
     display: flex;
     align-items: center;
     justify-content: flex-end;
 ">
-          <button type="button" id="synchronise-order" data-synchronise-order
-                  class="button button-primary">{{ 'Synchroniser la commande Wordpress avec Sage'|trans }}</button>
-          <div class="tooltip">
-            <span class="dashicons dashicons-info"></span>
-            <div class="tooltiptext" style="max-width: 300px; width: 300px">
-              {% include 'woocommerce/metaBoxes/tasksSynchronizeOrder.html.twig' %}
+              <button type="button" id="synchronize-order" data-synchronize-order
+                      class="button button-primary">{{ 'Synchroniser la commande Wordpress avec Sage'|trans }}</button>
+              <div class="tooltip">
+                <span class="dashicons dashicons-info"></span>
+                <div class="tooltiptext" style="max-width: 300px; width: 300px">
+                  {% include 'woocommerce/metaBoxes/tasksSynchronizeOrder.html.twig' %}
+                </div>
+              </div>
             </div>
-          </div>
+          {% endif %}
+          {% if tasksSynchronizeOrder.syncChanges is empty and tasksSynchronizeOrder.allProductsExistInWordpress %}
+            <p class="text-right">
+              {{ 'La commande Wordpress est synchronisée avec Sage'|trans }}
+              <span class="dashicons dashicons-yes" style="color: green"></span>
+            </p>
+          {% endif %}
         </div>
-      {% endif %}
-      {% if tasksSynchronizeOrder.syncChanges is empty and tasksSynchronizeOrder.allProductsExistInWordpress %}
-        <p class="text-right">
-          {{ 'La commande Wordpress est synchronisée avec Sage'|trans }}
-          <span class="dashicons dashicons-yes" style="color: green"></span>
-        </p>
-      {% endif %}
+      </div>
     {% endif %}
   {% endif %}
 {% endblock %}

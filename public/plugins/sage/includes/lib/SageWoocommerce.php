@@ -196,6 +196,30 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $data;
     }
 
+    public function desynchronizeOrder(WC_Order $order): WC_Order
+    {
+        $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
+        if (!empty($fDocenteteIdentifier)) {
+            $order->add_order_note(__('Le document de vente Sage a été désynchronisé de la commande.', 'sage') . ' [' . $fDocenteteIdentifier["doPiece"] . ']');
+            $order->delete_meta_data(Sage::META_KEY_IDENTIFIER);
+            $order->save();
+        }
+        return $order;
+    }
+
+    public function getFDocenteteIdentifierFromOrder(WC_Order $order): array|null
+    {
+        $fDocenteteIdentifier = null;
+        foreach ($order->get_meta_data() as $meta) {
+            $data = $meta->get_data();
+            if ($data['key'] === Sage::META_KEY_IDENTIFIER) {
+                $fDocenteteIdentifier = json_decode($data['value'], true, 512, JSON_THROW_ON_ERROR);
+                break;
+            }
+        }
+        return $fDocenteteIdentifier;
+    }
+
     public function getMetaboxSage(WC_Order $order, bool $ignorePingApi = false, string $message = ''): string
     {
         $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
@@ -234,19 +258,6 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
             'tasksSynchronizeOrder' => $tasksSynchronizeOrder
         ]);
-    }
-
-    public function getFDocenteteIdentifierFromOrder(WC_Order $order): array|null
-    {
-        $fDocenteteIdentifier = null;
-        foreach ($order->get_meta_data() as $meta) {
-            $data = $meta->get_data();
-            if ($data['key'] === Sage::META_KEY_IDENTIFIER) {
-                $fDocenteteIdentifier = json_decode($data['value'], true, 512, JSON_THROW_ON_ERROR);
-                break;
-            }
-        }
-        return $fDocenteteIdentifier;
     }
 
     public function getTasksSynchronizeOrder(
@@ -777,11 +788,11 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     }
 
     public function importOrderFromSage(
-        string    $doPiece,
-        int       $doType,
-        ?int      $shouldBeOrderId = null,
-        ?stdClass $fDocentete = null,
-        bool      $ignorePingApi = false
+        string                     $doPiece,
+        int                        $doType,
+        ?int                       $shouldBeOrderId = null,
+        stdClass|null|false|string $fDocentete = null,
+        bool                       $ignorePingApi = false
     ): array
     {
         if (is_null($fDocentete)) {
@@ -822,6 +833,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                                 <pre>" . $order->get_error_message() . "</pre>
                                 </div>"];
             }
+            $order->add_order_note(__('Le document de vente Sage a été synchronisé de la commande.', 'sage') . ' [' . $fDocentete->doPiece["doPiece"] . ']');
             $order->update_meta_data(Sage::META_KEY_IDENTIFIER, json_encode([
                 'doPiece' => $fDocentete->doPiece,
                 'doType' => $fDocentete->doType,

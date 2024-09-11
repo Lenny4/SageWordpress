@@ -644,6 +644,20 @@ final class Sage
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
+            register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/desynchronize', [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
+                    $order = new WC_Order($request['id']);
+                    $order = $sageWoocommerce->desynchronizeOrder($order);
+                    return new WP_REST_Response([
+                        // we create a new order here to be sure to refresh all data from bdd
+                        'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true)
+                    ], 200);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
             register_rest_route(Sage::TOKEN . '/v1', '/deactivate-shipping-zones', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {

@@ -207,7 +207,7 @@ jQuery(document).ready(function () {
     }
   }
 
-  async function synchroniseWordpressOrderWithSage() {
+  async function synchronizeWordpressOrderWithSage(sync) {
     const blockDom = jQuery("[id^='woocommerce-order-sage']");
     jQuery(blockDom).block({
       message: null,
@@ -217,7 +217,11 @@ jQuery(document).ready(function () {
       }
     });
     const [orderId, wpnonce] = getOrderIdWpnonce();
-    const response = await fetch(siteUrl + "/index.php?rest_route=" + encodeURI("/sage/v1/orders/" + orderId + "/sync") + "&_wpnonce=" + wpnonce);
+    let url = siteUrl + "/index.php?rest_route=" + encodeURI("/sage/v1/orders/" + orderId + "/sync") + "&_wpnonce=" + wpnonce;
+    if (!sync) {
+      url = siteUrl + "/index.php?rest_route=" + encodeURI("/sage/v1/orders/" + orderId + "/desynchronize") + "&_wpnonce=" + wpnonce;
+    }
+    const response = await fetch(url);
     jQuery(blockDom).unblock();
     if (response.status === 200) {
       const data = await response.json();
@@ -466,11 +470,17 @@ jQuery(document).ready(function () {
   });
   // endregion
 
-  // region synchronise order
-  jQuery(document).on('click', '[data-synchronise-order]', async function (e) {
+  // region de-synchronize order
+  jQuery(document).on('click', '[data-synchronize-order]', async function (e) {
     e.stopPropagation();
     if (window.confirm('todo 2eme ')) {
-      synchroniseWordpressOrderWithSage();
+      synchronizeWordpressOrderWithSage(true);
+    }
+  });
+  jQuery(document).on('click', '[data-desynchronize-order]', async function (e) {
+    e.stopPropagation();
+    if (window.confirm('test test')) {
+      synchronizeWordpressOrderWithSage(false);
     }
   });
   // endregion
@@ -535,7 +545,7 @@ jQuery(document).ready(function () {
   });
 
   jQuery(document.body).on('order-totals-recalculate-complete', function () {
-    synchroniseWordpressOrderWithSage();
+    synchronizeWordpressOrderWithSage(true);
   });
 
   // Change while load.
