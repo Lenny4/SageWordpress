@@ -462,7 +462,7 @@ jQuery(document).ready(function () {
     const orderId = jQuery(target).attr('data-order-id');
     const wpnonce = jQuery(target).attr('data-nonce');
 
-    const response = await fetch(siteUrl + "/index.php?rest_route=" + encodeURI("/sage/v1/farticle/" + arRef + "/import") + "&_wpnonce" + wpnonce + "&orderId=" + orderId);
+    const response = await fetch(siteUrl + "/index.php?rest_route=" + encodeURI("/sage/v1/farticle/" + arRef + "/import") + "&_wpnonce=" + wpnonce + "&orderId=" + orderId);
     jQuery(blockDom).unblock();
     if (response.status === 200) {
       const data = await response.json();
