@@ -531,6 +531,12 @@ final class Sage
                 ];
             }, $settings->sageEntityMenus);
         }));
+        $this->twig->addFunction(new TwigFunction('getJsTranslations', static function () : array {
+            return [
+                'synchronizeOrder' => __("Voulez vous vraiment synchroniser la commande Wordpress avec le document de vente Sage ?", "sage"),
+                'desynchronizeOrder' => __("Voulez vous vraiment désynchroniser la commande Wordpress avec le document de vente Sage ?", "sage"),
+            ];
+        }));
         // endregion
 
         // region link wordpress order to sage order

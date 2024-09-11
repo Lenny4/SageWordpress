@@ -6,6 +6,10 @@ jQuery(document).ready(function () {
   if (translationString) {
     translations = JSON.parse(translationString);
   }
+  let translationJs = jQuery("[data-sage-js-translation]").attr('data-sage-js-translation');
+  if (translationJs) {
+    translationJs = JSON.parse(translationJs);
+  }
   let apiHostUrl = jQuery("[data-sage-api-host-url]").attr('data-sage-api-host-url');
   // region remove sage_message in query
   let url = new URL(location.href);
@@ -473,13 +477,13 @@ jQuery(document).ready(function () {
   // region de-synchronize order
   jQuery(document).on('click', '[data-synchronize-order]', async function (e) {
     e.stopPropagation();
-    if (window.confirm('todo 2eme ')) {
+    if (window.confirm(translationJs.synchronizeOrder)) {
       synchronizeWordpressOrderWithSage(true);
     }
   });
   jQuery(document).on('click', '[data-desynchronize-order]', async function (e) {
     e.stopPropagation();
-    if (window.confirm('test test')) {
+    if (window.confirm(translationJs.desynchronizeOrder)) {
       synchronizeWordpressOrderWithSage(false);
     }
   });
