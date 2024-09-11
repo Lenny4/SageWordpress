@@ -36,8 +36,7 @@
           {{ 'Une erreur s\'est produite lors de la récupération du document de vente' |trans }}
         </p>
       </div>
-      <button type="button" id="desynchronize-order" data-desynchronize-order
-              class="button">{{ 'Désynchroniser la commande Wordpress avec Sage'|trans }}</button>
+      {% include 'woocommerce/elements/desynchronizeOrder.html.twig' %}
     {% else %}
       <h2>
         <strong>{{ flattenAllTranslations['doType']['values'][doTypeIdentifier] ~': n° '~ doPieceIdentifier }}</strong>
@@ -176,8 +175,7 @@
     justify-content: space-between;
     flex-wrap: wrap;
 ">
-        <button type="button" id="desynchronize-order" data-desynchronize-order
-                class="button">{{ 'Désynchroniser la commande Wordpress avec Sage'|trans }}</button>
+        {% include 'woocommerce/elements/desynchronizeOrder.html.twig' %}
         <div>
           {% if tasksSynchronizeOrder.allProductsExistInWordpress == false %}
             <p class="text-right">
