@@ -800,8 +800,8 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     $objValue = Sage::getValidWordpressMail($objValue);
                 }
                 if (
-                    ($oldValue = $order->{'get_' . $type . '_' . $key1}()) !==
-                    $objValue
+                    ($oldValue = $order->{'get_' . $type . '_' . $key1}()) !== $objValue &&
+                    (!empty($oldValue) || !empty($objValue))
                 ) {
                     $old->{$key1} = $oldValue;
                     $new->{$key1} = $objValue;
@@ -1313,10 +1313,19 @@ WHERE {$wpdb->posts}.post_type = 'product'
                         // no break because can have multiple same label
                     }
                 }
-//                foreach ($wcShippingItemTaxs as $wcShippingItemTax) {
-//                    $taxes = $wcShippingItemTax->get_taxes();
-//                    $wcShippingItemTax->set_taxes($taxes);
-//                }
+                foreach ($wcShippingItemTaxs as $wcShippingItemTax) {
+                    $taxes = $wcShippingItemTax->get_taxes();
+                    if (empty($taxes)) {
+                        continue;
+                    }
+                    $keys = array_keys($taxes["total"]);
+                    foreach ($keys as $key) {
+                        if (in_array($rates[$key]->tax_rate_name, $toRemove, true)) {
+                            unset($taxes["total"][$key]);
+                        }
+                    }
+                    $wcShippingItemTax->set_taxes($taxes);
+                }
             }
         }
         return $message;
