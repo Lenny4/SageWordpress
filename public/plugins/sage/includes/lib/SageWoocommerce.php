@@ -227,6 +227,17 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $fDocentete = null;
         $tasksSynchronizeOrder = [];
         if ($hasFDocentete) {
+            $fDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
+                $fDocenteteIdentifier["doPiece"],
+                $fDocenteteIdentifier["doType"],
+                getError: true,
+                getFDoclignes: true,
+                getExpedition: true,
+                ignorePingApi: $ignorePingApi,
+                addWordpressProductId: true,
+                getUser: true,
+                getLivraison: true,
+            );
             $fDocentete = $this->sage->sageGraphQl->getFDocentete(
                 $fDocenteteIdentifier["doPiece"],
                 $fDocenteteIdentifier["doType"],

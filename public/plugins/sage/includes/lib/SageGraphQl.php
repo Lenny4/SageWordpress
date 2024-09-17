@@ -529,7 +529,12 @@ final class SageGraphQl
                         }
                         $v = '[' . $v . ']';
                     }
-                    $where[$queryParams["filter_field"][$k]][] = $queryParams["filter_type"][$k] . ': ' . $v;
+                    if ($queryParams["filter_type"][$k] === "object") {
+                        // https://stackoverflow.com/a/66316611/6824121
+                        $where[$queryParams["filter_field"][$k]][] = preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($v, JSON_THROW_ON_ERROR));
+                    } else {
+                        $where[$queryParams["filter_field"][$k]][] = '{ ' . $queryParams["filter_type"][$k] . ': ' . $v . ' }';
+                    }
                 }
             }
 
@@ -550,7 +555,7 @@ final class SageGraphQl
             if ($where !== []) {
                 $stringWhere = [];
                 foreach ($where as $f => $w) {
-                    $stringWhere[] = $f . ': { ' . implode(',', $w) . ' }';
+                    $stringWhere[] = $f . ': ' . implode(',', $w);
                 }
 
                 $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': [{' . implode('},{', $stringWhere) . '}]}');
@@ -883,12 +888,17 @@ final class SageGraphQl
         if ($fDocentetes->data->fDocentetes->totalCount !== 1) {
             return false;
         }
-        $result = $fDocentetes->data->fDocentetes->items[0];
-        if ($addWordpressProductId) {
-            $result->fDoclignes = $this->addWordpressProductId($result->fDoclignes);
-        }
+        return $this->afterGetFDocentetes($fDocentetes->data->fDocentetes->items, $addWordpressProductId)[0];
+    }
 
-        return $result;
+    private function afterGetFDocentetes(array $fDocentetes, bool $addWordpressProductId): array
+    {
+        if ($addWordpressProductId) {
+            foreach ($fDocentetes as $fDocentete) {
+                $fDocentete->fDoclignes = $this->addWordpressProductId($fDocentete->fDoclignes);
+            }
+        }
+        return $fDocentetes;
     }
 
     private function addWordpressProductId(array $fDoclignes): array
@@ -918,6 +928,58 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             }
         }
         return $fDoclignes;
+    }
+
+    public function getExtendedFDocentetes(
+        string $doPiece,
+        int    $doType,
+        bool   $getError = false,
+        bool   $getFDoclignes = false,
+        bool   $getExpedition = false,
+        bool   $ignorePingApi = false,
+        bool   $addWordpressProductId = false,
+        bool   $getUser = false,
+        bool   $getLivraison = false,
+    ): array|null|string
+    {
+        if (!$this->pingApi && !$ignorePingApi) {
+            return null;
+        }
+        $fDocentetes = $this->searchEntities(
+            SageEntityMenu::FDOCENTETE_ENTITY_NAME,
+            [
+                "filter_field" => [
+                    "extendedDoPieceDoType",
+                ],
+                "filter_type" => [
+                    "object",
+                ],
+                "filter_value" => [
+                    [
+                        "doPiece" => ["eq" => $doPiece],
+                        "doType" => ["eq" => $doType],
+                    ]
+                ],
+                'where_condition' => 'and',
+                "paged" => "1",
+                "per_page" => "100"
+            ],
+            $this->_getFDocenteteSelectionSet(
+                getFDoclignes: $getFDoclignes,
+                getExpedition: $getExpedition,
+                getUser: $getUser,
+                getLivraison: $getLivraison,
+            ),
+            getError: $getError,
+            ignorePingApi: $ignorePingApi,
+        );
+        if (
+            is_null($fDocentetes) ||
+            is_string($fDocentetes)
+        ) {
+            return $fDocentetes;
+        }
+        return $this->afterGetFDocentetes($fDocentetes->data->fDocentetes->items, $addWordpressProductId);
     }
 
     public function getFComptet(string $ctNum, bool $ignorePingApi = false): StdClass|null
