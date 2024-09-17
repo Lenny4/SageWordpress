@@ -509,7 +509,10 @@ final class SageGraphQl
             if (array_key_exists('filter_field', $queryParams)) {
                 $primaryFields = array_filter($selectionSets, static fn(array $field): bool => array_key_exists('name', $field));
                 foreach ($queryParams["filter_field"] as $k => $v) {
-                    $fieldType = current(array_filter($primaryFields, static fn(array $field): bool => $field['name'] === $v))['type'];
+                    $fieldType = current(array_filter($primaryFields, static fn(array $field): bool => $field['name'] === $v));
+                    if ($fieldType !== false) {
+                        $fieldType = $fieldType['type'];
+                    }
                     if (in_array($fieldType, [
                         'StringOperationFilterInput',
                         'DateTimeOperationFilterInput',

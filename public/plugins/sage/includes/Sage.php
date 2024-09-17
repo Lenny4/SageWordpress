@@ -531,11 +531,17 @@ final class Sage
                 ];
             }, $settings->sageEntityMenus);
         }));
-        $this->twig->addFunction(new TwigFunction('getJsTranslations', static function () : array {
+        $this->twig->addFunction(new TwigFunction('getJsTranslations', static function (): array {
             return [
                 'synchronizeOrder' => __("Voulez vous vraiment synchroniser la commande Wordpress avec le document de vente Sage ?", "sage"),
                 'desynchronizeOrder' => __("Voulez vous vraiment désynchroniser la commande Wordpress avec le document de vente Sage ?", "sage"),
             ];
+        }));
+        $this->twig->addFunction(new TwigFunction('getFDoclignes', static function (array|null|string $fDocentetes) use ($sageWoocommerce): array {
+            return $sageWoocommerce->getFDoclignes($fDocentetes);
+        }));
+        $this->twig->addFunction(new TwigFunction('getMainFDocenteteOfExtendedFDocentetes', static function (WC_Order $order, array|null|string $fDocentetes) use ($sageWoocommerce): stdClass|null|string {
+            return $sageWoocommerce->getMainFDocenteteOfExtendedFDocentetes($order, $fDocentetes);
         }));
         // endregion
 
@@ -583,7 +589,7 @@ final class Sage
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $order = new WC_Order($request['id']);
                     $fDocenteteIdentifier = $sageWoocommerce->getFDocenteteIdentifierFromOrder($order);
-                    $fDocentete = $sageWoocommerce->sage->sageGraphQl->getFDocentete(
+                    $extendedFDocentetes = $sageWoocommerce->sage->sageGraphQl->getExtendedFDocentetes(
                         $fDocenteteIdentifier["doPiece"],
                         $fDocenteteIdentifier["doType"],
                         getError: true,
@@ -594,7 +600,7 @@ final class Sage
                         getUser: true,
                         getLivraison: true,
                     );
-                    $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $fDocentete);
+                    $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $extendedFDocentetes);
                     [$message, $order] = $sageWoocommerce->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
@@ -609,7 +615,7 @@ final class Sage
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $arRef = $request['arRef'];
-                    [$response, $responseError, $message] = $sageWoocommerce->importFArticleFromSage($arRef, ignorePingApi: true);
+                    [$response, $responseError, $message, $postId] = $sageWoocommerce->importFArticleFromSage($arRef, ignorePingApi: true);
                     $order = new Order($request['orderId']);
                     return new WP_REST_Response([
                         'html' => $sageWoocommerce->getMetaboxSage(
@@ -870,7 +876,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                                 </div>"];
             }
         }
-        $user = $this->sageWoocommerce->convertSageUserToWoocommerce(
+        [$userId, $user] = $this->sageWoocommerce->convertSageUserToWoocommerce(
             $fComptet,
             $userId,
         );
@@ -928,7 +934,10 @@ WHERE meta_key = %s
         ) {
             return;
         }
-        $ctIntitule = trim(explode(' ', $userdata['first_name'])[0] . ' ' . $userdata['last_name']);
+        $ctIntitule = '';
+        if (array_key_exists('first_name', $userdata) && array_key_exists('last_name', $userdata)) {
+            $ctIntitule = trim(explode(' ', $userdata['first_name'])[0] . ' ' . $userdata['last_name']);
+        }
         if ($ctIntitule === '') {
             $ctIntitule = $userdata['user_login'];
         }

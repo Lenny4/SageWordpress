@@ -180,7 +180,7 @@ final class SageSettings
                 options: [],
                 actions: [
                     'import_from_sage' => function (array $data) use ($sageWoocommerce): string {
-                        [$response, $responseError, $message] = $sageWoocommerce->importFArticleFromSage($data['arRef']);
+                        [$response, $responseError, $message, $postId] = $sageWoocommerce->importFArticleFromSage($data['arRef']);
                         return $message;
                     },
                     'set_default_filter' => static function (string $data) use ($sageSettings): string {

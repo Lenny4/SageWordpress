@@ -224,10 +224,10 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     {
         $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
         $hasFDocentete = !is_null($fDocenteteIdentifier);
-        $fDocentete = null;
+        $extendedFDocentetes = null;
         $tasksSynchronizeOrder = [];
         if ($hasFDocentete) {
-            $fDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
+            $extendedFDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
                 $fDocenteteIdentifier["doPiece"],
                 $fDocenteteIdentifier["doType"],
                 getError: true,
@@ -238,21 +238,10 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 getUser: true,
                 getLivraison: true,
             );
-            $fDocentete = $this->sage->sageGraphQl->getFDocentete(
-                $fDocenteteIdentifier["doPiece"],
-                $fDocenteteIdentifier["doType"],
-                getError: true,
-                getFDoclignes: true,
-                getExpedition: true,
-                ignorePingApi: $ignorePingApi,
-                addWordpressProductId: true,
-                getUser: true,
-                getLivraison: true,
-            );
-            if (is_string($fDocentete)) {
-                $message .= $fDocentete;
+            if (is_string($extendedFDocentetes)) {
+                $message .= $extendedFDocentetes;
             }
-            $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $fDocentete);
+            $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
         }
         // original WC_Meta_Box_Order_Data::output
         return $this->sage->twig->render('woocommerce/metaBoxes/main.html.twig', [
@@ -261,7 +250,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             'doTypeIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doType"] : null,
             'order' => $order,
             'hasFDocentete' => $hasFDocentete,
-            'fDocentete' => $fDocentete,
+            'extendedFDocentetes' => $extendedFDocentetes,
             'currency' => get_woocommerce_currency(),
             'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
             'tasksSynchronizeOrder' => $tasksSynchronizeOrder
@@ -269,15 +258,15 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     }
 
     public function getTasksSynchronizeOrder(
-        WC_Order            $order,
-        stdClass|false|null $fDocentete,
-        bool                $allChanges = true,
-        bool                $getProductChanges = false,
-        bool                $getShippingChanges = false,
-        bool                $getFeeChanges = false,
-        bool                $getCouponChanges = false,
-        bool                $getTaxesChanges = false,
-        bool                $getUserChanges = false,
+        WC_Order          $order,
+        array|null|string $extendedFDocentetes,
+        bool              $allChanges = true,
+        bool              $getProductChanges = false,
+        bool              $getShippingChanges = false,
+        bool              $getFeeChanges = false,
+        bool              $getCouponChanges = false,
+        bool              $getTaxesChanges = false,
+        bool              $getUserChanges = false,
     ): array
     {
         $result = [
@@ -285,26 +274,28 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             'syncChanges' => [],
             'products' => [],
         ];
-        $taxeCodesProduct = [];
-        $taxeCodesShipping = [];
-        if (!$fDocentete) {
+        if (empty($extendedFDocentetes) || is_string($extendedFDocentetes)) {
             return $result;
         }
+        $taxeCodesProduct = [];
+        $taxeCodesShipping = [];
         $getProductChanges = $allChanges || $getProductChanges;
         $getShippingChanges = $allChanges || $getShippingChanges;
         $getFeeChanges = $allChanges || $getFeeChanges;
         $getCouponChanges = $allChanges || $getCouponChanges;
         $getTaxesChanges = $allChanges || $getTaxesChanges;
         $getUserChanges = $allChanges || $getUserChanges;
+        $fDoclignes = $this->getFDoclignes($extendedFDocentetes);
+        $mainFDocentete = $this->getMainFDocenteteOfExtendedFDocentetes($order, $extendedFDocentetes);
         if ($getProductChanges || $getTaxesChanges) {
-            [$productChanges, $products, $taxeCodesProduct] = $this->getTasksSynchronizeOrder_Products($order, $fDocentete->fDoclignes ?? []);
+            [$productChanges, $products, $taxeCodesProduct] = $this->getTasksSynchronizeOrder_Products($order, $fDoclignes);
             $result['products'] = $products;
             if ($getProductChanges) {
                 $result['syncChanges'] = [...$result['syncChanges'], ...$productChanges];
             }
         }
         if ($getShippingChanges || $getTaxesChanges) {
-            [$shippingChanges, $taxeCodesShipping] = $this->getTasksSynchronizeOrder_Shipping($order, $fDocentete);
+            [$shippingChanges, $taxeCodesShipping] = $this->getTasksSynchronizeOrder_Shipping($order, $mainFDocentete);
             if ($getShippingChanges) {
                 $result['syncChanges'] = [...$result['syncChanges'], ...$shippingChanges];
             }
@@ -323,15 +314,47 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $result['syncChanges'] = [...$result['syncChanges'], ...$taxesChanges];
         }
         if ($getUserChanges) {
-            $userChanges = $this->getTasksSynchronizeOrder_User($order, $fDocentete);
+            $userChanges = $this->getTasksSynchronizeOrder_User($order, $mainFDocentete);
             $result['syncChanges'] = [...$result['syncChanges'], ...$userChanges];
         }
 
-        $result['allProductsExistInWordpress'] = array_filter($fDocentete->fDoclignes, static function (stdClass $fDocligne) {
+        $result['allProductsExistInWordpress'] = array_filter($fDoclignes, static function (stdClass $fDocligne) {
                 return is_null($fDocligne->postId);
             }) === [];
 
         return $result;
+    }
+
+    public function getFDoclignes(array|null|string $fDocentetes): array
+    {
+        if (!is_array($fDocentetes)) {
+            return [];
+        }
+        $fDoclignes = [];
+        foreach ($fDocentetes as $fDocentete) {
+            $fDoclignes = [...$fDoclignes, ...$fDocentete->fDoclignes];
+        }
+        return $fDoclignes;
+    }
+
+    public function getMainFDocenteteOfExtendedFDocentetes(WC_Order $order, array|null|string $extendedFDocentetes): stdClass|null|string
+    {
+        if (!is_array($extendedFDocentetes)) {
+            return $extendedFDocentetes;
+        }
+        $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
+        if (count($extendedFDocentetes) > 1) {
+            usort($extendedFDocentetes, static function (stdClass $a, stdClass $b) use ($fDocenteteIdentifier) {
+                if ($fDocenteteIdentifier["doPiece"] === $a->doPiece && $fDocenteteIdentifier["doType"] === $a->doType) {
+                    return -1;
+                }
+                if ($fDocenteteIdentifier["doPiece"] === $b->doPiece && $fDocenteteIdentifier["doType"] === $b->doType) {
+                    return 1;
+                }
+                return $b->doType <=> $a->doType;
+            });
+        }
+        return array_values($extendedFDocentetes)[0];
     }
 
     private function getTasksSynchronizeOrder_Products(WC_Order $order, array $fDoclignes): array
@@ -619,7 +642,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     {
         $userChanges = [];
         $userMetaWordpress = get_user_meta($userId);
-        $userSage = $this->convertSageUserToWoocommerce($fComptet, userId: $userId);
+        [$userId, $userSage] = $this->convertSageUserToWoocommerce($fComptet, userId: $userId);
         foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
             $old = new stdClass();
             $new = new stdClass();
@@ -665,7 +688,12 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         }
         $mailExistsUserId = email_exists($email);
         if ($mailExistsUserId !== false && $mailExistsUserId !== $userId) {
-            return "<div class=error>" . __('This email address [' . $email . '] is already registered for user id: ' . $mailExistsUserId . '.', 'woocommerce') . "</div>";
+            $ctNum = $this->sage->getUserWordpressIdForSage($mailExistsUserId);
+            if (!empty($ctNum)) {
+                return "<div class=error>" . __('This email address [' . $email . '] is already registered for user id: ' . $mailExistsUserId . '.', 'woocommerce') . "</div>";
+            }
+            $userId = $mailExistsUserId;
+            $this->sage->importUserFromSage($ctNum, $userId, $fComptet);
         }
         $fComptetAddress = Sage::createAddressWithFComptet($fComptet);
         $address = [];
@@ -732,7 +760,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $result['password'] = bin2hex(random_bytes(5));
         }
 
-        return $result;
+        return [$userId, $result];
     }
 
     private function getOrderAddressTypeChanges(WC_Order $order, stdClass $fComptet, stdClass $fLivraison): array
@@ -848,7 +876,18 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         } else {
             $order = wc_get_order($orderId);
         }
-        [$message, $order] = $this->applyTasksSynchronizeOrder($order, $this->getTasksSynchronizeOrder($order, $fDocentete));
+        $extendedFDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
+            $doPiece,
+            $doType,
+            getError: true,
+            getFDoclignes: true,
+            getExpedition: true,
+            ignorePingApi: $ignorePingApi,
+            addWordpressProductId: true,
+            getUser: true,
+            getLivraison: true,
+        );
+        [$message, $order] = $this->applyTasksSynchronizeOrder($order, $this->getTasksSynchronizeOrder($order, $extendedFDocentetes));
 
         $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "admin.php?page=wc-orders&action=edit&id=" . $orderId . "'>" . __("Voir la commande", 'sage') . "</a></span></strong>";
         if (!$newOrder) {
@@ -893,6 +932,25 @@ WHERE meta_key = %s
             return 0;
         });
         $alreadyAddedTaxes = [];
+
+        // region create missing products
+        foreach ($tasksSynchronizeOrder["syncChanges"] as $i => $syncChange) {
+            foreach ($syncChange['changes'] as $change) {
+                switch ($change) {
+                    case OrderUtils::ADD_PRODUCT_ACTION:
+                    case OrderUtils::REPLACE_PRODUCT_ACTION:
+                        if (is_null($syncChange["new"]->postId)) {
+                            [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage($syncChange["new"]->arRef, ignorePingApi: true);
+                            $tasksSynchronizeOrder["syncChanges"][$i]["new"]->postId = $postId;
+                            $message .= $message2;
+                        }
+                        break;
+                }
+            }
+        }
+        // endregion
+
+
         foreach ($tasksSynchronizeOrder["syncChanges"] as $syncChange) {
             foreach ($syncChange['changes'] as $change) {
                 // todo use $order->add_order_note ?
@@ -962,24 +1020,6 @@ WHERE meta_key = %s
         return [$message, $order];
     }
 
-    private function addProductToOrder(WC_Order $order, ?int $productId, int $quantity, stdClass $new, array &$alreadyAddedTaxes): string
-    {
-        $message = '';
-        $qty = wc_stock_amount($quantity);
-        if (is_null($new->postId)) {
-            [$response, $responseError, $message2] = $this->importFArticleFromSage($new->arRef, ignorePingApi: true);
-            if ($response["response"]["code"] !== 201) {
-                return $message2;
-            }
-            $productId = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR)->id;
-        }
-
-        $product = wc_get_product($productId);
-        $itemId = $order->add_product($product, $qty);
-        $message .= $this->updateProductOrder($order, $itemId, $new, $alreadyAddedTaxes);
-        return $message;
-    }
-
     public function importFArticleFromSage(string $arRef, bool $ignorePingApi = false): array
     {
         $fArticle = $this->sage->sageGraphQl->getFArticle($arRef, ignorePingApi: $ignorePingApi);
@@ -1014,11 +1054,13 @@ WHERE meta_key = %s
         );
         $dismissNotice = "<button type='button' class='notice-dismiss sage-notice-dismiss'><span class='screen-reader-text'>" . __('Dismiss this notice.') . "</span></button>";
         $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "post.php?post=%id%&action=edit'>" . __("Voir l'article", 'sage') . "</a></span></strong>";
+        $postId = null;
         if (is_string($responseError)) {
             $message = $responseError;
         } else if ($response["response"]["code"] === 200) {
             $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
             $url = str_replace('%id%', $body->id, $url);
+            $postId = $body->id;
             $message = "<div class='notice notice-success is-dismissible'>
                     <p>" . __('Article mis à jour: ' . $body->name, 'sage') . "</p>" . $url . "
                     $dismissNotice
@@ -1026,6 +1068,7 @@ WHERE meta_key = %s
         } else if ($response["response"]["code"] === 201) {
             $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
             $url = str_replace('%id%', $body->id, $url);
+            $postId = $body->id;
             $message = "<div class='notice notice-success is-dismissible'>
                     <p>" . __('Article créé: ' . $body->name, 'sage') . "</p>" . $url . "
                     $dismissNotice
@@ -1033,7 +1076,7 @@ WHERE meta_key = %s
         } else {
             $message = $response["body"];
         }
-        return [$response, $responseError, $message];
+        return [$response, $responseError, $message, $postId];
     }
 
     public function getWooCommerceIdArticle(string $arRef): int|null
@@ -1071,6 +1114,24 @@ WHERE {$wpdb->posts}.post_type = 'product'
             }
         }
         return $result;
+    }
+
+    private function addProductToOrder(WC_Order $order, ?int $productId, int $quantity, stdClass $new, array &$alreadyAddedTaxes): string
+    {
+        $message = '';
+        $qty = wc_stock_amount($quantity);
+        if (is_null($new->postId)) {
+            [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage($new->arRef, ignorePingApi: true);
+            if ($response["response"]["code"] !== 201) {
+                return $message2;
+            }
+            $productId = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR)->id;
+        }
+
+        $product = wc_get_product($productId);
+        $itemId = $order->add_product($product, $qty);
+        $message .= $this->updateProductOrder($order, $itemId, $new, $alreadyAddedTaxes);
+        return $message;
     }
 
     private function updateProductOrder(WC_Order $order, int $itemId, stdClass $new, array &$alreadyAddedTaxes): string
@@ -1244,6 +1305,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         }
         if (!empty($toRemove)) {
             $wcOrderItemTaxs = $order->get_taxes();
+            $wcShippingItemTaxs = $order->get_shipping_methods();
             foreach ($toRemove as $codeRemove) {
                 foreach ($wcOrderItemTaxs as $wcOrderItemTax) {
                     if ($wcOrderItemTax->get_label() === $codeRemove) {
@@ -1251,6 +1313,10 @@ WHERE {$wpdb->posts}.post_type = 'product'
                         // no break because can have multiple same label
                     }
                 }
+//                foreach ($wcShippingItemTaxs as $wcShippingItemTax) {
+//                    $taxes = $wcShippingItemTax->get_taxes();
+//                    $wcShippingItemTax->set_taxes($taxes);
+//                }
             }
         }
         return $message;
@@ -1259,14 +1325,16 @@ WHERE {$wpdb->posts}.post_type = 'product'
     private function removeProductOrder(WC_Order $order, int $itemId): string
     {
         $message = '';
-        $lineItems = array_values($order->get_items());
+        $lineItems = $order->get_items();
 
+        $order->remove_item($itemId);
         foreach ($lineItems as $lineItem) {
             if ($lineItem->get_id() === $itemId) {
                 $lineItem->delete();
                 break;
             }
         }
+        $order->save();
         return $message;
     }
 
@@ -1308,7 +1376,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $order->save();
 
         $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
-        $fDocentete = $this->sage->sageGraphQl->getFDocentete(
+        $extendedFDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
             $fDocenteteIdentifier["doPiece"],
             $fDocenteteIdentifier["doType"],
             getError: true,
@@ -1320,15 +1388,15 @@ WHERE {$wpdb->posts}.post_type = 'product'
             getLivraison: true,
         );
 
-        if (!is_string($fDocentete)) {
+        if (!is_string($extendedFDocentetes)) {
             $this->applyTasksSynchronizeOrder($order, $this->getTasksSynchronizeOrder(
                 $order,
-                $fDocentete,
+                $extendedFDocentetes,
                 allChanges: false,
                 getUserChanges: true,
             ));
         } else {
-            $message .= $fDocentete;
+            $message .= $extendedFDocentetes;
         }
 
         return $message;

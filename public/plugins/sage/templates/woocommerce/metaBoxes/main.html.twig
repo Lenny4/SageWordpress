@@ -5,6 +5,8 @@
   {{ message | raw }}
   {% set orderId = order.get_id() %}
   {% set wpnonce = 'wp_rest'|wp_create_nonce %}
+  {% set fDoclignes = getFDoclignes(extendedFDocentetes) %}
+  {% set mainFDocentete = getMainFDocenteteOfExtendedFDocentetes(order, extendedFDocentetes) %}
   <div data-order-data data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}"></div>
   {% if hasFDocentete == false %}
     <label for="sage-fdocentete-dopiece">
@@ -24,13 +26,13 @@
       <span class="dashicons dashicons-no endDashiconsInput hidden" style="color: red"></span>
     </div>
   {% else %}
-    {% if fDocentete|gettype == 'string' %}
+    {% if mainFDocentete|gettype == 'string' %}
       <div class="notice notice-error">
         <p>
-          {{ fDocentete }}
+          {{ mainFDocentete }}
         </p>
       </div>
-    {% elseif fDocentete is null or fDocentete == false %}
+    {% elseif mainFDocentete is null or mainFDocentete == false %}
       <div class="notice notice-error">
         <p>
           {{ 'Une erreur s\'est produite lors de la récupération du document de vente' |trans }}
@@ -41,16 +43,16 @@
       <h2>
         <strong>{{ flattenAllTranslations['doType']['values'][doTypeIdentifier] ~': n° '~ doPieceIdentifier }}</strong>
       </h2>
-      {% if fDocentete.fDoclignes is empty %}
+      {% if fDoclignes is empty %}
         <p>
           {{ 'Le document de vente ['~flattenAllTranslations['doType']['values'][doTypeIdentifier]~' n° '~doPieceIdentifier~'] est vide.' |trans }}
         </p>
       {% else %}
-        {% set doTypes = getDoTypes(fDocentete.fDoclignes) %}
-        {% set fDocligneFormatteds = formatFDoclignes(fDocentete.fDoclignes, doTypes) %}
+        {% set doTypes = getDoTypes(fDoclignes) %}
+        {% set fDocligneFormatteds = formatFDoclignes(fDoclignes, doTypes) %}
         {% set colspan = 4 %}
         <p>
-          {{ 'Mode d\'expédition'|trans ~ ': ' ~ fDocentete.doExpeditNavigation.eIntitule }}
+          {{ 'Mode d\'expédition'|trans ~ ': ' ~ mainFDocentete.doExpeditNavigation.eIntitule }}
           todo utilisé pour calculer le prix de la livraison
         </p>
         <p>
@@ -69,8 +71,8 @@
         </p>
         <p>
           {{ 'Prix de la livraison'|trans }}
-          {% if fDocentete.fraisExpedition.priceTtc > 0 %}
-            {{ fDocentete.fraisExpedition.priceTtc|format_currency(currency) }}
+          {% if mainFDocentete.fraisExpedition.priceTtc > 0 %}
+            {{ mainFDocentete.fraisExpedition.priceTtc|format_currency(currency) }}
           {% endif %}
         </p>
         <table>
