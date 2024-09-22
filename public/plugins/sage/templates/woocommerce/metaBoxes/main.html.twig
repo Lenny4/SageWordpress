@@ -52,14 +52,6 @@
         {% set doTypes = getDoTypes(fDoclignes) %}
         {% set fDocligneFormatteds = formatFDoclignes(fDoclignes, doTypes) %}
         {% set colspan = 6 %}
-        <p>
-          {{ 'Catégorie comptable'|trans ~ ': todo' }}
-          todo utilisé pour calculer le prix de la livraison
-        </p>
-        <p>
-          {{ 'Catégorie tarifaire'|trans ~ ': todo' }}
-          todo utilisé pour calculer le prix de la livraison
-        </p>
         <table class="center-table">
           <tr>
             {% for doType in doTypes %}
@@ -118,6 +110,14 @@
                           <td class="text-right">{{ 'Frais de Port (HT)'|trans }}:</td>
                           <td
                             class="text-left">{{ fDocentete.fraisExpedition.priceHt|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
+                        </tr>
+                        <tr>
+                          <td class="text-right">{{ 'Catégorie comptable'|trans }}:</td>
+                          <td class="pr-4 text-left">{{ pCatComptas[fDocentete.nCatCompta] }}</td>
+                          <td class="text-right">{{ 'Catégorie tarifaire'|trans }}:</td>
+                          <td class="pr-4 text-left">{{ pCattarifs[fDocentete.doTarif].ctIntitule }}</td>
+                          <td class="text-right"></td>
+                          <td class="text-left"></td>
                         </tr>
                         </tbody>
                       </table>

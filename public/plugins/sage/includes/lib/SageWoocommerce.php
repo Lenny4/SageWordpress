@@ -7,6 +7,7 @@ use App\Sage;
 use App\SageSettings;
 use App\Utils\FDocenteteUtils;
 use App\Utils\OrderUtils;
+use App\Utils\PCatComptaUtils;
 use App\Utils\RoundUtils;
 use StdClass;
 use WC_Meta_Data;
@@ -245,6 +246,8 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
         }
         // original WC_Meta_Box_Order_Data::output
+        $pCattarifs = $this->sage->sageGraphQl->getPCattarifs();
+        $pCatComptas = $this->sage->sageGraphQl->getPCatComptas();
         return $this->sage->twig->render('woocommerce/metaBoxes/main.html.twig', [
             'message' => $message,
             'doPieceIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doPiece"] : null,
@@ -254,7 +257,9 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             'extendedFDocentetes' => $extendedFDocentetes,
             'currency' => get_woocommerce_currency(),
             'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
-            'tasksSynchronizeOrder' => $tasksSynchronizeOrder
+            'tasksSynchronizeOrder' => $tasksSynchronizeOrder,
+            'pCattarifs' => $pCattarifs,
+            'pCatComptas' => $pCatComptas[PCatComptaUtils::TIERS_TYPE_VEN],
         ]);
     }
 

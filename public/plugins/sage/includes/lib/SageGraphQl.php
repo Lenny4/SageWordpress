@@ -784,6 +784,8 @@ final class SageGraphQl
                 'doStatut',
                 'doStatutString',
                 'doRef',
+                'nCatCompta', // catégorie comptable
+                'doTarif', // catégorie tarifaire
             ]),
         ];
         if ($getExpedition) {
@@ -1081,7 +1083,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             "per_page" => "100"
         ];
         $selectionSets = $this->_getPCattarifSelectionSet();
-        $this->pCattarifs = $this->getEntitiesAndSaveInOption(
+        $temp = $this->getEntitiesAndSaveInOption(
             $cacheName,
             $getFromSage,
             $entityName,
@@ -1090,6 +1092,14 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $getError,
             $ignorePingApi
         );
+        $this->pCattarifs = [];
+        if (is_array($temp)) {
+            foreach ($temp as $pCattarif) {
+                $this->pCattarifs[$pCattarif->cbIndice] = $pCattarif;
+            }
+        } else {
+            $this->pCattarifs = $temp;
+        }
         return $this->pCattarifs;
     }
 
