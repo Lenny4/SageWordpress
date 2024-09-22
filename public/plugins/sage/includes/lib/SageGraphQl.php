@@ -781,6 +781,9 @@ final class SageGraphQl
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'doPiece',
                 'doTiers',
+                'doStatut',
+                'doStatutString',
+                'doRef',
             ]),
         ];
         if ($getExpedition) {
@@ -849,6 +852,7 @@ final class SageGraphQl
         bool   $addWordpressProductId = false,
         bool   $getUser = false,
         bool   $getLivraison = false,
+        bool   $addWordpressUserId = false,
     ): stdClass|null|false|string
     {
         if (!$this->pingApi && !$ignorePingApi) {
@@ -891,16 +895,53 @@ final class SageGraphQl
         if ($fDocentetes->data->fDocentetes->totalCount !== 1) {
             return false;
         }
-        return $this->afterGetFDocentetes($fDocentetes->data->fDocentetes->items, $addWordpressProductId)[0];
+        return $this->afterGetFDocentetes($fDocentetes->data->fDocentetes->items, $addWordpressProductId, $addWordpressUserId)[0];
     }
 
-    private function afterGetFDocentetes(array $fDocentetes, bool $addWordpressProductId): array
+    private function afterGetFDocentetes(array $fDocentetes, bool $addWordpressProductId, bool $addWordpressUserId): array
     {
+        if ($addWordpressUserId) {
+            $fDocentetes = $this->addWordpressUserId($fDocentetes);
+        }
         if ($addWordpressProductId) {
+            $fDoclignes = [];
             foreach ($fDocentetes as $fDocentete) {
-                $fDocentete->fDoclignes = $this->addWordpressProductId($fDocentete->fDoclignes);
+                $fDoclignes = [...$fDoclignes, ...$fDocentete->fDoclignes];
+            }
+            $fDoclignes = $this->addWordpressProductId($fDoclignes);
+            foreach ($fDocentetes as $fDocentete) {
+                $fDocentete->fDoclignes = array_filter($fDoclignes, static function (stdClass $fDocligne) use ($fDocentete) {
+                    return $fDocligne->doPiece === $fDocentete->doPiece && $fDocligne->doType === $fDocentete->doType;
+                });
             }
         }
+        return $fDocentetes;
+    }
+
+    private function addWordpressUserId(array $fDocentetes): array
+    {
+        global $wpdb;
+        $ctNums = array_map(static function (stdClass $fDocentete) {
+            return $fDocentete->doTiers;
+        }, $fDocentetes);
+        $r = $wpdb->get_results(
+            $wpdb->prepare("
+SELECT user_id, meta_value
+FROM {$wpdb->usermeta}
+WHERE meta_key = %s
+  AND meta_value IN ('" . implode(', ', $ctNums) . "')
+", [Sage::META_KEY_CT_NUM]));
+        $mapping = [];
+        foreach ($r as $row) {
+            $mapping[$row->meta_value] = $row->user_id;
+        }
+        foreach ($fDocentetes as $fDocentete) {
+            $fDocentete->userId = null;
+            if (array_key_exists($fDocentete->doTiers, $mapping)) {
+                $fDocentete->userId = (int)$mapping[$fDocentete->doTiers];
+            }
+        }
+
         return $fDocentetes;
     }
 
@@ -943,6 +984,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool   $addWordpressProductId = false,
         bool   $getUser = false,
         bool   $getLivraison = false,
+        bool   $addWordpressUserId = false,
     ): array|null|string
     {
         if (!$this->pingApi && !$ignorePingApi) {
@@ -982,7 +1024,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         ) {
             return $fDocentetes;
         }
-        return $this->afterGetFDocentetes($fDocentetes->data->fDocentetes->items, $addWordpressProductId);
+        return $this->afterGetFDocentetes($fDocentetes->data->fDocentetes->items, $addWordpressProductId, $addWordpressUserId);
     }
 
     public function getFComptet(string $ctNum, bool $ignorePingApi = false): StdClass|null

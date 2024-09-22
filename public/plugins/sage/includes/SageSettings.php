@@ -903,9 +903,8 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             if (!empty($request['meta'])) {
                 $prepared_user->{$userMetaProp} = [];
                 $ctNum = null;
-                $metaKey = '_' . Sage::TOKEN . '_ctNum';
                 foreach ($request['meta'] as $key => $value) {
-                    if ($key === $metaKey) {
+                    if ($key === Sage::META_KEY_CT_NUM) {
                         $ctNum = $value;
                     }
                     $prepared_user->{$userMetaProp}[$key] = $value;
@@ -919,7 +918,7 @@ FROM {$wpdb->usermeta}
     INNER JOIN {$wpdb->users} ON {$wpdb->users}.ID = {$wpdb->usermeta}.user_id
 WHERE meta_key = %s
   AND meta_value = %s
-", [$metaKey, $ctNum]));
+", [Sage::META_KEY_CT_NUM, $ctNum]));
                     if (!empty($r)) {
                         wp_send_json_error([
                             'existing_user_ctNum' => __("Le compte Sage [" . $ctNum . "] est déjà lié au compte Wordpress [" . $r[0]->user_login . " (id: " . $r[0]->ID . ")]"),

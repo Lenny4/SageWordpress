@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block body %}
   {% set flattenAllTranslations = flattenAllTranslations(allTranslations['fDocentetes']) %}
+  {% set currencySymbol = get_woocommerce_currency_symbol() %}
 
   {{ message | raw }}
   {% set orderId = order.get_id() %}
@@ -50,11 +51,7 @@
       {% else %}
         {% set doTypes = getDoTypes(fDoclignes) %}
         {% set fDocligneFormatteds = formatFDoclignes(fDoclignes, doTypes) %}
-        {% set colspan = 4 %}
-        <p>
-          {{ 'Mode d\'expédition'|trans ~ ': ' ~ mainFDocentete.doExpeditNavigation.eIntitule }}
-          todo utilisé pour calculer le prix de la livraison
-        </p>
+        {% set colspan = 6 %}
         <p>
           {{ 'Catégorie comptable'|trans ~ ': todo' }}
           todo utilisé pour calculer le prix de la livraison
@@ -63,28 +60,16 @@
           {{ 'Catégorie tarifaire'|trans ~ ': todo' }}
           todo utilisé pour calculer le prix de la livraison
         </p>
-        <p>
-          {{ 'Nombre de colis'|trans ~ ': todo' }}
-        </p>
-        <p>
-          {{ 'Numéro client'|trans ~ ': todo' }}
-        </p>
-        <p>
-          {{ 'Prix de la livraison'|trans }}
-          {% if mainFDocentete.fraisExpedition.priceTtc > 0 %}
-            {{ mainFDocentete.fraisExpedition.priceTtc|format_currency(currency) }}
-          {% endif %}
-        </p>
-        <table>
+        <table class="center-table">
           <tr>
             {% for doType in doTypes %}
               {% if loop.first == false %}
                 <td class="td-separator"></td>
               {% endif %}
               <td class="text-center border-x border-y" colspan="{{ colspan }}">
-                <strong>
+                <span class="h6">
                   {{ flattenAllTranslations['doType']['values'][doType] }}
-                </strong>
+                </span>
               </td>
             {% endfor %}
           </tr>
@@ -105,7 +90,42 @@
                 <td colspan="{{ colspan }}"
                     class="text-center {% if display.showDoPiece or display.showBorderX %} border-x {% endif %} {% if display.showDoPiece %} border-y {% endif %}">
                   {% if display.showDoPiece %}
-                    {{ display.doPiece }}
+                    {% set fDocentete = getFDocentete(extendedFDocentetes, fDocligneFormatted.doPiece, fDocligneFormatted.doType) %}
+                    {% if fDocentete is not null and display.doType == fDocentete.doType %}
+                      <table style="width: 100%">
+                        <tbody>
+                        <tr>
+                          <td class="text-right">{{ 'Client'|trans }}:</td>
+                          <td class="pr-4 text-left">
+                            <a href="{{ get_admin_url() }}user-edit.php?user_id={{ fDocentete.userId }}">
+                              {{ fDocentete.doTiers }}
+                            </a>
+                          </td>
+                          <td class="text-right">{{ 'N° document'|trans }}:</td>
+                          <td class="pr-4 text-left">
+                            <strong>{{ fDocentete.doPiece }}</strong>
+                          </td>
+                          <td class="text-right">{{ 'Statut'|trans }}:</td>
+                          <td class="text-left">
+                            <strong>{{ fDocentete.doStatutString }}</strong>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="text-right">{{ 'Référence'|trans }}:</td>
+                          <td class="pr-4 text-left">{{ fDocentete.doRef }}</td>
+                          <td class="text-right">{{ 'Expédition'|trans }}:</td>
+                          <td class="pr-4 text-left">{{ fDocentete.doExpeditNavigation.eIntitule }}</td>
+                          <td class="text-right">{{ 'Frais de Port (HT)'|trans }}:</td>
+                          <td
+                            class="text-left">{{ fDocentete.fraisExpedition.priceHt|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
+                        </tr>
+                        </tbody>
+                      </table>
+                    {% else %}
+                      <strong>
+                        {{ display.doPiece }}
+                      </strong>
+                    {% endif %}
                   {% endif %}
                 </td>
               {% endfor %}
@@ -126,24 +146,35 @@
                 {% endif %}
                 {% if showData %}
                   {% set className = className ~ ' pr-1' %}
-                {% endif %}
-                <td class="{% if display.showBorderX %} border-left {% endif %} {{ className }}">
-                  {% if showData %}
-                    {{ display.dlQte }}
+                {% else %}
+                  {% set className = className ~ ' p-0' %}
+                  {% if display.showBorderX %}
+                    {% set className = className ~ ' border-left border-right text-center' %}
                   {% endif %}
-                </td>
-                <td class="{{ className }}">
+                {% endif %}
+                {% if showData %}
+                  <td class="{% if display.showBorderX %} border-left {% endif %} {{ className }}">
+                    {% if showData %}
+                      {{ display.dlQte }}
+                    {% endif %}
+                  </td>
+                {% endif %}
+                <td class="{{ className }}" {% if showData == false %} colspan="{{ colspan }}" {% endif %}>
                   {% if display.doPiece != '' %}
                     {{ fDocligneFormatted.arRef }}
                   {% endif %}
                 </td>
-                <td class="{{ className }}">
-                  {% if showData %}
+                {% if showData %}
+                  <td class="{{ className }}">
                     {{ fDocligneFormatted.dlDesign }}
-                  {% endif %}
-                </td>
-                <td class="{% if display.showBorderX %} border-right {% endif %} {{ className }}">
-                  {% if showData %}
+                  </td>
+                  <td class="{{ className }}">
+                    {{ fDocligneFormatted.dlMontantHt|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}
+                  </td>
+                  <td class="{{ className }}">
+                    {#                    todo show serial number #} todo show serial number
+                  </td>
+                  <td class="{% if display.showBorderX %} border-right {% endif %} {{ className }}">
                     {% if fDocligneFormatted.postId is null %}
                       <div class="tooltip" data-import-farticle="{{ fDocligneFormatted.arRef }}"
                            data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}">
@@ -164,8 +195,8 @@
                         </div>
                       </div>
                     {% endif %}
-                  {% endif %}
-                </td>
+                  </td>
+                {% endif %}
               {% endfor %}
             </tr>
           {% endfor %}

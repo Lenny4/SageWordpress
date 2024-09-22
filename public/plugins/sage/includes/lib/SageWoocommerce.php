@@ -237,6 +237,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 addWordpressProductId: true,
                 getUser: true,
                 getLivraison: true,
+                addWordpressUserId: true,
             );
             if (is_string($extendedFDocentetes)) {
                 $message .= $extendedFDocentetes;
@@ -334,6 +335,17 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         foreach ($fDocentetes as $fDocentete) {
             $fDoclignes = [...$fDoclignes, ...$fDocentete->fDoclignes];
         }
+        usort($fDoclignes, static function (stdClass $a, stdClass $b) {
+            foreach (FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE as $suffix) {
+                if ($a->{'dlPiece' . $suffix} !== $b->{'dlPiece' . $suffix}) {
+                    return strcmp($a->{'dlPiece' . $suffix}, $b->{'dlPiece' . $suffix});
+                }
+            }
+            if ($a->doType !== $b->doType) {
+                return $a->doType <=> $b->doType;
+            }
+            return $a->doPiece <=> $b->doPiece;
+        });
         return $fDoclignes;
     }
 
