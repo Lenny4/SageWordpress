@@ -774,6 +774,7 @@ final class SageGraphQl
         bool $getExpedition = false,
         bool $getUser = false,
         bool $getLivraison = false,
+        bool $getLotSerie = false,
     ): array
     {
         $result = [
@@ -793,7 +794,7 @@ final class SageGraphQl
             $result['fraisExpedition'] = $this->_getFraisExpeditionSelectionSet();
         }
         if ($getFDoclignes) {
-            $result['fDoclignes'] = $this->_getFDocligneSelectionSet();
+            $result['fDoclignes'] = $this->_getFDocligneSelectionSet(getLotSerie: $getLotSerie);
         }
         if ($getUser) {
             $result['doTiersNavigation'] = $this->_getFComptetSelectionSet();
@@ -811,9 +812,11 @@ final class SageGraphQl
         ];
     }
 
-    private function _getFDocligneSelectionSet(): array
+    private function _getFDocligneSelectionSet(
+        bool $getLotSerie = false,
+    ): array
     {
-        return [
+        $r = [
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
                 'dlMontantHt',
                 // 'dlMontantTtc', // don't use dlMontantTtc because it applies ignored taxe
@@ -842,6 +845,14 @@ final class SageGraphQl
                 }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
             ]),
         ];
+        if ($getLotSerie) {
+            $r['fLotserieNavigation'] = [
+                ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                    'lsNoSerie',
+                ]),
+            ];
+        }
+        return $r;
     }
 
     public function getFDocentete(
@@ -987,6 +998,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool   $getUser = false,
         bool   $getLivraison = false,
         bool   $addWordpressUserId = false,
+        bool   $getLotSerie = false,
     ): array|null|string
     {
         if (!$this->pingApi && !$ignorePingApi) {
@@ -1016,6 +1028,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 getExpedition: $getExpedition,
                 getUser: $getUser,
                 getLivraison: $getLivraison,
+                getLotSerie: $getLotSerie,
             ),
             getError: $getError,
             ignorePingApi: $ignorePingApi,

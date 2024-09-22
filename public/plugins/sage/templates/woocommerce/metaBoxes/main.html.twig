@@ -172,7 +172,12 @@
                     {{ fDocligneFormatted.dlMontantHt|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}
                   </td>
                   <td class="{{ className }}">
-                    {#                    todo show serial number #} todo show serial number
+                    <div class="tooltip">
+                      {{ fDocligneFormatted.fLotserieNavigation.lsNoSerie }}
+                      <div class="tooltiptext">
+                        {{ 'Numéro de série'|trans }}
+                      </div>
+                    </div>
                   </td>
                   <td class="{% if display.showBorderX %} border-right {% endif %} {{ className }}">
                     {% if fDocligneFormatted.postId is null %}

@@ -239,6 +239,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 getUser: true,
                 getLivraison: true,
                 addWordpressUserId: true,
+                getLotSerie: true,
             );
             if (is_string($extendedFDocentetes)) {
                 $message .= $extendedFDocentetes;
