@@ -570,24 +570,19 @@ final class Sage
             );
         });
         // action is trigger when click update button on order
-        add_action('woocommerce_process_shop_order_meta', static function (int $orderId, Order $order) use ($sageGraphQl): void {
+        add_action('woocommerce_process_shop_order_meta', static function (int $orderId, Order $order) use ($sageWoocommerce): void {
             if (
                 array_key_exists(Sage::TOKEN . '-fdocentete-dotype', $_POST) &&
                 array_key_exists(Sage::TOKEN . '-fdocentete-dopiece', $_POST) &&
                 is_numeric($_POST[Sage::TOKEN . '-fdocentete-dotype']) &&
                 !empty($_POST[Sage::TOKEN . '-fdocentete-dopiece'])
             ) {
-                $fDocentete = $sageGraphQl->getFDocentete(
+                $sageWoocommerce->linkOrderFDocentete(
+                    $order,
                     $_POST[Sage::TOKEN . '-fdocentete-dopiece'],
-                    (int)$_POST[Sage::TOKEN . '-fdocentete-dotype']
+                    (int)$_POST[Sage::TOKEN . '-fdocentete-dotype'],
+                    true,
                 );
-                if ($fDocentete instanceof stdClass) {
-                    $order->update_meta_data(Sage::META_KEY_IDENTIFIER, json_encode([
-                        'doPiece' => $fDocentete->doPiece,
-                        'doType' => $fDocentete->doType,
-                    ], JSON_THROW_ON_ERROR));
-                    $order->save();
-                }
             }
         }, accepted_args: 2);
         // endregion
@@ -671,6 +666,36 @@ final class Sage
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $order = new WC_Order($request['id']);
                     $order = $sageWoocommerce->desynchronizeOrder($order);
+                    return new WP_REST_Response([
+                        // we create a new order here to be sure to refresh all data from bdd
+                        'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true)
+                    ], 200);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
+            register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/fdocentete', [
+                'methods' => 'POST',
+                'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
+                    $order = new WC_Order($request['id']);
+                    $body = json_decode($request->get_body(), false);
+                    $doPiece = $body->{Sage::TOKEN . "-fdocentete-dopiece"};
+                    $doType = (int)$body->{Sage::TOKEN . "-fdocentete-dotype"};
+                    $order = $sageWoocommerce->linkOrderFDocentete($order, $doPiece, $doType, true);
+                    $extendedFDocentetes = $sageWoocommerce->sage->sageGraphQl->getExtendedFDocentetes(
+                        $doPiece,
+                        $doType,
+                        getError: true,
+                        getFDoclignes: true,
+                        getExpedition: true,
+                        ignorePingApi: true,
+                        addWordpressProductId: true,
+                        getUser: true,
+                        getLivraison: true,
+                    );
+                    $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $extendedFDocentetes);
+                    [$message, $order] = $sageWoocommerce->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
                         'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true)

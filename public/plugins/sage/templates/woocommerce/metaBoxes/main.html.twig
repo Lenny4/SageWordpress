@@ -25,6 +25,8 @@
       </svg>
       <span class="dashicons dashicons-yes endDashiconsInput hidden" style="color: green"></span>
       <span class="dashicons dashicons-no endDashiconsInput hidden" style="color: red"></span>
+      <button type="button" id="order-fdocentete" data-order-fdocentete disabled
+              class="button button-primary">{{ 'Valider'|trans }}</button>
     </div>
   {% else %}
     {% if mainFDocentete|gettype == 'string' %}
@@ -42,7 +44,8 @@
       {% include 'woocommerce/elements/desynchronizeOrder.html.twig' %}
     {% else %}
       <h2>
-        <strong>{{ flattenAllTranslations['doType']['values'][doTypeIdentifier] ~': n° '~ doPieceIdentifier }}</strong>
+        {{ 'Synchronisé avec'|trans ~ ': ' }}
+        <strong>{{ flattenAllTranslations['doType']['values'][doTypeIdentifier] ~' n° '~ doPieceIdentifier }}</strong>
       </h2>
       {% if fDoclignes is empty %}
         <p>
@@ -89,9 +92,13 @@
                         <tr>
                           <td class="text-right">{{ 'Client'|trans }}:</td>
                           <td class="pr-4 text-left">
-                            <a href="{{ get_admin_url() }}user-edit.php?user_id={{ fDocentete.userId }}">
+                            {% if fDocentete.userId is empty %}
                               {{ fDocentete.doTiers }}
-                            </a>
+                            {% else %}
+                              <a href="{{ get_admin_url() }}user-edit.php?user_id={{ fDocentete.userId }}">
+                                {{ fDocentete.doTiers }}
+                              </a>
+                            {% endif %}
                           </td>
                           <td class="text-right">{{ 'N° document'|trans }}:</td>
                           <td class="pr-4 text-left">

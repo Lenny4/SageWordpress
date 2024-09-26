@@ -221,6 +221,19 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $fDocenteteIdentifier;
     }
 
+    public function linkOrderFDocentete(WC_Order $order, string $doPiece, int $doType, bool $ignorePingApi): WC_Order
+    {
+        $fDocentete = $this->sage->sageGraphQl->getFDocentete($doPiece, $doType, ignorePingApi: $ignorePingApi);
+        if ($fDocentete instanceof stdClass) {
+            $order->update_meta_data(Sage::META_KEY_IDENTIFIER, json_encode([
+                'doPiece' => $fDocentete->doPiece,
+                'doType' => $fDocentete->doType,
+            ], JSON_THROW_ON_ERROR));
+            $order->save();
+        }
+        return $order;
+    }
+
     public function getMetaboxSage(WC_Order $order, bool $ignorePingApi = false, string $message = ''): string
     {
         $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);

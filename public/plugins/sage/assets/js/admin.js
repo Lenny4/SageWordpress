@@ -378,10 +378,12 @@ jQuery(document).ready(function () {
     const inputWpnonce = jQuery(domContainer).find('[name="sage-fdocentete-wpnonce"]');
     const successIcon = jQuery(domContainer).find(".dashicons-yes");
     const errorIcon = jQuery(domContainer).find(".dashicons-no");
+    const validateButton = jQuery(domContainer).find("[data-order-fdocentete]");
 
     jQuery(domContainer).find("div.notice").remove();
     jQuery(successIcon).addClass("hidden");
     jQuery(errorIcon).addClass("hidden");
+    jQuery(validateButton).prop("disabled", true);
     jQuery(inputDoType).val('');
     searchFDocentete = inputDoPiece.value;
     const currentSearch = inputDoPiece.value;
@@ -407,15 +409,22 @@ jQuery(document).ready(function () {
         } else if (fDocentetes.length === 1) {
           jQuery(inputDoType).val(fDocentetes[0].doType);
           jQuery(successIcon).removeClass("hidden");
+          jQuery(validateButton).prop("disabled", false);
         } else {
           jQuery(errorIcon).removeClass("hidden");
           const multipleResultDiv = jQuery("<div class='notice notice-info'></div>").prependTo(domContainer);
           jQuery(multipleResultDiv).append('<p>' + translations.sentences.multipleDoPieces + '</p>');
           const listDom = jQuery('<div class="d-flex flex-wrap"></div>').appendTo(multipleResultDiv);
           for (const fDocentete of fDocentetes) {
+            let label = "";
+            for (const key in translations.fDocentetes.doType.values) {
+              if (translations.fDocentetes.doType.values[key].hasOwnProperty(fDocentete.doType)) {
+                label = translations.fDocentetes.doType.values[key][fDocentete.doType];
+                break;
+              }
+            }
             jQuery(listDom).append('<div class="card cursor-pointer" data-select-sage-fdocentete-dotype="' + fDocentete.doType + '" style="max-width: none">' +
-              translations.fDocentetes.doType.values[fDocentete.doType] +
-              '</div>');
+              label + '</div>');
           }
         }
       } else {
@@ -436,10 +445,42 @@ jQuery(document).ready(function () {
     const inputDoType = jQuery(domContainer).find('[name="sage-fdocentete-dotype"]');
     const successIcon = jQuery(domContainer).find(".dashicons-yes");
     const errorIcon = jQuery(domContainer).find(".dashicons-no");
+    const validateButton = jQuery(domContainer).find("[data-order-fdocentete]");
+
     jQuery(domContainer).find("div.notice").remove();
     jQuery(inputDoType).val(jQuery(divDoType).attr('data-select-sage-fdocentete-dotype'));
     jQuery(successIcon).removeClass("hidden");
     jQuery(errorIcon).addClass("hidden");
+    jQuery(validateButton).prop("disabled", false);
+  });
+  jQuery(document).on('click', '[data-order-fdocentete]', async function (e) {
+    const blockDom = jQuery("[id^='woocommerce-order-sage']");
+    jQuery(blockDom).block({
+      message: null,
+      overlayCSS: {
+        background: '#fff',
+        opacity: 0.6
+      }
+    });
+    const [orderId, wpnonce] = getOrderIdWpnonce();
+    const response = await fetch(siteUrl + "/index.php?rest_route=" + encodeURI("/sage/v1/orders/" + orderId + "/fdocentete") + "&_wpnonce=" + wpnonce, {
+      method: "POST",
+      body: JSON.stringify({
+        ["sage-fdocentete-dopiece"]: jQuery('#sage-fdocentete-dopiece').val(),
+        ["sage-fdocentete-dotype"]: jQuery('#sage-fdocentete-dotype').val(),
+      }),
+    });
+    jQuery(blockDom).unblock();
+    if (response.status === 200) {
+      const data = await response.json();
+      const blockInside = jQuery(blockDom).find(".inside");
+      jQuery(blockInside).html(data.html);
+      // woocommerce/assets/js/admin/meta-boxes-order.js .on( 'wc_order_items_reload', this.reload_items )
+      jQuery("#woocommerce-order-items").trigger("wc_order_items_reload");
+      reloadWooCommerceOrderDataBox();
+    } else {
+      // todo toastr
+    }
   });
   // endregion
 
