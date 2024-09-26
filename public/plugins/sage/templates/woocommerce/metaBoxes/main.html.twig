@@ -90,8 +90,8 @@
                       <table style="width: 100%">
                         <tbody>
                         <tr>
-                          <td class="text-right">{{ 'Client'|trans }}:</td>
-                          <td class="pr-4 text-left">
+                          <td class="text-end">{{ 'Client'|trans }}:</td>
+                          <td class="pr-4 text-start">
                             {% if fDocentete.userId is empty %}
                               {{ fDocentete.doTiers }}
                             {% else %}
@@ -100,31 +100,31 @@
                               </a>
                             {% endif %}
                           </td>
-                          <td class="text-right">{{ 'N° document'|trans }}:</td>
-                          <td class="pr-4 text-left">
+                          <td class="text-end">{{ 'N° document'|trans }}:</td>
+                          <td class="pr-4 text-start">
                             <strong>{{ fDocentete.doPiece }}</strong>
                           </td>
-                          <td class="text-right">{{ 'Statut'|trans }}:</td>
-                          <td class="text-left">
+                          <td class="text-end">{{ 'Statut'|trans }}:</td>
+                          <td class="text-start">
                             <strong>{{ fDocentete.doStatutString }}</strong>
                           </td>
                         </tr>
                         <tr>
-                          <td class="text-right">{{ 'Référence'|trans }}:</td>
-                          <td class="pr-4 text-left">{{ fDocentete.doRef }}</td>
-                          <td class="text-right">{{ 'Expédition'|trans }}:</td>
-                          <td class="pr-4 text-left">{{ fDocentete.doExpeditNavigation.eIntitule }}</td>
-                          <td class="text-right">{{ 'Frais de Port (HT)'|trans }}:</td>
+                          <td class="text-end">{{ 'Référence'|trans }}:</td>
+                          <td class="pr-4 text-start">{{ fDocentete.doRef }}</td>
+                          <td class="text-end">{{ 'Expédition'|trans }}:</td>
+                          <td class="pr-4 text-start">{{ fDocentete.doExpeditNavigation.eIntitule }}</td>
+                          <td class="text-end">{{ 'Frais de Port (HT)'|trans }}:</td>
                           <td
-                            class="text-left">{{ fDocentete.fraisExpedition.priceHt|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
+                            class="text-start">{{ fDocentete.fraisExpedition.priceHt|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
                         </tr>
                         <tr>
-                          <td class="text-right">{{ 'Catégorie comptable'|trans }}:</td>
-                          <td class="pr-4 text-left">{{ pCatComptas[fDocentete.nCatCompta] }}</td>
-                          <td class="text-right">{{ 'Catégorie tarifaire'|trans }}:</td>
-                          <td class="pr-4 text-left">{{ pCattarifs[fDocentete.doTarif].ctIntitule }}</td>
-                          <td class="text-right"></td>
-                          <td class="text-left"></td>
+                          <td class="text-end">{{ 'Catégorie comptable'|trans }}:</td>
+                          <td class="pr-4 text-start">{{ pCatComptas[fDocentete.nCatCompta] }}</td>
+                          <td class="text-end">{{ 'Catégorie tarifaire'|trans }}:</td>
+                          <td class="pr-4 text-start">{{ pCattarifs[fDocentete.doTarif].ctIntitule }}</td>
+                          <td class="text-end"></td>
+                          <td class="text-start"></td>
                         </tr>
                         </tbody>
                       </table>
@@ -223,7 +223,7 @@
         {% include 'woocommerce/elements/desynchronizeOrder.html.twig' %}
         <div>
           {% if tasksSynchronizeOrder.allProductsExistInWordpress == false %}
-            <p class="text-right">
+            <p class="text-end">
               {{ 'Certains produits ne sont pas encore importés dans Wordpress'|trans }}
               <span class="dashicons dashicons-no" style="color: red"></span>
             </p>
@@ -245,7 +245,7 @@
             </div>
           {% endif %}
           {% if tasksSynchronizeOrder.syncChanges is empty and tasksSynchronizeOrder.allProductsExistInWordpress %}
-            <p class="text-right">
+            <p class="text-end">
               {{ 'La commande Wordpress est synchronisée avec Sage'|trans }}
               <span class="dashicons dashicons-yes" style="color: green"></span>
             </p>
