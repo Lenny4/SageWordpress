@@ -179,33 +179,28 @@
                     {{ fDocligneFormatted.dlMontantHt|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}
                   </td>
                   <td class="{{ className }}">
-                    <div class="tooltip">
-                      {{ fDocligneFormatted.fLotserieNavigation.lsNoSerie }}
-                      <div class="tooltiptext">
+                    <div data-tippy-content="<div>
                         {{ 'Numéro de série/lot'|trans }}
-                      </div>
+                      </div>">
+                      {{ fDocligneFormatted.fLotserieNavigation.lsNoSerie }}
                     </div>
                   </td>
                   <td class="{% if display.showBorderX %} border-right {% endif %} {{ className }}">
                     {% if fDocligneFormatted.postId is null %}
-                      <div class="tooltip" data-import-farticle="{{ fDocligneFormatted.arRef }}"
+                      <div data-tippy-content="<div>
+                          <p>{{ 'Ce produit n\'existe pas dans Wordpress. Veuillez cliquer sur la croix pour le créer.'|trans }}</p>
+                        </div>" data-import-farticle="{{ fDocligneFormatted.arRef }}"
                            data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}">
                                             <span class="dashicons dashicons-no button"
                                                   style="color: red; padding-right: 22px"></span>
-                        <div class="tooltiptext">
-                          <p>{{ 'Ce produit n\'existe pas dans Wordpress. Veuillez cliquer sur la croix pour le créer.'|trans }}</p>
-                        </div>
                       </div>
                     {% else %}
-                      <div class="tooltip">
-                        <a href="{{ get_admin_url() }}post.php?post={{ fDocligneFormatted.postId }}&action=edit">
-                                                <span class="dashicons dashicons-visibility button"
-                                                      style="padding-right: 22px"></span>
-                        </a>
-                        <div class="tooltiptext">
+                      <a href="{{ get_admin_url() }}post.php?post={{ fDocligneFormatted.postId }}&action=edit"
+                         data-tippy-content="<div>
                           {{ 'Voir l\'article Wordpress'|trans }}
-                        </div>
-                      </div>
+                        </div>">
+                        <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>
+                      </a>
                     {% endif %}
                   </td>
                 {% endif %}
@@ -236,12 +231,9 @@
 ">
               <button type="button" id="synchronize-order" data-synchronize-order
                       class="button button-primary">{{ 'Synchroniser la commande Wordpress avec Sage'|trans }}</button>
-              <div class="tooltip">
-                <span class="dashicons dashicons-info"></span>
-                <div class="tooltiptext" style="max-width: 300px; width: 300px">
+              <span data-tippy-content="<div>
                   {% include 'woocommerce/metaBoxes/tasksSynchronizeOrder.html.twig' %}
-                </div>
-              </div>
+                </div>" class="dashicons dashicons-info"></span>
             </div>
           {% endif %}
           {% if tasksSynchronizeOrder.syncChanges is empty and tasksSynchronizeOrder.allProductsExistInWordpress %}

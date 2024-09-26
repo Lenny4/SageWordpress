@@ -1,27 +1,21 @@
-<div class="tooltip">
-  <a href="{{ getUrlWithParam('action', {
-    'type': 'import_from_sage',
-    'data': {
-      'ctNum': item.ctNum
-    }
-  }|json_encode()) }}">
-    <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
-  </a>
-  <div class="tooltiptext" style="right: 0">
+<a href="{{ getUrlWithParam('action', {
+  'type': 'import_from_sage',
+  'data': {
+    'ctNum': item.ctNum
+  }
+}|json_encode()) }}" data-tippy-content="<div>
     {% if item._sage_postId != null %}
       {{ 'Mettre à jour le client'|trans }}
     {% else %}
       {{ 'Importer le client'|trans }}
     {% endif %}
-  </div>
-</div>
+  </div>">
+  <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
+</a>
 {% if item._sage_postId != null %}
-  <div class="tooltip">
-    <a href="{{ get_admin_url() }}user-edit.php?user_id={{ item._sage_postId }}">
-      <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>
-    </a>
-    <div class="tooltiptext" style="right: 0">
+  <a href="{{ get_admin_url() }}user-edit.php?user_id={{ item._sage_postId }}" data-tippy-content="<div>
       {{ 'Voir l\'utilisateur Wordpress'|trans }}
-    </div>
-  </div>
+    </div>">
+    <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>
+  </a>
 {% endif %}

@@ -27,13 +27,11 @@
       </div>
       <div>
         <input type="submit" id="search" class="button action" value="{{ 'Rechercher'|trans }}">
-        <div class="tooltip">
-          <button type="submit" class="button action" name="action"
-                  value='{"type": "set_default_filter","data": "{{ sageEntityMenu.entityName }}"}'>{{ 'Définir comme filtre par défaut'|trans }}</button>
-          <div class="tooltiptext" style="right: 0">
+        <button type="submit" class="button action" name="action"
+                value='{"type": "set_default_filter","data": "{{ sageEntityMenu.entityName }}"}'
+                data-tippy-content="<div>
             {{ 'Ces filtres seront sélectionnés automatiquement lorsque vous reviendrez sur cette page'|trans }}
-          </div>
-        </div>
+          </div>">{{ 'Définir comme filtre par défaut'|trans }}</button>
       </div>
     </div>
     {% include 'common/paging.html.twig' %}

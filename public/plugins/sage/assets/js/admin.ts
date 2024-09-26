@@ -1,4 +1,7 @@
 import "../css/admin.scss";
+import tippy from 'tippy.js';
+import 'jquery-blockui';
+
 $(() => {
 
   let allFilterContainer = $("#filters_container");
@@ -23,6 +26,19 @@ $(() => {
 
   function getNumberFilter() {
     return $(allFilterContainer).children().length;
+  }
+
+  function applyTippy() {
+    // https://atomiks.github.io/tippyjs/v6/constructor/
+    tippy('[data-tippy-content]', {
+      interactive: true,
+      allowHTML: true,
+    });
+  }
+
+  function setContentHtml(blockInside: JQuery, html: string) {
+    $(blockInside).html(html);
+    applyTippy();
   }
 
   function addFilter() {
@@ -235,7 +251,7 @@ $(() => {
     if (response.status === 200) {
       const data = await response.json();
       const blockInside = $(blockDom).find(".inside");
-      $(blockInside).html(data.html);
+      setContentHtml(blockInside, data.html)
     } else {
       // todo toastr
     }
@@ -262,7 +278,7 @@ $(() => {
     if (response.status === 200) {
       const data = await response.json();
       const blockInside = $(blockDom).find(".inside");
-      $(blockInside).html(data.html);
+      setContentHtml(blockInside, data.html)
       $(document.body).trigger('wc-enhanced-select-init');// woocommerce/assets/js/admin/wc-enhanced-select.js
     } else {
       // todo toastr
@@ -484,7 +500,7 @@ $(() => {
     if (response.status === 200) {
       const data = await response.json();
       const blockInside = $(blockDom).find(".inside");
-      $(blockInside).html(data.html);
+      setContentHtml(blockInside, data.html)
       // woocommerce/assets/js/admin/meta-boxes-order.js .on( 'wc_order_items_reload', this.reload_items )
       $("#woocommerce-order-items").trigger("wc_order_items_reload");
       reloadWooCommerceOrderDataBox();
@@ -520,7 +536,7 @@ $(() => {
     if (response.status === 200) {
       const data = await response.json();
       const blockInside = $(target).closest(".inside");
-      $(blockInside).html(data.html);
+      setContentHtml(blockInside, data.html)
     } else {
       // todo toastr
     }
@@ -612,5 +628,9 @@ $(() => {
       wcFreeShippingShowHideMinAmountField($('#wc-backbone-modal-dialog [id^="woocommerce_"][id$="_requires"]', evt.currentTarget));
     }
   });
+  // endregion
+
+  // region tooltip
+  applyTippy();
   // endregion
 });

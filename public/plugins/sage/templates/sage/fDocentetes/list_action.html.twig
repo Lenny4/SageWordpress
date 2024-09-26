@@ -1,37 +1,28 @@
 {% if item.doDomaine == 0 %}
-  <div class="tooltip">
-    <a href="{{ getUrlWithParam('action', {
-      'type': 'import_from_sage',
-      'data': {
-        'doPiece': item.doPiece,
-        'doType': item.doType
-      }
-    }|json_encode()) }}">
-      <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
-    </a>
-    <div class="tooltiptext" style="right: 0">
+  <a href="{{ getUrlWithParam('action', {
+    'type': 'import_from_sage',
+    'data': {
+      'doPiece': item.doPiece,
+      'doType': item.doType
+    }
+  }|json_encode()) }}" data-tippy-content="<div>
       {% if item._sage_postId != null %}
         {{ 'Mettre à jour le document'|trans }}
       {% else %}
         {{ 'Importer le document'|trans }}
       {% endif %}
-    </div>
-  </div>
+    </div>">
+    <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
+  </a>
   {% if item._sage_postId != null %}
-    <div class="tooltip">
-      <a href="{{ get_admin_url() }}admin.php?page=wc-orders&action=edit&id={{ item._sage_postId }}">
-        <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>
-      </a>
-      <div class="tooltiptext" style="right: 0">
+    <a href="{{ get_admin_url() }}admin.php?page=wc-orders&action=edit&id={{ item._sage_postId }}" data-tippy-content="<div>
         {{ 'Voir la commande Wordpress'|trans }}
-      </div>
-    </div>
+      </div>">
+      <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>
+    </a>
   {% endif %}
 {% else %}
-  <div class="tooltip tooltiperror">
-    <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
-    <div class="tooltiptext" style="right: 0">
+  <span class="dashicons dashicons-download button text-error" style="padding-right: 22px" data-tippy-content="<div class='text-error'>
       {{ 'Seuls les documents de ventes peuvent être importés.'|trans }}
-    </div>
-  </div>
+    </div>"></span>
 {% endif %}

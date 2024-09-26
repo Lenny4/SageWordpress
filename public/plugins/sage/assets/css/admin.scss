@@ -1,3 +1,5 @@
+@import "../../node_modules/tippy.js/dist/tippy.css";
+
 #all_filter_container select {
   float: none !important;
 }
@@ -35,14 +37,6 @@
   position: relative;
   display: inline-block;
 
-  &.tooltiperror {
-    span.dashicons {
-      border-color: red;
-      color: red;
-      cursor: auto;
-    }
-  }
-
   .tooltiptext {
     visibility: hidden;
     max-width: 200px;
@@ -69,6 +63,11 @@
 
 .text-center {
   text-align: center !important;
+}
+
+.text-error {
+  color: red !important;
+  border-color: red !important;
 }
 
 .text-end {

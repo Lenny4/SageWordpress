@@ -21,6 +21,8 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "jquery": "^3.7.1"
+    "jquery": "^3.7.1",
+    "jquery-blockui": "^2.7.0",
+    "tippy.js": "^6.3.7"
   }
 }

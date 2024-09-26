@@ -47,6 +47,11 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@popperjs/core@^2.9.0":
+  version "2.11.8"
+  resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
+  integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
+
 "@types/estree@^1.0.5":
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-1.0.6.tgz#628effeeae2064a1b4e79f78e81d87b7e5fc7b50"
@@ -546,6 +551,11 @@ jest-worker@^27.4.5:
     merge-stream "^2.0.0"
     supports-color "^8.0.0"
 
+jquery-blockui@^2.7.0:
+  version "2.7.0"
+  resolved "https://registry.yarnpkg.com/jquery-blockui/-/jquery-blockui-2.7.0.tgz#912710a9e0fb8be86e83d70b180ffe91317609d5"
+  integrity sha512-lOiCCNYLaqUWMhBZRQ1GkeYAt2/4jX/1g9RvLYRvVtslaplGFnBLltffNAkkavjyPk6VintTj44Ky1yWrqxEzQ==
+
 jquery@^3.7.1:
   version "3.7.1"
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.7.1.tgz#083ef98927c9a6a74d05a6af02806566d16274de"
@@ -897,6 +907,13 @@ terser@^5.26.0:
     acorn "^8.8.2"
     commander "^2.20.0"
     source-map-support "~0.5.20"
+
+tippy.js@^6.3.7:
+  version "6.3.7"
+  resolved "https://registry.yarnpkg.com/tippy.js/-/tippy.js-6.3.7.tgz#8ccfb651d642010ed9a32ff29b0e9e19c5b8c61c"
+  integrity sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==
+  dependencies:
+    "@popperjs/core" "^2.9.0"
 
 to-regex-range@^5.0.1:
   version "5.0.1"
