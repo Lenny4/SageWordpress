@@ -727,19 +727,19 @@ final class SageSettings
                             return;
                     }
 
-                    add_action('admin_print_styles-' . $page, function (): void {
-                        // We're including the farbtastic script & styles here because they're needed for the colour picker
-                        // If you're not including a colour picker field then you can leave these calls out as well as the farbtastic dependency for the wpt-admin-js script below.
-                        wp_enqueue_style('farbtastic');
-                        wp_enqueue_script('farbtastic');
-
-                        // We're including the WP media scripts here because they're needed for the image upload field.
-                        // If you're not including an image upload then you can leave this function call out.
-                        wp_enqueue_media();
-
-                        wp_register_script(Sage::TOKEN . '-settings-js', $this->sage->assets_url . 'js/settings' . $this->sage->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
-                        wp_enqueue_script(Sage::TOKEN . '-settings-js');
-                    });
+//                    add_action('admin_print_styles-' . $page, function (): void {
+//                        // We're including the farbtastic script & styles here because they're needed for the colour picker
+//                        // If you're not including a colour picker field then you can leave these calls out as well as the farbtastic dependency for the wpt-admin-js script below.
+//                        wp_enqueue_style('farbtastic');
+//                        wp_enqueue_script('farbtastic');
+//
+//                        // We're including the WP media scripts here because they're needed for the image upload field.
+//                        // If you're not including an image upload then you can leave this function call out.
+//                        wp_enqueue_media();
+//
+//                        wp_register_script(Sage::TOKEN . '-settings-js', $this->sage->assets_url . 'js/settings' . $this->sage->script_suffix . '.js', ['farbtastic', 'jquery'], '1.0.0', true);
+//                        wp_enqueue_script(Sage::TOKEN . '-settings-js');
+//                    });
                 }
             }
         });

@@ -76,6 +76,7 @@ final class Sage
      * The plugin assets URL.
      */
     public ?string $assets_url = null;
+    public ?string $assets_dist_url = null;
 
     /**
      * Suffix for JavaScripts.
@@ -105,6 +106,7 @@ final class Sage
 
         $this->assets_dir = trailingslashit($this->dir) . 'assets';
         $this->assets_url = esc_url(trailingslashit(plugins_url('/assets/', $this->file)));
+        $this->assets_dist_url = esc_url(trailingslashit(plugins_url('/dist/', $this->file)));
 
         $this->script_suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
 
@@ -129,18 +131,18 @@ final class Sage
         // region enqueue js && css
         // Load frontend JS & CSS.
         add_action('wp_enqueue_scripts', function (): void {
-            wp_register_style(self::TOKEN . '-frontend', esc_url($this->assets_url) . 'css/frontend.css', [], $this->_version);
-            wp_enqueue_style(self::TOKEN . '-frontend');
-            wp_register_script(self::TOKEN . '-frontend', esc_url($this->assets_url) . 'js/frontend' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
+//            wp_register_style(self::TOKEN . '-frontend', esc_url($this->assets_dist_url) . 'frontend.css', [], $this->_version);
+//            wp_enqueue_style(self::TOKEN . '-frontend');
+            wp_register_script(self::TOKEN . '-frontend', esc_url($this->assets_dist_url) . 'frontend' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
             wp_enqueue_script(self::TOKEN . '-frontend');
         }, 10);
 
         // Load admin JS & CSS.
         add_action('admin_enqueue_scripts', function (string $hook = ''): void {
-            wp_register_script(self::TOKEN . '-admin', esc_url($this->assets_url) . 'js/admin' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
+            wp_register_script(self::TOKEN . '-admin', esc_url($this->assets_dist_url) . 'admin' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
             wp_enqueue_script(self::TOKEN . '-admin');
-            wp_register_style(self::TOKEN . '-admin', esc_url($this->assets_url) . 'css/admin.css', [], $this->_version);
-            wp_enqueue_style(self::TOKEN . '-admin');
+//            wp_register_style(self::TOKEN . '-admin', esc_url($this->assets_dist_url) . 'admin.css', [], $this->_version);
+//            wp_enqueue_style(self::TOKEN . '-admin');
         }, 10, 1);
         // endregion
 

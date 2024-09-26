@@ -20,7 +20,8 @@ RUN apt-get update -y && \
     apt-get upgrade -y && \
     curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs && \
-    npm install -g grunt-cli
+    npm install --global yarn && \
+    yarn add -D webpack-cli
 
 ENTRYPOINT ["docker-entrypoint"]
 CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]

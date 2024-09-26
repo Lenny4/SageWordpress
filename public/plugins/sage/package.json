@@ -1,14 +1,26 @@
 {
-  "name": "wordpress-plugin-template",
-  "title": "WordPress Plugin Template",
+  "name": "sage-plugin",
+  "title": "Sage plugin",
+  "license": "MIT",
   "version": "1.0.0",
-  "homepage": "https://github.com/hlashbrooke/WordPress-Plugin-Template",
-  "main": "Gruntfile.js",
+  "homepage": "https://github.com/Lenny4/SageWordpress",
+  "private": true,
+  "scripts": {
+    "build": "webpack --mode production",
+    "watch": "webpack --watch --mode development"
+  },
   "devDependencies": {
-    "grunt": "^1.6.1",
-    "grunt-contrib-cssmin": "^5.0.0",
-    "grunt-contrib-less": "^3.0.0",
-    "grunt-contrib-uglify": "^5.2.2",
-    "grunt-contrib-watch": "^1.1.0"
+    "@types/jquery": "^3.5.31",
+    "css-loader": "^7.1.2",
+    "sass": "^1.79.3",
+    "sass-loader": "^16.0.2",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.6.2",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "jquery": "^3.7.1"
   }
 }
