@@ -26,5 +26,13 @@ services:
     volumes:
       - dbmysql:/var/lib/mysql
 
+  maildev:
+    image: maildev/maildev
+    restart: unless-stopped
+    ports:
+      - 8087:80
+      - 1025:1025
+    command: --web 80
+
 volumes:
   dbmysql:
