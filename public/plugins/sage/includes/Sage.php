@@ -213,7 +213,7 @@ final class Sage
         });
 
         add_action('user_register', function (int $userId, array $userdata): void {
-            $autoCreateSageAccount = (bool)get_option(Sage::TOKEN . '_auto_create_sage_account');
+            $autoCreateSageAccount = (bool)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet');
             if ($autoCreateSageAccount) {
                 $this->createUserSage($userId, $userdata);
             }

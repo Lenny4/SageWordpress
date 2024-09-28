@@ -82,18 +82,25 @@ final class SageSettings
                 transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
                 options: [
                     [
-                        'id' => 'auto_create_sage_account',
+                        'id' => 'auto_create_sage_fcomptet',
                         'label' => __('Automatically create Sage account', 'sage'),
-                        'description' => __("Lorsqu'un utilisateur créé un compte dans Wordpress un compte client est automatiquement créé dans Sage.", 'sage'),
+                        'description' => __("Créer automatiquement un compte client dans Sage lorsqu'un compte Wordpress est crée.", 'sage'),
                         'type' => 'checkbox',
-                        'default' => 'on'
+                        'default' => 'off'
                     ],
                     [
-                        'id' => 'auto_send_mail_import_sage_account',
-                        'label' => __('Automatically send email to reset password', 'sage'),
-                        'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", 'sage'),
+                        'id' => 'auto_create_wordpress_account',
+                        'label' => __('Synchronisation des comptes Sage', 'sage'),
+                        'description' => __("Créer automatiquement un compte dans Wordpress lorsqu'un utilisateur Sage est crée.", 'sage'),
                         'type' => 'checkbox',
-                        'default' => 'on'
+                        'default' => 'off'
+                    ],
+                    [
+                        'id' => 'mail_auto_create_sage_fcomptet',
+                        'label' => __('Automatically send email to reset password', 'sage'),
+                        'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => 'off'
                     ],
                 ],
                 actions: [
@@ -142,7 +149,22 @@ final class SageSettings
                 ],
                 filterType: SageEntityMenu::FDOCENTETE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FDOCENTETES,
-                options: [],
+                options: [
+                    [
+                        'id' => 'auto_create_sage_fdocentete',
+                        'label' => __('Créer automatiquement le document de vente', 'sage'),
+                        'description' => __("Créer automatiquement un document de vente dans Sage lorsqu'une commande Wordpress est crée.", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => 'off'
+                    ],
+                    [
+                        'id' => 'auto_create_wordpress_order',
+                        'label' => __('Créer automatiquement la commande', 'sage'),
+                        'description' => __("Créer automatiquement une commande dans Wordpress lorsqu'un document de vente Sage est crée.", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => 'off'
+                    ],
+                ],
                 actions: [
                     'import_from_sage' => static function (array $data) use ($sageWoocommerce): string {
                         [$orderId, $message] = $sageWoocommerce->importOrderFromSage($data['doPiece'], $data['doType']);
@@ -177,7 +199,15 @@ final class SageSettings
                 mandatoryFields: ['arRef'],
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
-                options: [],
+                options: [
+                    [
+                        'id' => 'auto_create_wordpress_article',
+                        'label' => __('Créer automatiquement le produit Wordpress', 'sage'),
+                        'description' => __("Créer automatiquement le produit dans Wordpress lorsqu'un article Sage est crée.", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => 'off'
+                    ],
+                ],
                 actions: [
                     'import_from_sage' => function (array $data) use ($sageWoocommerce): string {
                         [$response, $responseError, $message, $postId] = $sageWoocommerce->importFArticleFromSage($data['arRef']);
@@ -685,12 +715,25 @@ final class SageSettings
                         'location' => 'submenu',
                         // Possible settings: options, menu, submenu.
                         'parent_slug' => Sage::TOKEN . '_settings',
-                        'page_title' => __('About', 'sage'),
-                        'menu_title' => __('About', 'sage'),
+                        'page_title' => __('À propos', 'sage'),
+                        'menu_title' => __('À propos', 'sage'),
                         'capability' => self::$capability,
                         'menu_slug' => Sage::TOKEN . '_about',
                         'function' => static function (): void {
                             echo 'about page';
+                        },
+                        'position' => null,
+                    ],
+                    [
+                        'location' => 'submenu',
+                        // Possible settings: options, menu, submenu.
+                        'parent_slug' => Sage::TOKEN . '_settings',
+                        'page_title' => __('Logs', 'sage'),
+                        'menu_title' => __('Logs', 'sage'),
+                        'capability' => self::$capability,
+                        'menu_slug' => Sage::TOKEN . '_log',
+                        'function' => static function (): void {
+                            echo 'logs page';
                         },
                         'position' => null,
                     ],
@@ -947,7 +990,7 @@ WHERE meta_key = %s
             bool            $creating
         ): void {
             if ($creating) {
-                $sendMail = (bool)get_option(Sage::TOKEN . '_auto_send_mail_import_sage_account');
+                $sendMail = (bool)get_option(Sage::TOKEN . '_auto_send_mail_import_sage_fcomptet');
                 if ($sendMail) {
                     // Accepts only 'user', 'admin' , 'both' or default '' as $notify.
                     wp_send_new_user_notifications($user->ID, 'user');
