@@ -490,6 +490,7 @@ final class SageTranslationUtils
                 "arInterdireCommande" => __("arInterdireCommande", 'sage'),
                 "arExclure" => __("arExclure", 'sage'),
                 "prices" => __("Prices", 'sage'),
+                "canEditArSuiviStock" => __("Can Edit ArSuiviStock", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update' => __("Dernière synchronisation dans Wordpress", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_arRef' => __("arRef", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_prices' => __("Prices", 'sage'),

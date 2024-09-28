@@ -508,35 +508,33 @@ final class SageGraphQl
             $where = [];
             if (array_key_exists('filter_field', $queryParams)) {
                 $primaryFields = array_filter($selectionSets, static fn(array $field): bool => array_key_exists('name', $field));
-                foreach ($queryParams["filter_field"] as $k => $v) {
-                    $fieldType = current(array_filter($primaryFields, static fn(array $field): bool => $field['name'] === $v));
-                    if ($fieldType !== false) {
-                        $fieldType = $fieldType['type'];
+                foreach ($queryParams["filter_field"] as $index => $field) {
+                    $fieldValue = $queryParams["filter_value"][$index];
+                    $fieldType = $queryParams["filter_type"][$index];
+                    $inputType = current(array_filter($primaryFields, static fn(array $f): bool => $f['name'] === $field));
+                    if ($inputType !== false) {
+                        $inputType = $inputType['type'];
                     }
-                    if (in_array($fieldType, [
+                    // region format fieldValue
+                    if (in_array($inputType, [
                         'StringOperationFilterInput',
                         'DateTimeOperationFilterInput',
                         'UuidOperationFilterInput',
                     ])) {
-                        $queryParams["filter_value"][$k] = '"' . $queryParams["filter_value"][$k] . '"';
+                        $fieldValue = '"' . $fieldValue . '"';
                     }
-
-                    if (!isset($where[$queryParams["filter_field"][$k]])) {
-                        $where[$queryParams["filter_field"][$k]] = [];
-                    }
-
-                    $v = $queryParams["filter_value"][$k];
-                    if (in_array($queryParams["filter_type"][$k], ['in', 'nin'])) {
-                        if (str_starts_with($v, '"') && str_ends_with($v, '"')) {
-                            $v = str_replace(',', '","', $v);
+                    if (in_array($queryParams["filter_type"][$index], ['in', 'nin'])) {
+                        if (str_starts_with($field, '"') && str_ends_with($field, '"')) {
+                            $fieldValue = str_replace(',', '","', $fieldValue);
                         }
-                        $v = '[' . $v . ']';
+                        $fieldValue = '[' . $fieldValue . ']';
                     }
-                    if ($queryParams["filter_type"][$k] === "object") {
+                    // endregion
+                    if ($fieldType === "object") {
                         // https://stackoverflow.com/a/66316611/6824121
-                        $where[$queryParams["filter_field"][$k]][] = preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($v, JSON_THROW_ON_ERROR));
+                        $where[] = preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($fieldValue, JSON_THROW_ON_ERROR));
                     } else {
-                        $where[$queryParams["filter_field"][$k]][] = '{ ' . $queryParams["filter_type"][$k] . ': ' . $v . ' }';
+                        $where[] = '{ ' . $field . ': { ' . $fieldType . ': ' . $fieldValue . ' } }';
                     }
                 }
             }
@@ -556,12 +554,8 @@ final class SageGraphQl
             }
 
             if ($where !== []) {
-                $stringWhere = [];
-                foreach ($where as $f => $w) {
-                    $stringWhere[] = $f . ': ' . implode(',', $w);
-                }
-
-                $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': [{' . implode('},{', $stringWhere) . '}]}');
+                $stringWhere = implode(',', $where);
+                $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': [' . $stringWhere . ']}');
             }
 
             $query = (new Query($entityName))
@@ -1017,7 +1011,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                     [
                         "doPiece" => ["eq" => $doPiece],
                         "doType" => ["eq" => $doType],
-                    ]
+                    ],
                 ],
                 'where_condition' => 'and',
                 "paged" => "1",
