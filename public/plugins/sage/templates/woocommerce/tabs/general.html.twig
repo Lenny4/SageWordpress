@@ -11,7 +11,7 @@
     </tr>
     <tr>
       {% for pCatCompta in pCatComptas %}
-        <td colspan="2" class="text-center">{{ pCatCompta }}</td>
+        <td colspan="2" class="text-center">{{ pCatCompta.label }}</td>
       {% endfor %}
     </tr>
     <tr>
@@ -29,10 +29,11 @@
           <td rowspan="{{ pCattarifs|length }}">{{ 'Catégorie tarifaire'|trans }}</td>
         {% endif %}
         <td>{{ pCattarif.ctIntitule }}</td>
-        {% for htTtc in htTtcs %}
-          {% for pCatCompta in pCatComptas %}
+        {% for pCatCompta in pCatComptas %}
+          {% for htTtc in htTtcs %}
             <td>
-              {{ prices[pCattarif.cbMarq][loop.index]['price'~htTtc]|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}</td>
+              {{ prices[pCattarif.cbIndice][pCatCompta.cbIndice]['price'~htTtc]|number_format(2, ',', ' ') }} {{ currencySymbol|raw }}
+            </td>
           {% endfor %}
         {% endfor %}
       </tr>

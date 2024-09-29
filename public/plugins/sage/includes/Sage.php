@@ -22,7 +22,6 @@ use Twig\Extra\Intl\IntlExtension;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
-use WC_Meta_Data;
 use WC_Order;
 use WC_Product;
 use WP_Error;
@@ -181,7 +180,7 @@ final class Sage
                         if (!is_plugin_active($pluginId)) {
                             ?>
                             <div class="error"><p>
-                                <?= __('Sage plugin require WooCommerce to be activated.', 'sage') ?>
+                                <?= __('Le plugin Sage a besoin de WooCommerce pour fonctionner.', 'sage') ?>
                             </p>
                             </div><?php
                         } else {
@@ -358,22 +357,12 @@ final class Sage
             return implode('|', $r);
         }));
         $this->twig->addFunction(new TwigFunction('getApiHostUrl', static fn(): string => get_option(Sage::TOKEN . '_api_host_url')));
-        $this->twig->addFunction(new TwigFunction('getPricesProduct', static function (WC_Product $product): array {
-            $r = [];
-            /** @var WC_Meta_Data[] $metaDatas */
-            $metaDatas = $product->get_meta_data();
-            foreach ($metaDatas as $metaData) {
-                $data = $metaData->get_data();
-                if ($data["key"] !== '_' . Sage::TOKEN . '_prices') {
-                    continue;
+        $this->twig->addFunction(new TwigFunction('getPricesProduct', static function (WC_Product $product) use ($sageWoocommerce): array {
+            $r = $sageWoocommerce->getPricesProduct($product);
+            foreach ($r as &$r1) {
+                foreach ($r1 as &$r2) {
+                    $r2 = (array)$r2;
                 }
-                $prices = json_decode($data["value"], true, 512, JSON_THROW_ON_ERROR);
-                foreach ($prices as $price) {
-                    // Catégorie comptable (nCatCompta): [Locale, Export, Métropole]
-                    // Catégorie tarifaire (nCatTarif): [Tarif GC, Tarif Remise, Prix public, Tarif Partenaire]
-                    $r[$price["nCatTarif"]][$price["nCatCompta"]] = $price;
-                }
-                break;
             }
             return $r;
         }));
@@ -572,20 +561,15 @@ final class Sage
             );
         });
         // action is trigger when click update button on order
-        add_action('woocommerce_process_shop_order_meta', static function (int $orderId, Order $order) use ($sageWoocommerce): void {
-            if (
-                array_key_exists(Sage::TOKEN . '-fdocentete-dotype', $_POST) &&
-                array_key_exists(Sage::TOKEN . '-fdocentete-dopiece', $_POST) &&
-                is_numeric($_POST[Sage::TOKEN . '-fdocentete-dotype']) &&
-                !empty($_POST[Sage::TOKEN . '-fdocentete-dopiece'])
-            ) {
-                $sageWoocommerce->linkOrderFDocentete(
-                    $order,
-                    $_POST[Sage::TOKEN . '-fdocentete-dopiece'],
-                    (int)$_POST[Sage::TOKEN . '-fdocentete-dotype'],
-                    true,
-                );
+        add_action('woocommerce_process_shop_order_meta', static function (int $orderId, Order $order) use ($sage): void {
+            if ($order->get_status() === 'auto-draft') {
+                // handle by the add_action `woocommerce_new_order`
+                return;
             }
+            $sage->afterCreateOrEditOrder($order);
+        }, accepted_args: 2);
+        add_action('woocommerce_new_order', static function (int $orderId, Order $order) use ($sage): void {
+            $sage->afterCreateOrEditOrder($order);
         }, accepted_args: 2);
         // endregion
 
@@ -685,19 +669,6 @@ final class Sage
                     $doPiece = $body->{Sage::TOKEN . "-fdocentete-dopiece"};
                     $doType = (int)$body->{Sage::TOKEN . "-fdocentete-dotype"};
                     $order = $sageWoocommerce->linkOrderFDocentete($order, $doPiece, $doType, true);
-                    $extendedFDocentetes = $sageWoocommerce->sage->sageGraphQl->getExtendedFDocentetes(
-                        $doPiece,
-                        $doType,
-                        getError: true,
-                        getFDoclignes: true,
-                        getExpedition: true,
-                        ignorePingApi: true,
-                        addWordpressProductId: true,
-                        getUser: true,
-                        getLivraison: true,
-                    );
-                    $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $extendedFDocentetes);
-                    [$message, $order] = $sageWoocommerce->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
                         'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true)
@@ -761,6 +732,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         }
         // endregion
         $this->settings->applyDefaultSageEntityMenuOptions();
+        $this->settings->updateTaxes();
 
         // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
         $this->init();
@@ -1008,6 +980,23 @@ WHERE meta_key = %s
         }
 
         return self::$_instance;
+    }
+
+    private function afterCreateOrEditOrder(Order $order): void
+    {
+        if (
+            array_key_exists(Sage::TOKEN . '-fdocentete-dotype', $_POST) &&
+            array_key_exists(Sage::TOKEN . '-fdocentete-dopiece', $_POST) &&
+            is_numeric($_POST[Sage::TOKEN . '-fdocentete-dotype']) &&
+            !empty($_POST[Sage::TOKEN . '-fdocentete-dopiece'])
+        ) {
+            $this->sageWoocommerce->linkOrderFDocentete(
+                $order,
+                $_POST[Sage::TOKEN . '-fdocentete-dopiece'],
+                (int)$_POST[Sage::TOKEN . '-fdocentete-dotype'],
+                true,
+            );
+        }
     }
 
     public static function getArRef(int $postId): mixed

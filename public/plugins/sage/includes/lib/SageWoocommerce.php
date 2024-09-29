@@ -32,11 +32,11 @@ final class SageWoocommerce
         // region edit woocommerce price
         // https://stackoverflow.com/a/45807054/6824121
         // Simple, grouped and external products
-        add_filter('woocommerce_product_get_price', fn($price, $product) => $this->custom_price($price, $product), 99, 2);
-        add_filter('woocommerce_product_get_regular_price', fn($price, $product) => $this->custom_price($price, $product), 99, 2);
+        add_filter('woocommerce_product_get_price', fn($price, $product) => $this->custom_price($price, $product, get_current_user_id()), 99, 2);
+        add_filter('woocommerce_product_get_regular_price', fn($price, $product) => $this->custom_price($price, $product, get_current_user_id()), 99, 2);
         // Variations
-        add_filter('woocommerce_product_variation_get_regular_price', fn($price, $product) => $this->custom_price($price, $product), 99, 2);
-        add_filter('woocommerce_product_variation_get_price', fn($price, $product) => $this->custom_price($price, $product), 99, 2);
+        add_filter('woocommerce_product_variation_get_regular_price', fn($price, $product) => $this->custom_price($price, $product, get_current_user_id()), 99, 2);
+        add_filter('woocommerce_product_variation_get_price', fn($price, $product) => $this->custom_price($price, $product, get_current_user_id()), 99, 2);
         // Variable (price range)
 //        add_filter('woocommerce_variation_prices_price', fn($price, $variation, $product) => $this->custom_variable_price($price, $variation, $product), 99, 3);
 //        add_filter('woocommerce_variation_prices_regular_price', fn($price, $variation, $product) => $this->custom_variable_price($price, $variation, $product), 99, 3);
@@ -86,40 +86,63 @@ final class SageWoocommerce
 
     }
 
-    private function custom_price(string $price, WC_Product $product): float|string
+    private function custom_price(string $price, WC_Product $product, int $userId = 0): float|string
     {
         $arRef = $product->get_meta(Sage::META_KEY_AR_REF);
         if (empty($arRef)) {
             return $price;
         }
+        $prices = $this->getPricesProduct($product);
+        $flattenPrices = [];
+        foreach ($prices as $price1) {
+            foreach ($price1 as $price2) {
+                $flattenPrices[] = $price2;
+            }
+        }
+        $field = 'priceTtc';
+        $maxPrice = json_decode($this->getMaxPrice($flattenPrices), false, 512, JSON_THROW_ON_ERROR);
+        if ($userId === 0) {
+            return $maxPrice->{$field};
+        }
+        $metadata = get_user_meta($userId);
+        if (!isset(
+            $metadata["_" . Sage::TOKEN . "_nCatTarif"][0],
+            $metadata["_" . Sage::TOKEN . "_nCatCompta"][0]
+        )) {
+            return $maxPrice->{$field};
+        }
+        return $prices
+        [$metadata["_" . Sage::TOKEN . "_nCatTarif"][0]]
+        [$metadata["_" . Sage::TOKEN . "_nCatCompta"][0]]->{$field} ?? $maxPrice->{$field};
+    }
+
+    public function getPricesProduct(WC_Product $product): array
+    {
+        $r = [];
         /** @var WC_Meta_Data[] $metaDatas */
         $metaDatas = $product->get_meta_data();
-        $pCattarifs = $this->sage->sageGraphQl->getPCattarifs();
         foreach ($metaDatas as $metaData) {
             $data = $metaData->get_data();
             if ($data["key"] !== '_' . Sage::TOKEN . '_prices') {
                 continue;
             }
-            $pricesData = json_decode($data["value"], true, 512, JSON_THROW_ON_ERROR);
-            $nCatTarifCbIndice = get_user_meta(get_current_user_id(), '_' . Sage::TOKEN . '_nCatTarif', true);
-            if ($nCatTarifCbIndice !== '') {
-                $nCatTarifCbMarq = current(array_filter($pCattarifs, static fn(StdClass $pCattarif) => $pCattarif->cbIndice === (int)$nCatTarifCbIndice));
-                if ($nCatTarifCbMarq !== false) {
-                    $priceData = current(array_filter($pricesData, static fn(array $p) => $p['nCatTarif'] === $nCatTarifCbMarq->cbMarq));
-                    if ($priceData !== false) {
-                        $price = $priceData["priceTtc"];
-                    }
-                }
-            }
-            if (empty($price)) {
-                $allPrices = array_map(static function (array $priceData) {
-                    return $priceData['priceTtc'];
-                }, $pricesData);
-                $price = max($allPrices);
+            $prices = json_decode($data["value"], false, 512, JSON_THROW_ON_ERROR);
+            foreach ($prices as $price) {
+                // Catégorie comptable (nCatCompta): [Locale, Export, Métropole]
+                // Catégorie tarifaire (nCatTarif): [Tarif GC, Tarif Remise, Prix public, Tarif Partenaire]
+                $r[$price->nCatTarif][$price->nCatCompta] = $price;
             }
             break;
         }
-        return (float)$price;
+        return $r;
+    }
+
+    public function getMaxPrice(array $prices): false|string
+    {
+        usort($prices, static function (StdClass $a, StdClass $b) {
+            return $b->priceTtc <=> $a->priceTtc;
+        });
+        return json_encode($prices[0], JSON_THROW_ON_ERROR);
     }
 
     public static function instance(Sage $sage): ?self
@@ -230,51 +253,21 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 'doType' => $fDocentete->doType,
             ], JSON_THROW_ON_ERROR));
             $order->save();
-        }
-        return $order;
-    }
-
-    public function getMetaboxSage(WC_Order $order, bool $ignorePingApi = false, string $message = ''): string
-    {
-        $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
-        $hasFDocentete = !is_null($fDocenteteIdentifier);
-        $extendedFDocentetes = null;
-        $tasksSynchronizeOrder = [];
-        if ($hasFDocentete) {
             $extendedFDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
-                $fDocenteteIdentifier["doPiece"],
-                $fDocenteteIdentifier["doType"],
+                $doPiece,
+                $doType,
                 getError: true,
                 getFDoclignes: true,
                 getExpedition: true,
-                ignorePingApi: $ignorePingApi,
+                ignorePingApi: true,
                 addWordpressProductId: true,
                 getUser: true,
                 getLivraison: true,
-                addWordpressUserId: true,
-                getLotSerie: true,
             );
-            if (is_string($extendedFDocentetes)) {
-                $message .= $extendedFDocentetes;
-            }
             $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
+            [$message, $order] = $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
         }
-        // original WC_Meta_Box_Order_Data::output
-        $pCattarifs = $this->sage->sageGraphQl->getPCattarifs();
-        $pCatComptas = $this->sage->sageGraphQl->getPCatComptas();
-        return $this->sage->twig->render('woocommerce/metaBoxes/main.html.twig', [
-            'message' => $message,
-            'doPieceIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doPiece"] : null,
-            'doTypeIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doType"] : null,
-            'order' => $order,
-            'hasFDocentete' => $hasFDocentete,
-            'extendedFDocentetes' => $extendedFDocentetes,
-            'currency' => get_woocommerce_currency(),
-            'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
-            'tasksSynchronizeOrder' => $tasksSynchronizeOrder,
-            'pCattarifs' => $pCattarifs,
-            'pCatComptas' => $pCatComptas[PCatComptaUtils::TIERS_TYPE_VEN],
-        ]);
+        return $order;
     }
 
     public function getTasksSynchronizeOrder(
@@ -558,6 +551,9 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             ];
         }
 
+        // todo la sync des douments et des articles ne peut pas se faire en meme temps car elle pourrait dupliquer la création d'article
+        // todo la sync des douments et des clients ne peut pas se faire en meme temps car elle pourrait dupliquer la création de client
+
         // todo "Veuillez renseigner le N°pièce de la commande Sage" ajouter un bouton pour créer la commande dans Sage
 
         // todo calculer le prix de la livraison pour afficher le prix sur le site
@@ -730,7 +726,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         }
         $fComptetAddress = Sage::createAddressWithFComptet($fComptet);
         $address = [];
-        $fPays = $this->sage->sageGraphQl->getFPays(false);
+        $fPays = $this->sage->sageGraphQl->getFPays(false, ignorePingApi: true);
         foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
             $thisAdress = current(array_filter($fComptet->fLivraisons, static function (StdClass $fLivraison) use ($addressType, $fComptetAddress) {
                 if ($addressType === OrderUtils::BILLING_ADDRESS_TYPE) {
@@ -851,102 +847,6 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             }
         }
         return $addressTypeChanges;
-    }
-
-    public function importOrderFromSage(
-        string                     $doPiece,
-        int                        $doType,
-        ?int                       $shouldBeOrderId = null,
-        stdClass|null|false|string $fDocentete = null,
-        bool                       $ignorePingApi = false
-    ): array
-    {
-        if (is_null($fDocentete)) {
-            $fDocentete = $this->sage->sageGraphQl->getFDocentete(
-                $doPiece,
-                $doType,
-                getError: true,
-                getFDoclignes: true,
-                getExpedition: true,
-                ignorePingApi: $ignorePingApi,
-                addWordpressProductId: true,
-                getUser: true,
-                getLivraison: true
-            );
-        }
-        if (is_null($fDocentete) || $fDocentete === false) {
-            return [null, "<div class='error'>
-                        " . __("Le document de vente Sage n'a pas pu être importé", 'sage') . "
-                                </div>"];
-        }
-        $orderId = $this->getOrderIdWithDoPieceDoType($doPiece, $doType);
-        if (!is_null($shouldBeOrderId)) {
-            if (is_null($orderId)) {
-                $orderId = $shouldBeOrderId;
-            } else if ($orderId !== $shouldBeOrderId) {
-                return [null, "<div class='error'>
-                        " . __("Ce document de vente Sage est déjà assigné à une commande Wordpress", 'sage') . "
-                                </div>"];
-            }
-        }
-        $newOrder = false;
-        if (is_null($orderId)) {
-            $newOrder = true;
-            $order = wc_create_order();
-            if ($order instanceof WP_Error) {
-                return [null, "<div class='notice notice-error is-dismissible'>
-                                <pre>" . $order->get_error_code() . "</pre>
-                                <pre>" . $order->get_error_message() . "</pre>
-                                </div>"];
-            }
-            $order->add_order_note(__('Le document de vente Sage a été synchronisé de la commande.', 'sage') . ' [' . $fDocentete->doPiece["doPiece"] . ']');
-            $order->update_meta_data(Sage::META_KEY_IDENTIFIER, json_encode([
-                'doPiece' => $fDocentete->doPiece,
-                'doType' => $fDocentete->doType,
-            ], JSON_THROW_ON_ERROR));
-            $order->save();
-            $orderId = $order->get_id();
-        } else {
-            $order = wc_get_order($orderId);
-        }
-        $extendedFDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
-            $doPiece,
-            $doType,
-            getError: true,
-            getFDoclignes: true,
-            getExpedition: true,
-            ignorePingApi: $ignorePingApi,
-            addWordpressProductId: true,
-            getUser: true,
-            getLivraison: true,
-        );
-        [$message, $order] = $this->applyTasksSynchronizeOrder($order, $this->getTasksSynchronizeOrder($order, $extendedFDocentetes));
-
-        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "admin.php?page=wc-orders&action=edit&id=" . $orderId . "'>" . __("Voir la commande", 'sage') . "</a></span></strong>";
-        if (!$newOrder) {
-            return [$orderId, $message . "<div class='notice notice-success is-dismissible'>
-                        " . __('La commande a été mise à jour', 'sage') . $url . "
-                                </div>"];
-        }
-        return [$orderId, $message . "<div class='notice notice-success is-dismissible'>
-                        " . __('La commande a été créée', 'sage') . $url . "
-                                </div>"];
-    }
-
-    public function getOrderIdWithDoPieceDoType(string $doPiece, int $doType): int|null
-    {
-        global $wpdb;
-        $r = $wpdb->get_results(
-            $wpdb->prepare("
-SELECT order_id
-FROM " . $wpdb->prefix . "wc_orders_meta
-WHERE meta_key = %s
-  AND meta_value = %s
-", [Sage::META_KEY_IDENTIFIER, json_encode(['doPiece' => $doPiece, 'doType' => $doType], JSON_THROW_ON_ERROR)]));
-        if (!empty($r)) {
-            return (int)$r[0]->order_id;
-        }
-        return null;
     }
 
     public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): array
@@ -1484,6 +1384,145 @@ WHERE {$wpdb->posts}.post_type = 'product'
             }
         }
         return $message;
+    }
+
+    public function getMetaboxSage(WC_Order $order, bool $ignorePingApi = false, string $message = ''): string
+    {
+        $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
+        $hasFDocentete = !is_null($fDocenteteIdentifier);
+        $extendedFDocentetes = null;
+        $tasksSynchronizeOrder = [];
+        if ($hasFDocentete) {
+            $extendedFDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
+                $fDocenteteIdentifier["doPiece"],
+                $fDocenteteIdentifier["doType"],
+                getError: true,
+                getFDoclignes: true,
+                getExpedition: true,
+                ignorePingApi: $ignorePingApi,
+                addWordpressProductId: true,
+                getUser: true,
+                getLivraison: true,
+                addWordpressUserId: true,
+                getLotSerie: true,
+            );
+            if (is_string($extendedFDocentetes)) {
+                $message .= $extendedFDocentetes;
+            }
+            $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
+        }
+        // original WC_Meta_Box_Order_Data::output
+        $pCattarifs = $this->sage->sageGraphQl->getPCattarifs();
+        $pCatComptas = $this->sage->sageGraphQl->getPCatComptas();
+        return $this->sage->twig->render('woocommerce/metaBoxes/main.html.twig', [
+            'message' => $message,
+            'doPieceIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doPiece"] : null,
+            'doTypeIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doType"] : null,
+            'order' => $order,
+            'hasFDocentete' => $hasFDocentete,
+            'extendedFDocentetes' => $extendedFDocentetes,
+            'currency' => get_woocommerce_currency(),
+            'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
+            'tasksSynchronizeOrder' => $tasksSynchronizeOrder,
+            'pCattarifs' => $pCattarifs,
+            'pCatComptas' => $pCatComptas[PCatComptaUtils::TIERS_TYPE_VEN],
+        ]);
+    }
+
+    public function importOrderFromSage(
+        string                     $doPiece,
+        int                        $doType,
+        ?int                       $shouldBeOrderId = null,
+        stdClass|null|false|string $fDocentete = null,
+        bool                       $ignorePingApi = false
+    ): array
+    {
+        if (is_null($fDocentete)) {
+            $fDocentete = $this->sage->sageGraphQl->getFDocentete(
+                $doPiece,
+                $doType,
+                getError: true,
+                getFDoclignes: true,
+                getExpedition: true,
+                ignorePingApi: $ignorePingApi,
+                addWordpressProductId: true,
+                getUser: true,
+                getLivraison: true
+            );
+        }
+        if (is_null($fDocentete) || $fDocentete === false) {
+            return [null, "<div class='error'>
+                        " . __("Le document de vente Sage n'a pas pu être importé", 'sage') . "
+                                </div>"];
+        }
+        $orderId = $this->getOrderIdWithDoPieceDoType($doPiece, $doType);
+        if (!is_null($shouldBeOrderId)) {
+            if (is_null($orderId)) {
+                $orderId = $shouldBeOrderId;
+            } else if ($orderId !== $shouldBeOrderId) {
+                return [null, "<div class='error'>
+                        " . __("Ce document de vente Sage est déjà assigné à une commande Wordpress", 'sage') . "
+                                </div>"];
+            }
+        }
+        $newOrder = false;
+        if (is_null($orderId)) {
+            $newOrder = true;
+            $order = wc_create_order();
+            if ($order instanceof WP_Error) {
+                return [null, "<div class='notice notice-error is-dismissible'>
+                                <pre>" . $order->get_error_code() . "</pre>
+                                <pre>" . $order->get_error_message() . "</pre>
+                                </div>"];
+            }
+            $order->add_order_note(__('Le document de vente Sage a été synchronisé de la commande.', 'sage') . ' [' . $fDocentete->doPiece["doPiece"] . ']');
+            $order->update_meta_data(Sage::META_KEY_IDENTIFIER, json_encode([
+                'doPiece' => $fDocentete->doPiece,
+                'doType' => $fDocentete->doType,
+            ], JSON_THROW_ON_ERROR));
+            $order->save();
+            $orderId = $order->get_id();
+        } else {
+            $order = wc_get_order($orderId);
+        }
+        $extendedFDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
+            $doPiece,
+            $doType,
+            getError: true,
+            getFDoclignes: true,
+            getExpedition: true,
+            ignorePingApi: $ignorePingApi,
+            addWordpressProductId: true,
+            getUser: true,
+            getLivraison: true,
+        );
+        [$message, $order] = $this->applyTasksSynchronizeOrder($order, $this->getTasksSynchronizeOrder($order, $extendedFDocentetes));
+
+        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "admin.php?page=wc-orders&action=edit&id=" . $orderId . "'>" . __("Voir la commande", 'sage') . "</a></span></strong>";
+        if (!$newOrder) {
+            return [$orderId, $message . "<div class='notice notice-success is-dismissible'>
+                        " . __('La commande a été mise à jour', 'sage') . $url . "
+                                </div>"];
+        }
+        return [$orderId, $message . "<div class='notice notice-success is-dismissible'>
+                        " . __('La commande a été créée', 'sage') . $url . "
+                                </div>"];
+    }
+
+    public function getOrderIdWithDoPieceDoType(string $doPiece, int $doType): int|null
+    {
+        global $wpdb;
+        $r = $wpdb->get_results(
+            $wpdb->prepare("
+SELECT order_id
+FROM " . $wpdb->prefix . "wc_orders_meta
+WHERE meta_key = %s
+  AND meta_value = %s
+", [Sage::META_KEY_IDENTIFIER, json_encode(['doPiece' => $doPiece, 'doType' => $doType], JSON_THROW_ON_ERROR)]));
+        if (!empty($r)) {
+            return (int)$r[0]->order_id;
+        }
+        return null;
     }
 
     public function calculateFraisExpedition(WC_Order $order): float

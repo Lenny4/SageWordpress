@@ -5,6 +5,7 @@
 
   {{ message | raw }}
   {% set orderId = order.get_id() %}
+  {% set orderStatus = order.get_status() %}
   {% set wpnonce = 'wp_rest'|wp_create_nonce %}
   {% set fDoclignes = getFDoclignes(extendedFDocentetes) %}
   {% set mainFDocentete = getMainFDocenteteOfExtendedFDocentetes(order, extendedFDocentetes) %}
@@ -25,8 +26,10 @@
       </svg>
       <span class="dashicons dashicons-yes endDashiconsInput hidden" style="color: green"></span>
       <span class="dashicons dashicons-no endDashiconsInput hidden" style="color: red"></span>
-      <button type="button" id="order-fdocentete" data-order-fdocentete disabled
-              class="button button-primary">{{ 'Valider'|trans }}</button>
+      {% if orderStatus != 'auto-draft' %}
+        <button type="button" id="order-fdocentete" data-order-fdocentete disabled
+                class="button button-primary">{{ 'Valider'|trans }}</button>
+      {% endif %}
     </div>
   {% else %}
     {% if mainFDocentete|gettype == 'string' %}
@@ -120,7 +123,7 @@
                         </tr>
                         <tr>
                           <td class="text-end">{{ 'Catégorie comptable'|trans }}:</td>
-                          <td class="pr-4 text-start">{{ pCatComptas[fDocentete.nCatCompta] }}</td>
+                          <td class="pr-4 text-start">{{ pCatComptas[fDocentete.nCatCompta].label }}</td>
                           <td class="text-end">{{ 'Catégorie tarifaire'|trans }}:</td>
                           <td class="pr-4 text-start">{{ pCattarifs[fDocentete.doTarif].ctIntitule }}</td>
                           <td class="text-end"></td>

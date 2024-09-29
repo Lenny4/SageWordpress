@@ -120,6 +120,9 @@ final class SageSettings
                     new SageEntityMetadata(field: '_nCatTarif', value: static function (StdClass $fComptet) {
                         return $fComptet->nCatTarif;
                     }),
+                    new SageEntityMetadata(field: '_nCatCompta', value: static function (StdClass $fComptet) {
+                        return $fComptet->nCatCompta;
+                    }),
                     new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {
                         return (new DateTime())->format('Y-m-d H:i:s');
                     }),
@@ -224,11 +227,8 @@ final class SageSettings
                     new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {
                         return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
                     }),
-                    new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) {
-                        usort($fArticle->prices, static function (StdClass $a, StdClass $b) {
-                            return $b->priceTtc <=> $a->priceTtc;
-                        });
-                        return json_encode($fArticle->prices[0], JSON_THROW_ON_ERROR);
+                    new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
+                        return $sageWoocommerce->getMaxPrice($fArticle->prices);
                     }),
                     new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
                         return (new DateTime())->format('Y-m-d H:i:s');

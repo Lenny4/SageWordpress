@@ -258,6 +258,7 @@ final class SageGraphQl
                 'ctTelephone',
                 'ctCodeRegion',
                 'nCatTarif',
+                'nCatCompta',
             ]),
             'fLivraisons' => $this->_getFLivraisonSelectionSet(),
         ];
@@ -657,7 +658,9 @@ final class SageGraphQl
     private function _getPExpeditionSelectionSet(): array
     {
         return [
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['cbMarq']),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'cbIndice',
+            ]),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['eIntitule']),
             'arRefNavigation' => $this->_getFArticleSelectionSet(),
         ];
@@ -1114,7 +1117,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
-                'cbMarq',
                 'cbIndice',
             ]),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
@@ -1241,7 +1243,10 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                     continue;
                 }
                 list($tiers, $i) = preg_split('/(?<=.{' . $pos . '})/', str_replace('caCompta', '', $key), 2);
-                $result[$tiers][(int)$i] = $pCatCompta;
+                $stdClass = new stdClass();
+                $stdClass->label = $pCatCompta;
+                $stdClass->cbIndice = (int)$i;
+                $result[$tiers][(int)$i] = $stdClass;
             }
         } else {
             $result = $pCatComptas;
