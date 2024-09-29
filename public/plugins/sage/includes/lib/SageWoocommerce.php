@@ -26,11 +26,18 @@ if (!defined('ABSPATH')) {
 final class SageWoocommerce
 {
     private static ?self $_instance = null;
+    private array $prices = [];
 
     private function __construct(public ?Sage $sage)
     {
         // region edit woocommerce price
         // https://stackoverflow.com/a/45807054/6824121
+        add_filter('woocommerce_get_price_including_tax', function ($price, $quantity, $product) {
+            return $this->custom_price($price, $product, get_current_user_id(), true);
+        }, 99, 3);
+        add_filter('woocommerce_get_price_excluding_tax', function ($price, $quantity, $product) {
+            return $this->custom_price($price, $product, get_current_user_id(), false);
+        }, 99, 3);
         // Simple, grouped and external products
         add_filter('woocommerce_product_get_price', fn($price, $product) => $this->custom_price($price, $product, get_current_user_id()), 99, 2);
         add_filter('woocommerce_product_get_regular_price', fn($price, $product) => $this->custom_price($price, $product, get_current_user_id()), 99, 2);
@@ -86,11 +93,23 @@ final class SageWoocommerce
 
     }
 
-    private function custom_price(string $price, WC_Product $product, int $userId = 0): float|string
+    private function custom_price(string $price, WC_Product $product, int $userId = 0, ?bool $withTaxes = null): float|string
     {
+        $field = 'priceHt';
+        if (
+            $withTaxes === true ||
+            (is_null($withTaxes) && get_option('woocommerce_tax_display_shop') !== 'excl') // excl || incl
+        ) {
+            $field = 'priceTtc';
+        }
+        $identifier = $product->get_id() . '_' . $userId . '_' . $field;
+        if (array_key_exists($identifier, $this->prices)) { // performance
+            return $this->prices[$identifier];
+        }
         $arRef = $product->get_meta(Sage::META_KEY_AR_REF);
         if (empty($arRef)) {
-            return $price;
+            $this->prices[$identifier] = $price;
+            return $this->prices[$identifier];
         }
         $prices = $this->getPricesProduct($product);
         $flattenPrices = [];
@@ -99,24 +118,26 @@ final class SageWoocommerce
                 $flattenPrices[] = $price2;
             }
         }
-        $field = 'priceTtc';
         $maxPrice = json_decode($this->getMaxPrice($flattenPrices), false, 512, JSON_THROW_ON_ERROR);
-        if ($userId === 0) {
-            return $maxPrice->{$field};
+        if ($userId === 0 || is_admin()) {
+            $this->prices[$identifier] = $maxPrice->{$field};
+            return $this->prices[$identifier];
         }
         $metadata = get_user_meta($userId);
         if (!isset(
             $metadata["_" . Sage::TOKEN . "_nCatTarif"][0],
             $metadata["_" . Sage::TOKEN . "_nCatCompta"][0]
         )) {
-            return $maxPrice->{$field};
+            $this->prices[$identifier] = $maxPrice->{$field};
+            return $this->prices[$identifier];
         }
-        return $prices
+        $this->prices[$identifier] = $prices
         [$metadata["_" . Sage::TOKEN . "_nCatTarif"][0]]
         [$metadata["_" . Sage::TOKEN . "_nCatCompta"][0]]->{$field} ?? $maxPrice->{$field};
+        return $this->prices[$identifier];
     }
 
-    public function getPricesProduct(WC_Product $product): array
+    public function getPricesProduct(WC_Product $product, bool $flat = false): array
     {
         $r = [];
         /** @var WC_Meta_Data[] $metaDatas */
@@ -130,7 +151,11 @@ final class SageWoocommerce
             foreach ($prices as $price) {
                 // Catégorie comptable (nCatCompta): [Locale, Export, Métropole]
                 // Catégorie tarifaire (nCatTarif): [Tarif GC, Tarif Remise, Prix public, Tarif Partenaire]
-                $r[$price->nCatTarif][$price->nCatCompta] = $price;
+                if ($flat) {
+                    $r[] = $price;
+                } else {
+                    $r[$price->nCatTarif][$price->nCatCompta] = $price;
+                }
             }
             break;
         }
