@@ -130,8 +130,8 @@ final class Sage
         // region enqueue js && css
         // Load frontend JS & CSS.
         add_action('wp_enqueue_scripts', function (): void {
-//            wp_register_style(self::TOKEN . '-frontend', esc_url($this->assets_dist_url) . 'frontend.css', [], $this->_version);
-//            wp_enqueue_style(self::TOKEN . '-frontend');
+            wp_register_style(self::TOKEN . '-frontend', esc_url($this->assets_dist_url) . 'frontend.css', [], $this->_version);
+            wp_enqueue_style(self::TOKEN . '-frontend');
             wp_register_script(self::TOKEN . '-frontend', esc_url($this->assets_dist_url) . 'frontend' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
             wp_enqueue_script(self::TOKEN . '-frontend');
         }, 10);
@@ -140,8 +140,8 @@ final class Sage
         add_action('admin_enqueue_scripts', function (string $hook = ''): void {
             wp_register_script(self::TOKEN . '-admin', esc_url($this->assets_dist_url) . 'admin' . $this->script_suffix . '.js', ['jquery'], $this->_version, true);
             wp_enqueue_script(self::TOKEN . '-admin');
-//            wp_register_style(self::TOKEN . '-admin', esc_url($this->assets_dist_url) . 'admin.css', [], $this->_version);
-//            wp_enqueue_style(self::TOKEN . '-admin');
+            wp_register_style(self::TOKEN . '-admin', esc_url($this->assets_dist_url) . 'admin.css', [], $this->_version);
+            wp_enqueue_style(self::TOKEN . '-admin');
         }, 10, 1);
         // endregion
 

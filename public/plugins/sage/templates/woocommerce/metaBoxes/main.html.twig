@@ -11,25 +11,32 @@
   {% set mainFDocentete = getMainFDocenteteOfExtendedFDocentetes(order, extendedFDocentetes) %}
   <div data-order-data data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}"></div>
   {% if hasFDocentete == false %}
-    <label for="sage-fdocentete-dopiece">
-      {{ 'Veuillez renseigner le N°pièce de la commande Sage'|trans }}
-    </label>
-    <div style="position: relative">
-      <input name="sage-fdocentete-dopiece" style="padding-right: 20px" id="sage-fdocentete-dopiece" type="text"
-             size="20"
-             value="">
-      <input name="sage-fdocentete-dotype" id="sage-fdocentete-dotype" type="hidden">
-      <input name="sage-fdocentete-wpnonce" id="sage-fdocentete-wpnonce" type="hidden"
-             value="{{ 'wp_rest'|wp_create_nonce }}">
-      <svg class="svg-spinner hidden" viewBox="0 0 50 50">
-        <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
-      </svg>
-      <span class="dashicons dashicons-yes endDashiconsInput hidden" style="color: green"></span>
-      <span class="dashicons dashicons-no endDashiconsInput hidden" style="color: red"></span>
-      {% if orderStatus != 'auto-draft' %}
-        <button type="button" id="order-fdocentete" data-order-fdocentete disabled
-                class="button button-primary">{{ 'Valider'|trans }}</button>
-      {% endif %}
+    <div class="text-center">
+      <label for="sage-fdocentete-dopiece">
+        {{ 'Veuillez renseigner le N°pièce du document de vente Sage'|trans }}
+      </label>
+      <div style="position: relative">
+        <input name="sage-fdocentete-dopiece" style="padding-right: 20px" id="sage-fdocentete-dopiece" type="text"
+               size="20"
+               value="">
+        <input name="sage-fdocentete-dotype" id="sage-fdocentete-dotype" type="hidden">
+        <input name="sage-fdocentete-wpnonce" id="sage-fdocentete-wpnonce" type="hidden"
+               value="{{ 'wp_rest'|wp_create_nonce }}">
+        <svg class="svg-spinner hidden" viewBox="0 0 50 50">
+          <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+        </svg>
+        <span class="dashicons dashicons-yes endDashiconsInput hidden" style="color: green"></span>
+        <span class="dashicons dashicons-no endDashiconsInput hidden" style="color: red"></span>
+        {% if orderStatus != 'auto-draft' %}
+          <button type="button" id="order-fdocentete" data-order-fdocentete disabled
+                  class="button button-primary">{{ 'Valider'|trans }}</button>
+        {% endif %}
+      </div>
+    </div>
+    <div class="text-divider mt-2 mb-2">{{ 'OU'|trans }}</div>
+    <div class="text-center">
+      <button type="button" id="order-fdocentete-create" data-order-fdocentete-create="{{ orderId }}"
+              class="button button-primary">{{ 'Créer un nouveau document de vente dans Sage'|trans }}</button>
     </div>
   {% else %}
     {% if mainFDocentete|gettype == 'string' %}
