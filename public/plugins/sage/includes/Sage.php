@@ -732,7 +732,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         }
         // endregion
         $this->settings->applyDefaultSageEntityMenuOptions();
-        $this->settings->updateTaxes();
+        $this->settings->updateTaxes(showMessage: false);
 
         // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
         $this->init();
