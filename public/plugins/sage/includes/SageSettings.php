@@ -155,15 +155,15 @@ final class SageSettings
                 options: [
                     [
                         'id' => 'auto_create_sage_fdocentete',
-                        'label' => __('Créer automatiquement le document de vente', 'sage'),
-                        'description' => __("Créer automatiquement un document de vente dans Sage lorsqu'une commande Wordpress est crée.", 'sage'),
+                        'label' => __('Créer automatiquement le document de vente Sage', 'sage'),
+                        'description' => __("Créer automatiquement un document de vente dans Sage lorsqu'une commande Woocommerce est crée.", 'sage'),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
                     [
                         'id' => 'auto_create_wordpress_order',
-                        'label' => __('Créer automatiquement la commande', 'sage'),
-                        'description' => __("Créer automatiquement une commande dans Wordpress lorsqu'un document de vente Sage est crée.", 'sage'),
+                        'label' => __('Créer automatiquement la commande Woocommerce', 'sage'),
+                        'description' => __("Créer automatiquement une commande dans Woocommerce lorsqu'un document de vente Sage est crée.", 'sage'),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
@@ -203,10 +203,16 @@ final class SageSettings
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
                 options: [
+//                    [
+//                        'id' => 'auto_create_sage_farticle',
+//                        'label' => __('Créer automatiquement le produit Sage', 'sage'),
+//                        'description' => __("Créer automatiquement le produit dans Woocommerce lorsqu'un article Sage est crée.", 'sage'),
+//                        'type' => 'html',
+//                    ],
                     [
                         'id' => 'auto_create_wordpress_article',
-                        'label' => __('Créer automatiquement le produit Wordpress', 'sage'),
-                        'description' => __("Créer automatiquement le produit dans Wordpress lorsqu'un article Sage est crée.", 'sage'),
+                        'label' => __('Créer automatiquement le produit Woocommerce', 'sage'),
+                        'description' => __("Créer automatiquement le produit dans Woocommerce lorsqu'un article Sage est crée.", 'sage'),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
@@ -276,14 +282,14 @@ final class SageSettings
                         [
                             'id' => 'wordpress_host_url',
                             'label' => __('Wordpress host url', 'sage'),
-                            'description' => __('Renseigner l\'url à laquelle l\'API Sage peut contacter l\'API de wordpress.', 'sage'),
+                            'description' => __('Renseigner l\'url à laquelle l\'API Sage peut contacter l\'API de Wordpress. Modifier C:\Windows\System32\drivers\etc\hosts si nécessaire sur le serveur de l\'API Sage.', 'sage'),
                             'type' => 'text',
                             'default' => $defaultWordpressUrl,
                             'placeholder' => __($defaultWordpressUrl, 'sage')
                         ],
                         [
                             'id' => 'sync_articles_to_website',
-                            'label' => __('Synchronise les articles de Sage dans Wordpress', 'sage'),
+                            'label' => __('Synchronise les articles de Sage dans Woocommerce', 'sage'),
                             'description' => __('Tous les articles dans Sage sont crées automatiquement dans WooCommerce.', 'sage'),
                             'type' => 'checkbox',
                             'default' => ''

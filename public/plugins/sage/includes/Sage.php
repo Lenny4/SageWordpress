@@ -525,8 +525,8 @@ final class Sage
         }));
         $this->twig->addFunction(new TwigFunction('getJsTranslations', static function (): array {
             return [
-                'synchronizeOrder' => __("Voulez vous vraiment synchroniser la commande Wordpress avec le document de vente Sage ?", "sage"),
-                'desynchronizeOrder' => __("Voulez vous vraiment désynchroniser la commande Wordpress avec le document de vente Sage ?", "sage"),
+                'synchronizeOrder' => __("Voulez vous vraiment synchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
+                'desynchronizeOrder' => __("Voulez vous vraiment désynchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
             ];
         }));
         $this->twig->addFunction(new TwigFunction('getFDoclignes', static function (array|null|string $fDocentetes) use ($sageWoocommerce): array {
@@ -766,7 +766,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                 optionName: 'woocommerce_enable_guest_checkout',
                 optionValue: 'no',
                 trans: __('Allow customers to place orders without an account', 'woocommerce'),
-                description: __("Lorsque cette option est activée vos clients ne sont pas obligés de se connecter à leurs comptes pour passer commande et il est donc impossible de créer automatiquement la commande passé dans Wordpress dans Sage.", 'sage'),
+                description: __("Lorsque cette option est activée vos clients ne sont pas obligés de se connecter à leurs comptes pour passer commande et il est donc impossible de créer automatiquement la commande passé dans Woocommerce dans Sage.", 'sage'),
             ),
             new SageExpectedOption(
                 optionName: 'woocommerce_calc_taxes',
@@ -780,7 +780,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                 optionName: 'woocommerce_currency',
                 optionValue: $pDossier->nDeviseCompteNavigation->dCodeIso,
                 trans: __('Currency', 'woocommerce'),
-                description: __("La devise dans Wordpress n'est pas la même que dans Sage.", 'sage'),
+                description: __("La devise dans Woocommerce n'est pas la même que dans Sage.", 'sage'),
             );
         }
         /** @var SageExpectedOption[] $changes */

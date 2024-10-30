@@ -337,7 +337,6 @@ final class SageAdminApi
                     'data' => $data,
                 ]);
                 break;
-
         }
 
         switch ($field['type']) {

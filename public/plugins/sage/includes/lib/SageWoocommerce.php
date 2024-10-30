@@ -1486,7 +1486,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
                 $orderId = $shouldBeOrderId;
             } else if ($orderId !== $shouldBeOrderId) {
                 return [null, "<div class='error'>
-                        " . __("Ce document de vente Sage est déjà assigné à une commande Wordpress", 'sage') . "
+                        " . __("Ce document de vente Sage est déjà assigné à une commande Woocommerce", 'sage') . "
                                 </div>"];
             }
         }
