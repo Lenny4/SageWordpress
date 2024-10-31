@@ -273,8 +273,8 @@ final class SageSettings
                             'placeholder' => __('https://192.168.0.1', 'sage')
                         ],
                         [
-                            'id' => 'activate_https_verification_graphql',
-                            'label' => __('Activer Https GraphQl', 'sage'),
+                            'id' => 'activate_https_verification_api',
+                            'label' => __('Activer Https Api', 'sage'),
                             'description' => __("Décochez cette case si vous avez l'erreur: cURL error 60: SSL certificate problem: self-signed certificate.", 'sage'),
                             'type' => 'checkbox',
                             'default' => 'on'
@@ -1127,15 +1127,40 @@ WHERE meta_key = %s
     private function createUpdateWebsite(string $user_id, string $password): bool
     {
         $user = get_user_by('id', $user_id);
-        $url = parse_url((string)get_option(Sage::TOKEN . '_wordpress_host_url'));
+        $hasError = false;
+        $wordpressHostUrl = parse_url((string)get_option(Sage::TOKEN . '_wordpress_host_url'));
+        if (!array_key_exists("scheme", $wordpressHostUrl)) {
+            add_action('admin_notices', static function (): void {
+                ?>
+                <div class="error"><p>
+                    <?= __("Wordpress host url doit commencer par 'http://' ou 'https://'", 'sage') ?>
+                </p>
+                </div><?php
+            });
+            $hasError = true;
+        }
+        $apiHostUrl = parse_url((string)get_option(Sage::TOKEN . '_api_host_url'));
+        if (!array_key_exists("scheme", $apiHostUrl)) {
+            add_action('admin_notices', static function (): void {
+                ?>
+                <div class="error"><p>
+                    <?= __("Api host url doit commencer par 'http://' ou 'https://'", 'sage') ?>
+                </p>
+                </div><?php
+            });
+            $hasError = true;
+        }
+        if ($hasError) {
+            return false;
+        }
         global $wpdb;
         $stdClass = $this->sage->sageGraphQl->createUpdateWebsite(
             name: get_bloginfo(),
             username: $user->data->user_login,
             password: $password,
             websiteEnum: WebsiteEnum::Wordpress,
-            host: $url["host"],
-            protocol: $url["scheme"],
+            host: $wordpressHostUrl["host"],
+            protocol: $wordpressHostUrl["scheme"],
             forceSsl: (bool)get_option(Sage::TOKEN . '_activate_https_verification_wordpress'),
             dbHost: get_option(Sage::TOKEN . '_wordpress_db_host'),
             tablePrefix: $wpdb->prefix,

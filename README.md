@@ -3,6 +3,9 @@ Api host url: 192.168.1.50
 Wordpress host url: https://caddy
 Wordpress db host: 192.168.1.44
 
+# Important
+
+launch chrome this way: `google-chrome --ignore-certificate-errors`
 
 https://trello.com/b/t64T4Swz/sage-api
 
@@ -21,6 +24,9 @@ When add a new entity use function `private function settings_fields` with debug
 ```
 ./runc wp-content/plugins/sage/vendor/bin/rector process --config=wp-content/plugins/sage/rector.php
 ```
+
+Noter quelque part que l'erreur: Aucune connexion n’a pu être établie car l’ordinateur cible l’a expressément refusée,
+correspond au fait qu'il faille ajouter s au http donc https pour `Wordpress host url`
 
 https://github.com/hlashbrooke/WordPress-Plugin-Template
 

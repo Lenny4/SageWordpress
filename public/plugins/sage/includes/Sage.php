@@ -160,6 +160,7 @@ final class Sage
         $sage = $this;
 
         add_action('admin_init', static function () use ($sage): void {
+            echo $sage->twig->render('data.html.twig');
             if (is_admin() && current_user_can('activate_plugins')) {
                 $allPlugins = get_plugins();
                 $pluginId = 'woocommerce/woocommerce.php';
@@ -173,14 +174,14 @@ final class Sage
                     if (!$isWooCommerceInstalled) {
                         ?>
                         <div class="error"><p>
-                                <?= __('Sage plugin require WooCommerce to be installed.', 'sage') ?>
+                                <?= __('Le plugin Sage a besoin que WooCommerce soit installé pour fonctionner.', 'sage') ?>
                             </p></div>
                         <?php
                     } else {
                         if (!is_plugin_active($pluginId)) {
                             ?>
                             <div class="error"><p>
-                                <?= __('Le plugin Sage a besoin de WooCommerce pour fonctionner.', 'sage') ?>
+                                <?= __('Le plugin Sage a besoin que WooCommerce soit activé pour fonctionner.', 'sage') ?>
                             </p>
                             </div><?php
                         } else {

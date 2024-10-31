@@ -28,6 +28,11 @@ $(() => {
     return $(allFilterContainer).children().length;
   }
 
+  function setIntervalAndExecute(fn: Function, t: number) {
+    fn();
+    return (setInterval(fn, t));
+  }
+
   function applyTippy() {
     // https://atomiks.github.io/tippyjs/v6/constructor/
     tippy('[data-tippy-content]', {
@@ -285,6 +290,83 @@ $(() => {
     }
   }
 
+  function createWebsocket() {
+    let apiHostUrl: URL = null;
+    const pingTime = 5000;
+    let lastMessageTime: number = null;
+    if (stringApiHostUrl) {
+      try {
+        apiHostUrl = new URL(stringApiHostUrl);
+      } catch (e) {
+        apiHostUrl = null;
+        console.error(e);
+        return;
+      }
+      let hasError = false;
+      const url = 'wss://' + apiHostUrl.host + '/ws';
+      const ws = new WebSocket(url);
+      let intervalPing: number | null = null;
+      let alreadyClose = false;
+      let nbLost = 0;
+
+      const wsClose = () => {
+        if (alreadyClose) {
+          return;
+        }
+        alreadyClose = true;
+        if (intervalPing !== null) {
+          clearInterval(intervalPing);
+        }
+        setTimeout(() => {
+          createWebsocket();
+        }, hasError ? 5000 : 0);
+      }
+
+      ws.onopen = () => {
+        console.log(`ws.onopen`);
+        ws.send(JSON.stringify({
+          Get: "appState"
+        }));
+        intervalPing = setIntervalAndExecute(() => {
+          ws.send(JSON.stringify({
+            Get: "ping"
+          }));
+          const waitPingReturn = 1000;
+          setTimeout(() => {
+            if (lastMessageTime === null || Date.now() - waitPingReturn > lastMessageTime) {
+              nbLost++;
+              console.log("todo connection lost"); // todo connection lost, display a message on screen
+              if (nbLost > 3) {
+                try {
+                  wsClose();
+                  ws.close();
+                } catch (e) {
+                  console.error(e)
+                }
+              }
+            }
+          }, waitPingReturn);
+        }, pingTime);
+      }
+
+      ws.onmessage = (message) => {
+        console.log(`ws.onmessage`, message.data);
+        lastMessageTime = Date.now();
+        nbLost = 0;
+      }
+
+      ws.onerror = (evt) => {
+        console.log('ws.onerror', evt);
+        hasError = true;
+      }
+
+      ws.onclose = (evt) => {
+        console.log('ws.onclose alreadyClose: ' + alreadyClose, evt);
+        wsClose();
+      }
+    }
+  }
+
   // region data-2-select-target
   $(document).on('click', '[data-2-select-target] option', function (e) {
     let thisSelect = $(e.target).closest('select');
@@ -359,38 +441,6 @@ $(() => {
   });
 
   initFiltersWithQueryParams();
-  // endregion
-
-  // region websocket
-  let apiHostUrl: URL = null;
-  if (stringApiHostUrl) {
-    try {
-      apiHostUrl = new URL(stringApiHostUrl);
-    } catch (_) {
-      apiHostUrl = null;
-    }
-    if (apiHostUrl) {
-      const url = 'wss://' + apiHostUrl.host + '/ws';
-      console.log('start websocket', url);
-      const ws = new WebSocket(url)
-      ws.onopen = () => {
-        console.log('ws.onopen')
-        ws.send('hello world')
-      }
-
-      ws.onmessage = (message) => {
-        console.log(`ws.onmessage`, message.data)
-      }
-
-      ws.onerror = (evt) => {
-        console.log('ws.onerror', evt)
-      }
-
-      ws.onclose = (evt) => {
-        console.log('ws.onclose', evt)
-      }
-    }
-  }
   // endregion
 
   // region search fdocentete
@@ -632,5 +682,9 @@ $(() => {
 
   // region tooltip
   applyTippy();
+  // endregion
+
+  // region websocket
+  createWebsocket()
   // endregion
 });
