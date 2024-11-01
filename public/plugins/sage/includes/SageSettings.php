@@ -83,21 +83,37 @@ final class SageSettings
                 options: [
                     [
                         'id' => 'auto_create_sage_fcomptet',
-                        'label' => __('Automatically create Sage account', 'sage'),
+                        'label' => __('Créer automatiquement le client Sage', 'sage'),
                         'description' => __("Créer automatiquement un compte client dans Sage lorsqu'un compte Wordpress est crée.", 'sage'),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
                     [
+                        'id' => 'auto_import_sage_fcomptet',
+                        'label' => __('Importer automatiquement les anciens clients Woocommerce', 'sage'),
+                        'description' => __("Importe les comptes Woocommerce dans Sage à compter de la date renseigner (date de création du compte dans Woocommerce). Laissez vide pour ne pas importer.", 'sage'),
+                        'type' => 'date',
+                        'default' => '',
+                        'placeholder' => __('', 'sage')
+                    ],
+                    [
                         'id' => 'auto_create_wordpress_account',
-                        'label' => __('Synchronisation des comptes Sage', 'sage'),
+                        'label' => __('Créer automatiquement le compte Wordpress', 'sage'),
                         'description' => __("Créer automatiquement un compte dans Wordpress lorsqu'un utilisateur Sage est crée.", 'sage'),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
                     [
+                        'id' => 'auto_import_wordpress_account',
+                        'label' => __('Importer automatiquement les anciens clients Sage', 'sage'),
+                        'description' => __("Importe les comptes Sage dans Woocommerce à compter de la date renseigner (date de création du compte dans Sage). Laissez vide pour ne pas importer.", 'sage'),
+                        'type' => 'date',
+                        'default' => '',
+                        'placeholder' => __('', 'sage')
+                    ],
+                    [
                         'id' => 'mail_auto_create_sage_fcomptet',
-                        'label' => __('Automatically send email to reset password', 'sage'),
+                        'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', 'sage'),
                         'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", 'sage'),
                         'type' => 'checkbox',
                         'default' => 'off'
@@ -167,6 +183,22 @@ final class SageSettings
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
+                    [
+                        'id' => 'auto_create_wordpress_order',
+                        'label' => __('Créer automatiquement la commande Woocommerce', 'sage'),
+                        'description' => __("Créer automatiquement une commande dans Woocommerce lorsqu'un document de vente Sage est crée pour les types de documents sélectionnés.", 'sage'),
+                        'type' => '2_select_multi',
+                        'options' => [
+                            '0' => __("Devis", 'sage'),
+                            '1' => __("Bon de commande", 'sage'),
+                            '2' => __("Préparation de livraison", 'sage'),
+                            '3' => __("Bon de livraison", 'sage'),
+                            '6' => __("Facture", 'sage'),
+                            '7' => __("Facture comptabilisée", 'sage'),
+                        ],
+                        'default' => [],
+                        'sort' => false,
+                    ],
                 ],
                 actions: [
                     'import_from_sage' => static function (array $data) use ($sageWoocommerce): string {
@@ -215,6 +247,14 @@ final class SageSettings
                         'description' => __("Créer automatiquement le produit dans Woocommerce lorsqu'un article Sage est crée.", 'sage'),
                         'type' => 'checkbox',
                         'default' => 'off'
+                    ],
+                    [
+                        'id' => 'auto_import_wordpress_article',
+                        'label' => __('Importer automatiquement les anciens produits Sage', 'sage'),
+                        'description' => __("Importe les produits Sage dans Woocommerce à compter de la date renseigner (date de création de l'article dans Sage). Laissez vide pour ne pas importer.", 'sage'),
+                        'type' => 'date',
+                        'default' => '',
+                        'placeholder' => __('', 'sage')
                     ],
                 ],
                 actions: [
@@ -1167,7 +1207,20 @@ WHERE meta_key = %s
             dbName: get_option(Sage::TOKEN . '_wordpress_db_name'),
             dbUsername: get_option(Sage::TOKEN . '_wordpress_db_username'),
             dbPassword: get_option(Sage::TOKEN . '_wordpress_db_password'),
-            syncArticlesToWebsite: (bool)get_option(Sage::TOKEN . '_sync_articles_to_website'),
+            // region fComptet
+            autoCreateSageFcomptet: (bool)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet'),
+            autoImportSageFcomptet: self::get_option_date_or_null(Sage::TOKEN . '_auto_import_sage_fcomptet'),
+            autoCreateWordpressAccount: (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_account'),
+            autoImportWordpressAccount: self::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_account'),
+            // endregion
+            // region fDocentete
+            autoCreateSageFdocentete: (bool)get_option(Sage::TOKEN . '_auto_create_sage_fdocentete'),
+            autoCreateWordpressOrder: empty($autoCreateWordpressOrder = get_option(Sage::TOKEN . '_auto_create_wordpress_order')) ? null : $autoCreateWordpressOrder,
+            // endregion
+            // region fArticle
+            autoCreateWordpressArticle: (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_article'),
+            autoImportWordpressArticle: self::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article'),
+        // endregion
         );
         if (!is_null($stdClass)) {
             $pCattarifs = $this->sage->sageGraphQl->getPCattarifs(useCache: false);
@@ -1176,7 +1229,7 @@ WHERE meta_key = %s
             add_action('admin_notices', static function (): void {
                 ?>
                 <div class="notice notice-success is-dismissible"><p><?=
-                        __('Connexion réussie à l\'API.', 'sage')
+                        __('Connexion réussie à l\'API. Les paramètres ont été mis à jour.', 'sage')
                         ?></p></div>
                 <?php
             });
@@ -1184,6 +1237,15 @@ WHERE meta_key = %s
         }
 
         return false;
+    }
+
+    public static function get_option_date_or_null(string $option, bool $default_value = false): ?DateTime
+    {
+        $dateString = get_option($option, $default_value);
+        if (($date = DateTime::createFromFormat('Y-m-d H:i:s', $dateString)) !== false) {
+            return $date;
+        }
+        return null;
     }
 
     private function showMetaBoxProduct(array $wp_meta_boxes, string $screen): void

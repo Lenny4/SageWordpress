@@ -8,6 +8,7 @@ use App\Sage;
 use App\SageSettings;
 use App\Utils\FDocenteteUtils;
 use App\Utils\PCatComptaUtils;
+use DateTime;
 use Exception;
 use GraphQL\Client;
 use GraphQL\Mutation;
@@ -95,7 +96,7 @@ final class SageGraphQl
             add_action('admin_notices', static function () use ($errorMsg): void {
                 ?>
                 <div class="error"><p>
-                        <?= __('Sage API is not reachable. Did you launched the server ?', 'sage') ?>
+                        <?= __("L'API Sage n'est pas joignable. Avez vous lancé le serveur ?", 'sage') ?>
                         <?php
                         if (!is_null($errorMsg)) {
                             echo "<br>" . __('Error', 'sage') . ": " . $errorMsg;
@@ -117,19 +118,26 @@ final class SageGraphQl
     }
 
     public function createUpdateWebsite(
-        string      $name,
-        string      $username,
-        string      $password,
-        WebsiteEnum $websiteEnum,
-        string      $host,
-        string      $protocol,
-        bool        $forceSsl,
-        string      $dbHost,
-        string      $tablePrefix,
-        string      $dbName,
-        string      $dbUsername,
-        string      $dbPassword,
-        bool        $syncArticlesToWebsite,
+        string        $name,
+        string        $username,
+        string        $password,
+        WebsiteEnum   $websiteEnum,
+        string        $host,
+        string        $protocol,
+        bool          $forceSsl,
+        string        $dbHost,
+        string        $tablePrefix,
+        string        $dbName,
+        string        $dbUsername,
+        string        $dbPassword,
+        bool          $autoCreateSageFcomptet,
+        DateTime|null $autoImportSageFcomptet,
+        bool          $autoCreateWordpressAccount,
+        DateTime|null $autoImportWordpressAccount,
+        bool          $autoCreateSageFdocentete,
+        array|null    $autoCreateWordpressOrder,
+        bool          $autoCreateWordpressArticle,
+        DateTime|null $autoImportWordpressArticle,
     ): StdClass|null
     {
         $query = (new Mutation('createUpdateWebsite'))
@@ -146,7 +154,14 @@ final class SageGraphQl
                 'dbPassword' => new RawObject('"' . $dbPassword . '"'),
                 'tablePrefix' => new RawObject('"' . $tablePrefix . '"'),
                 'dbName' => new RawObject('"' . $dbName . '"'),
-                'syncArticlesToWebsite' => new RawObject($syncArticlesToWebsite ? 'true' : 'false'),
+                'autoCreateSageFcomptet' => new RawObject($autoCreateSageFcomptet ? 'true' : 'false'),
+                'autoImportSageFcomptet' => new RawObject(!is_null($autoImportSageFcomptet) ? '"' . $autoImportSageFcomptet->format('Y-m-d H:i:s') . '"' : 'null'),
+                'autoCreateWebsiteAccount' => new RawObject($autoCreateWordpressAccount ? 'true' : 'false'),
+                'autoImportWebsiteAccount' => new RawObject(!is_null($autoImportWordpressAccount) ? '"' . $autoImportWordpressAccount->format('Y-m-d H:i:s') . '"' : 'null'),
+                'autoCreateSageFdocentete' => new RawObject($autoCreateSageFdocentete ? 'true' : 'false'),
+                'autoCreateWebsiteOrder' => new RawObject(is_array($autoCreateWordpressOrder) ? json_encode($autoCreateWordpressOrder, JSON_THROW_ON_ERROR) : 'null'),
+                'autoCreateWebsiteArticle' => new RawObject($autoCreateWordpressArticle ? 'true' : 'false'),
+                'autoImportWebsiteArticle' => new RawObject(!is_null($autoImportWordpressArticle) ? '"' . $autoImportWordpressArticle->format('Y-m-d H:i:s') . '"' : 'null'),
             ])
             ->setSelectionSet(
                 [

@@ -374,7 +374,8 @@ $(() => {
     let attr = $(thisSelect).attr('name');
     let sort = false;
     if (typeof attr !== 'undefined') {
-      sort = true;
+      const dataSort = $(thisSelect).attr('data-sort');
+      sort = dataSort !== "0";
       otherSelect = $(thisSelect).parent().prev().find('select');
     } else {
       otherSelect = $(thisSelect).parent().next().find('select');
@@ -385,10 +386,10 @@ $(() => {
 
     if (sort) {
       let listItems = otherSelect.children('option').get();
-      listItems.sort(function (a, b) {
+      listItems.sort((a, b) => {
         return $(a).text().toUpperCase().localeCompare($(b).text().toUpperCase());
       })
-      $.each(listItems, function (idx, itm) {
+      $.each(listItems, (idx, itm) => {
         otherSelect.append(itm);
       });
     }

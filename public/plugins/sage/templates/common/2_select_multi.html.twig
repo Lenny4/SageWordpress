@@ -1,3 +1,11 @@
+{% set sort = '1' %}
+{% if field.sort is defined and field.sort == false %}
+  {% set sort = '0' %}
+{% endif %}
+{% set fieldOptions = field['options'] %}
+{% if sort == '1' %}
+  {% set fieldOptions = field['options']|sortInsensitive %}
+{% endif %}
 <div
   style="display: flex;flex-wrap: wrap;"
 >
@@ -14,8 +22,9 @@
       multiple="multiple"
       style="min-width: 200px;min-height: 200px;"
       data-2-select-target="all"
+      data-sort="{{ sort }}"
     >
-      {% for k,v in field['options']|sortInsensitive %}
+      {% for k,v in fieldOptions %}
         {% if k not in data %}
           <option value="{{ k|esc_attr }}">{{ v }}</option>
         {% endif %}
@@ -37,6 +46,7 @@
       multiple="multiple"
       style="min-width: 200px;min-height: 200px;"
       data-2-select-target="selected"
+      data-sort="{{ sort }}"
     >
       {% for k,v in field['options'] %}
         {% if k in data %}

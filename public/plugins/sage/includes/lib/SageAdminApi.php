@@ -215,6 +215,9 @@ final class SageAdminApi
                 $html .= '<input id="' . esc_attr($field['id']) . '" type="text" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" value="' . esc_attr($data) . '" />' . "\n";
                 break;
 
+            case 'date':
+                $html .= '<input id="' . esc_attr($field['id']) . '" type="date" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" value="' . esc_attr($data) . '" />' . "\n";
+                break;
             case 'password':
             case 'number':
             case 'hidden':
