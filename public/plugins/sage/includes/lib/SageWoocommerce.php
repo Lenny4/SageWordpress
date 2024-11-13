@@ -978,7 +978,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$message, $order];
     }
 
-    public function importFArticleFromSage(string $arRef, bool $ignorePingApi = false): array
+    public function importFArticleFromSage(string $arRef, bool $ignorePingApi = false, array $headers = []): array
     {
         $fArticle = $this->sage->sageGraphQl->getFArticle($arRef, ignorePingApi: $ignorePingApi);
         if (is_null($fArticle)) {
@@ -1009,6 +1009,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $article,
             Sage::META_KEY_AR_REF,
             $arRef,
+            headers: $headers
         );
         $dismissNotice = "<button type='button' class='notice-dismiss sage-notice-dismiss'><span class='screen-reader-text'>" . __('Dismiss this notice.') . "</span></button>";
         $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "post.php?post=%id%&action=edit'>" . __("Voir l'article", 'sage') . "</a></span></strong>";

@@ -16,6 +16,7 @@ use Automattic\WooCommerce\Admin\Overrides\Order;
 use StdClass;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Filesystem\Filesystem;
+use Throwable;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
 use Twig\Extra\Intl\IntlExtension;
@@ -603,11 +604,28 @@ final class Sage
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/farticle/(?P<arRef>([^&]*))/import', [ // https://stackoverflow.com/a/10126995/6824121
+            register_rest_route(Sage::TOKEN . '/v1', '/farticle/(?P<arRef>([^&]*))/import', args: [ // https://stackoverflow.com/a/10126995/6824121
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $arRef = $request['arRef'];
-                    [$response, $responseError, $message, $postId] = $sageWoocommerce->importFArticleFromSage($arRef, ignorePingApi: true);
+                    $headers = [];
+                    if (!empty($authorization = $request->get_header('authorization'))) {
+                        $headers['authorization'] = $authorization;
+                    }
+                    [$response, $responseError, $message, $postId] = $sageWoocommerce->importFArticleFromSage(
+                        $arRef,
+                        ignorePingApi: true,
+                        headers: $headers,
+                    );
+                    if ($request->get_param('json') === '1') {
+                        $body = $response["body"];
+                        try {
+                            $body = json_decode($body, false, 512, JSON_THROW_ON_ERROR);
+                        } catch (Throwable) {
+                            // nothing
+                        }
+                        return new WP_REST_Response($body, $response['response']['code']);
+                    }
                     $order = new Order($request['orderId']);
                     return new WP_REST_Response([
                         'html' => $sageWoocommerce->getMetaboxSage(
@@ -615,7 +633,7 @@ final class Sage
                             ignorePingApi: true,
                             message: $message,
                         )
-                    ], 200);
+                    ], $response['response']['code']);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);
@@ -1112,6 +1130,7 @@ WHERE user_login LIKE %s
         array   $body,
         ?string $deleteKey,
         ?string $deleteValue,
+        array  $headers = [],
     ): array
     {
         if (!is_null($deleteKey) && !is_null($deleteValue)) {
@@ -1120,6 +1139,7 @@ WHERE user_login LIKE %s
         $response = SageRequest::selfRequest($url, [
             'headers' => [
                 'Content-Type' => 'application/json',
+                ...$headers,
             ],
             'method' => $method,
             'body' => json_encode($body, JSON_THROW_ON_ERROR),

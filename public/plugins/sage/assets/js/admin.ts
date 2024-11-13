@@ -584,13 +584,9 @@ $(() => {
     const response = await fetch(siteUrl + "/index.php?rest_route=" + encodeURI("/sage/v1/farticle/" + arRef + "/import") + "&_wpnonce=" + wpnonce + "&orderId=" + orderId);
     // @ts-ignore
     $(blockDom).unblock();
-    if (response.status === 200) {
-      const data = await response.json();
-      const blockInside = $(target).closest(".inside");
-      setContentHtml(blockInside, data.html)
-    } else {
-      // todo toastr
-    }
+    const data = await response.json();
+    const blockInside = $(target).closest(".inside");
+    setContentHtml(blockInside, data.html)
   });
   // endregion
 

@@ -91,7 +91,7 @@ final class SageSettings
                     [
                         'id' => 'auto_import_sage_fcomptet',
                         'label' => __('Importer automatiquement les anciens clients Woocommerce', 'sage'),
-                        'description' => __("Importe les comptes Woocommerce dans Sage à compter de la date renseigner (date de création du compte dans Woocommerce). Laissez vide pour ne pas importer.", 'sage'),
+                        'description' => __("Importe les comptes Woocommerce dans Sage à compter de la date renseignée (date de création du compte dans Woocommerce). Laissez vide pour ne pas importer.", 'sage'),
                         'type' => 'date',
                         'default' => '',
                         'placeholder' => __('', 'sage')
@@ -106,7 +106,7 @@ final class SageSettings
                     [
                         'id' => 'auto_import_wordpress_account',
                         'label' => __('Importer automatiquement les anciens clients Sage', 'sage'),
-                        'description' => __("Importe les comptes Sage dans Woocommerce à compter de la date renseigner (date de création du compte dans Sage). Laissez vide pour ne pas importer.", 'sage'),
+                        'description' => __("Importe les comptes Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage). Laissez vide pour ne pas importer.", 'sage'),
                         'type' => 'date',
                         'default' => '',
                         'placeholder' => __('', 'sage')
@@ -179,14 +179,31 @@ final class SageSettings
                     [
                         'id' => 'auto_create_wordpress_order',
                         'label' => __('Créer automatiquement la commande Woocommerce', 'sage'),
-                        'description' => __("Créer automatiquement une commande dans Woocommerce lorsqu'un document de vente Sage est crée.", 'sage'),
-                        'type' => 'checkbox',
-                        'default' => 'off'
+                        'description' => __("Créer automatiquement une commande dans Woocommerce lorsqu'un document de vente Sage est crée pour les types de documents sélectionnés.", 'sage'),
+                        'type' => '2_select_multi',
+                        'options' => [
+                            '0' => __("Devis", 'sage'),
+                            '1' => __("Bon de commande", 'sage'),
+                            '2' => __("Préparation de livraison", 'sage'),
+                            '3' => __("Bon de livraison", 'sage'),
+                            '6' => __("Facture", 'sage'),
+                            '7' => __("Facture comptabilisée", 'sage'),
+                        ],
+                        'default' => [],
+                        'sort' => false,
                     ],
                     [
-                        'id' => 'auto_create_wordpress_order',
-                        'label' => __('Créer automatiquement la commande Woocommerce', 'sage'),
-                        'description' => __("Créer automatiquement une commande dans Woocommerce lorsqu'un document de vente Sage est crée pour les types de documents sélectionnés.", 'sage'),
+                        'id' => 'auto_import_wordpress_order_date',
+                        'label' => __('Importer automatiquement les anciens documents de vente Sage', 'sage'),
+                        'description' => __("Importe les documents de vente Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage). Laissez vide pour ne pas importer.", 'sage'),
+                        'type' => 'date',
+                        'default' => '',
+                        'placeholder' => __('', 'sage')
+                    ],
+                    [
+                        'id' => 'auto_import_wordpress_order_dotype',
+                        'label' => '',
+                        'description' => __("Importe les documents de vente Sage dans Woocommerce qui ont les status sélectionnés. Laissez vide pour ne pas importer.", 'sage'),
                         'type' => '2_select_multi',
                         'options' => [
                             '0' => __("Devis", 'sage'),
@@ -251,7 +268,7 @@ final class SageSettings
                     [
                         'id' => 'auto_import_wordpress_article',
                         'label' => __('Importer automatiquement les anciens produits Sage', 'sage'),
-                        'description' => __("Importe les produits Sage dans Woocommerce à compter de la date renseigner (date de création de l'article dans Sage). Laissez vide pour ne pas importer.", 'sage'),
+                        'description' => __("Importe les produits Sage dans Woocommerce à compter de la date renseignée (date de création de l'article dans Sage). Laissez vide pour ne pas importer.", 'sage'),
                         'type' => 'date',
                         'default' => '',
                         'placeholder' => __('', 'sage')
@@ -1216,6 +1233,8 @@ WHERE meta_key = %s
             // region fDocentete
             autoCreateSageFdocentete: (bool)get_option(Sage::TOKEN . '_auto_create_sage_fdocentete'),
             autoCreateWordpressOrder: empty($autoCreateWordpressOrder = get_option(Sage::TOKEN . '_auto_create_wordpress_order')) ? null : $autoCreateWordpressOrder,
+            autoImportWordpressOrderDate: self::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_order_date'),
+            autoImportWordpressOrderDoType: empty($autoImportWordpressOrderDoType = get_option(Sage::TOKEN . '_auto_import_wordpress_order_dotype')) ? null : $autoImportWordpressOrderDoType,
             // endregion
             // region fArticle
             autoCreateWordpressArticle: (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_article'),
@@ -1242,6 +1261,9 @@ WHERE meta_key = %s
     public static function get_option_date_or_null(string $option, bool $default_value = false): ?DateTime
     {
         $dateString = get_option($option, $default_value);
+        if (($date = DateTime::createFromFormat('Y-m-d', $dateString)) !== false) {
+            return new DateTime($date->format('Y-m-d 00:00:00'));
+        }
         if (($date = DateTime::createFromFormat('Y-m-d H:i:s', $dateString)) !== false) {
             return $date;
         }

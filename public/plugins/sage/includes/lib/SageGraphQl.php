@@ -136,6 +136,8 @@ final class SageGraphQl
         DateTime|null $autoImportWordpressAccount,
         bool          $autoCreateSageFdocentete,
         array|null    $autoCreateWordpressOrder,
+        DateTime|null $autoImportWordpressOrderDate,
+        array|null    $autoImportWordpressOrderDoType,
         bool          $autoCreateWordpressArticle,
         DateTime|null $autoImportWordpressArticle,
     ): StdClass|null
@@ -159,6 +161,8 @@ final class SageGraphQl
                 'autoCreateWebsiteAccount' => new RawObject($autoCreateWordpressAccount ? 'true' : 'false'),
                 'autoImportWebsiteAccount' => new RawObject(!is_null($autoImportWordpressAccount) ? '"' . $autoImportWordpressAccount->format('Y-m-d H:i:s') . '"' : 'null'),
                 'autoCreateSageFdocentete' => new RawObject($autoCreateSageFdocentete ? 'true' : 'false'),
+                'autoImportWordpressOrderDate' => new RawObject(!is_null($autoImportWordpressOrderDate) ? '"' . $autoImportWordpressOrderDate->format('Y-m-d H:i:s') . '"' : 'null'),
+                'autoImportWordpressOrderDoType' => new RawObject(is_array($autoImportWordpressOrderDoType) ? json_encode($autoImportWordpressOrderDoType, JSON_THROW_ON_ERROR) : 'null'),
                 'autoCreateWebsiteOrder' => new RawObject(is_array($autoCreateWordpressOrder) ? json_encode($autoCreateWordpressOrder, JSON_THROW_ON_ERROR) : 'null'),
                 'autoCreateWebsiteArticle' => new RawObject($autoCreateWordpressArticle ? 'true' : 'false'),
                 'autoImportWebsiteArticle' => new RawObject(!is_null($autoImportWordpressArticle) ? '"' . $autoImportWordpressArticle->format('Y-m-d H:i:s') . '"' : 'null'),
@@ -467,7 +471,7 @@ final class SageGraphQl
         if (!$getFromSage) {
             $entities = get_option($optionName, null);
             if (!is_null($entities)) {
-                $entities = json_decode($entities, false, 512, JSON_THROW_ON_ERROR);
+                $entities = (array)json_decode($entities, false, 512, JSON_THROW_ON_ERROR);
             }
             $tryGetOption = true;
         }
@@ -484,7 +488,7 @@ final class SageGraphQl
                 if (!$tryGetOption) {
                     $entitiesBdd = get_option($optionName, null);
                     if ($entitiesBdd !== 'null' && $entitiesBdd !== null) {
-                        $entities = json_decode($entitiesBdd, false, 512, JSON_THROW_ON_ERROR);
+                        $entities = (array)json_decode($entitiesBdd, false, 512, JSON_THROW_ON_ERROR);
                     }
                 }
             } else {
