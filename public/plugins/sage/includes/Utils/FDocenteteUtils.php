@@ -11,21 +11,35 @@ if (!defined('ABSPATH')) {
 
 final class FDocenteteUtils
 {
-    public const VENTE_DEVIS = 0;
-    public const VENTE_COMMANDE = 1;
-    public const VENTE_PREPA_LIVRAISON = 2;
-    public const VENTE_LIVRAISON = 3;
-    public const VENTE_REPRISE = 4;
-    public const VENTE_AVOIR = 5;
-    public const VENTE_FACTURE = 6;
-    public const VENTE_FACTURE_CPTA = 7;
-    public const VENTE_FACTURE_ARCHIVE = 8;
+    public const DO_TYPE_DEVIS = 0;
+    public const DO_TYPE_COMMANDE = 1;
+    public const DO_TYPE_PREPA_LIVRAISON = 2;
+    public const DO_TYPE_LIVRAISON = 3;
+    public const DO_TYPE_REPRISE = 4;
+    public const DO_TYPE_AVOIR = 5;
+    public const DO_TYPE_FACTURE = 6;
+    public const DO_TYPE_FACTURE_CPTA = 7;
+    public const DO_TYPE_FACTURE_ARCHIVE = 8;
+
+    public const DO_DOMAINE_VENTE = 0;
+
+    public const DO_PROVENANCE_NORMAL = 0;
+
+    // basically all doTypes which are saved in history or facture
+    public const DO_TYPE_MAPPABLE = [
+        self::DO_TYPE_DEVIS,
+        self::DO_TYPE_COMMANDE,
+        self::DO_TYPE_PREPA_LIVRAISON,
+        self::DO_TYPE_LIVRAISON,
+        self::DO_TYPE_FACTURE,
+        self::DO_TYPE_FACTURE_CPTA,
+    ];
 
     public const FDOCLIGNE_MAPPING_DO_TYPE = [
-        self::VENTE_DEVIS => 'De',
-        self::VENTE_COMMANDE => 'Bc',
-        self::VENTE_PREPA_LIVRAISON => 'Pl',
-        self::VENTE_LIVRAISON => 'Bl',
+        self::DO_TYPE_DEVIS => 'De',
+        self::DO_TYPE_COMMANDE => 'Bc',
+        self::DO_TYPE_PREPA_LIVRAISON => 'Pl',
+        self::DO_TYPE_LIVRAISON => 'Bl',
     ];
 
     public const ALL_TAXES = [1, 2, 3];

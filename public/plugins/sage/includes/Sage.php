@@ -644,6 +644,9 @@ final class Sage
                 'callback' => static function (WP_REST_Request $request) use ($sageGraphQl) {
                     $fDocentetes = $sageGraphQl->getFDocentetes(
                         strtoupper(trim($request['doPiece'])),
+                        doType: FDocenteteUtils::DO_TYPE_MAPPABLE,
+                        doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
+                        doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
                         getError: true,
                         ignorePingApi: true
                     );

@@ -756,7 +756,7 @@ final class SageSettings
                             }
 
                             $data = json_decode(json_encode($sageSettings->sage->sageGraphQl
-                                ->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $filterFields)
+                                ->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $showFields)
                                 , JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
                             $data = $sageSettings->sage->sageWoocommerce->populateMetaDatas($data, $showFields, $sageEntityMenu);
                             $hideFields = array_map(static function (string $hideField) {

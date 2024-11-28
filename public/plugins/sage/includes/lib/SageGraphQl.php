@@ -161,8 +161,8 @@ final class SageGraphQl
                 'autoCreateWebsiteAccount' => new RawObject($autoCreateWordpressAccount ? 'true' : 'false'),
                 'autoImportWebsiteAccount' => new RawObject(!is_null($autoImportWordpressAccount) ? '"' . $autoImportWordpressAccount->format('Y-m-d H:i:s') . '"' : 'null'),
                 'autoCreateSageFdocentete' => new RawObject($autoCreateSageFdocentete ? 'true' : 'false'),
-                'autoImportWordpressOrderDate' => new RawObject(!is_null($autoImportWordpressOrderDate) ? '"' . $autoImportWordpressOrderDate->format('Y-m-d H:i:s') . '"' : 'null'),
-                'autoImportWordpressOrderDoType' => new RawObject(is_array($autoImportWordpressOrderDoType) ? json_encode($autoImportWordpressOrderDoType, JSON_THROW_ON_ERROR) : 'null'),
+                'autoImportWebsiteOrderDate' => new RawObject(!is_null($autoImportWordpressOrderDate) ? '"' . $autoImportWordpressOrderDate->format('Y-m-d H:i:s') . '"' : 'null'),
+                'autoImportWebsiteOrderDoType' => new RawObject(is_array($autoImportWordpressOrderDoType) ? json_encode($autoImportWordpressOrderDoType, JSON_THROW_ON_ERROR) : 'null'),
                 'autoCreateWebsiteOrder' => new RawObject(is_array($autoCreateWordpressOrder) ? json_encode($autoCreateWordpressOrder, JSON_THROW_ON_ERROR) : 'null'),
                 'autoCreateWebsiteArticle' => new RawObject($autoCreateWordpressArticle ? 'true' : 'false'),
                 'autoImportWebsiteArticle' => new RawObject(!is_null($autoImportWordpressArticle) ? '"' . $autoImportWordpressArticle->format('Y-m-d H:i:s') . '"' : 'null'),
@@ -755,22 +755,38 @@ final class SageGraphQl
 
     public function getFDocentetes(
         string $doPiece,
+        ?array $doType = null,
+        ?int   $doDomaine = null,
+        ?int   $doProvenance = null,
         bool   $getError = false,
         bool   $ignorePingApi = false,
     ): array|null|string
     {
+        $filterField = ["doPiece"];
+        $filterType = ["eq"];
+        $filterValue = [$doPiece];
+        if (!empty($doType)) {
+            $filterField[] = "doType";
+            $filterType[] = "in";
+            $filterValue[] = implode(',', $doType);
+        }
+        if ($doDomaine !== null) {
+            $filterField[] = "doDomaine";
+            $filterType[] = "eq";
+            $filterValue[] = $doDomaine;
+        }
+        if ($doProvenance !== null) {
+            $filterField[] = "doProvenance";
+            $filterType[] = "eq";
+            $filterValue[] = $doProvenance;
+        }
         $fDocentetes = $this->searchEntities(
             SageEntityMenu::FDOCENTETE_ENTITY_NAME,
             [
-                "filter_field" => [
-                    "doPiece"
-                ],
-                "filter_type" => [
-                    "eq"
-                ],
-                "filter_value" => [
-                    $doPiece
-                ],
+                "filter_field" => $filterField,
+                "filter_type" => $filterType,
+                "filter_value" => $filterValue,
+                'where_condition' => 'and',
                 "paged" => "1",
                 "per_page" => "10"
             ],
