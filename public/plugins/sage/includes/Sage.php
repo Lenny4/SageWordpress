@@ -162,6 +162,9 @@ final class Sage
 
         add_action('admin_init', static function () use ($sage): void {
             echo $sage->twig->render('data.html.twig');
+            // like register_order_origin_column in woocommerce/src/Internal/Orders/OrderAttributionController.php
+            $sage->settings->registerOrderSageColumn();
+
             if (is_admin() && current_user_can('activate_plugins')) {
                 $allPlugins = get_plugins();
                 $pluginId = 'woocommerce/woocommerce.php';
@@ -1133,7 +1136,7 @@ WHERE user_login LIKE %s
         array   $body,
         ?string $deleteKey,
         ?string $deleteValue,
-        array  $headers = [],
+        array   $headers = [],
     ): array
     {
         if (!is_null($deleteKey) && !is_null($deleteValue)) {

@@ -10,6 +10,7 @@ use App\lib\SageRequest;
 use App\Utils\PCatComptaUtils;
 use App\Utils\SageTranslationUtils;
 use App\Utils\TaxeUtils;
+use Automattic\WooCommerce\Utilities\OrderUtil;
 use DateTime;
 use PHPHtmlParser\Dom;
 use stdClass;
@@ -1459,6 +1460,44 @@ WHERE meta_key = %s
                 update_option($option, $optionNames[$option]);
             }
         }
+    }
+
+    // copy of get_order_screen_id in woocommerce/src/Internal/Orders/OrderAttributionController.php
+    public function registerOrderSageColumn(): void
+    {
+        $sageSettings = $this;
+        $screen_id = $this->get_order_screen_id();
+        $add_column = function (array $columns) {
+            $columns['sage'] = __('Sage', 'sage');
+            return $columns;
+        };
+        // HPOS and non-HPOS use different hooks.
+        add_filter("manage_{$screen_id}_columns", $add_column, 11);
+        add_filter("manage_edit-{$screen_id}_columns", $add_column, 11);
+        $trans = SageTranslationUtils::getTranslations();
+        $display_column = function (string $column_name, WC_Order $order) use ($sageSettings, $trans) {
+            if ('sage' !== $column_name) {
+                return;
+            }
+            $identifier = $sageSettings->sage->sageWoocommerce->getFDocenteteIdentifierFromOrder($order);
+            if (empty($identifier)) {
+                echo '<span class="dashicons dashicons-no" style="color: red"></span>';
+                return;
+            }
+            echo $trans["fDocentetes"]["doType"]["values"]["Documents des ventes"][$identifier['doType']]
+                . ': n° '
+                . $identifier["doPiece"];
+        };
+        // HPOS and non-HPOS use different hooks.
+        add_action("manage_{$screen_id}_custom_column", $display_column, 10, 2);
+        add_action("manage_{$screen_id}_posts_custom_column", $display_column, 10, 2);
+    }
+
+    // copy of register_order_origin_column in woocommerce/src/Internal/Orders/OrderAttributionController.php
+
+    private function get_order_screen_id(): string
+    {
+        return OrderUtil::custom_orders_table_usage_is_enabled() ? wc_get_page_screen_id('shop-order') : 'shop_order';
     }
 
     /**
