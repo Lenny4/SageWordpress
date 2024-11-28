@@ -269,7 +269,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $fDocenteteIdentifier;
     }
 
-    public function linkOrderFDocentete(WC_Order $order, string $doPiece, int $doType, bool $ignorePingApi): WC_Order
+    public function linkOrderFDocentete(WC_Order $order, string $doPiece, int $doType, bool $ignorePingApi, array $headers = []): WC_Order
     {
         $fDocentete = $this->sage->sageGraphQl->getFDocentete($doPiece, $doType, ignorePingApi: $ignorePingApi);
         if ($fDocentete instanceof stdClass) {
@@ -290,7 +290,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 getLivraison: true,
             );
             $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
-            [$message, $order] = $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
+            [$message, $order] = $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder, headers: $headers);
         }
         return $order;
     }
@@ -465,7 +465,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 }
             } else if (is_null($new)) {
                 $changes[] = OrderUtils::REMOVE_PRODUCT_ACTION;
-            } else if (is_null($old)) {
+            } else if (is_null($old) && !is_null($new->arRef)) {
                 $changes[] = OrderUtils::ADD_PRODUCT_ACTION;
             }
             if (!empty($changes)) {
@@ -713,8 +713,15 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             }
             $fields = array_values(array_unique($fields));
             foreach ($fields as $field) {
-                if ($userMetaWordpress[$field][0] !== $userSage["meta"][$field]) {
-                    $old->{$field} = $userMetaWordpress[$field][0];
+                if (
+                    !array_key_exists($field, $userMetaWordpress) ||
+                    $userMetaWordpress[$field][0] !== $userSage["meta"][$field]
+                ) {
+                    if (array_key_exists($field, $userMetaWordpress)) {
+                        $old->{$field} = $userMetaWordpress[$field][0];
+                    } else {
+                        $old->{$field} = null;
+                    }
                     $new->{$field} = $userSage["meta"][$field];
                 }
             }
@@ -874,7 +881,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $addressTypeChanges;
     }
 
-    public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): array
+    public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder, array $headers = []): array
     {
         $message = '';
         $syncChanges = $tasksSynchronizeOrder["syncChanges"];
@@ -898,7 +905,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     case OrderUtils::ADD_PRODUCT_ACTION:
                     case OrderUtils::REPLACE_PRODUCT_ACTION:
                         if (is_null($syncChange["new"]->postId)) {
-                            [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage($syncChange["new"]->arRef, ignorePingApi: true);
+                            [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage($syncChange["new"]->arRef, ignorePingApi: true, headers: $headers);
                             $tasksSynchronizeOrder["syncChanges"][$i]["new"]->postId = $postId;
                             $message .= $message2;
                         }

@@ -566,14 +566,14 @@ final class Sage
             );
         });
         // action is trigger when click update button on order
-        add_action('woocommerce_process_shop_order_meta', static function (int $orderId, Order $order) use ($sage): void {
+        add_action('woocommerce_process_shop_order_meta', static function (int $orderId, WC_Order $order) use ($sage): void {
             if ($order->get_status() === 'auto-draft') {
                 // handle by the add_action `woocommerce_new_order`
                 return;
             }
             $sage->afterCreateOrEditOrder($order);
         }, accepted_args: 2);
-        add_action('woocommerce_new_order', static function (int $orderId, Order $order) use ($sage): void {
+        add_action('woocommerce_new_order', static function (int $orderId, WC_Order $order) use ($sage): void {
             $sage->afterCreateOrEditOrder($order);
         }, accepted_args: 2);
         // endregion
@@ -731,6 +731,39 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     return new WP_REST_Response([
                         'html' => $html
                     ], 200);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
+            register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+)/(?P<doType>\d+)/import', args: [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
+                    $doPiece = $request['doPiece'];
+                    $doType = $request['doType'];
+                    $headers = [];
+                    if (!empty($authorization = $request->get_header('authorization'))) {
+                        $headers['authorization'] = $authorization;
+                    }
+                    $order = new WC_Order();
+                    $order = $sageWoocommerce->linkOrderFDocentete($order, $doPiece, $doType, true, headers: $headers);
+                    $extendedFDocentetes = $sageWoocommerce->sage->sageGraphQl->getExtendedFDocentetes(
+                        $doPiece,
+                        $doType,
+                        getError: true,
+                        getFDoclignes: true,
+                        getExpedition: true,
+                        ignorePingApi: true,
+                        addWordpressProductId: true,
+                        getUser: true,
+                        getLivraison: true,
+                    );
+                    $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $extendedFDocentetes);
+                    [$message, $order] = $sageWoocommerce->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder, $headers);
+                    return new WP_REST_Response([
+                        'id' => $order->get_id(),
+                        'message' => $message,
+                    ], $message === "" ? 201 : 500);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);
@@ -1007,7 +1040,7 @@ WHERE meta_key = %s
         return self::$_instance;
     }
 
-    private function afterCreateOrEditOrder(Order $order): void
+    private function afterCreateOrEditOrder(WC_Order $order): void
     {
         if (
             array_key_exists(Sage::TOKEN . '-fdocentete-dotype', $_POST) &&
