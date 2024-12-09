@@ -446,9 +446,11 @@ $(() => {
 
   // region search fdocentete
   let searchFDocentete = "";
+  $('[name="sage-fdocentete-dopiece"]').prop("disabled", false);
   $(document).on('input', '[name="sage-fdocentete-dopiece"]', function (e) {
     const inputDoPiece = e.target;
     const domContainer = $(inputDoPiece).parent();
+    const domResultContainer = $(domContainer).parent().find('[id="sage-fdocentete-dopiece-result"]');
     const inputDoType = $(domContainer).find('[name="sage-fdocentete-dotype"]');
     const inputWpnonce = $(domContainer).find('[name="sage-fdocentete-wpnonce"]');
     const successIcon = $(domContainer).find(".dashicons-yes");
@@ -456,6 +458,7 @@ $(() => {
     const validateButton = $(domContainer).find("[data-order-fdocentete]");
 
     $(domContainer).find("div.notice").remove();
+    $(domResultContainer).html('');
     $(successIcon).addClass("hidden");
     $(errorIcon).addClass("hidden");
     $(validateButton).prop("disabled", true);
@@ -481,25 +484,39 @@ $(() => {
         const fDocentetes = await response.json();
         if (fDocentetes.length === 0) {
           $(errorIcon).removeClass("hidden");
-        } else if (fDocentetes.length === 1) {
-          $(inputDoType).val(fDocentetes[0].doType);
-          $(successIcon).removeClass("hidden");
-          $(validateButton).prop("disabled", false);
         } else {
-          $(errorIcon).removeClass("hidden");
-          const multipleResultDiv = $("<div class='notice notice-info'></div>").prependTo(domContainer);
-          $(multipleResultDiv).append('<p>' + translations.sentences.multipleDoPieces + '</p>');
-          const listDom = $('<div class="d-flex flex-wrap"></div>').appendTo(multipleResultDiv);
-          for (const fDocentete of fDocentetes) {
-            let label = "";
-            for (const key in translations.fDocentetes.doType.values) {
-              if (translations.fDocentetes.doType.values[key].hasOwnProperty(fDocentete.doType)) {
-                label = translations.fDocentetes.doType.values[key][fDocentete.doType];
-                break;
+          const addNoticeToCard = (fDocentete: any, dom: JQuery) => {
+            if (fDocentete.wordpressIds.length > 0) {
+              const notice = $('<div class="notice notice-warning"></div>').appendTo(dom);
+              $('<p>' + translations.sentences.fDoceneteteAlreadyHasOrders + ':</p>').appendTo(notice);
+              const listOrders = $('<ul class="ul-horizontal"></ul>').appendTo(notice);
+              for (const wordpressId of fDocentete.wordpressIds) {
+                $('<li class="ml-2 mr-2"><a href="' + siteUrl + '/wp-admin/admin.php?page=wc-orders&action=edit&id=' + wordpressId + '">#' + wordpressId + '</a></li>').appendTo(listOrders);
               }
             }
-            $(listDom).append('<div class="card cursor-pointer" data-select-sage-fdocentete-dotype="' + fDocentete.doType + '" style="max-width: none">' +
-              label + '</div>');
+          }
+          if (fDocentetes.length === 1) {
+            $(inputDoType).val(fDocentetes[0].doType);
+            $(successIcon).removeClass("hidden");
+            $(validateButton).prop("disabled", false);
+            addNoticeToCard(fDocentetes[0], domResultContainer);
+          } else {
+            $(errorIcon).removeClass("hidden");
+            const multipleResultDiv = $("<div class='notice notice-info'></div>").prependTo(domContainer);
+            $(multipleResultDiv).append('<p>' + translations.sentences.multipleDoPieces + '</p>');
+            const listDom = $('<div class="d-flex flex-wrap"></div>').appendTo(multipleResultDiv);
+            for (const fDocentete of fDocentetes) {
+              let label = "";
+              for (const key in translations.fDocentetes.doType.values) {
+                if (translations.fDocentetes.doType.values[key].hasOwnProperty(fDocentete.doType)) {
+                  label = translations.fDocentetes.doType.values[key][fDocentete.doType];
+                  break;
+                }
+              }
+              const cardDoType = $('<div class="card cursor-pointer" data-select-sage-fdocentete-dotype="' + fDocentete.doType + '" style="max-width: none">' +
+                label + '</div>').appendTo(listDom);
+              addNoticeToCard(fDocentete, cardDoType);
+            }
           }
         }
       } else {

@@ -760,6 +760,7 @@ final class SageGraphQl
         ?int   $doProvenance = null,
         bool   $getError = false,
         bool   $ignorePingApi = false,
+        bool   $getWordpressIds = false,
     ): array|null|string
     {
         $filterField = ["doPiece"];
@@ -797,8 +798,36 @@ final class SageGraphQl
         if (is_null($fDocentetes) || is_string($fDocentetes)) {
             return $fDocentetes;
         }
+        $fDocentetes = $fDocentetes->data->fDocentetes->items;
+        if ($getWordpressIds) {
+            $values = array_map(static function (stdClass $fDocentete) {
+                return json_encode([
+                    'doPiece' => $fDocentete->doPiece,
+                    'doType' => $fDocentete->doType,
+                ], JSON_THROW_ON_ERROR);
+            }, $fDocentetes);
+            global $wpdb;
+            $r = $wpdb->get_results(
+                $wpdb->prepare("
+SELECT order_id, meta_value
+FROM " . $wpdb->prefix . "wc_orders_meta
+WHERE meta_key = %s
+  AND meta_value IN ('" . implode(', ', $values) . "')
+", [Sage::META_KEY_IDENTIFIER]));
+            foreach ($fDocentetes as $i => $fDocentete) {
+                $fDocentetes[$i]->wordpressIds = [];
+                foreach ($r as $wcOrdersMeta) {
+                    $data = json_decode($wcOrdersMeta->meta_value, false, 512, JSON_THROW_ON_ERROR);
+                    if ($data->doPiece === $fDocentete->doPiece &&
+                        $data->doType === $fDocentete->doType) {
+                        $fDocentetes[$i]->wordpressIds[] = (int)$wcOrdersMeta->order_id;
+                        break;
+                    }
+                }
+            }
+        }
 
-        return $fDocentetes->data->fDocentetes->items;
+        return $fDocentetes;
     }
 
     private function _getFDocenteteSelectionSet(

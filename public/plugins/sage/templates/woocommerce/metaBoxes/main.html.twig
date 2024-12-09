@@ -17,8 +17,7 @@
       </label>
       <div style="position: relative">
         <input name="sage-fdocentete-dopiece" style="padding-right: 20px" id="sage-fdocentete-dopiece" type="text"
-               size="20"
-               value="">
+               size="20" value="" disabled>
         <input name="sage-fdocentete-dotype" id="sage-fdocentete-dotype" type="hidden">
         <input name="sage-fdocentete-wpnonce" id="sage-fdocentete-wpnonce" type="hidden"
                value="{{ 'wp_rest'|wp_create_nonce }}">
@@ -32,6 +31,7 @@
                   class="button button-primary">{{ 'Valider'|trans }}</button>
         {% endif %}
       </div>
+      <div id="sage-fdocentete-dopiece-result"></div>
     </div>
     <div class="text-divider mt-2 mb-2">{{ 'OU'|trans }}</div>
     <div class="text-center">

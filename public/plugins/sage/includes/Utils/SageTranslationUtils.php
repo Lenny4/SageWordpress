@@ -520,6 +520,7 @@ final class SageTranslationUtils
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),
+                'fDoceneteteAlreadyHasOrders' => __("Ce document de vente est déjà lié au(x) commande(s)", 'sage'),
             ],
         ];
     }

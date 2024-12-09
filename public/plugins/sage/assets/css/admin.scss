@@ -237,6 +237,14 @@ pre {
   margin-top: 0.5rem !important;
 }
 
+.ml-2 {
+  margin-left: 0.5rem !important;
+}
+
+.mr-2 {
+  margin-right: 0.5rem !important;
+}
+
 .mb-2 {
   margin-bottom: 0.5rem !important;
 }
@@ -274,4 +282,10 @@ table {
 
 .text-divider::after {
   margin-left: var(--text-divider-gap);
+}
+
+.ul-horizontal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
 }

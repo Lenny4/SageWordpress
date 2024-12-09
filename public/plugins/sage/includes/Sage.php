@@ -651,7 +651,8 @@ final class Sage
                         doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
                         doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
                         getError: true,
-                        ignorePingApi: true
+                        ignorePingApi: true,
+                        getWordpressIds: true,
                     );
                     if (is_string($fDocentetes)) {
                         return new WP_REST_Response([
