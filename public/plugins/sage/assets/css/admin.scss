@@ -289,3 +289,29 @@ table {
   flex-wrap: wrap;
   justify-content: center;
 }
+
+.progress-bar-light-grey {
+  color: #000 !important;
+  background-color: #f1f1f1 !important;
+}
+
+.progress-bar-container {
+  padding: 0.01em 16px;
+
+  &:after,
+  &:before {
+    content: "";
+    display: table;
+    clear: both;
+  }
+}
+
+.progress-bar-round-large {
+  border-radius: 8px;
+}
+
+.progress-bar-blue {
+  color: #fff !important;
+  background-color: #2196F3 !important;
+}
+
