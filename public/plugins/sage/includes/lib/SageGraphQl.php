@@ -761,25 +761,46 @@ final class SageGraphQl
         bool   $getError = false,
         bool   $ignorePingApi = false,
         bool   $getWordpressIds = false,
-    ): array|null|string
+        bool   $getFDoclignes = false,
+        bool   $getExpedition = false,
+        bool   $addWordpressProductId = false,
+        bool   $getUser = false,
+        bool   $getLivraison = false,
+        bool   $addWordpressUserId = false,
+        bool   $getLotSerie = false,
+        bool   $extended = false,
+        bool   $single = false,
+    ): array|stdClass|null|false|string
     {
-        $filterField = ["doPiece"];
-        $filterType = ["eq"];
-        $filterValue = [$doPiece];
-        if (!empty($doType)) {
-            $filterField[] = "doType";
-            $filterType[] = "in";
-            $filterValue[] = implode(',', $doType);
-        }
-        if ($doDomaine !== null) {
-            $filterField[] = "doDomaine";
-            $filterType[] = "eq";
-            $filterValue[] = $doDomaine;
-        }
-        if ($doProvenance !== null) {
-            $filterField[] = "doProvenance";
-            $filterType[] = "eq";
-            $filterValue[] = $doProvenance;
+        if ($extended) {
+            $filterField = ["extendedDoPieceDoType"];
+            $filterType = ["object"];
+            $filterValue = [
+                "doPiece" => ["eq" => $doPiece],
+            ];
+            if (!empty($doType)) {
+                $filterValue['doType'] = ["in" => implode(',', $doType)];
+            }
+            $filterValue = [$filterValue];
+        } else {
+            $filterField = ["doPiece"];
+            $filterType = ["eq"];
+            $filterValue = [$doPiece];
+            if (!empty($doType)) {
+                $filterField[] = "doType";
+                $filterType[] = "in";
+                $filterValue[] = implode(',', $doType);
+            }
+            if ($doDomaine !== null) {
+                $filterField[] = "doDomaine";
+                $filterType[] = "eq";
+                $filterValue[] = $doDomaine;
+            }
+            if ($doProvenance !== null) {
+                $filterField[] = "doProvenance";
+                $filterType[] = "eq";
+                $filterValue[] = $doProvenance;
+            }
         }
         $fDocentetes = $this->searchEntities(
             SageEntityMenu::FDOCENTETE_ENTITY_NAME,
@@ -789,16 +810,25 @@ final class SageGraphQl
                 "filter_value" => $filterValue,
                 'where_condition' => 'and',
                 "paged" => "1",
-                "per_page" => "10"
+                "per_page" => $single ? "1" : "20"
             ],
-            $this->_getFDocenteteSelectionSet(),
+            $this->_getFDocenteteSelectionSet(
+                getFDoclignes: $getFDoclignes,
+                getExpedition: $getExpedition,
+                getUser: $getUser,
+                getLivraison: $getLivraison,
+                getLotSerie: $getLotSerie,
+            ),
             getError: $getError,
             ignorePingApi: $ignorePingApi,
         );
         if (is_null($fDocentetes) || is_string($fDocentetes)) {
             return $fDocentetes;
         }
-        $fDocentetes = $fDocentetes->data->fDocentetes->items;
+        if ($fDocentetes->data->fDocentetes->totalCount !== 1 && $single) {
+            return false;
+        }
+        $fDocentetes = $this->afterGetFDocentetes($fDocentetes->data->fDocentetes->items, $addWordpressProductId, $addWordpressUserId);
         if ($getWordpressIds) {
             $values = array_map(static function (stdClass $fDocentete) {
                 return json_encode([
@@ -916,62 +946,6 @@ WHERE meta_key = %s
         return $r;
     }
 
-    public function getFDocentete(
-        string $doPiece,
-        int    $doType,
-        bool   $getError = false,
-        bool   $getFDoclignes = false,
-        bool   $getExpedition = false,
-        bool   $ignorePingApi = false,
-        bool   $addWordpressProductId = false,
-        bool   $getUser = false,
-        bool   $getLivraison = false,
-        bool   $addWordpressUserId = false,
-    ): stdClass|null|false|string
-    {
-        if (!$this->pingApi && !$ignorePingApi) {
-            return null;
-        }
-        $fDocentetes = $this->searchEntities(
-            SageEntityMenu::FDOCENTETE_ENTITY_NAME,
-            [
-                "filter_field" => [
-                    "doPiece",
-                    "doType",
-                ],
-                "filter_type" => [
-                    "eq",
-                    "eq",
-                ],
-                "filter_value" => [
-                    $doPiece,
-                    $doType,
-                ],
-                'where_condition' => 'and',
-                "paged" => "1",
-                "per_page" => "1"
-            ],
-            $this->_getFDocenteteSelectionSet(
-                getFDoclignes: $getFDoclignes,
-                getExpedition: $getExpedition,
-                getUser: $getUser,
-                getLivraison: $getLivraison,
-            ),
-            getError: $getError,
-            ignorePingApi: $ignorePingApi,
-        );
-        if (
-            is_null($fDocentetes) ||
-            is_string($fDocentetes)
-        ) {
-            return $fDocentetes;
-        }
-        if ($fDocentetes->data->fDocentetes->totalCount !== 1) {
-            return false;
-        }
-        return $this->afterGetFDocentetes($fDocentetes->data->fDocentetes->items, $addWordpressProductId, $addWordpressUserId)[0];
-    }
-
     private function afterGetFDocentetes(array $fDocentetes, bool $addWordpressProductId, bool $addWordpressUserId): array
     {
         if ($addWordpressUserId) {
@@ -1046,61 +1020,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             }
         }
         return $fDoclignes;
-    }
-
-    public function getExtendedFDocentetes(
-        string $doPiece,
-        int    $doType,
-        bool   $getError = false,
-        bool   $getFDoclignes = false,
-        bool   $getExpedition = false,
-        bool   $ignorePingApi = false,
-        bool   $addWordpressProductId = false,
-        bool   $getUser = false,
-        bool   $getLivraison = false,
-        bool   $addWordpressUserId = false,
-        bool   $getLotSerie = false,
-    ): array|null|string
-    {
-        if (!$this->pingApi && !$ignorePingApi) {
-            return null;
-        }
-        $fDocentetes = $this->searchEntities(
-            SageEntityMenu::FDOCENTETE_ENTITY_NAME,
-            [
-                "filter_field" => [
-                    "extendedDoPieceDoType",
-                ],
-                "filter_type" => [
-                    "object",
-                ],
-                "filter_value" => [
-                    [
-                        "doPiece" => ["eq" => $doPiece],
-                        "doType" => ["eq" => $doType],
-                    ],
-                ],
-                'where_condition' => 'and',
-                "paged" => "1",
-                "per_page" => "100"
-            ],
-            $this->_getFDocenteteSelectionSet(
-                getFDoclignes: $getFDoclignes,
-                getExpedition: $getExpedition,
-                getUser: $getUser,
-                getLivraison: $getLivraison,
-                getLotSerie: $getLotSerie,
-            ),
-            getError: $getError,
-            ignorePingApi: $ignorePingApi,
-        );
-        if (
-            is_null($fDocentetes) ||
-            is_string($fDocentetes)
-        ) {
-            return $fDocentetes;
-        }
-        return $this->afterGetFDocentetes($fDocentetes->data->fDocentetes->items, $addWordpressProductId, $addWordpressUserId);
     }
 
     public function getFComptet(string $ctNum, bool $ignorePingApi = false): StdClass|null

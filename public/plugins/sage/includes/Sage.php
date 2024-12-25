@@ -585,16 +585,17 @@ final class Sage
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $order = new WC_Order($request['id']);
                     $fDocenteteIdentifier = $sageWoocommerce->getFDocenteteIdentifierFromOrder($order);
-                    $extendedFDocentetes = $sageWoocommerce->sage->sageGraphQl->getExtendedFDocentetes(
+                    $extendedFDocentetes = $sageWoocommerce->sage->sageGraphQl->getFDocentetes(
                         $fDocenteteIdentifier["doPiece"],
-                        $fDocenteteIdentifier["doType"],
+                        [$fDocenteteIdentifier["doType"]],
                         getError: true,
+                        ignorePingApi: true,
                         getFDoclignes: true,
                         getExpedition: true,
-                        ignorePingApi: true,
                         addWordpressProductId: true,
                         getUser: true,
                         getLivraison: true,
+                        extended: true,
                     );
                     $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $extendedFDocentetes);
                     [$message, $order] = $sageWoocommerce->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
@@ -722,10 +723,19 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
+            register_rest_route(Sage::TOKEN . '/v1', '/healthz', [
+                'methods' => 'GET',
+                'callback' => static function () {
+                    return new WP_REST_Response(null, 200);
+                },
+                'permission_callback' => static function () {
+                    return true;
+                },
+            ]);
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/meta-box-order', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($settings) {
-                    // this include import woocommerce_wp_text_input
+                    // this includes import woocommerce_wp_text_input
                     include_once __DIR__ . '/../../woocommerce/includes/admin/wc-meta-box-functions.php';
                     $order = new WC_Order($request['id']);
                     $html = $settings->getMetaBoxOrder($order);
@@ -748,16 +758,17 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     }
                     $order = new WC_Order();
                     $order = $sageWoocommerce->linkOrderFDocentete($order, $doPiece, $doType, true, headers: $headers);
-                    $extendedFDocentetes = $sageWoocommerce->sage->sageGraphQl->getExtendedFDocentetes(
+                    $extendedFDocentetes = $sageWoocommerce->sage->sageGraphQl->getFDocentetes(
                         $doPiece,
-                        $doType,
+                        [$doType],
                         getError: true,
+                        ignorePingApi: true,
                         getFDoclignes: true,
                         getExpedition: true,
-                        ignorePingApi: true,
                         addWordpressProductId: true,
                         getUser: true,
                         getLivraison: true,
+                        extended: true,
                     );
                     $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $extendedFDocentetes);
                     [$message, $order] = $sageWoocommerce->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder, $headers);

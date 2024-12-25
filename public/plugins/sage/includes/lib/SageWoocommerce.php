@@ -271,23 +271,24 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 
     public function linkOrderFDocentete(WC_Order $order, string $doPiece, int $doType, bool $ignorePingApi, array $headers = []): WC_Order
     {
-        $fDocentete = $this->sage->sageGraphQl->getFDocentete($doPiece, $doType, ignorePingApi: $ignorePingApi);
+        $fDocentete = $this->sage->sageGraphQl->getFDocentetes($doPiece, [$doType], ignorePingApi: $ignorePingApi, single: true);
         if ($fDocentete instanceof stdClass) {
             $order->update_meta_data(Sage::META_KEY_IDENTIFIER, json_encode([
                 'doPiece' => $fDocentete->doPiece,
                 'doType' => $fDocentete->doType,
             ], JSON_THROW_ON_ERROR));
             $order->save();
-            $extendedFDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
+            $extendedFDocentetes = $this->sage->sageGraphQl->getFDocentetes(
                 $doPiece,
-                $doType,
+                [$doType],
                 getError: true,
+                ignorePingApi: true,
                 getFDoclignes: true,
                 getExpedition: true,
-                ignorePingApi: true,
                 addWordpressProductId: true,
                 getUser: true,
                 getLivraison: true,
+                extended: true,
             );
             $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
             [$message, $order] = $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder, headers: $headers);
@@ -1351,16 +1352,17 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $order->save();
 
         $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
-        $extendedFDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
+        $extendedFDocentetes = $this->sage->sageGraphQl->getFDocentetes(
             $fDocenteteIdentifier["doPiece"],
-            $fDocenteteIdentifier["doType"],
+            [$fDocenteteIdentifier["doType"]],
             getError: true,
+            ignorePingApi: true,
             getFDoclignes: true,
             getExpedition: true,
-            ignorePingApi: true,
             addWordpressProductId: true,
             getUser: true,
             getLivraison: true,
+            extended: true,
         );
 
         if (!is_string($extendedFDocentetes)) {
@@ -1426,18 +1428,19 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $extendedFDocentetes = null;
         $tasksSynchronizeOrder = [];
         if ($hasFDocentete) {
-            $extendedFDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
+            $extendedFDocentetes = $this->sage->sageGraphQl->getFDocentetes(
                 $fDocenteteIdentifier["doPiece"],
-                $fDocenteteIdentifier["doType"],
+                [$fDocenteteIdentifier["doType"]],
                 getError: true,
+                ignorePingApi: $ignorePingApi,
                 getFDoclignes: true,
                 getExpedition: true,
-                ignorePingApi: $ignorePingApi,
                 addWordpressProductId: true,
                 getUser: true,
                 getLivraison: true,
                 addWordpressUserId: true,
                 getLotSerie: true,
+                extended: true,
             );
             if (is_string($extendedFDocentetes)) {
                 $message .= $extendedFDocentetes;
@@ -1471,16 +1474,18 @@ WHERE {$wpdb->posts}.post_type = 'product'
     ): array
     {
         if (is_null($fDocentete)) {
-            $fDocentete = $this->sage->sageGraphQl->getFDocentete(
+            /** @noinspection CallableParameterUseCaseInTypeContextInspection */
+            $fDocentete = $this->sage->sageGraphQl->getFDocentetes(
                 $doPiece,
-                $doType,
+                [$doType],
                 getError: true,
+                ignorePingApi: $ignorePingApi,
                 getFDoclignes: true,
                 getExpedition: true,
-                ignorePingApi: $ignorePingApi,
                 addWordpressProductId: true,
                 getUser: true,
-                getLivraison: true
+                getLivraison: true,
+                single: true,
             );
         }
         if (is_null($fDocentete) || $fDocentete === false) {
@@ -1518,16 +1523,17 @@ WHERE {$wpdb->posts}.post_type = 'product'
         } else {
             $order = wc_get_order($orderId);
         }
-        $extendedFDocentetes = $this->sage->sageGraphQl->getExtendedFDocentetes(
+        $extendedFDocentetes = $this->sage->sageGraphQl->getFDocentetes(
             $doPiece,
-            $doType,
+            [$doType],
             getError: true,
+            ignorePingApi: $ignorePingApi,
             getFDoclignes: true,
             getExpedition: true,
-            ignorePingApi: $ignorePingApi,
             addWordpressProductId: true,
             getUser: true,
             getLivraison: true,
+            extended: true,
         );
         [$message, $order] = $this->applyTasksSynchronizeOrder($order, $this->getTasksSynchronizeOrder($order, $extendedFDocentetes));
 
