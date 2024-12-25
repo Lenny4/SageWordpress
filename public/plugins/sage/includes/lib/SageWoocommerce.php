@@ -271,7 +271,14 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 
     public function linkOrderFDocentete(WC_Order $order, string $doPiece, int $doType, bool $ignorePingApi, array $headers = []): WC_Order
     {
-        $fDocentete = $this->sage->sageGraphQl->getFDocentetes($doPiece, [$doType], ignorePingApi: $ignorePingApi, single: true);
+        $fDocentete = $this->sage->sageGraphQl->getFDocentetes(
+            $doPiece,
+            [$doType],
+            doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
+            doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
+            ignorePingApi: $ignorePingApi,
+            single: true
+        );
         if ($fDocentete instanceof stdClass) {
             $order->update_meta_data(Sage::META_KEY_IDENTIFIER, json_encode([
                 'doPiece' => $fDocentete->doPiece,
@@ -281,6 +288,8 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $extendedFDocentetes = $this->sage->sageGraphQl->getFDocentetes(
                 $doPiece,
                 [$doType],
+                doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
+                doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
                 getError: true,
                 ignorePingApi: true,
                 getFDoclignes: true,
@@ -1355,6 +1364,8 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $extendedFDocentetes = $this->sage->sageGraphQl->getFDocentetes(
             $fDocenteteIdentifier["doPiece"],
             [$fDocenteteIdentifier["doType"]],
+            doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
+            doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
             getError: true,
             ignorePingApi: true,
             getFDoclignes: true,
@@ -1431,6 +1442,8 @@ WHERE {$wpdb->posts}.post_type = 'product'
             $extendedFDocentetes = $this->sage->sageGraphQl->getFDocentetes(
                 $fDocenteteIdentifier["doPiece"],
                 [$fDocenteteIdentifier["doType"]],
+                doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
+                doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
                 getError: true,
                 ignorePingApi: $ignorePingApi,
                 getFDoclignes: true,
@@ -1478,6 +1491,8 @@ WHERE {$wpdb->posts}.post_type = 'product'
             $fDocentete = $this->sage->sageGraphQl->getFDocentetes(
                 $doPiece,
                 [$doType],
+                doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
+                doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
                 getError: true,
                 ignorePingApi: $ignorePingApi,
                 getFDoclignes: true,
@@ -1526,6 +1541,8 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $extendedFDocentetes = $this->sage->sageGraphQl->getFDocentetes(
             $doPiece,
             [$doType],
+            doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
+            doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
             getError: true,
             ignorePingApi: $ignorePingApi,
             getFDoclignes: true,

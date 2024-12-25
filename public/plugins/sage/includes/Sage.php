@@ -588,6 +588,8 @@ final class Sage
                     $extendedFDocentetes = $sageWoocommerce->sage->sageGraphQl->getFDocentetes(
                         $fDocenteteIdentifier["doPiece"],
                         [$fDocenteteIdentifier["doType"]],
+                        doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
+                        doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
                         getError: true,
                         ignorePingApi: true,
                         getFDoclignes: true,
@@ -646,6 +648,13 @@ final class Sage
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+$)', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageGraphQl) {
+                    $extended = false;
+                    if (
+                        array_key_exists('extended', $_GET) &&
+                        ($_GET['extended'] === '1' || $_GET['extended'] === 'true')
+                    ) {
+                        $extended = true;
+                    }
                     $fDocentetes = $sageGraphQl->getFDocentetes(
                         strtoupper(trim($request['doPiece'])),
                         doType: FDocenteteUtils::DO_TYPE_MAPPABLE,
@@ -654,6 +663,7 @@ final class Sage
                         getError: true,
                         ignorePingApi: true,
                         getWordpressIds: true,
+                        extended: $extended,
                     );
                     if (is_string($fDocentetes)) {
                         return new WP_REST_Response([
@@ -761,6 +771,8 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     $extendedFDocentetes = $sageWoocommerce->sage->sageGraphQl->getFDocentetes(
                         $doPiece,
                         [$doType],
+                        doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
+                        doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
                         getError: true,
                         ignorePingApi: true,
                         getFDoclignes: true,

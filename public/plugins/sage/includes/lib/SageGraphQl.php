@@ -828,7 +828,22 @@ final class SageGraphQl
         if ($fDocentetes->data->fDocentetes->totalCount !== 1 && $single) {
             return false;
         }
-        $fDocentetes = $this->afterGetFDocentetes($fDocentetes->data->fDocentetes->items, $addWordpressProductId, $addWordpressUserId);
+        $fDocentetes = $fDocentetes->data->fDocentetes->items;
+        if ($addWordpressUserId) {
+            $fDocentetes = $this->addWordpressUserId($fDocentetes);
+        }
+        if ($addWordpressProductId) {
+            $fDoclignes = [];
+            foreach ($fDocentetes as $fDocentete) {
+                $fDoclignes = [...$fDoclignes, ...$fDocentete->fDoclignes];
+            }
+            $fDoclignes = $this->addWordpressProductId($fDoclignes);
+            foreach ($fDocentetes as $fDocentete) {
+                $fDocentete->fDoclignes = array_filter($fDoclignes, static function (stdClass $fDocligne) use ($fDocentete) {
+                    return $fDocligne->doPiece === $fDocentete->doPiece && $fDocligne->doType === $fDocentete->doType;
+                });
+            }
+        }
         if ($getWordpressIds) {
             $values = array_map(static function (stdClass $fDocentete) {
                 return json_encode([
@@ -944,26 +959,6 @@ WHERE meta_key = %s
             ];
         }
         return $r;
-    }
-
-    private function afterGetFDocentetes(array $fDocentetes, bool $addWordpressProductId, bool $addWordpressUserId): array
-    {
-        if ($addWordpressUserId) {
-            $fDocentetes = $this->addWordpressUserId($fDocentetes);
-        }
-        if ($addWordpressProductId) {
-            $fDoclignes = [];
-            foreach ($fDocentetes as $fDocentete) {
-                $fDoclignes = [...$fDoclignes, ...$fDocentete->fDoclignes];
-            }
-            $fDoclignes = $this->addWordpressProductId($fDoclignes);
-            foreach ($fDocentetes as $fDocentete) {
-                $fDocentete->fDoclignes = array_filter($fDoclignes, static function (stdClass $fDocligne) use ($fDocentete) {
-                    return $fDocligne->doPiece === $fDocentete->doPiece && $fDocligne->doType === $fDocentete->doType;
-                });
-            }
-        }
-        return $fDocentetes;
     }
 
     private function addWordpressUserId(array $fDocentetes): array
