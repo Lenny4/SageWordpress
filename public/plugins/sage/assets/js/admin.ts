@@ -1,6 +1,7 @@
 import "../css/admin.scss";
 import tippy from 'tippy.js';
 import 'jquery-blockui';
+import {setHtmlFromAppState} from "./appstate";
 
 $(() => {
 
@@ -350,9 +351,14 @@ $(() => {
       }
 
       ws.onmessage = (message) => {
-        console.log(`ws.onmessage`, message.data);
+        // region ping management
         lastMessageTime = Date.now();
         nbLost = 0;
+        // endregion
+        const data = JSON.parse(message.data);
+        if (data.hasOwnProperty("SyncWebsite")) {
+          setHtmlFromAppState(data, $("#sage_tasks .content"));
+        }
       }
 
       ws.onerror = (evt) => {

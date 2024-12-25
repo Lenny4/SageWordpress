@@ -1,7 +1,7 @@
 Api key: AD23A964-B01D-4BDB-93FF-B46940EA74B4
-Api host url: 192.168.1.50
+Api host url: https://192.168.0.35
 Wordpress host url: https://caddy
-Wordpress db host: 192.168.1.44
+Wordpress db host: 192.168.0.31
 
 # Important
 
