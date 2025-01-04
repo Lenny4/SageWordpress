@@ -17,6 +17,7 @@ $(() => {
     translationJs = JSON.parse(translationJs);
   }
   let stringApiHostUrl = $("[data-sage-api-host-url]").attr('data-sage-api-host-url');
+  let stringAuthorization = $("[data-sage-authorization]").attr('data-sage-authorization');
   // region remove sage_message in query
   let url = new URL(location.href);
   url.searchParams.delete('sage_message');
@@ -295,7 +296,7 @@ $(() => {
     let apiHostUrl: URL = null;
     const pingTime = 5000;
     let lastMessageTime: number = null;
-    if (stringApiHostUrl) {
+    if (stringApiHostUrl && stringAuthorization) {
       try {
         apiHostUrl = new URL(stringApiHostUrl);
       } catch (e) {
@@ -304,7 +305,7 @@ $(() => {
         return;
       }
       let hasError = false;
-      const url = 'wss://' + apiHostUrl.host + '/ws';
+      const url = 'wss://' + apiHostUrl.host + '/ws?authorization=' + stringAuthorization;
       const ws = new WebSocket(url);
       let intervalPing: number | null = null;
       let alreadyClose = false;
@@ -320,7 +321,7 @@ $(() => {
         }
         setTimeout(() => {
           createWebsocket();
-        }, hasError ? 5000 : 0);
+        }, hasError ? 5000 : 1000);
       }
 
       ws.onopen = () => {
@@ -356,8 +357,8 @@ $(() => {
         nbLost = 0;
         // endregion
         const data = JSON.parse(message.data);
-        if (data.hasOwnProperty("SyncWebsite")) {
-          setHtmlFromAppState(data, $("#sage_tasks .content"));
+        if (data.hasOwnProperty("AppState")) {
+          setHtmlFromAppState(data.AppState, $("#sage_tasks .content"));
         }
       }
 

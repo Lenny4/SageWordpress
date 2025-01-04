@@ -1245,6 +1245,8 @@ WHERE meta_key = %s
         if (!is_null($stdClass)) {
             $pCattarifs = $this->sage->sageGraphQl->getPCattarifs(useCache: false);
             update_option(Sage::TOKEN . '_pCattarifs', json_encode($pCattarifs, JSON_THROW_ON_ERROR));
+            update_option(Sage::TOKEN . '_authorization', $stdClass->data->createUpdateWebsite->authorization);
+            update_option(Sage::TOKEN . '_website_id', $stdClass->data->createUpdateWebsite->id);
             $this->sage->install();
             add_action('admin_notices', static function (): void {
                 ?>

@@ -171,7 +171,7 @@ final class Sage
                 $isWooCommerceInstalled = array_key_exists($pluginId, $allPlugins);
                 add_action('admin_notices', static function () use ($isWooCommerceInstalled, $pluginId, $sage): void {
                     ?>
-                    <div id="<?= Sage::TOKEN ?>_tasks" class="notice notice-info is-dismissible">
+                    <div id="<?= Sage::TOKEN ?>_tasks" class="notice notice-info is-dismissible hidden">
                         <div class="content"></div>
                     </div>
                     <?php
@@ -361,7 +361,7 @@ final class Sage
 
             return implode('|', $r);
         }));
-        $this->twig->addFunction(new TwigFunction('getApiHostUrl', static fn(): string => get_option(Sage::TOKEN . '_api_host_url')));
+        $this->twig->addFunction(new TwigFunction('get_option', static fn(string $option): string => get_option($option)));
         $this->twig->addFunction(new TwigFunction('getPricesProduct', static function (WC_Product $product) use ($sageWoocommerce): array {
             $r = $sageWoocommerce->getPricesProduct($product);
             foreach ($r as &$r1) {

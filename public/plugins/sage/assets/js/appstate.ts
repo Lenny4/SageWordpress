@@ -1,5 +1,7 @@
 export function setHtmlFromAppState(appState: any, dom: JQuery) {
   console.log(appState);
+  $(dom).html("");
+  $(dom).parent().removeClass("hidden");
   createProgressBar(dom, 33);
 }
 

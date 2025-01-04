@@ -170,6 +170,7 @@ final class SageGraphQl
             ->setSelectionSet(
                 [
                     'id',
+                    'authorization',
                 ]
             );
         $r = $this->runQuery($query);
