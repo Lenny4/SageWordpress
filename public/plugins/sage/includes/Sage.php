@@ -528,12 +528,6 @@ final class Sage
                 ];
             }, $settings->sageEntityMenus);
         }));
-        $this->twig->addFunction(new TwigFunction('getJsTranslations', static function (): array {
-            return [
-                'synchronizeOrder' => __("Voulez vous vraiment synchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
-                'desynchronizeOrder' => __("Voulez vous vraiment désynchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
-            ];
-        }));
         $this->twig->addFunction(new TwigFunction('getFDoclignes', static function (array|null|string $fDocentetes) use ($sageWoocommerce): array {
             return $sageWoocommerce->getFDoclignes($fDocentetes);
         }));

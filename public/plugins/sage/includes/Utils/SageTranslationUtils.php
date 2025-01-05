@@ -521,7 +521,14 @@ final class SageTranslationUtils
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),
                 'fDoceneteteAlreadyHasOrders' => __("Ce document de vente est déjà lié au(x) commande(s)", 'sage'),
+                'synchronizeOrder' => __("Voulez vous vraiment synchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
+                'desynchronizeOrder' => __("Voulez vous vraiment désynchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
             ],
+            'enum' => [
+                'syncWebsiteState' => [
+                    0 => __("Création des tâches de synchronisation ...", "sage")
+                ]
+            ]
         ];
     }
 }

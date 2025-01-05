@@ -756,7 +756,7 @@ final class SageGraphQl
 
     public function getFDocentetes(
         string $doPiece,
-        ?array $doType = null,
+        ?array $doTypes = null,
         ?int   $doDomaine = null,
         ?int   $doProvenance = null,
         bool   $getError = false,
@@ -779,18 +779,18 @@ final class SageGraphQl
             $filterValue = [
                 "doPiece" => ["eq" => $doPiece],
             ];
-            if (!empty($doType)) {
-                $filterValue['doType'] = ["in" => implode(',', $doType)];
+            if (!empty($doTypes)) {
+                $filterValue['doType'] = ["in" => $doTypes];
             }
             $filterValue = [$filterValue];
         } else {
             $filterField = ["doPiece"];
             $filterType = ["eq"];
             $filterValue = [$doPiece];
-            if (!empty($doType)) {
+            if (!empty($doTypes)) {
                 $filterField[] = "doType";
                 $filterType[] = "in";
-                $filterValue[] = implode(',', $doType);
+                $filterValue[] = $doTypes;
             }
             if ($doDomaine !== null) {
                 $filterField[] = "doDomaine";
