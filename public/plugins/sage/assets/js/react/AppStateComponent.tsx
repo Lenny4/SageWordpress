@@ -52,9 +52,9 @@ const TaskJobSyncWebsiteJobComponent: React.FC<State2> = React.memo(
   (oldProps, newProps) => {
     const diff = getDiff(oldProps ?? {}, newProps ?? {});
     return (
-      diff.added.length !== 0 ||
-      diff.edited.length !== 0 ||
-      diff.removed.length !== 0
+      diff.added.length === 0 &&
+      diff.edited.length === 0 &&
+      diff.removed.length === 0
     );
   },
 );
@@ -87,9 +87,9 @@ const SyncWebsiteJobComponent: React.FC<State> = React.memo(
   (oldProps, newProps) => {
     const diff = getDiff(oldProps ?? {}, newProps ?? {});
     return (
-      diff.added.length !== 0 ||
-      diff.edited.length !== 0 ||
-      diff.removed.length !== 0
+      diff.added.length === 0 &&
+      diff.edited.length === 0 &&
+      diff.removed.length === 0
     );
   },
 );

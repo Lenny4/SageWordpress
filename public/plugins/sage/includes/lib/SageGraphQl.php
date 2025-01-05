@@ -544,7 +544,7 @@ final class SageGraphQl
                     ])) {
                         $fieldValue = '"' . $fieldValue . '"';
                     }
-                    if (in_array($queryParams["filter_type"][$index], ['in', 'nin'])) {
+                    if (in_array($fieldType, ['in', 'nin'])) {
                         if (str_starts_with($field, '"') && str_ends_with($field, '"')) {
                             $fieldValue = str_replace(',', '","', $fieldValue);
                         }
@@ -790,7 +790,7 @@ final class SageGraphQl
             if (!empty($doTypes)) {
                 $filterField[] = "doType";
                 $filterType[] = "in";
-                $filterValue[] = $doTypes;
+                $filterValue[] = implode(',', $doTypes);
             }
             if ($doDomaine !== null) {
                 $filterField[] = "doDomaine";

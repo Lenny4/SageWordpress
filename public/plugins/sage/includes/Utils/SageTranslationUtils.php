@@ -526,7 +526,8 @@ final class SageTranslationUtils
             ],
             'enum' => [
                 'syncWebsiteState' => [
-                    0 => __("Création des tâches de synchronisation ...", "sage") // CreateTasks
+                    0 => __("Création des tâches de synchronisation [Sage] ...", "sage"), // CreateTasks
+                    1 => __("Synchronisation en cours [Sage] ...", "sage"), // DoTasks
                 ],
                 'taskJobType' => [
                     0 => __('Créer automatiquement le client Sage', 'sage'), // AutoCreateSageFcomptet => auto_create_sage_fcomptet
