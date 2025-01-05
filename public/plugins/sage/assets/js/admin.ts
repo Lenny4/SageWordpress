@@ -1,8 +1,9 @@
 import "../css/admin.scss";
 import tippy from 'tippy.js';
 import 'jquery-blockui';
-import {setHtmlFromAppState} from "./appstate";
+import './react/AppStateComponent';
 
+// todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 $(() => {
 
   let allFilterContainer = $("#filters_container");
@@ -16,8 +17,6 @@ $(() => {
   if (translationJs) {
     translationJs = JSON.parse(translationJs);
   }
-  let stringApiHostUrl = $("[data-sage-api-host-url]").attr('data-sage-api-host-url');
-  let stringAuthorization = $("[data-sage-authorization]").attr('data-sage-authorization');
   // region remove sage_message in query
   let url = new URL(location.href);
   url.searchParams.delete('sage_message');
@@ -28,11 +27,6 @@ $(() => {
 
   function getNumberFilter() {
     return $(allFilterContainer).children().length;
-  }
-
-  function setIntervalAndExecute(fn: Function, t: number) {
-    fn();
-    return (setInterval(fn, t));
   }
 
   function applyTippy() {
@@ -289,88 +283,6 @@ $(() => {
       $(document.body).trigger('wc-enhanced-select-init');// woocommerce/assets/js/admin/wc-enhanced-select.js
     } else {
       // todo toastr
-    }
-  }
-
-  function createWebsocket() {
-    let apiHostUrl: URL = null;
-    const pingTime = 5000;
-    let lastMessageTime: number = null;
-    if (stringApiHostUrl && stringAuthorization) {
-      try {
-        apiHostUrl = new URL(stringApiHostUrl);
-      } catch (e) {
-        apiHostUrl = null;
-        console.error(e);
-        return;
-      }
-      let hasError = false;
-      const url = 'wss://' + apiHostUrl.host + '/ws?authorization=' + stringAuthorization;
-      const ws = new WebSocket(url);
-      let intervalPing: number | null = null;
-      let alreadyClose = false;
-      let nbLost = 0;
-
-      const wsClose = () => {
-        if (alreadyClose) {
-          return;
-        }
-        alreadyClose = true;
-        if (intervalPing !== null) {
-          clearInterval(intervalPing);
-        }
-        setTimeout(() => {
-          createWebsocket();
-        }, hasError ? 5000 : 1000);
-      }
-
-      ws.onopen = () => {
-        console.log(`ws.onopen`);
-        ws.send(JSON.stringify({
-          Get: "appState"
-        }));
-        intervalPing = setIntervalAndExecute(() => {
-          ws.send(JSON.stringify({
-            Get: "ping"
-          }));
-          const waitPingReturn = 1000;
-          setTimeout(() => {
-            if (lastMessageTime === null || Date.now() - waitPingReturn > lastMessageTime) {
-              nbLost++;
-              console.log("todo connection lost"); // todo connection lost, display a message on screen
-              if (nbLost > 3) {
-                try {
-                  wsClose();
-                  ws.close();
-                } catch (e) {
-                  console.error(e)
-                }
-              }
-            }
-          }, waitPingReturn);
-        }, pingTime);
-      }
-
-      ws.onmessage = (message) => {
-        // region ping management
-        lastMessageTime = Date.now();
-        nbLost = 0;
-        // endregion
-        const data = JSON.parse(message.data);
-        if (data.hasOwnProperty("AppState")) {
-          setHtmlFromAppState(data.AppState, $("#sage_tasks .content"));
-        }
-      }
-
-      ws.onerror = (evt) => {
-        console.log('ws.onerror', evt);
-        hasError = true;
-      }
-
-      ws.onclose = (evt) => {
-        console.log('ws.onclose alreadyClose: ' + alreadyClose, evt);
-        wsClose();
-      }
     }
   }
 
@@ -703,9 +615,5 @@ $(() => {
 
   // region tooltip
   applyTippy();
-  // endregion
-
-  // region websocket
-  createWebsocket()
   // endregion
 });
