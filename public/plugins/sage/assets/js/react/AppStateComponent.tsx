@@ -1,9 +1,15 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import { createRoot } from "react-dom/client";
 import React from "react";
-import { AppStateInterface } from "../interface/AppStateInterface";
-import { SyncWebsiteStateEnum } from "../enum/SyncWebsiteStateEnum";
+import {
+  AppStateInterface,
+  SyncWebsiteJobInterface,
+  TaskJobSyncWebsiteJobInterface,
+} from "../interface/AppStateInterface";
 import { getTranslations } from "../functions/translations";
+import { LinearProgress } from "@mui/material";
+import { LinearProgressWithLabel } from "./component/LinearProgressWithLabel";
+import { getDiff } from "json-difference";
 
 const stringApiHostUrl = $("[data-sage-api-host-url]").attr(
   "data-sage-api-host-url",
@@ -14,6 +20,79 @@ const stringAuthorization = $("[data-sage-authorization]").attr(
 const containerSelector = "#sage_tasks";
 
 let translations: any = getTranslations();
+
+interface State {
+  SyncWebsiteJob: SyncWebsiteJobInterface;
+}
+
+interface State2 {
+  TaskJobSyncWebsiteJob: TaskJobSyncWebsiteJobInterface;
+}
+
+const TaskJobSyncWebsiteJobComponent: React.FC<State2> = React.memo(
+  ({ TaskJobSyncWebsiteJob }) => {
+    return (
+      <>
+        <p>
+          {translations.enum.taskJobType[TaskJobSyncWebsiteJob.TaskJobType]}
+        </p>
+        <div>
+          {TaskJobSyncWebsiteJob.NewNbTasks === null ? (
+            <LinearProgress />
+          ) : (
+            <LinearProgressWithLabel
+              done={TaskJobSyncWebsiteJob.NbTaskDone}
+              max={TaskJobSyncWebsiteJob.NewNbTasks}
+            />
+          )}
+        </div>
+      </>
+    );
+  },
+  (oldProps, newProps) => {
+    const diff = getDiff(oldProps ?? {}, newProps ?? {});
+    return (
+      diff.added.length !== 0 ||
+      diff.edited.length !== 0 ||
+      diff.removed.length !== 0
+    );
+  },
+);
+
+const SyncWebsiteJobComponent: React.FC<State> = React.memo(
+  ({ SyncWebsiteJob }) => {
+    return (
+      <>
+        {SyncWebsiteJob.Show && (
+          <div>
+            <p className="h5">
+              {translations.enum.syncWebsiteState[SyncWebsiteJob.State]}
+            </p>
+            <ol>
+              {SyncWebsiteJob.TaskJobSyncWebsiteJobs.map(
+                (taskJobSyncWebsiteJob, indexTaskJobSyncWebsiteJob) => (
+                  <li key={indexTaskJobSyncWebsiteJob}>
+                    <TaskJobSyncWebsiteJobComponent
+                      TaskJobSyncWebsiteJob={taskJobSyncWebsiteJob}
+                    />
+                  </li>
+                ),
+              )}
+            </ol>
+          </div>
+        )}
+      </>
+    );
+  },
+  (oldProps, newProps) => {
+    const diff = getDiff(oldProps ?? {}, newProps ?? {});
+    return (
+      diff.added.length !== 0 ||
+      diff.edited.length !== 0 ||
+      diff.removed.length !== 0
+    );
+  },
+);
 
 const AppStateComponent = () => {
   const [appState, setAppState] = React.useState<AppStateInterface | null>(
@@ -29,6 +108,7 @@ const AppStateComponent = () => {
     let apiHostUrl: URL = null;
     const pingTime = 5000;
     let lastMessageTime: number = null;
+    let copyAppStateWs = appState;
     if (stringApiHostUrl && stringAuthorization) {
       try {
         apiHostUrl = new URL(stringApiHostUrl);
@@ -45,7 +125,7 @@ const AppStateComponent = () => {
       let alreadyClose = false;
       let nbLost = 0;
 
-      const wsClose = () => {
+      const wsReconnect = () => {
         if (alreadyClose) {
           return;
         }
@@ -84,7 +164,7 @@ const AppStateComponent = () => {
               console.log("todo connection lost"); // todo connection lost, display a message on screen
               if (nbLost > 3) {
                 try {
-                  wsClose();
+                  wsReconnect();
                   ws.close();
                 } catch (e) {
                   console.error(e);
@@ -101,9 +181,17 @@ const AppStateComponent = () => {
         nbLost = 0;
         // endregion
         const data = JSON.parse(message.data);
-        if (data.hasOwnProperty("AppState")) {
-          setAppState(data.AppState);
-          console.log(data.AppState);
+        if (data.Get === "appState") {
+          const diff = getDiff(copyAppStateWs ?? {}, data.AppState);
+          if (
+            diff.added.length !== 0 ||
+            diff.edited.length !== 0 ||
+            diff.removed.length !== 0
+          ) {
+            console.log(data.AppState);
+            copyAppStateWs = data.AppState;
+            setAppState(data.AppState);
+          }
         }
       };
 
@@ -114,7 +202,7 @@ const AppStateComponent = () => {
 
       ws.onclose = (evt) => {
         console.log("ws.onclose alreadyClose: " + alreadyClose, evt);
-        wsClose();
+        wsReconnect();
       };
     }
   };
@@ -124,26 +212,16 @@ const AppStateComponent = () => {
   }, []);
 
   React.useEffect(() => {
-    if (appState && appState.SyncWebsite !== null) {
+    if (appState && appState.SyncWebsiteJob !== null) {
       $(containerSelector).removeClass("hidden");
     }
   }, [appState]);
 
   return (
     <div>
-      {appState?.SyncWebsite && (
+      {appState?.SyncWebsiteJob && (
         <>
-          <p className="h5">
-            {translations.enum.syncWebsiteState[appState.SyncWebsite.State]}
-          </p>
-          {appState.SyncWebsite.State === SyncWebsiteStateEnum.CreateTasks ? (
-            <>
-              <p>{appState.SyncWebsite.WebsiteId}</p>
-              <p>{appState.SyncWebsite.NbTasksToDo}</p>
-            </>
-          ) : (
-            <></>
-          )}
+          <SyncWebsiteJobComponent SyncWebsiteJob={appState.SyncWebsiteJob} />
         </>
       )}
     </div>

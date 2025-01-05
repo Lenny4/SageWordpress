@@ -526,7 +526,18 @@ final class SageTranslationUtils
             ],
             'enum' => [
                 'syncWebsiteState' => [
-                    0 => __("Création des tâches de synchronisation ...", "sage")
+                    0 => __("Création des tâches de synchronisation ...", "sage") // CreateTasks
+                ],
+                'taskJobType' => [
+                    0 => __('Créer automatiquement le client Sage', 'sage'), // AutoCreateSageFcomptet => auto_create_sage_fcomptet
+                    1 => __('Importer automatiquement les anciens clients Woocommerce', 'sage'), // AutoImportSageFcomptet => auto_import_sage_fcomptet
+                    2 => __('Créer automatiquement le compte Wordpress', 'sage'), // AutoCreateWebsiteAccount => auto_create_wordpress_account
+                    3 => __('Importer automatiquement les anciens clients Sage', 'sage'), // AutoImportWebsiteAccount => auto_import_wordpress_account
+                    4 => __('Créer automatiquement le document de vente Sage', 'sage'), // AutoCreateSageFdocentete => auto_create_sage_fdocentete
+                    5 => __('Créer automatiquement la commande Woocommerce', 'sage'), // AutoCreateWebsiteOrder => auto_create_wordpress_order
+                    6 => __('Créer automatiquement le produit Woocommerce', 'sage'), // AutoCreateWebsiteArticle => auto_create_wordpress_article
+                    7 => __('Importer automatiquement les anciens produits Sage', 'sage'), // AutoImportWebsiteArticle => auto_import_wordpress_article
+                    8 => __('Importer automatiquement les anciens documents de vente Sage', 'sage'), // AutoImportWebsiteOrder => auto_import_wordpress_order
                 ]
             ]
         ];
