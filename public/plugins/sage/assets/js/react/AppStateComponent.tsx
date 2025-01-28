@@ -11,12 +11,16 @@ import { LinearProgress } from "@mui/material";
 import { LinearProgressWithLabel } from "./component/LinearProgressWithLabel";
 import { getDiff } from "json-difference";
 
+const humanizeDuration = require("humanize-duration");
+
 const stringApiHostUrl = $("[data-sage-api-host-url]").attr(
   "data-sage-api-host-url",
 );
 const stringAuthorization = $("[data-sage-authorization]").attr(
   "data-sage-authorization",
 );
+const language = $("[data-sage-language]").attr("data-sage-language");
+
 const containerSelector = "#sage_tasks";
 
 let translations: any = getTranslations();
@@ -34,7 +38,32 @@ const TaskJobSyncWebsiteJobComponent: React.FC<State2> = React.memo(
     return (
       <>
         <p>
-          {translations.enum.taskJobType[TaskJobSyncWebsiteJob.TaskJobType]}
+          <span>
+            {translations.enum.taskJobType[TaskJobSyncWebsiteJob.TaskJobType]}
+          </span>
+          {TaskJobSyncWebsiteJob.TaskJobDoneSpeed !== null && (
+            <>
+              <br />
+              <span>
+                {translations.words.taskJobDoneSpeed + ": "}
+                {humanizeDuration(TaskJobSyncWebsiteJob.TaskJobDoneSpeed, {
+                  language: language,
+                })}
+              </span>
+            </>
+          )}
+          {TaskJobSyncWebsiteJob.RemainingTime !== null && (
+            <>
+              <br />
+              <span>
+                {translations.words.remainingTime + ": "}
+                {humanizeDuration(TaskJobSyncWebsiteJob.RemainingTime, {
+                  language: language,
+                  round: true,
+                })}
+              </span>
+            </>
+          )}
         </p>
         <div>
           {TaskJobSyncWebsiteJob.NewNbTasks === null ? (
@@ -65,8 +94,14 @@ const SyncWebsiteJobComponent: React.FC<State> = React.memo(
       <>
         {SyncWebsiteJob.Show && (
           <div>
-            <p className="h5">
-              {translations.enum.syncWebsiteState[SyncWebsiteJob.State]}
+            <p>
+              <span className="h5">
+                {translations.enum.syncWebsiteState[SyncWebsiteJob.State]}
+              </span>
+              <br />
+              <span>
+                {translations.sentences.nbThreads}: {SyncWebsiteJob.NbThreads}
+              </span>
             </p>
             <ol>
               {SyncWebsiteJob.TaskJobSyncWebsiteJobs.map(

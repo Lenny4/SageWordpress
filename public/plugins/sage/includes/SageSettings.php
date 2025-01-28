@@ -1122,7 +1122,7 @@ WHERE meta_key = %s
 
     // woocommerce/includes/admin/class-wc-admin-meta-boxes.php:134 add_meta_box( 'woocommerce-product-data
 
-    private function addWebsiteSageApi(): void
+    public function addWebsiteSageApi(): void
     {
         if (
             !(

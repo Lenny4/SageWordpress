@@ -256,6 +256,7 @@ final class Sage
         $this->twig->addFilter(new TwigFilter('wp_nonce_field', static fn(string $action) => wp_nonce_field($action)));
         $this->twig->addFilter(new TwigFilter('wp_create_nonce', static fn(string $action) => wp_create_nonce($action)));
         $this->twig->addFunction(new TwigFunction('getTranslations', static fn(): array => SageTranslationUtils::getTranslations()));
+        $this->twig->addFunction(new TwigFunction('get_locale', static fn(): string => substr(get_locale(), 0, 2)));
         $this->twig->addFunction(new TwigFunction('getAllFilterType', static function (): array {
             $r = [];
             foreach ([
@@ -651,7 +652,7 @@ final class Sage
                     }
                     $fDocentetes = $sageGraphQl->getFDocentetes(
                         strtoupper(trim($request['doPiece'])),
-                        doType: FDocenteteUtils::DO_TYPE_MAPPABLE,
+                        doTypes: FDocenteteUtils::DO_TYPE_MAPPABLE,
                         doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
                         doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
                         getError: true,

@@ -517,17 +517,20 @@ final class SageTranslationUtils
                 'in' => __("Dedans", 'sage'),
                 'neq' => __("Pas égal", 'sage'),
                 'nin' => __("Pas dedans", 'sage'),
+                'taskJobDoneSpeed' => __("Nombre d'opérations par seconde", 'sage'),
+                'remainingTime' => __("Temps restant", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),
                 'fDoceneteteAlreadyHasOrders' => __("Ce document de vente est déjà lié au(x) commande(s)", 'sage'),
                 'synchronizeOrder' => __("Voulez vous vraiment synchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
                 'desynchronizeOrder' => __("Voulez vous vraiment désynchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
+                'nbThreads' => __("Nombre de d'opérations simultanées (nb threads)", "sage"),
             ],
             'enum' => [
                 'syncWebsiteState' => [
-                    0 => __("Création des tâches de synchronisation [Sage] ...", "sage"), // CreateTasks
-                    1 => __("Synchronisation en cours [Sage] ...", "sage"), // DoTasks
+                    0 => __("[Sage] Création des tâches de synchronisation en cours ...", "sage"), // CreateTasks
+                    1 => __("[Sage] Synchronisation en cours ...", "sage"), // DoTasks
                 ],
                 'taskJobType' => [
                     0 => __('Créer automatiquement le client Sage', 'sage'), // AutoCreateSageFcomptet => auto_create_sage_fcomptet

@@ -8,6 +8,7 @@ export interface AppStateInterface {
 export interface SyncWebsiteJobInterface {
   WebsiteId: number;
   Show: boolean;
+  NbThreads: number;
   State: SyncWebsiteStateEnum;
   TaskJobSyncWebsiteJobs: TaskJobSyncWebsiteJobInterface[] | null;
 }
@@ -16,4 +17,6 @@ export interface TaskJobSyncWebsiteJobInterface {
   NbTaskDone: number;
   NewNbTasks: number | null;
   TaskJobType: TaskJobTypeEnum;
+  TaskJobDoneSpeed: number | null;
+  RemainingTime: number | null;
 }
