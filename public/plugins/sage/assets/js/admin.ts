@@ -7,7 +7,7 @@ import { getTranslations } from "./functions/translations"; // todo refacto pour
 // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 $(() => {
   let allFilterContainer = $("#filters_container");
-  let siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
+  const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
   let translations: any = getTranslations();
   // region remove sage_message in query
   let url = new URL(location.href);

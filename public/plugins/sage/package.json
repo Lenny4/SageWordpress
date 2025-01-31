@@ -2,7 +2,6 @@
   "name": "sage-plugin",
   "title": "Sage plugin",
   "license": "MIT",
-  "version": "1.0.0",
   "homepage": "https://github.com/Lenny4/SageWordpress",
   "private": true,
   "scripts": {

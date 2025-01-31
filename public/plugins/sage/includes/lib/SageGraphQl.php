@@ -8,7 +8,6 @@ use App\Sage;
 use App\SageSettings;
 use App\Utils\FDocenteteUtils;
 use App\Utils\PCatComptaUtils;
-use DateTime;
 use Exception;
 use GraphQL\Client;
 use GraphQL\Mutation;
@@ -118,54 +117,68 @@ final class SageGraphQl
     }
 
     public function createUpdateWebsite(
-        string        $name,
-        string        $username,
-        string        $password,
-        WebsiteEnum   $websiteEnum,
-        string        $host,
-        string        $protocol,
-        bool          $forceSsl,
-        string        $dbHost,
-        string        $tablePrefix,
-        string        $dbName,
-        string        $dbUsername,
-        string        $dbPassword,
-        bool          $autoCreateSageFcomptet,
-        DateTime|null $autoImportSageFcomptet,
-        bool          $autoCreateWordpressAccount,
-        DateTime|null $autoImportWordpressAccount,
-        bool          $autoCreateSageFdocentete,
-        array|null    $autoCreateWordpressOrder,
-        DateTime|null $autoImportWordpressOrderDate,
-        array|null    $autoImportWordpressOrderDoType,
-        bool          $autoCreateWordpressArticle,
-        DateTime|null $autoImportWordpressArticle,
+        string $username,
+        string $password,
     ): StdClass|null
     {
+        global $wpdb;
+        $hasError = false;
+        $wordpressHostUrl = parse_url((string)get_option(Sage::TOKEN . '_wordpress_host_url'));
+        if (!array_key_exists("scheme", $wordpressHostUrl)) {
+            add_action('admin_notices', static function (): void {
+                ?>
+                <div class="error"><p>
+                    <?= __("Wordpress host url doit commencer par 'http://' ou 'https://'", 'sage') ?>
+                </p>
+                </div><?php
+            });
+            $hasError = true;
+        }
+        $apiHostUrl = parse_url((string)get_option(Sage::TOKEN . '_api_host_url'));
+        if (!array_key_exists("scheme", $apiHostUrl)) {
+            add_action('admin_notices', static function (): void {
+                ?>
+                <div class="error"><p>
+                    <?= __("Api host url doit commencer par 'http://' ou 'https://'", 'sage') ?>
+                </p>
+                </div><?php
+            });
+            $hasError = true;
+        }
+        if ($hasError) {
+            return null;
+        }
+        $autoImportSageFcomptet = SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_sage_fcomptet');
+        $autoImportWordpressAccount = SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_account');
+        $autoImportWordpressOrderDate = SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_order_date');
+        $autoImportWordpressOrderDoType = empty($autoImportWordpressOrderDoType = get_option(Sage::TOKEN . '_auto_import_wordpress_order_dotype')) ? null : $autoImportWordpressOrderDoType;
+        $autoCreateWordpressOrder = empty($autoCreateWordpressOrder = get_option(Sage::TOKEN . '_auto_create_wordpress_order')) ? null : $autoCreateWordpressOrder;
+        $autoImportWordpressArticle = SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article');
         $query = (new Mutation('createUpdateWebsite'))
             ->setArguments([
-                'name' => new RawObject('"' . $name . '"'),
+                'name' => new RawObject('"' . get_bloginfo() . '"'),
                 'username' => new RawObject('"' . $username . '"'),
                 'password' => new RawObject('"' . $password . '"'),
-                'type' => new RawObject(strtoupper($websiteEnum->name)),
-                'host' => new RawObject('"' . $host . '"'),
-                'protocol' => new RawObject('"' . $protocol . '"'),
-                'forceSsl' => new RawObject($forceSsl ? 'true' : 'false'),
-                'dbHost' => new RawObject('"' . $dbHost . '"'),
-                'dbUsername' => new RawObject('"' . $dbUsername . '"'),
-                'dbPassword' => new RawObject('"' . $dbPassword . '"'),
-                'tablePrefix' => new RawObject('"' . $tablePrefix . '"'),
-                'dbName' => new RawObject('"' . $dbName . '"'),
-                'autoCreateSageFcomptet' => new RawObject($autoCreateSageFcomptet ? 'true' : 'false'),
+                'type' => new RawObject(strtoupper(WebsiteEnum::Wordpress->name)),
+                'host' => new RawObject('"' . $wordpressHostUrl["host"] . '"'),
+                'protocol' => new RawObject('"' . $wordpressHostUrl["scheme"] . '"'),
+                'forceSsl' => new RawObject(get_option(Sage::TOKEN . '_activate_https_verification_wordpress') ? 'true' : 'false'),
+                'dbHost' => new RawObject('"' . get_option(Sage::TOKEN . '_wordpress_db_host') . '"'),
+                'dbUsername' => new RawObject('"' . get_option(Sage::TOKEN . '_wordpress_db_username') . '"'),
+                'dbPassword' => new RawObject('"' . get_option(Sage::TOKEN . '_wordpress_db_password') . '"'),
+                'tablePrefix' => new RawObject('"' . $wpdb->prefix . '"'),
+                'dbName' => new RawObject('"' . get_option(Sage::TOKEN . '_wordpress_db_name') . '"'),
+                'autoCreateSageFcomptet' => new RawObject(get_option(Sage::TOKEN . '_auto_create_sage_fcomptet') ? 'true' : 'false'),
                 'autoImportSageFcomptet' => new RawObject(!is_null($autoImportSageFcomptet) ? '"' . $autoImportSageFcomptet->format('Y-m-d H:i:s') . '"' : 'null'),
-                'autoCreateWebsiteAccount' => new RawObject($autoCreateWordpressAccount ? 'true' : 'false'),
+                'autoCreateWebsiteAccount' => new RawObject(get_option(Sage::TOKEN . '_auto_create_wordpress_account') ? 'true' : 'false'),
                 'autoImportWebsiteAccount' => new RawObject(!is_null($autoImportWordpressAccount) ? '"' . $autoImportWordpressAccount->format('Y-m-d H:i:s') . '"' : 'null'),
-                'autoCreateSageFdocentete' => new RawObject($autoCreateSageFdocentete ? 'true' : 'false'),
+                'autoCreateSageFdocentete' => new RawObject(get_option(Sage::TOKEN . '_auto_create_sage_fdocentete') ? 'true' : 'false'),
                 'autoImportWebsiteOrderDate' => new RawObject(!is_null($autoImportWordpressOrderDate) ? '"' . $autoImportWordpressOrderDate->format('Y-m-d H:i:s') . '"' : 'null'),
                 'autoImportWebsiteOrderDoType' => new RawObject(is_array($autoImportWordpressOrderDoType) ? json_encode($autoImportWordpressOrderDoType, JSON_THROW_ON_ERROR) : 'null'),
                 'autoCreateWebsiteOrder' => new RawObject(is_array($autoCreateWordpressOrder) ? json_encode($autoCreateWordpressOrder, JSON_THROW_ON_ERROR) : 'null'),
-                'autoCreateWebsiteArticle' => new RawObject($autoCreateWordpressArticle ? 'true' : 'false'),
+                'autoCreateWebsiteArticle' => new RawObject(get_option(Sage::TOKEN . '_auto_create_wordpress_article') ? 'true' : 'false'),
                 'autoImportWebsiteArticle' => new RawObject(!is_null($autoImportWordpressArticle) ? '"' . $autoImportWordpressArticle->format('Y-m-d H:i:s') . '"' : 'null'),
+                'pluginVersion' => get_plugin_data($this->sage->file)['Version'],
             ])
             ->setSelectionSet(
                 [

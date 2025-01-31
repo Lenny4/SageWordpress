@@ -519,6 +519,7 @@ final class SageTranslationUtils
                 'nin' => __("Pas dedans", 'sage'),
                 'taskJobDoneSpeed' => __("Nombre d'opérations par seconde", 'sage'),
                 'remainingTime' => __("Temps restant", 'sage'),
+                'fixTheProblem' => __("Résoudre le problème", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),
@@ -526,6 +527,7 @@ final class SageTranslationUtils
                 'synchronizeOrder' => __("Voulez vous vraiment synchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
                 'desynchronizeOrder' => __("Voulez vous vraiment désynchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
                 'nbThreads' => __("Nombre de d'opérations simultanées (nb threads)", "sage"),
+                'hasErrorWebsocket' => __("Wordpress n'arrive pas à se connecter à l'API pour la raison suivante", "sage"),
             ],
             'enum' => [
                 'syncWebsiteState' => [

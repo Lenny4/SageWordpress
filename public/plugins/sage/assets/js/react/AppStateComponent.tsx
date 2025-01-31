@@ -11,6 +11,9 @@ import { LinearProgress } from "@mui/material";
 import { LinearProgressWithLabel } from "./component/LinearProgressWithLabel";
 import { getDiff } from "json-difference";
 
+const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
+const wpnonce = $("[data-sage-nonce]").attr("data-sage-nonce");
+
 const humanizeDuration = require("humanize-duration");
 
 const stringApiHostUrl = $("[data-sage-api-host-url]").attr(
@@ -133,6 +136,11 @@ const AppStateComponent = () => {
   const [appState, setAppState] = React.useState<AppStateInterface | null>(
     null,
   );
+  const [hasErrorWebsocket, setHasErrorWebsocket] = React.useState<string>("");
+  const [hasErrorWebsocketAuthorization, setHasErrorWebsocketAuthorization] =
+    React.useState<boolean>(false);
+  const [loadingAuthorizationError, setLoadingAuthorizationError] =
+    React.useState<boolean>(false);
 
   const setIntervalAndExecute = (fn: Function, t: number) => {
     fn();
@@ -237,9 +245,29 @@ const AppStateComponent = () => {
 
       ws.onclose = (evt) => {
         console.log("ws.onclose alreadyClose: " + alreadyClose, evt);
+        $(containerSelector).removeClass("hidden");
+        $(containerSelector).removeClass("notice-info");
+        $(containerSelector).addClass("notice-error");
+        setHasErrorWebsocket(evt.reason);
+        setHasErrorWebsocketAuthorization(evt.code === 1008);
         wsReconnect();
       };
     }
+  };
+
+  const solveAuthorizationError = async () => {
+    if (loadingAuthorizationError) {
+      return;
+    }
+    setLoadingAuthorizationError(true);
+    const response = await fetch(
+      siteUrl +
+        "/index.php?rest_route=" +
+        encodeURI("/sage/v1/add-website-sage-api") +
+        "&_wpnonce=" +
+        wpnonce,
+    );
+    window.location.reload();
   };
 
   React.useEffect(() => {
@@ -248,16 +276,40 @@ const AppStateComponent = () => {
 
   React.useEffect(() => {
     if (appState && appState.SyncWebsiteJob !== null) {
+      $(containerSelector).removeClass("notice-error");
+      $(containerSelector).addClass("notice-info");
       $(containerSelector).removeClass("hidden");
     }
   }, [appState]);
 
   return (
     <div>
-      {appState?.SyncWebsiteJob && (
-        <>
-          <SyncWebsiteJobComponent SyncWebsiteJob={appState.SyncWebsiteJob} />
-        </>
+      {hasErrorWebsocket !== "" ? (
+        <p>
+          {translations.sentences.hasErrorWebsocket + ":"}
+          <code>{hasErrorWebsocket}</code>
+          {hasErrorWebsocketAuthorization && (
+            <>
+              <br />
+              <button
+                className="button-primary"
+                disabled={loadingAuthorizationError}
+                onClick={solveAuthorizationError}
+              >
+                {translations.words.fixTheProblem}
+                {loadingAuthorizationError && (
+                  <span className="spinner is-active"></span>
+                )}
+              </button>
+            </>
+          )}
+        </p>
+      ) : (
+        appState?.SyncWebsiteJob && (
+          <>
+            <SyncWebsiteJobComponent SyncWebsiteJob={appState.SyncWebsiteJob} />
+          </>
+        )
       )}
     </div>
   );

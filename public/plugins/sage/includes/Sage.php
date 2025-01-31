@@ -726,6 +726,16 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
+            register_rest_route(Sage::TOKEN . '/v1', '/add-website-sage-api', [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($settings) {
+                    $settings->addWebsiteSageApi(true);
+                    return new WP_REST_Response(null, 200);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
             register_rest_route(Sage::TOKEN . '/v1', '/healthz', [
                 'methods' => 'GET',
                 'callback' => static function () {

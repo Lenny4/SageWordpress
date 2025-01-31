@@ -5,7 +5,6 @@ namespace App;
 use App\class\SageEntityMenu;
 use App\class\SageEntityMetadata;
 use App\class\SageShippingMethod__index__;
-use App\enum\WebsiteEnum;
 use App\lib\SageRequest;
 use App\Utils\PCatComptaUtils;
 use App\Utils\SageTranslationUtils;
@@ -1182,62 +1181,9 @@ WHERE meta_key = %s
     private function createUpdateWebsite(string $user_id, string $password): bool
     {
         $user = get_user_by('id', $user_id);
-        $hasError = false;
-        $wordpressHostUrl = parse_url((string)get_option(Sage::TOKEN . '_wordpress_host_url'));
-        if (!array_key_exists("scheme", $wordpressHostUrl)) {
-            add_action('admin_notices', static function (): void {
-                ?>
-                <div class="error"><p>
-                    <?= __("Wordpress host url doit commencer par 'http://' ou 'https://'", 'sage') ?>
-                </p>
-                </div><?php
-            });
-            $hasError = true;
-        }
-        $apiHostUrl = parse_url((string)get_option(Sage::TOKEN . '_api_host_url'));
-        if (!array_key_exists("scheme", $apiHostUrl)) {
-            add_action('admin_notices', static function (): void {
-                ?>
-                <div class="error"><p>
-                    <?= __("Api host url doit commencer par 'http://' ou 'https://'", 'sage') ?>
-                </p>
-                </div><?php
-            });
-            $hasError = true;
-        }
-        if ($hasError) {
-            return false;
-        }
-        global $wpdb;
         $stdClass = $this->sage->sageGraphQl->createUpdateWebsite(
-            name: get_bloginfo(),
             username: $user->data->user_login,
             password: $password,
-            websiteEnum: WebsiteEnum::Wordpress,
-            host: $wordpressHostUrl["host"],
-            protocol: $wordpressHostUrl["scheme"],
-            forceSsl: (bool)get_option(Sage::TOKEN . '_activate_https_verification_wordpress'),
-            dbHost: get_option(Sage::TOKEN . '_wordpress_db_host'),
-            tablePrefix: $wpdb->prefix,
-            dbName: get_option(Sage::TOKEN . '_wordpress_db_name'),
-            dbUsername: get_option(Sage::TOKEN . '_wordpress_db_username'),
-            dbPassword: get_option(Sage::TOKEN . '_wordpress_db_password'),
-            // region fComptet
-            autoCreateSageFcomptet: (bool)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet'),
-            autoImportSageFcomptet: self::get_option_date_or_null(Sage::TOKEN . '_auto_import_sage_fcomptet'),
-            autoCreateWordpressAccount: (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_account'),
-            autoImportWordpressAccount: self::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_account'),
-            // endregion
-            // region fDocentete
-            autoCreateSageFdocentete: (bool)get_option(Sage::TOKEN . '_auto_create_sage_fdocentete'),
-            autoCreateWordpressOrder: empty($autoCreateWordpressOrder = get_option(Sage::TOKEN . '_auto_create_wordpress_order')) ? null : $autoCreateWordpressOrder,
-            autoImportWordpressOrderDate: self::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_order_date'),
-            autoImportWordpressOrderDoType: empty($autoImportWordpressOrderDoType = get_option(Sage::TOKEN . '_auto_import_wordpress_order_dotype')) ? null : $autoImportWordpressOrderDoType,
-            // endregion
-            // region fArticle
-            autoCreateWordpressArticle: (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_article'),
-            autoImportWordpressArticle: self::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article'),
-        // endregion
         );
         if (is_null($stdClass)) {
             return false;
@@ -1246,7 +1192,6 @@ WHERE meta_key = %s
         update_option(Sage::TOKEN . '_pCattarifs', json_encode($pCattarifs, JSON_THROW_ON_ERROR));
         update_option(Sage::TOKEN . '_authorization', $stdClass->data->createUpdateWebsite->authorization);
         update_option(Sage::TOKEN . '_website_id', $stdClass->data->createUpdateWebsite->id);
-        $this->sage->install();
         add_action('admin_notices', static function (): void {
             ?>
             <div class="notice notice-success is-dismissible"><p><?=
@@ -1255,18 +1200,6 @@ WHERE meta_key = %s
             <?php
         });
         return true;
-    }
-
-    public static function get_option_date_or_null(string $option, bool $default_value = false): ?DateTime
-    {
-        $dateString = get_option($option, $default_value);
-        if (($date = DateTime::createFromFormat('Y-m-d', $dateString)) !== false) {
-            return new DateTime($date->format('Y-m-d 00:00:00'));
-        }
-        if (($date = DateTime::createFromFormat('Y-m-d H:i:s', $dateString)) !== false) {
-            return $date;
-        }
-        return null;
     }
 
     private function showMetaBoxProduct(array $wp_meta_boxes, string $screen): void
@@ -1420,6 +1353,18 @@ WHERE meta_key = %s
                 WC_Tax::_delete_tax_rate($taxeChange["old"]->tax_rate_id);
             }
         }
+    }
+
+    public static function get_option_date_or_null(string $option, bool $default_value = false): ?DateTime
+    {
+        $dateString = get_option($option, $default_value);
+        if (($date = DateTime::createFromFormat('Y-m-d', $dateString)) !== false) {
+            return new DateTime($date->format('Y-m-d 00:00:00'));
+        }
+        if (($date = DateTime::createFromFormat('Y-m-d H:i:s', $dateString)) !== false) {
+            return $date;
+        }
+        return null;
     }
 
     /**
