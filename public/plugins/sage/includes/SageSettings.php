@@ -1122,17 +1122,14 @@ WHERE meta_key = %s
 
     // woocommerce/includes/admin/class-wc-admin-meta-boxes.php:134 add_meta_box( 'woocommerce-product-data
 
-    public function addWebsiteSageApi(): void
+    public function addWebsiteSageApi(bool $force = false): void
     {
-        if (
-            !(
-                array_key_exists('settings-updated', $_GET) &&
-                array_key_exists('page', $_GET) &&
-                $_GET["settings-updated"] === 'true' &&
-                $_GET["page"] === Sage::TOKEN . '_settings'
-            ) ||
-            !current_user_can(self::$capability)
-        ) {
+        $optionFormSubmitted =
+            array_key_exists('settings-updated', $_GET) &&
+            array_key_exists('page', $_GET) &&
+            $_GET["settings-updated"] === 'true' &&
+            $_GET["page"] === Sage::TOKEN . '_settings';
+        if (!($force || ($optionFormSubmitted && current_user_can(self::$capability)))) {
             return;
         }
 
@@ -1242,23 +1239,22 @@ WHERE meta_key = %s
             autoImportWordpressArticle: self::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article'),
         // endregion
         );
-        if (!is_null($stdClass)) {
-            $pCattarifs = $this->sage->sageGraphQl->getPCattarifs(useCache: false);
-            update_option(Sage::TOKEN . '_pCattarifs', json_encode($pCattarifs, JSON_THROW_ON_ERROR));
-            update_option(Sage::TOKEN . '_authorization', $stdClass->data->createUpdateWebsite->authorization);
-            update_option(Sage::TOKEN . '_website_id', $stdClass->data->createUpdateWebsite->id);
-            $this->sage->install();
-            add_action('admin_notices', static function (): void {
-                ?>
-                <div class="notice notice-success is-dismissible"><p><?=
-                        __('Connexion réussie à l\'API. Les paramètres ont été mis à jour.', 'sage')
-                        ?></p></div>
-                <?php
-            });
-            return true;
+        if (is_null($stdClass)) {
+            return false;
         }
-
-        return false;
+        $pCattarifs = $this->sage->sageGraphQl->getPCattarifs(useCache: false);
+        update_option(Sage::TOKEN . '_pCattarifs', json_encode($pCattarifs, JSON_THROW_ON_ERROR));
+        update_option(Sage::TOKEN . '_authorization', $stdClass->data->createUpdateWebsite->authorization);
+        update_option(Sage::TOKEN . '_website_id', $stdClass->data->createUpdateWebsite->id);
+        $this->sage->install();
+        add_action('admin_notices', static function (): void {
+            ?>
+            <div class="notice notice-success is-dismissible"><p><?=
+                    __('Connexion réussie à l\'API. Les paramètres ont été mis à jour.', 'sage')
+                    ?></p></div>
+            <?php
+        });
+        return true;
     }
 
     public static function get_option_date_or_null(string $option, bool $default_value = false): ?DateTime

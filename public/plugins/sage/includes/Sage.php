@@ -151,8 +151,6 @@ final class Sage
             $this->admin = new SageAdminApi($this);
         }
 
-        // Handle localisation.
-        $this->load_plugin_textdomain();
         add_action('init', function (): void {
             // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
             $this->init();
@@ -809,6 +807,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         }
         // endregion
         $this->settings->applyDefaultSageEntityMenuOptions();
+        $this->settings->addWebsiteSageApi(true);
         $this->settings->updateTaxes(showMessage: false);
 
         // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
@@ -818,7 +817,8 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
 
     public function init(): void
     {
-        load_plugin_textdomain('sage', false, dirname(plugin_basename($this->file)) . '/lang/'); // load_localisation
+        // Handle localisation.
+        $this->load_plugin_textdomain();
         // todo register_post_type here
     }
 
@@ -827,10 +827,8 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
      */
     public function load_plugin_textdomain(): void
     {
-        $domain = 'sage';
-
+        $domain = self::TOKEN;
         $locale = apply_filters('plugin_locale', get_locale(), $domain);
-
         load_textdomain($domain, WP_LANG_DIR . '/' . $domain . '/' . $domain . '-' . $locale . '.mo');
         load_plugin_textdomain($domain, false, dirname(plugin_basename($this->file)) . '/lang/');
     }
