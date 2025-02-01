@@ -16,6 +16,8 @@ use stdClass;
 use WC_Meta_Box_Order_Data;
 use WC_Order;
 use WC_Product;
+use WC_Shipping_Zone;
+use WC_Shipping_Zones;
 use WC_Tax;
 use WP_Application_Passwords;
 use WP_Post;
@@ -1192,6 +1194,23 @@ WHERE meta_key = %s
         update_option(Sage::TOKEN . '_pCattarifs', json_encode($pCattarifs, JSON_THROW_ON_ERROR));
         update_option(Sage::TOKEN . '_authorization', $stdClass->data->createUpdateWebsite->authorization);
         update_option(Sage::TOKEN . '_website_id', $stdClass->data->createUpdateWebsite->id);
+        // woocommerce/includes/class-wc-ajax.php : shipping_zone_add_method
+        if (get_option(Sage::TOKEN . '_shipping_methods_init', false) === false) {
+            // add all sage expeditions to all shipping methods
+            $pExpeditions = $this->sage->sageGraphQl->getPExpeditions();
+            $zones = WC_Shipping_Zones::get_zones();
+            $zoneIds = [0, ...array_map(static function (array $zone) {
+                return $zone['id'];
+            }, $zones)];
+            foreach ($zoneIds as $zoneId) {
+                $zone = new WC_Shipping_Zone($zoneId);
+                foreach ($pExpeditions as $pExpedition) {
+                    $zone->add_shipping_method($pExpedition->slug);
+                }
+            }
+            update_option(Sage::TOKEN . '_shipping_methods_init', true);
+        }
+
         add_action('admin_notices', static function (): void {
             ?>
             <div class="notice notice-success is-dismissible"><p><?=
