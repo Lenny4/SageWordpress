@@ -886,6 +886,9 @@ WHERE meta_key = %s
             }
         }
 
+        if ($single) {
+            return $fDocentetes[0];
+        }
         return $fDocentetes;
     }
 
