@@ -136,7 +136,9 @@ const AppStateComponent = () => {
   const [appState, setAppState] = React.useState<AppStateInterface | null>(
     null,
   );
-  const [hasErrorWebsocket, setHasErrorWebsocket] = React.useState<string>("");
+  const [errorWebsocket, setErrorWebsocket] = React.useState<string | null>(
+    null,
+  );
   const [hasErrorWebsocketAuthorization, setHasErrorWebsocketAuthorization] =
     React.useState<boolean>(false);
   const [loadingAuthorizationError, setLoadingAuthorizationError] =
@@ -197,21 +199,28 @@ const AppStateComponent = () => {
               Get: "ping",
             }),
           );
-          const waitPingReturn = 1000;
+          const waitPingReturn = pingTime - 1000;
+          if (pingTime < waitPingReturn) {
+            throw "pingTime < waitPingReturn";
+          }
           setTimeout(() => {
             if (
               lastMessageTime === null ||
-              Date.now() - waitPingReturn > lastMessageTime
+              lastMessageTime < Date.now() - waitPingReturn
             ) {
               nbLost++;
-              console.log("todo connection lost"); // todo connection lost, display a message on screen
               if (nbLost > 3) {
                 try {
-                  wsReconnect();
                   ws.close();
+                  wsReconnect();
                 } catch (e) {
                   console.error(e);
                 }
+              }
+            } else {
+              if ($(containerSelector).hasClass("notice-error")) {
+                $(containerSelector).addClass("hidden");
+                setErrorWebsocket(null);
               }
             }
           }, waitPingReturn);
@@ -248,7 +257,7 @@ const AppStateComponent = () => {
         $(containerSelector).removeClass("hidden");
         $(containerSelector).removeClass("notice-info");
         $(containerSelector).addClass("notice-error");
-        setHasErrorWebsocket(evt.reason);
+        setErrorWebsocket(evt.reason);
         setHasErrorWebsocketAuthorization(evt.code === 1008);
         wsReconnect();
       };
@@ -284,10 +293,15 @@ const AppStateComponent = () => {
 
   return (
     <div>
-      {hasErrorWebsocket !== "" ? (
+      {errorWebsocket !== null ? (
         <p>
-          {translations.sentences.hasErrorWebsocket + ":"}
-          <code>{hasErrorWebsocket}</code>
+          {translations.sentences.errorWebsocket}
+          {errorWebsocket !== "" && (
+            <>
+              {":"}
+              <code>{errorWebsocket}</code>
+            </>
+          )}
           {hasErrorWebsocketAuthorization && (
             <>
               <br />

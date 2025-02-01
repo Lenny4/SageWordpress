@@ -262,7 +262,7 @@ $(() => {
       const chooseValueSelectInput = $(
         "<select data-filter-value-select " + multiple + "></select>",
       ).appendTo(chooseValueContainer);
-      // $(chooseValueInput).hide(); // todo uncomment
+      $(chooseValueInput).hide();
       const selectedValues = $(chooseValueInput).val().toString().split(",");
       _displayOptionWithOptGroup(
         availableValues,

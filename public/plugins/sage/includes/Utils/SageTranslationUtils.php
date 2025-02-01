@@ -527,7 +527,7 @@ final class SageTranslationUtils
                 'synchronizeOrder' => __("Voulez vous vraiment synchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
                 'desynchronizeOrder' => __("Voulez vous vraiment désynchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
                 'nbThreads' => __("Nombre de d'opérations simultanées (nb threads)", "sage"),
-                'hasErrorWebsocket' => __("Wordpress n'arrive pas à se connecter à l'API pour la raison suivante", "sage"),
+                'errorWebsocket' => __("Wordpress n'arrive pas à se connecter à l'API Sage", "sage"),
             ],
             'enum' => [
                 'syncWebsiteState' => [
