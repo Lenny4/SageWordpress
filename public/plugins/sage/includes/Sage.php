@@ -25,6 +25,7 @@ use Twig\TwigFilter;
 use Twig\TwigFunction;
 use WC_Order;
 use WC_Product;
+use WC_Shipping_Rate;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -798,6 +799,10 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             ]);
         });
         // endregion
+
+        add_filter('woocommerce_shipping_rate_cost', static function (string $cost, WC_Shipping_Rate $wcShippingRate) use ($sageWoocommerce) {
+            return (string)($sageWoocommerce->getShippingRateCosts(WC()->cart, $wcShippingRate) ?? $cost);
+        }, accepted_args: 2);
     }
 
     /**

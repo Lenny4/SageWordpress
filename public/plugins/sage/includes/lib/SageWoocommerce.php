@@ -3,6 +3,7 @@
 namespace App\lib;
 
 use App\class\SageEntityMenu;
+use App\enum\Sage\DocumentFraisTypeEnum;
 use App\Sage;
 use App\SageSettings;
 use App\Utils\FDocenteteUtils;
@@ -10,6 +11,7 @@ use App\Utils\OrderUtils;
 use App\Utils\PCatComptaUtils;
 use App\Utils\RoundUtils;
 use StdClass;
+use WC_Cart;
 use WC_Meta_Data;
 use WC_Order;
 use WC_Order_Item;
@@ -17,6 +19,7 @@ use WC_Order_Item_Product;
 use WC_Order_Item_Shipping;
 use WC_Order_Item_Tax;
 use WC_Product;
+use WC_Shipping_Rate;
 use WP_Error;
 
 if (!defined('ABSPATH')) {
@@ -1576,12 +1579,25 @@ WHERE meta_key = %s
         return null;
     }
 
-    public function calculateFraisExpedition(WC_Order $order): float
+    public function getShippingRateCosts(WC_Cart $wcCart, WC_Shipping_Rate $wcShippingRate): float|null
     {
-        // todo implements
-        $pExpeditions = $this->sage->sageGraphQl->getPExpeditions(
-            getError: true,
-        );
-        return 0;
+        $pExpeditions = $this->sage->sageGraphQl->getPExpeditions();
+        if (!is_array($pExpeditions)) {
+            return null;
+        }
+        $methodId = $wcShippingRate->get_method_id();
+        foreach ($pExpeditions as $pExpedition) {
+            if ($pExpedition->slug !== $methodId) {
+                continue;
+            }
+            if ($pExpedition->eTypeFrais === DocumentFraisTypeEnum::DocFraisTypeForfait->value) {
+                // use eValFrais
+                $t = 0;
+            } else {
+                // use grille
+                $t = 0;
+            }
+        }
+        return null;
     }
 }

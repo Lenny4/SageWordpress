@@ -201,6 +201,12 @@ final class SageGraphQl
         } catch (Throwable $throwable) {
             // todo store logs
             $message = $throwable->getMessage();
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                $message = json_encode([
+                    'message' => $message,
+                    'stackTrace' => $throwable->getTraceAsString(),
+                ], JSON_THROW_ON_ERROR);
+            }
             if ($getError) {
                 return $message;
             }
@@ -693,9 +699,16 @@ final class SageGraphQl
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                 'cbIndice',
+                'eTypeFrais', // Base de calcul (Montant forfaitaire, quantité DocumentFraisType) // Type des frais d'expédition
+                'eTypeCalcul', // Valeur, Grille frais fixe, grille frais variable)
+                'eValFrais', // valeur quand eTypeCalcul == 'Valeur'
+                'eTypeLigneFrais', // indique si le prix est en HT ou TTC (HT == 0)
             ]),
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['eIntitule']),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'eIntitule',
+            ]),
             'arRefNavigation' => $this->_getFArticleSelectionSet(),
+            'fExpeditiongrilles' => $this->_getFExpeditiongrilles(),
         ];
     }
 
@@ -737,6 +750,16 @@ final class SageGraphQl
                     'taxeNumber'
                 ]),
             ],
+        ];
+    }
+
+    private function _getFExpeditiongrilles(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'egBorne',
+                'egFrais',
+            ]),
         ];
     }
 

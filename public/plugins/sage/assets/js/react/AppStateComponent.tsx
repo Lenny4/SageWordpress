@@ -218,6 +218,7 @@ const AppStateComponent = () => {
                 }
               }
             } else {
+              // ping worked
               if ($(containerSelector).hasClass("notice-error")) {
                 $(containerSelector).addClass("hidden");
                 setErrorWebsocket(null);
