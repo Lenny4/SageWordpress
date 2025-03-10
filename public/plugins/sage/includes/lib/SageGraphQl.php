@@ -51,12 +51,18 @@ final class SageGraphQl
     private function ping(): void
     {
         $hostUrl = get_option(Sage::TOKEN . '_api_host_url');
+        $message = null;
         if (!is_string($hostUrl) || ($hostUrl === '' || $hostUrl === '0')) {
-            add_action('admin_notices', static function (): void {
+            $message = __("Veuillez renseigner l'host du serveur Sage.", 'sage');
+        } else if (filter_var($hostUrl, FILTER_VALIDATE_URL) === false) {
+            $message = __("L'host du serveur Sage n'est pas une url valide.", 'sage');
+        }
+        if (!is_null($message)) {
+            add_action('admin_notices', static function () use ($message): void {
                 ?>
                 <div class="notice notice-info">
                     <p>
-                        <?= __("Veuillez renseigner l'host du serveur Sage.", 'sage') ?>
+                        <?= $message ?>
                     </p>
                 </div>
                 <?php
@@ -739,16 +745,13 @@ final class SageGraphQl
                 'priceTtc',
             ]),
             'taxes' => [
-                ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
-                    'taIntitule',
-                    'taCode',
-                ]),
                 ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
-                    'amount'
+                    'amount',
                 ]),
                 ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
-                    'taxeNumber'
+                    'taxeNumber',
                 ]),
+                'fTaxe' => $this->_getFTaxeSelectionSet(),
             ],
         ];
     }
@@ -1215,10 +1218,14 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'taIntitule',
                 'taCode',
             ]),
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
                 'taTaux',
+            ]),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'taTtaux',
                 'taNp',
             ]),
         ];
