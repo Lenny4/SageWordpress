@@ -295,6 +295,12 @@ final class SageSettings
                     new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
                         return $sageWoocommerce->getMaxPrice($fArticle->prices);
                     }),
+                    new SageEntityMetadata(field: '_poids_net', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
+                        return $fArticle->arPoidsNet;
+                    }),
+                    new SageEntityMetadata(field: '_poids_brut', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
+                        return $fArticle->arPoidsBrut;
+                    }),
                     new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
                         return (new DateTime())->format('Y-m-d H:i:s');
                     }),

@@ -4,6 +4,8 @@ namespace App\lib;
 
 use App\class\SageEntityMenu;
 use App\enum\Sage\DocumentFraisTypeEnum;
+use App\enum\Sage\ETypeCalculEnum;
+use App\enum\Sage\TaxeTauxType;
 use App\Sage;
 use App\SageSettings;
 use App\Utils\FDocenteteUtils;
@@ -19,6 +21,7 @@ use WC_Order_Item_Product;
 use WC_Order_Item_Shipping;
 use WC_Order_Item_Tax;
 use WC_Product;
+use WC_Product_Simple;
 use WC_Shipping_Rate;
 use WP_Error;
 
@@ -1586,18 +1589,110 @@ WHERE meta_key = %s
             return null;
         }
         $methodId = $wcShippingRate->get_method_id();
-        foreach ($pExpeditions as $pExpedition) {
-            if ($pExpedition->slug !== $methodId) {
-                continue;
-            }
-            if ($pExpedition->eTypeFrais === DocumentFraisTypeEnum::DocFraisTypeForfait->value) {
-                // use eValFrais
-                $t = 0;
+        $pExpedition = current(array_filter($pExpeditions, static function ($pExpedition) use ($methodId) {
+            return $pExpedition->slug === $methodId;
+        }));
+        if ($pExpedition === false) {
+            return null;
+        }
+        $customer = $wcCart->get_customer();
+        $userMetaWordpress = get_user_meta($customer->get_id(), single: true); // todo check if $customer->get_id() is really the user id
+        $userNCatTarif = null;
+        $userNCatCompta = null;
+        if (isset($userMetaWordpress["_" . Sage::TOKEN . "_nCatTarif"][0])) {
+            $userNCatTarif = (int)$userMetaWordpress["_" . Sage::TOKEN . "_nCatTarif"][0];
+        }
+        if (isset($userMetaWordpress["_" . Sage::TOKEN . "_nCatCompta"][0])) {
+            $userNCatCompta = (int)$userMetaWordpress["_" . Sage::TOKEN . "_nCatCompta"][0];
+        }
+        $price = false;
+        if (!is_null($pExpedition->arRefNavigation)) {
+            $price = current(array_filter($pExpedition->arRefNavigation->prices, static function (stdClass $price) use ($userNCatTarif, $userNCatCompta) {
+                return $price->nCatTarif === $userNCatTarif && $price->nCatCompta === $userNCatCompta;
+            }));
+        }
+        $result = null;
+        $woocommerceShowTax = get_option('woocommerce_tax_display_cart') !== "excl"; // excl || incl
+        if ($pExpedition->eTypeCalcul === ETypeCalculEnum::Valeur->value) {
+            $result = $pExpedition->eValFrais;
+        } else {
+            // grille, in this case (DocFraisTypeForfait && DocFraisTypeColisage) cannot be selected in sage
+            if ($pExpedition->eTypeFrais === DocumentFraisTypeEnum::DocFraisTypeQuantite->value) {
+                $quantity = 0;
+                foreach ($wcCart->get_cart_contents() as $cartContent) {
+                    $quantity += $cartContent["quantity"];
+                }
+                $result = $this->findFraisExpeditionGrille($pExpedition, $quantity);
             } else {
-                // use grille
-                $t = 0;
+                $prop = '';
+                if ($pExpedition->eTypeFrais === DocumentFraisTypeEnum::DocFraisTypePoidsNet->value) {
+                    $prop = '_poids_net';
+                } else if ($pExpedition->eTypeFrais === DocumentFraisTypeEnum::DocFraisTypePoidsBrut->value) {
+                    $prop = '_poids_brut';
+                }
+                foreach ($wcCart->get_cart_contents() as $cartContent) {
+                    /** @var WC_Product_Simple $product */
+                    $product = $cartContent['data'];
+                    /** @var WC_Meta_Data[] $metaDatas */
+                    $metaDatas = $product->get_meta_data();
+                    foreach ($metaDatas as $metaData) {
+                        $data = $metaData->get_data();
+                        if ($data["key"] === '_' . Sage::TOKEN . $prop) {
+                            $result = $this->findFraisExpeditionGrille($pExpedition, (float)$metaData->get_data()['value']);
+                            break;
+                        }
+                    }
+                }
             }
         }
-        return null;
+        $isTtc = (bool)$pExpedition->eTypeLigneFrais;
+        if ($price !== false) {
+            if ($woocommerceShowTax && !$isTtc) {
+                $result = $this->applyTaxes($result, $price, true);
+            } elseif (!$woocommerceShowTax && $isTtc) {
+                $result = $this->applyTaxes($result, $price, false);
+            }
+        }
+        return $result;
+    }
+
+    private function findFraisExpeditionGrille(stdClass $pExpedition, float $borne): float
+    {
+        $frais = 0;
+        $lastBorne = 0;
+        foreach ($pExpedition->fExpeditiongrilles as $fExpeditiongrille) {
+            if ($fExpeditiongrille->egBorne > $lastBorne && $borne <= $fExpeditiongrille->egBorne) {
+                $lastBorne = $fExpeditiongrille->egBorne;
+                $frais = $fExpeditiongrille->egFrais;
+            }
+        }
+        return $frais;
+    }
+
+    /**
+     * Copy paste of applyTaxes of the sage api
+     */
+    private function applyTaxes(float $value, stdClass $price, bool $addOrRemove): float|null
+    {
+        $initPrice = $value;
+        foreach ($price->taxes as $taxe) {
+            if ($taxe->fTaxe->taNp !== 0) {
+                continue;
+            }
+            if ($taxe->fTaxe->taTtaux === TaxeTauxType::TaxeTauxTypePourcent->value) {
+                if ($addOrRemove) {
+                    $amount = round(($initPrice * $taxe->fTaxe->taTaux)) / 100;
+                } else {
+                    $amount = (round(($initPrice / (100 + $taxe->fTaxe->taTaux))) * 100) - $initPrice;
+                }
+            } else {
+                $amount = $taxe->fTaxe->taTaux;
+                if (!$addOrRemove) {
+                    $amount = -$amount;
+                }
+            }
+            $value += $amount;
+        }
+        return $value;
     }
 }

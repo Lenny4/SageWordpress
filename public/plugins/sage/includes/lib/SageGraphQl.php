@@ -662,6 +662,9 @@ final class SageGraphQl
         bool  $ignorePingApi = false
     ): array|null|string
     {
+//        $this->pExpeditions = null;
+//        $useCache = false;
+//        $getFromSage = true;
         if (!is_null($this->pExpeditions)) {
             return $this->pExpeditions;
         }
@@ -726,6 +729,7 @@ final class SageGraphQl
             ];
         }
         return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['arPoidsNet', 'arPoidsBrut']),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['arRef', 'arDesign']),
             'prices' => [
                 ...$this->_getPriceSelectionSet(),
@@ -753,6 +757,23 @@ final class SageGraphQl
                 ]),
                 'fTaxe' => $this->_getFTaxeSelectionSet(),
             ],
+        ];
+    }
+
+    private function _getFTaxeSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'taIntitule',
+                'taCode',
+            ]),
+            ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
+                'taTaux',
+            ]),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'taTtaux',
+                'taNp',
+            ]),
         ];
     }
 
@@ -1212,23 +1233,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $ignorePingApi
         );
         return $this->fTaxes;
-    }
-
-    private function _getFTaxeSelectionSet(): array
-    {
-        return [
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
-                'taIntitule',
-                'taCode',
-            ]),
-            ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
-                'taTaux',
-            ]),
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
-                'taTtaux',
-                'taNp',
-            ]),
-        ];
     }
 
     public function getPCatComptas(

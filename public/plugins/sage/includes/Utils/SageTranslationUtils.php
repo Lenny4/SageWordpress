@@ -497,6 +497,8 @@ final class SageTranslationUtils
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_prices' => __("Prices", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_max_price' => __("Prix max", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId' => __("Wordpress ID", 'sage'),
+                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_poids_net' => __("Poids net", 'sage'),
+                SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_poids_brut' => __("Poids brut", 'sage'),
             ],
             'words' => [
                 'contains' => __("Contient", 'sage'),
