@@ -21,7 +21,7 @@ final class SageTranslationUtils
     {
         return [
             self::TRANS_FCOMPTETS => [
-                "ctNum" => __("Numéro de compte", 'sage'),
+                "ctNum" => __("Numéro de compte Sage", 'sage'),
                 "ctIntitule" => __("Intitulé du tiers", 'sage'),
                 "ctType" => __("Type de tiers", 'sage'),
                 "cgNumPrinc" => __("cgNumPrinc", 'sage'),
@@ -164,7 +164,7 @@ final class SageTranslationUtils
                 "calNo" => __("calNo", 'sage'),
                 "cbCalNo" => __("cbCalNo", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update' => __("Dernière synchronisation dans Wordpress", 'sage'),
-                SageSettings::PREFIX_META_DATA . Sage::META_KEY_CT_NUM => __("Numéro de compte", 'sage'),
+                SageSettings::PREFIX_META_DATA . Sage::META_KEY_CT_NUM => __("Numéro de compte Sage", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_nCatTarif' => __("Catégorie de tarif", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_nCatCompta' => __("Catégorie comptable", 'sage'),
                 SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId' => __("Wordpress ID", 'sage'),

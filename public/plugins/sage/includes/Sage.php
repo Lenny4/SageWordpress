@@ -199,12 +199,8 @@ final class Sage
                 });
             }
         });
-
         // region link wordpress user to sage user
-        add_action('show_user_profile', function (WP_User $user): void {
-            $this->addCustomerMetaFields($user);
-        });
-        add_action('edit_user_profile', function (WP_User $user): void {
+        add_action('personal_options', function (WP_User $user): void {
             $this->addCustomerMetaFields($user);
         });
 
@@ -920,11 +916,35 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         }
     }
 
-    public function addCustomerMetaFields(WP_User $user): void
+    public function addCustomerMetaFields(?WP_User $user = null): void
     {
+        $ctNum = null;
+        $userMetaWordpress = null;
+        $nCatTarifLabel = null;
+        $nCatComptaLabel = null;
+        if ($user) {
+            $ctNum = $this->getUserWordpressIdForSage($user->ID);
+            $userMetaWordpress = get_user_meta($user->ID);
+            $pCattarifs = $this->sageGraphQl->getPCattarifs();
+            $pCatComptas = $this->sageGraphQl->getPCatComptas();
+            if (
+                isset($userMetaWordpress["_" . self::TOKEN . "_nCatTarif"][0]) &&
+                array_key_exists($userMetaWordpress["_" . self::TOKEN . "_nCatTarif"][0], $pCattarifs)
+            ) {
+                $nCatTarifLabel = $pCattarifs[$userMetaWordpress["_" . self::TOKEN . "_nCatTarif"][0]]->ctIntitule;
+            }
+            if (
+                isset($userMetaWordpress["_" . self::TOKEN . "_nCatCompta"][0]) &&
+                array_key_exists($userMetaWordpress["_" . self::TOKEN . "_nCatCompta"][0], $pCattarifs)
+            ) {
+                $nCatComptaLabel = $pCatComptas["Ven"][$userMetaWordpress["_" . self::TOKEN . "_nCatCompta"][0]]->label;
+            }
+        }
         echo $this->twig->render('user/formMetaFields.html.twig', [
             'user' => $user,
-            'ctNum' => $this->getUserWordpressIdForSage($user->ID),
+            'ctNum' => $ctNum,
+            'nCatTarifLabel' => $nCatTarifLabel,
+            'nCatComptaLabel' => $nCatComptaLabel,
         ]);
     }
 

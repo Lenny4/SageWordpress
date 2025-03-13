@@ -535,8 +535,8 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $new->taxes = [];
         if (!is_null($fDocentete->fraisExpedition->taxes)) {
             foreach ($fDocentete->fraisExpedition->taxes as $taxe) {
-                $taxeCodes[] = $taxe->taCode;
-                $new->taxes[$taxe->taxeNumber] = ['code' => $taxe->taCode, 'amount' => (float)$taxe->amount];
+                $taxeCodes[] = $taxe->fTaxe->taCode;
+                $new->taxes[$taxe->taxeNumber] = ['code' => $taxe->fTaxe->taCode, 'amount' => (float)$taxe->amount];
             }
         }
         // endregion
@@ -1683,7 +1683,7 @@ WHERE meta_key = %s
                 if ($addOrRemove) {
                     $amount = round(($initPrice * $taxe->fTaxe->taTaux)) / 100;
                 } else {
-                    $amount = (round(($initPrice / (100 + $taxe->fTaxe->taTaux))) * 100) - $initPrice;
+                    $amount = (round($initPrice / (100 + $taxe->fTaxe->taTaux)) * 100) - $initPrice;
                 }
             } else {
                 $amount = $taxe->fTaxe->taTaux;

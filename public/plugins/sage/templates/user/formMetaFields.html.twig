@@ -1,23 +1,51 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-  <h2>{{ 'Sage' | trans }}</h2>
+  <tr>
+    <th style="padding:0">
+      <h2>{{ 'Sage' | trans }}</h2>
+    </th>
+  </tr>
   {% if ctNum %}
-    {{ allTranslations['fComptets']['ctNum'] }}: <strong>{{ ctNum }}</strong>
+    <tr>
+      <th>
+        <label>{{ allTranslations['fComptets']['ctNum'] }}</label>
+      </th>
+      <td>
+        <strong>{{ ctNum }}</strong>
+      </td>
+    </tr>
   {% else %}
-    <table class="form-table" id="fieldset-sage">
-      <tbody>
-      <tr>
-        <th>
-          <label for="_sage_ctNum">{{ allTranslations['fComptets']['ctNum'] }}</label>
-        </th>
-        <td>
-          <input type="text" name="_sage_ctNum" id="_sage_ctNum" value="" class="regular-text">
-          <p class="description">
-            {{ 'Une fois défini vous ne pourrez plus modifier le numéro de compte Sage de ' | trans }}{{ user.display_name }}
-          </p>
-        </td>
-      </tr>
-      </tbody>
-    </table>
+    <tr>
+      <th><label for="_sage_ctNum">{{ allTranslations['fComptets']['ctNum'] }}</label></th>
+      <td>
+        <input type="text" name="_sage_ctNum" id="_sage_ctNum" value="" class="regular-text">
+        {% if user != null %}
+          <span class="description">
+          {{ 'Une fois défini vous ne pourrez plus modifier le numéro de compte Sage de ' | trans }}
+            {{ user.display_name }}
+          </span>
+        {% endif %}
+      </td>
+    </tr>
+  {% endif %}
+  {% if nCatTarifLabel != null %}
+    <tr>
+      <th>
+        <label>{{ 'Catégorie tarifaire'|trans }}</label>
+      </th>
+      <td>
+        {{ nCatTarifLabel }}
+      </td>
+    </tr>
+  {% endif %}
+  {% if nCatComptaLabel != null %}
+    <tr>
+      <th>
+        <label>{{ 'Catégorie comptable'|trans }}</label>
+      </th>
+      <td>
+        {{ nCatComptaLabel }}
+      </td>
+    </tr>
   {% endif %}
 {% endblock %}
