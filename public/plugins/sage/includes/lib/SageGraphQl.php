@@ -1135,7 +1135,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             "per_page" => "100"
         ];
         $selectionSets = $this->_getPCattarifSelectionSet();
-        $temp = $this->getEntitiesAndSaveInOption(
+        $pCattarifs = $this->getEntitiesAndSaveInOption(
             $cacheName,
             $getFromSage,
             $entityName,
@@ -1145,12 +1145,12 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $ignorePingApi
         );
         $this->pCattarifs = [];
-        if (is_array($temp)) {
-            foreach ($temp as $pCattarif) {
+        if (is_array($pCattarifs)) {
+            foreach ($pCattarifs as $pCattarif) {
                 $this->pCattarifs[$pCattarif->cbIndice] = $pCattarif;
             }
         } else {
-            $this->pCattarifs = $temp;
+            $this->pCattarifs = $pCattarifs;
         }
         return $this->pCattarifs;
     }

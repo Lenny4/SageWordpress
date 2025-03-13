@@ -2,6 +2,7 @@ import "../css/admin.scss";
 import tippy from "tippy.js";
 import "jquery-blockui";
 import "./react/AppStateComponent";
+import "./react/UserComponent";
 import { getTranslations } from "./functions/translations"; // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 
 // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)

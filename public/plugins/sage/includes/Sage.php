@@ -203,6 +203,9 @@ final class Sage
         add_action('personal_options', function (WP_User $user): void {
             $this->addCustomerMetaFields($user);
         });
+        add_action('user_new_form', function (): void {
+            $this->addCustomerMetaFields();
+        });
 
         add_action('personal_options_update', function (int $userId): void {
             $this->saveCustomerMetaFields($userId);
@@ -793,6 +796,29 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
+            register_rest_route(Sage::TOKEN . '/v1', '/user/(?P<ctNum>([^&]*))', [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($sageGraphQl) {
+                    $ctNum = $request['ctNum'];
+                    $fComptet = $sageGraphQl->getFComptet($ctNum, ignorePingApi: true);
+                    $user = get_users([
+                        'meta_key' => Sage::META_KEY_CT_NUM,
+                        'meta_value' => strtoupper($ctNum)
+                    ]);
+                    if (!empty($user)) {
+                        $user = $user[0];
+                    } else {
+                        $user = null;
+                    }
+                    return new WP_REST_Response([
+                        'fComptet' => $fComptet,
+                        'user' => $user,
+                    ], 200);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
         });
         // endregion
 
@@ -918,39 +944,18 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
 
     public function addCustomerMetaFields(?WP_User $user = null): void
     {
-        $ctNum = null;
+        $pCattarifs = $this->sageGraphQl->getPCattarifs();
+        $pCatComptas = $this->sageGraphQl->getPCatComptas();
         $userMetaWordpress = null;
-        $nCatTarifLabel = null;
-        $nCatComptaLabel = null;
         if ($user) {
-            $ctNum = $this->getUserWordpressIdForSage($user->ID);
             $userMetaWordpress = get_user_meta($user->ID);
-            $pCattarifs = $this->sageGraphQl->getPCattarifs();
-            $pCatComptas = $this->sageGraphQl->getPCatComptas();
-            if (
-                isset($userMetaWordpress["_" . self::TOKEN . "_nCatTarif"][0]) &&
-                array_key_exists($userMetaWordpress["_" . self::TOKEN . "_nCatTarif"][0], $pCattarifs)
-            ) {
-                $nCatTarifLabel = $pCattarifs[$userMetaWordpress["_" . self::TOKEN . "_nCatTarif"][0]]->ctIntitule;
-            }
-            if (
-                isset($userMetaWordpress["_" . self::TOKEN . "_nCatCompta"][0]) &&
-                array_key_exists($userMetaWordpress["_" . self::TOKEN . "_nCatCompta"][0], $pCattarifs)
-            ) {
-                $nCatComptaLabel = $pCatComptas["Ven"][$userMetaWordpress["_" . self::TOKEN . "_nCatCompta"][0]]->label;
-            }
         }
         echo $this->twig->render('user/formMetaFields.html.twig', [
             'user' => $user,
-            'ctNum' => $ctNum,
-            'nCatTarifLabel' => $nCatTarifLabel,
-            'nCatComptaLabel' => $nCatComptaLabel,
+            'userMetaWordpress' => $userMetaWordpress,
+            'pCattarifs' => $pCattarifs,
+            'pCatComptas' => $pCatComptas,
         ]);
-    }
-
-    public function getUserWordpressIdForSage(int $userId)
-    {
-        return get_user_meta($userId, self::META_KEY_CT_NUM, true);
     }
 
     public function saveCustomerMetaFields(int $userId): void
@@ -1154,8 +1159,6 @@ WHERE meta_key = %s
         return ['', ''];
     }
 
-    // https://stackoverflow.com/a/31330346/6824121
-
     public static function createAddressWithFComptet(StdClass $fComptet): StdClass
     {
         $r = new StdClass();
@@ -1175,6 +1178,8 @@ WHERE meta_key = %s
         return $r;
     }
 
+    // https://stackoverflow.com/a/31330346/6824121
+
     public static function showErrors(array|null|string $data): bool
     {
         if (is_string($data) || is_null($data)) {
@@ -1186,6 +1191,11 @@ WHERE meta_key = %s
             return true;
         }
         return false;
+    }
+
+    public function getUserWordpressIdForSage(int $userId)
+    {
+        return get_user_meta($userId, self::META_KEY_CT_NUM, true);
     }
 
     public function getAvailableUserName(string $ctNum): string

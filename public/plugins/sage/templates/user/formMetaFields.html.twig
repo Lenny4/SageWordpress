@@ -1,51 +1,8 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-  <tr>
-    <th style="padding:0">
-      <h2>{{ 'Sage' | trans }}</h2>
-    </th>
-  </tr>
-  {% if ctNum %}
-    <tr>
-      <th>
-        <label>{{ allTranslations['fComptets']['ctNum'] }}</label>
-      </th>
-      <td>
-        <strong>{{ ctNum }}</strong>
-      </td>
-    </tr>
-  {% else %}
-    <tr>
-      <th><label for="_sage_ctNum">{{ allTranslations['fComptets']['ctNum'] }}</label></th>
-      <td>
-        <input type="text" name="_sage_ctNum" id="_sage_ctNum" value="" class="regular-text">
-        {% if user != null %}
-          <span class="description">
-          {{ 'Une fois défini vous ne pourrez plus modifier le numéro de compte Sage de ' | trans }}
-            {{ user.display_name }}
-          </span>
-        {% endif %}
-      </td>
-    </tr>
-  {% endif %}
-  {% if nCatTarifLabel != null %}
-    <tr>
-      <th>
-        <label>{{ 'Catégorie tarifaire'|trans }}</label>
-      </th>
-      <td>
-        {{ nCatTarifLabel }}
-      </td>
-    </tr>
-  {% endif %}
-  {% if nCatComptaLabel != null %}
-    <tr>
-      <th>
-        <label>{{ 'Catégorie comptable'|trans }}</label>
-      </th>
-      <td>
-        {{ nCatComptaLabel }}
-      </td>
-    </tr>
-  {% endif %}
+  <div data-sage-user="{{ user|json_encode }}"></div>
+  <div data-sage-user-meta-wordpress="{{ userMetaWordpress|json_encode }}"></div>
+  <div data-sage-pcattarifs="{{ pCattarifs|json_encode }}"></div>
+  <div data-sage-pcatcomptas="{{ pCatComptas|json_encode }}"></div>
+  <div id="sage_user"></div>
 {% endblock %}
