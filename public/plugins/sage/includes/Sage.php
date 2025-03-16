@@ -13,6 +13,7 @@ use App\lib\SageWoocommerce;
 use App\Utils\FDocenteteUtils;
 use App\Utils\SageTranslationUtils;
 use Automattic\WooCommerce\Admin\Overrides\Order;
+use DateTime;
 use StdClass;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Filesystem\Filesystem;
@@ -206,20 +207,12 @@ final class Sage
         add_action('user_new_form', function (): void {
             $this->addCustomerMetaFields();
         });
-
-        add_action('personal_options_update', function (int $userId): void {
-            $this->saveCustomerMetaFields($userId);
-        });
-        add_action('edit_user_profile_update', function (int $userId): void {
-            $this->saveCustomerMetaFields($userId);
-        });
-
-        add_action('user_register', function (int $userId, array $userdata): void {
-            $autoCreateSageAccount = (bool)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet');
-            if ($autoCreateSageAccount) {
-                $this->createUserSage($userId, $userdata);
-            }
-        }, accepted_args: 2);
+        add_action('profile_update', function (int $userId) {
+            $this->saveCustomerUserMetaFields($userId);
+        }, accepted_args: 1);
+        add_action('user_register', function (int $userId) {
+            $this->saveCustomerUserMetaFields($userId);
+        }, accepted_args: 1);
         // endregion
 
         $this->sageGraphQl = SageGraphQl::instance($this);
@@ -958,36 +951,91 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         ]);
     }
 
-    public function saveCustomerMetaFields(int $userId): void
+    /**
+     * Create FComptet or update it according to $_POST
+     */
+    public function saveCustomerUserMetaFields(?int $userId): void
     {
-        $queryParam = self::META_KEY_CT_NUM;
-        if (!array_key_exists($queryParam, $_POST)) {
+        $inSage = (bool)get_option(self::TOKEN . '_auto_create_sage_fcomptet');
+        $ctNum = null;
+        $newFComptet = false;
+        foreach ($_POST as $key => $value) {
+            if (str_starts_with($key, '_' . self::TOKEN)) {
+                if ($key === '_' . self::TOKEN . '_creationType') {
+                    if ($value === 'new') {
+                        $newFComptet = true;
+                    } else if ($value === 'none') {
+                        $inSage = false;
+                    }
+                }
+                if ($key === self::META_KEY_CT_NUM) {
+                    $value = strtoupper($value);
+                    $ctNum = $value;
+                }
+                update_user_meta($userId, $key, $value);
+            }
+        }
+        if (!$inSage) {
             return;
         }
-        if ($_POST[$queryParam]) {
-            [$userId, $message] = $this->importUserFromSage($_POST[$queryParam], $userId);
-            if ($message) {
-                $redirect = add_query_arg(self::TOKEN . '_message', urlencode($message), wp_get_referer());
-                wp_redirect($redirect);
-                exit;
-            }
+        update_user_meta($userId, '_' . self::TOKEN . '_updateApi', new DateTime());
+        [$userId, $message] = $this->updateUserOrFComptet($ctNum, $userId, newFComptet: $newFComptet);
+        if ($message) {
+            $redirect = add_query_arg(self::TOKEN . '_message', urlencode($message), wp_get_referer());
+            wp_redirect($redirect);
+            exit;
         }
     }
 
-    public function importUserFromSage(
-        string    $ctNum,
-        ?int      $shouldBeUserId = null,
-        ?stdClass $fComptet = null,
-        bool      $ignorePingApi = false
+    /**
+     * If fComptet is more up to date than user -> update user in wordpress
+     * If user is more up to date than fComptet -> update fComptet in sage
+     */
+    public function updateUserOrFComptet(
+        ?string              $ctNum,
+        ?int                 $shouldBeUserId = null,
+        stdClass|string|null $fComptet = null,
+        bool                 $ignorePingApi = false,
+        bool                 $newFComptet = false,
     ): array
     {
-        if (is_null($fComptet)) {
+        if (is_null($ctNum) && !$newFComptet) {
+            return [null, "<div class='error'>
+                    " . __("Vous devez spécifier le numéro de compte Sage", 'sage') . "
+                            </div>"];
+        }
+        if (is_null($fComptet) && !is_null($ctNum)) {
+            $ctNum = str_replace(' ', '', strtoupper($ctNum));
             $fComptet = $this->sageGraphQl->getFComptet($ctNum, ignorePingApi: $ignorePingApi);
         }
+        if ($newFComptet) {
+            if (!is_null($fComptet)) {
+                return [null, "<div class='error'>
+                    " . __("Vous essayez de créer compte Sage qui existe déjà (" . $ctNum . ")", 'sage') . "
+                            </div>"];
+            }
+            if (is_null($shouldBeUserId)) {
+                return [null, "<div class='error'>
+                    " . __("Vous devez spécifier l'id compte Wordpress", 'sage') . "
+                            </div>"];
+            }
+            $fComptet = $this->sageGraphQl->createFComptet(
+                userId: $shouldBeUserId,
+                ctNum: $ctNum,
+                getError: true,
+            );
+            if (is_string($fComptet)) {
+                return [null, $fComptet];
+            }
+        }
         if (is_null($fComptet)) {
+            $word = 'importé';
+            if ($newFComptet) {
+                $word = 'crée';
+            }
             return [null, "<div class='error'>
-                        " . __("Le compte Sage n'a pas pu être importé", 'sage') . "
-                                </div>"];
+                    " . __("Le compte Sage n'a pas pu être " . $word, 'sage') . "
+                            </div>"];
         }
         $ctNum = $fComptet->ctNum;
         $userId = $this->getUserIdWithCtNum($ctNum);
@@ -1000,16 +1048,16 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                                 </div>"];
             }
         }
-        [$userId, $user] = $this->sageWoocommerce->convertSageUserToWoocommerce(
+        [$userId, $userFromSage, $metadata] = $this->sageWoocommerce->convertSageUserToWoocommerce(
             $fComptet,
             $userId,
         );
-        if (is_string($user)) {
-            return [null, $user];
+        if (is_string($userFromSage)) {
+            return [null, $userFromSage];
         }
         $newUser = is_null($userId);
         if ($newUser) {
-            $userId = wp_create_user($user["username"], $user["password"], $user["email"]);
+            $userId = wp_create_user($userFromSage->user_login, $userFromSage->user_pass, $userFromSage->user_email);
         }
         if ($userId instanceof WP_Error) {
             return [null, "<div class='notice notice-error is-dismissible'>
@@ -1017,9 +1065,27 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                                 <pre>" . $userId->get_error_message() . "</pre>
                                 </div>"];
         }
-        wp_update_user(['ID' => $userId, ...$user]);
-        foreach ($user["meta"] as $key => $value) {
-            update_user_meta($userId, $key, $value);
+        $updateWordpress = empty(get_user_meta($userId, '_' . self::TOKEN . '_updateApi', true));
+        if ($updateWordpress) {
+            $wpUser = new WP_User($userId);
+            if ($wpUser !== $userFromSage) {
+                wp_update_user($userFromSage);
+            }
+            foreach ($metadata as $key => $value) {
+                update_user_meta($userId, $key, $value);
+            }
+        } else {
+            if (!$newFComptet) { // no need update fComptet as sageGraphQl->createFComptet already update fComptet
+                $fComptet = $this->sageGraphQl->updateFComptetFromWebsite(
+                    ctNum: $ctNum,
+                    getError: true,
+                );
+                if (is_string($fComptet)) {
+                    return [null, $fComptet];
+                }
+            }
+            // no need because it's done directly by Sage Api
+            // update_user_meta($userId, '_' . self::TOKEN . '_updateApi', null);
         }
 
         $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "user-edit.php?user_id=" . $userId . "'>" . __("Voir l'utilisateur", 'sage') . "</a></span></strong>";
@@ -1047,34 +1113,6 @@ WHERE meta_key = %s
             return (int)$r[0]->user_id;
         }
         return null;
-    }
-
-    public function createUserSage(int $userId, array $userdata): void
-    {
-        $userMetaProp = SageSettings::PREFIX_META_DATA;
-        if (
-            array_key_exists($userMetaProp, $userdata) &&
-            array_key_exists(self::META_KEY_CT_NUM, $userdata[$userMetaProp])
-        ) {
-            return;
-        }
-        $ctIntitule = '';
-        if (array_key_exists('first_name', $userdata) && array_key_exists('last_name', $userdata)) {
-            $ctIntitule = trim(explode(' ', $userdata['first_name'])[0] . ' ' . $userdata['last_name']);
-        }
-        if ($ctIntitule === '') {
-            $ctIntitule = $userdata['user_login'];
-        }
-        $fComptet = $this->sageGraphQl->createFComptet(
-            ctIntitule: $ctIntitule,
-            ctEmail: $userdata['user_email'],
-            autoGenerateCtNum: true,
-        );
-        if (is_null($fComptet)) {
-            // todo if can't be created register to create it later
-        } else {
-            $this->importUserFromSage($fComptet->ctNum, $userId, $fComptet);
-        }
     }
 
     /**
@@ -1177,8 +1215,6 @@ WHERE meta_key = %s
         $r->liAdresseFact = 0;
         return $r;
     }
-
-    // https://stackoverflow.com/a/31330346/6824121
 
     public static function showErrors(array|null|string $data): bool
     {

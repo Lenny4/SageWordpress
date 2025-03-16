@@ -24,6 +24,7 @@ use WC_Product;
 use WC_Product_Simple;
 use WC_Shipping_Rate;
 use WP_Error;
+use WP_User;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -707,7 +708,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     {
         $userChanges = [];
         $userMetaWordpress = get_user_meta($userId);
-        [$userId, $userSage] = $this->convertSageUserToWoocommerce($fComptet, userId: $userId);
+        [$userId, $userFromSage, $metadata] = $this->convertSageUserToWoocommerce($fComptet, userId: $userId);
         foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
             $old = new stdClass();
             $new = new stdClass();
@@ -717,7 +718,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     $fields[] = $key;
                 }
             }
-            foreach ($userSage["meta"] as $key => $value) {
+            foreach ($metadata as $key => $value) {
                 if (str_starts_with($key, $addressType)) {
                     $fields[] = $key;
                 }
@@ -726,14 +727,14 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             foreach ($fields as $field) {
                 if (
                     !array_key_exists($field, $userMetaWordpress) ||
-                    $userMetaWordpress[$field][0] !== $userSage["meta"][$field]
+                    $userMetaWordpress[$field][0] !== $metadata[$field]
                 ) {
                     if (array_key_exists($field, $userMetaWordpress)) {
                         $old->{$field} = $userMetaWordpress[$field][0];
                     } else {
                         $old->{$field} = null;
                     }
-                    $new->{$field} = $userSage["meta"][$field];
+                    $new->{$field} = $metadata[$field];
                 }
             }
             if ((array)$new !== []) {
@@ -765,7 +766,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 return "<div class=error>" . __('This email address [' . $email . '] is already registered for user id: ' . $mailExistsUserId . '.', 'woocommerce') . "</div>";
             }
             $userId = $mailExistsUserId;
-            $this->sage->importUserFromSage($ctNum, $userId, $fComptet);
+            $this->sage->updateUserOrFComptet($ctNum, $userId, $fComptet);
         }
         $fComptetAddress = Sage::createAddressWithFComptet($fComptet);
         $address = [];
@@ -820,19 +821,18 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $fComptet->ctIntitule,
             $fComptet->ctContact
         );
-        $result = [
-            'name' => Sage::getName(intitule: $fComptet->ctIntitule, contact: $fComptet->ctContact), // Display name for the user
-            'first_name' => $firstName, // First name for the user
-            'last_name' => $lastName, // Last name for the user
-            'email' => $email, // The email address for the user
-            'meta' => $meta,
-        ];
+        $wpUser = new WP_User($userId ?? 0);
+        $wpUser->display_name = Sage::getName(intitule: $fComptet->ctIntitule, contact: $fComptet->ctContact);
+        $wpUser->first_name = $firstName;
+        $wpUser->last_name = $lastName;
+        $wpUser->user_email = $email;
+
         if (is_null($userId)) {
-            $result['username'] = $this->sage->getAvailableUserName($fComptet->ctNum);
-            $result['password'] = bin2hex(random_bytes(5));
+            $wpUser->user_login = $this->sage->getAvailableUserName($fComptet->ctNum);
+            $wpUser->user_pass = bin2hex(random_bytes(5));
         }
 
-        return [$userId, $result];
+        return [$userId, $wpUser, $meta];
     }
 
     private function getOrderAddressTypeChanges(WC_Order $order, stdClass $fComptet, stdClass $fLivraison): array
@@ -1353,7 +1353,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $message = '';
         $userId = $new->userId;
         if (is_null($userId)) {
-            [$userId, $message] = $this->sage->importUserFromSage($new->ctNum, ignorePingApi: true);
+            [$userId, $message] = $this->sage->updateUserOrFComptet($new->ctNum, ignorePingApi: true);
             if (!is_numeric($userId)) {
                 return $message;
             }

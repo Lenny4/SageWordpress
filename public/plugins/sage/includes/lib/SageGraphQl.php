@@ -245,30 +245,42 @@ final class SageGraphQl
     }
 
     public function createFComptet(
-        string  $ctIntitule,
-        string  $ctEmail,
+        int     $userId,
         ?string $ctNum = null,
-        ?bool   $autoGenerateCtNum = null,
-    ): StdClass|null
+        bool    $getError = false,
+    ): StdClass|null|string
     {
+        $autoGenerateCtNum = is_null($ctNum);
+        $user = get_user_by('id', $userId);
+        $userMetaWordpress = get_user_meta($userId);
+        $ctEmail = $user->user_email;
+        $ctIntitule = '';
+        if (isset($userMetaWordpress['first_name'][0])) {
+            $ctIntitule = trim($userMetaWordpress['first_name'][0]);
+        }
+        if (isset($userMetaWordpress['last_name'][0])) {
+            $ctIntitule = trim($userMetaWordpress['first_name'][0]);
+        }
+        if ($ctIntitule === '') {
+            $ctIntitule = $user->data->user_login;
+        }
         $arguments = [
             'ctIntitule' => new RawObject('"' . $ctIntitule . '"'),
             'ctEmail' => new RawObject('"' . $ctEmail . '"'),
+            'websiteId' => new RawObject('"' . get_option(Sage::TOKEN . '_website_id') . '"'),
         ];
         if (!is_null($ctNum)) {
             $arguments['ctNum'] = new RawObject('"' . $ctNum . '"');
         }
-        if (!is_null($autoGenerateCtNum)) {
-            $arguments['autoGenerateCtNum'] = new RawObject($autoGenerateCtNum ? 'true' : 'false');
-        }
+        $arguments['autoGenerateCtNum'] = new RawObject($autoGenerateCtNum ? 'true' : 'false');
         $query = (new Mutation('createFComptet'))
             ->setArguments($arguments)
             ->setSelectionSet($this->formatSelectionSet($this->_getFComptetSelectionSet()));
-        $result = $this->runQuery($query);
+        $result = $this->runQuery($query, $getError);
         if (!is_null($result) && !is_string($result)) {
             return $result->data->createFComptet;
         }
-        return null;
+        return $result;
     }
 
     private function formatSelectionSet(array $selectionSets): array
@@ -1296,6 +1308,25 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                     }, range(1, PCatComptaUtils::NB_TIERS_TYPE)),
                 ]),
             ];
+        }
+        return $result;
+    }
+
+    public function updateFComptetFromWebsite(
+        string $ctNum,
+        bool   $getError = false,
+    ): StdClass|null|string
+    {
+        $arguments = [
+            'ctNum' => new RawObject('"' . $ctNum . '"'),
+            'websiteId' => new RawObject('"' . get_option(Sage::TOKEN . '_website_id') . '"'),
+        ];
+        $query = (new Mutation('updateFComptetFromWebsite'))
+            ->setArguments($arguments)
+            ->setSelectionSet($this->formatSelectionSet($this->_getFComptetSelectionSet()));
+        $result = $this->runQuery($query, $getError);
+        if (!is_null($result) && !is_string($result)) {
+            return $result->data->updateFComptetFromWebsite;
         }
         return $result;
     }

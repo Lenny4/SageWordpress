@@ -8,6 +8,10 @@ import notEmptyValidator from "../functions/form";
 const containerSelector = "#sage_user";
 const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
 const wpnonce = $("[data-sage-nonce]").attr("data-sage-nonce");
+const autoCreateSageFcomptet =
+  $("[data-sage-auto-create-sage-fcomptet]").attr(
+    "data-sage-auto-create-sage-fcomptet",
+  ) === "on";
 let translations: any = getTranslations();
 let currentCtNumSearch = "";
 const user = JSON.parse($("[data-sage-user]").attr("data-sage-user") ?? "null");
@@ -29,112 +33,55 @@ interface FormState {
 }
 
 interface FormState2 {
-  nCatTarif: InputInterface;
-}
-
-interface FormState3 {
-  nCatCompta: InputInterface;
+  nCompta: InputInterface;
 }
 
 interface State {
   fComptet: any | undefined;
+  prop: string;
+  field: string;
+  list: any;
 }
 
-const UserNCatComptasComponent: React.FC<State> = ({ fComptet }) => {
-  const getDefaultValue = React.useCallback((): FormState3 => {
-    let nCatCompta = "";
-    if (fComptet) {
-      nCatCompta = fComptet.nCatCompta.toString();
-    } else {
-      for (const key in pCatComptas) {
-        nCatCompta = pCatComptas[key].cbIndice;
-        break;
-      }
-    }
-    return {
-      nCatCompta: { value: nCatCompta },
-    };
-  }, []);
-  const [values, setValues] = React.useState<FormState3>(getDefaultValue());
-  const handleChangeSelect =
-    (prop: keyof FormState3) => (event: ChangeEvent<HTMLSelectElement>) => {
-      setValues((v) => {
-        return {
-          ...v,
-          [prop]: {
-            ...v[prop],
-            value: event.target.value as string,
-            error: "",
-          },
-        };
-      });
-    };
-
-  let labelSage = "";
-  if (fComptet) {
-    for (const key in pCatComptas) {
-      if (pCatComptas[key].cbIndice === fComptet.nCatCompta) {
-        labelSage = pCatComptas[key].label;
-        break;
-      }
-    }
+const getMetadataValue = (prop: string, ignoreCase: boolean = true): string => {
+  let v = "";
+  prop = "_sage_" + prop;
+  if (userMetaWordpress?.[prop] && userMetaWordpress?.[prop].length > 0) {
+    v = userMetaWordpress?.[prop][0];
   }
-  return (
-    <tr>
-      <th>
-        <label htmlFor="_sage_nCatCompta">Catégorie comptable</label>
-      </th>
-      <td>
-        <select
-          name="_sage_nCatCompta"
-          id="_sage_nCatCompta"
-          value={values.nCatCompta.value}
-          onChange={handleChangeSelect("nCatCompta")}
-        >
-          {Object.entries(pCatComptas).map((data) => {
-            const pCatCompta: any = data[1];
-            return (
-              <option key={pCatCompta.cbIndice} value={pCatCompta.cbIndice}>
-                {pCatCompta.label}
-              </option>
-            );
-          })}
-        </select>
-        {user &&
-          fComptet &&
-          fComptet.nCatCompta.toString() !== values.nCatCompta.value && (
-            <div>
-              <span className="error-message">
-                La catégorie tarifaire renseignée dans Sage est différente de
-                celle renseignée dans Wordpress.
-              </span>
-              <br />
-              <span>
-                Valeur dans Sage: <strong>{labelSage}</strong>
-              </span>
-            </div>
-          )}
-      </td>
-    </tr>
-  );
+  return v.toUpperCase();
 };
 
-const UserNCatTarifComponent: React.FC<State> = ({ fComptet }) => {
-  const getDefaultValue = React.useCallback((): FormState2 => {
-    let nCatTarif = "";
-    if (fComptet) {
-      nCatTarif = fComptet.nCatTarif.toString();
-    } else {
-      for (const key in pCattarifs) {
-        nCatTarif = pCattarifs[key].cbIndice;
-        break;
+const UserComptaComponent: React.FC<State> = ({
+  fComptet,
+  prop,
+  list,
+  field,
+}) => {
+  const [userHasCtNum, setUserHasCtNum] = React.useState<boolean>(
+    getMetadataValue("ctNum") !== "",
+  );
+  const getDefaultValue = (): FormState2 => {
+    let value = getMetadataValue(prop);
+    if (value === "") {
+      if (!user || !userHasCtNum) {
+        if (fComptet) {
+          value = fComptet[prop].toString();
+        } else {
+          for (const key in list) {
+            value = list[key].cbIndice;
+            break;
+          }
+        }
       }
     }
     return {
-      nCatTarif: { value: nCatTarif },
+      nCompta: { value: value },
     };
-  }, []);
+  };
   const [values, setValues] = React.useState<FormState2>(getDefaultValue());
+  const [nComptaMetaDataValue, setNComptaMetaDataValue] =
+    React.useState<string>(getMetadataValue(prop));
   const handleChangeSelect =
     (prop: keyof FormState2) => (event: ChangeEvent<HTMLSelectElement>) => {
       setValues((v) => {
@@ -151,41 +98,48 @@ const UserNCatTarifComponent: React.FC<State> = ({ fComptet }) => {
 
   let labelSage = "";
   if (fComptet) {
-    for (const key in pCattarifs) {
-      if (pCattarifs[key].cbIndice === fComptet.nCatTarif) {
-        labelSage = pCattarifs[key].ctIntitule;
+    for (const key in list) {
+      if (list[key].cbIndice === fComptet[prop]) {
+        labelSage = list[key][field];
         break;
       }
     }
   }
+  React.useEffect(() => {
+    setValues(getDefaultValue());
+  }, [fComptet]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <tr>
       <th>
-        <label htmlFor="_sage_nCatTarif">Catégorie tarifaire</label>
+        <label htmlFor={"_sage_" + prop}>Catégorie comptable</label>
       </th>
       <td>
         <select
-          name="_sage_nCatTarif"
-          id="_sage_nCatTarif"
-          value={values.nCatTarif.value}
-          onChange={handleChangeSelect("nCatTarif")}
+          name={"_sage_" + prop}
+          id={"_sage_" + prop}
+          value={values.nCompta.value}
+          onChange={handleChangeSelect("nCompta")}
         >
-          {Object.entries(pCattarifs).map((data) => {
-            const pCattarif: any = data[1];
+          <option value="" disabled={true}>
+            Sélectionnez une option
+          </option>
+          {Object.entries(list).map((data) => {
+            const compta: any = data[1];
             return (
-              <option key={pCattarif.cbIndice} value={pCattarif.cbIndice}>
-                {pCattarif.ctIntitule}
+              <option key={compta.cbIndice} value={compta.cbIndice}>
+                {compta[field]}
               </option>
             );
           })}
         </select>
-        {user &&
+        {userHasCtNum &&
           fComptet &&
-          fComptet.nCatTarif.toString() !== values.nCatTarif.value && (
+          fComptet[prop].toString() !== nComptaMetaDataValue && (
             <div>
               <span className="error-message">
-                La catégorie tarifaire renseignée dans Sage est différente de
-                celle renseignée dans Wordpress.
+                La catégorie renseignée dans Sage est différente de celle
+                renseignée dans Wordpress.
               </span>
               <br />
               <span>
@@ -199,20 +153,24 @@ const UserNCatTarifComponent: React.FC<State> = ({ fComptet }) => {
 };
 
 const UserComponent = () => {
-  const getDefaultValue = React.useCallback((): FormState => {
-    let ctNum = "";
-    if (
-      userMetaWordpress?._sage_ctNum &&
-      userMetaWordpress?._sage_ctNum.length > 0
-    ) {
-      ctNum = userMetaWordpress?._sage_ctNum[0];
-    }
+  const [userHasCtNum, setUserHasCtNum] = React.useState<boolean>(
+    getMetadataValue("ctNum") !== "",
+  );
+  const getDefaultValue = (): FormState => {
+    const ctNum = getMetadataValue("ctNum");
     return {
       ctNum: { value: ctNum },
       autoGenerateCtNum: { value: true },
-      creationType: { value: "new" },
+      creationType: {
+        value:
+          user && !userHasCtNum
+            ? "none"
+            : autoCreateSageFcomptet
+              ? "new"
+              : "none",
+      },
     };
-  }, []);
+  };
   const [values, setValues] = React.useState<FormState>(getDefaultValue());
   const [loadingSearchFComptet, setLoadingSearchFComptet] =
     React.useState<boolean>(false);
@@ -277,25 +235,37 @@ const UserComponent = () => {
     }
   };
 
-  const validCtNum =
-    (fComptet && values.creationType.value === "link") ||
-    (values.creationType.value === "new" &&
-      (fComptet === null || values.autoGenerateCtNum.value));
-  const notValidCtNum =
-    (fComptet && values.creationType.value === "new") ||
+  const showCreationType = !user || !userHasCtNum;
+  const notValidCtNumExists =
+    (fComptet &&
+      getMetadataValue("ctNum") !== fComptet.ctNum &&
+      values.creationType.value === "new") ||
     (fComptet === null && values.creationType.value === "link");
+  const notValidCtNumAlreadyLink = thisUser && thisUser.ID !== user?.ID;
+  const validCtNum =
+    !notValidCtNumExists &&
+    !notValidCtNumAlreadyLink &&
+    ((fComptet && values.creationType.value === "link") ||
+      (values.creationType.value === "new" &&
+        (fComptet === null || values.autoGenerateCtNum.value)));
   const showCtNumField =
-    !!user ||
+    (!!user && userHasCtNum) ||
     values.creationType.value === "link" ||
     (values.creationType.value === "new" && !values.autoGenerateCtNum.value);
   const showSageForm =
-    !!user ||
+    (!!user && userHasCtNum) ||
     ((values.creationType.value === "link" ||
       values.creationType.value === "new") &&
       validCtNum);
 
   const validateForm = (): boolean => {
-    let result = notValidCtNum || notEmptyValidator(values.ctNum.value) !== "";
+    let result =
+      notValidCtNumExists ||
+      notValidCtNumAlreadyLink ||
+      (notEmptyValidator(values.ctNum.value) !== "" &&
+        (values.creationType.value === "link" ||
+          (values.creationType.value === "new" &&
+            !values.autoGenerateCtNum.value)));
     if (result) {
       setValues((v) => {
         v.ctNum.error = "notValid";
@@ -321,8 +291,10 @@ const UserComponent = () => {
 
   React.useEffect(() => {
     if (
-      (values.autoGenerateCtNum.value && values.creationType.value === "new") ||
-      values.creationType.value === "none"
+      !userHasCtNum &&
+      ((values.autoGenerateCtNum.value &&
+        values.creationType.value === "new") ||
+        values.creationType.value === "none")
     ) {
       setValues((v) => {
         v.ctNum.value = "";
@@ -335,14 +307,18 @@ const UserComponent = () => {
   }, [values.autoGenerateCtNum.value, values.creationType.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
-    $(document).on("submit", 'form[name="createuser"]', (e) => {
-      if (!validateForm()) {
-        e.preventDefault();
-      }
-    });
+    // todo vérifier que c'est aussi trigger pour update un utilisateur
+    $(document).on(
+      "submit",
+      'form[name="createuser"], form[id="your-profile"]',
+      (e) => {
+        if (!validateForm()) {
+          e.preventDefault();
+        }
+      },
+    );
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  console.log(values.ctNum.error);
   return (
     <table className="form-table" role="presentation">
       <tbody>
@@ -351,7 +327,7 @@ const UserComponent = () => {
             <h2>Sage</h2>
           </th>
         </tr>
-        {!user && (
+        {showCreationType && (
           <>
             <tr>
               <th>
@@ -361,7 +337,7 @@ const UserComponent = () => {
                 <label htmlFor="_sage_creationType_none">
                   <input
                     type="radio"
-                    name="sage_radio_buttons"
+                    name="_sage_creationType"
                     value="none"
                     id="_sage_creationType_none"
                     checked={values.creationType.value === "none"}
@@ -374,7 +350,7 @@ const UserComponent = () => {
                 <label htmlFor="_sage_creationType_new">
                   <input
                     type="radio"
-                    name="sage_radio_buttons"
+                    name="_sage_creationType"
                     value="new"
                     id="_sage_creationType_new"
                     checked={values.creationType.value === "new"}
@@ -387,7 +363,7 @@ const UserComponent = () => {
                 <label htmlFor="_sage_creationType_link">
                   <input
                     type="radio"
-                    name="sage_radio_buttons"
+                    name="_sage_creationType"
                     value="link"
                     id="_sage_creationType_link"
                     checked={values.creationType.value === "link"}
@@ -422,7 +398,7 @@ const UserComponent = () => {
           </>
         )}
         {showCtNumField && (
-          <tr className="form-field">
+          <tr>
             <th>
               <label htmlFor="_sage_ctNum">
                 {translations.fComptets.ctNum}
@@ -434,11 +410,12 @@ const UserComponent = () => {
                   type="text"
                   name="_sage_ctNum"
                   id="_sage_ctNum"
-                  readOnly={!!user}
+                  readOnly={userHasCtNum}
                   style={{
-                    ...(values.ctNum.error !== "" && {
-                      borderColor: "#d63638",
-                    }),
+                    ...(!userHasCtNum &&
+                      values.ctNum.error !== "" && {
+                        borderColor: "#d63638",
+                      }),
                   }}
                   value={values.ctNum.value}
                   onChange={handleChange("ctNum")}
@@ -456,36 +433,69 @@ const UserComponent = () => {
                   </svg>
                 )}
                 {validCtNum && (
-                  <span
-                    className="dashicons dashicons-yes endDashiconsInput"
-                    style={{ color: "green" }}
-                  ></span>
+                  <>
+                    <span
+                      className="dashicons dashicons-yes endDashiconsInput"
+                      style={{ color: "green" }}
+                    ></span>
+                    <span>{fComptet?.ctIntitule}</span>
+                  </>
                 )}
-                {notValidCtNum && (
+                {(notValidCtNumExists || notValidCtNumAlreadyLink) && (
                   <>
                     <span
                       className="dashicons dashicons-no endDashiconsInput"
                       style={{ color: "red" }}
                     ></span>
-                    {values.creationType.value === "link" && (
-                      <span>Ce compte Sage n'existe pas</span>
-                    )}
-                    {values.creationType.value === "new" && (
+                    {notValidCtNumExists && (
                       <>
-                        <span>
-                          Ce compte Sage existe déjà{" "}
-                          {thisUser && (
-                            <a
-                              href={
-                                siteUrl +
-                                "/wp-admin/user-edit.php?user_id=" +
-                                thisUser.ID
-                              }
+                        <span>Ce compte Sage n'existe pas</span>
+                      </>
+                    )}
+                    {notValidCtNumAlreadyLink && (
+                      <>
+                        {values.creationType.value === "link" && (
+                          <>
+                            <span>Ce compte Sage est déjà lié à </span>
+                          </>
+                        )}
+                        {values.creationType.value === "new" && (
+                          <>
+                            <span>Ce compte Sage existe déjà </span>
+                          </>
+                        )}
+                        {thisUser ? (
+                          <a
+                            href={
+                              siteUrl +
+                              "/wp-admin/user-edit.php?user_id=" +
+                              thisUser.ID
+                            }
+                          >
+                            {thisUser.data.display_name}
+                          </a>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              className="button"
+                              onClick={() => {
+                                setValues((v) => {
+                                  return {
+                                    ...v,
+                                    creationType: {
+                                      ...v.creationType,
+                                      value: "link",
+                                      error: "",
+                                    },
+                                  };
+                                });
+                              }}
                             >
-                              {thisUser.data.display_name}
-                            </a>
-                          )}
-                        </span>
+                              Lier à ce compte
+                            </button>
+                          </>
+                        )}
                       </>
                     )}
                   </>
@@ -496,8 +506,18 @@ const UserComponent = () => {
         )}
         {showSageForm && (
           <>
-            <UserNCatTarifComponent fComptet={fComptet} />
-            <UserNCatComptasComponent fComptet={fComptet} />
+            <UserComptaComponent
+              fComptet={fComptet}
+              prop="nCatTarif"
+              field="ctIntitule"
+              list={pCattarifs}
+            />
+            <UserComptaComponent
+              fComptet={fComptet}
+              prop="nCatCompta"
+              field="label"
+              list={pCatComptas}
+            />
           </>
         )}
       </tbody>

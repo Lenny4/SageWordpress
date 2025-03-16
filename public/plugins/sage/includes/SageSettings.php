@@ -124,7 +124,7 @@ final class SageSettings
                 actions: [
                     'import_from_sage' => static function (array $data) use ($sageSettings): string {
                         $ctNum = $data['ctNum'];
-                        [$userId, $message] = $sageSettings->sage->importUserFromSage($ctNum);
+                        [$userId, $message] = $sageSettings->sage->updateUserOrFComptet($ctNum);
                         return $message;
                     },
                     'set_default_filter' => static function (string $data) use ($sageSettings): string {
