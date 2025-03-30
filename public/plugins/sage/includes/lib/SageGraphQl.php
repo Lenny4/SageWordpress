@@ -1319,7 +1319,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     {
         $arguments = [
             'ctNum' => new RawObject('"' . $ctNum . '"'),
-            'websiteId' => new RawObject('"' . get_option(Sage::TOKEN . '_website_id') . '"'),
+            'websiteId' => new RawObject(get_option(Sage::TOKEN . '_website_id')),
         ];
         $query = (new Mutation('updateFComptetFromWebsite'))
             ->setArguments($arguments)

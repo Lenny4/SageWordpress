@@ -112,7 +112,10 @@ const UserComptaComponent: React.FC<State> = ({
   return (
     <tr>
       <th>
-        <label htmlFor={"_sage_" + prop}>Catégorie comptable</label>
+        <label htmlFor={"_sage_" + prop}>
+          {prop === "nCatCompta" && <>Catégorie comptable</>}
+          {prop === "nCatTarif" && <>Catégorie tarifaire</>}
+        </label>
       </th>
       <td>
         <select
