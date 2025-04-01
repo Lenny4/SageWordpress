@@ -1,15 +1,18 @@
-const notEmptyValidator = (
-  value: string | number | undefined | null | any[],
+export const stringValidator = (
+  value: string | null,
+  maxLength: null | number = null,
+  canBeEmpty: boolean = false,
+  canHaveSpace: boolean = true,
 ) => {
-  if (typeof value === "string") {
-    value = value?.replace(" ", "") ?? "";
+  value = (value?.replace(/\s\s+/g, " ") ?? "").trim() ?? "";
+  if (!canBeEmpty && value.length === 0) {
+    return "Ce champ ne peut pas être vide";
   }
-  if (Array.isArray(value) && value.length === 0) {
-    return "error.not_empty";
+  if (value.length > maxLength) {
+    return "Ce champ ne peut pas dépassé " + maxLength + " caractères";
   }
-  if (!value) {
-    return "error.not_empty";
+  if (!canHaveSpace && value.includes(" ")) {
+    return "Ce champ ne peut pas avoir d'espace";
   }
   return "";
 };
-export default notEmptyValidator;

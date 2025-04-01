@@ -698,13 +698,13 @@ final class SageSettings
                                 $action = json_decode(stripslashes((string)$queryParams['action']), true, 512, JSON_THROW_ON_ERROR);
                                 $message = $sageEntityMenu->getActions()[$action["type"]]($action["data"]);
                                 $redirect = remove_query_arg('action', wp_get_referer());
-                                $redirect = add_query_arg(Sage::TOKEN . '_message', urlencode($message), $redirect);
                                 foreach ($queryParams as $key => $value) {
                                     if ($key === 'action') {
                                         continue;
                                     }
                                     $redirect = add_query_arg($key, $value, $redirect);
                                 }
+                                $redirect = add_query_arg(Sage::TOKEN . '_message', urlencode($message), $redirect);
                                 wp_redirect($redirect);
                                 exit;
                             }

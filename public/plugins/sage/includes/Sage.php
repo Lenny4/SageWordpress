@@ -956,11 +956,13 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
      */
     public function saveCustomerUserMetaFields(?int $userId): void
     {
+        $nbUpdatedMeta = 0;
         $inSage = (bool)get_option(self::TOKEN . '_auto_create_sage_fcomptet');
         $ctNum = null;
         $newFComptet = false;
         foreach ($_POST as $key => $value) {
             if (str_starts_with($key, '_' . self::TOKEN)) {
+                $value = trim(preg_replace('/\s\s+/', ' ', $value));
                 if ($key === '_' . self::TOKEN . '_creationType') {
                     if ($value === 'new') {
                         $newFComptet = true;
@@ -972,14 +974,18 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     $value = strtoupper($value);
                     $ctNum = $value;
                 }
+                $nbUpdatedMeta++;
                 update_user_meta($userId, $key, $value);
             }
         }
-        if (!$inSage) {
+        if (!$inSage || $nbUpdatedMeta === 0) {
             return;
         }
         update_user_meta($userId, '_' . self::TOKEN . '_updateApi', new DateTime());
-        [$userId, $message] = $this->updateUserOrFComptet($ctNum, $userId, newFComptet: $newFComptet);
+        [$createdOrUpdatedUserId, $message] = $this->updateUserOrFComptet($ctNum, $userId, newFComptet: $newFComptet);
+        if ($newFComptet && is_null($createdOrUpdatedUserId)) {
+            $this->deleteSageMetadataForUser($userId);
+        }
         if ($message) {
             $redirect = add_query_arg(self::TOKEN . '_message', urlencode($message), wp_get_referer());
             wp_redirect($redirect);
@@ -1025,7 +1031,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                 getError: true,
             );
             if (is_string($fComptet)) {
-                return [null, $fComptet];
+                return [null, "<div class='notice notice-error is-dismissible'>" . $fComptet . "</div>"];
             }
         }
         if (is_null($fComptet)) {
@@ -1068,7 +1074,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         $updateWordpress = empty(get_user_meta($userId, '_' . self::TOKEN . '_updateApi', true));
         if ($updateWordpress) {
             $wpUser = new WP_User($userId);
-            if ($wpUser !== $userFromSage) {
+            if ($wpUser->user_login !== $userFromSage->user_login) {
                 wp_update_user($userFromSage);
             }
             foreach ($metadata as $key => $value) {
@@ -1113,6 +1119,16 @@ WHERE meta_key = %s
             return (int)$r[0]->user_id;
         }
         return null;
+    }
+
+    public function deleteSageMetadataForUser(int $userId): void
+    {
+        global $wpdb;
+        $wpdb->query($wpdb->prepare("
+DELETE
+FROM {$wpdb->usermeta}
+WHERE user_id = %s AND meta_key LIKE '_" . self::TOKEN . "_%'
+        ", [$userId]));
     }
 
     /**

@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import React, { ChangeEvent } from "react";
 import { getTranslations } from "../functions/translations";
 import { InputInterface } from "../interface/InputInterface";
-import notEmptyValidator from "../functions/form";
+import { stringValidator } from "../functions/form";
 
 const containerSelector = "#sage_user";
 const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
@@ -262,16 +262,17 @@ const UserComponent = () => {
       validCtNum);
 
   const validateForm = (): boolean => {
-    let result =
-      notValidCtNumExists ||
-      notValidCtNumAlreadyLink ||
-      (notEmptyValidator(values.ctNum.value) !== "" &&
-        (values.creationType.value === "link" ||
-          (values.creationType.value === "new" &&
-            !values.autoGenerateCtNum.value)));
-    if (result) {
+    let result = notValidCtNumExists || notValidCtNumAlreadyLink;
+    let ctNumError = "";
+    if (
+      values.creationType.value === "link" ||
+      (values.creationType.value === "new" && !values.autoGenerateCtNum.value)
+    ) {
+      ctNumError = stringValidator(values.ctNum.value, 19, false, false);
+    }
+    if (result || ctNumError) {
       setValues((v) => {
-        v.ctNum.error = "notValid";
+        v.ctNum.error = ctNumError !== "" ? ctNumError : "notValid";
         return {
           ...v,
         };

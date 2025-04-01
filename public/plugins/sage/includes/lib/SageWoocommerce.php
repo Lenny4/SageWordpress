@@ -757,13 +757,13 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     {
         $email = explode(';', $fComptet->ctEmail)[0];
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return "<div class=error>" . __("L'adresse email n'est pas au bon format [email: '" . $email . "']", 'sage') . "</div>";
+            return [null, "<div class='notice notice-error is-dismissible'>" . __("L'adresse email n'est pas au bon format [email: '" . $email . "']", 'sage') . "</div>", null];
         }
         $mailExistsUserId = email_exists($email);
         if ($mailExistsUserId !== false && $mailExistsUserId !== $userId) {
             $ctNum = $this->sage->getUserWordpressIdForSage($mailExistsUserId);
             if (!empty($ctNum)) {
-                return "<div class=error>" . __('This email address [' . $email . '] is already registered for user id: ' . $mailExistsUserId . '.', 'woocommerce') . "</div>";
+                return [null, "<div class='notice notice-error is-dismissible'>" . __('This email address [' . $email . '] is already registered for user id: ' . $mailExistsUserId . '.', 'woocommerce') . "</div>", null];
             }
             $userId = $mailExistsUserId;
             $this->sage->updateUserOrFComptet($ctNum, $userId, $fComptet);
