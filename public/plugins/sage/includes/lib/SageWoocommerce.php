@@ -593,11 +593,6 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             ];
         }
 
-        // todo calculer le prix de la livraison pour afficher le prix sur le site
-        // todo return apply_filters( 'woocommerce_cart_shipping_method_full_label', $label, $method ); modifier le prix affiché au panier
-
-        // todo dans la page du compte d'un utilisateur ajouter bouton synchroniser avec sage ou affiché si c'est bien synchronisé avec Sage
-
         // todo faire un cron qui regarde si une commande a été modifié dans Sage mais pas dans wordpress -> mettre à jour la commande wordpress
 
         return [$shippingChanges, $taxeCodes];
@@ -1596,7 +1591,7 @@ WHERE meta_key = %s
             return null;
         }
         $customer = $wcCart->get_customer();
-        $userMetaWordpress = get_user_meta($customer->get_id(), single: true); // todo check if $customer->get_id() is really the user id
+        $userMetaWordpress = get_user_meta($customer->get_id(), single: true);
         $userNCatTarif = null;
         $userNCatCompta = null;
         if (isset($userMetaWordpress["_" . Sage::TOKEN . "_nCatTarif"][0])) {

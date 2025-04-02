@@ -311,7 +311,6 @@ const UserComponent = () => {
   }, [values.autoGenerateCtNum.value, values.creationType.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
-    // todo vérifier que c'est aussi trigger pour update un utilisateur
     $(document).on(
       "submit",
       'form[name="createuser"], form[id="your-profile"]',
