@@ -257,8 +257,9 @@ final class SageSettings
 //                    [
 //                        'id' => 'auto_create_sage_farticle',
 //                        'label' => __('Créer automatiquement le produit Sage', 'sage'),
-//                        'description' => __("Créer automatiquement le produit dans Woocommerce lorsqu'un article Sage est crée.", 'sage'),
-//                        'type' => 'html',
+//                        'description' => __("Créer automatiquement le article dans Sage lorsqu'un produit Woocommerce est crée.", 'sage'),
+//                        'type' => 'checkbox',
+//                        'default' => 'off'
 //                    ],
                     [
                         'id' => 'auto_create_wordpress_article',
@@ -351,13 +352,6 @@ final class SageSettings
                             'type' => 'text',
                             'default' => $defaultWordpressUrl,
                             'placeholder' => __($defaultWordpressUrl, 'sage')
-                        ],
-                        [
-                            'id' => 'sync_articles_to_website',
-                            'label' => __('Synchronise les articles de Sage dans Woocommerce', 'sage'),
-                            'description' => __('Tous les articles dans Sage sont crées automatiquement dans WooCommerce.', 'sage'),
-                            'type' => 'checkbox',
-                            'default' => ''
                         ],
                         [
                             'id' => 'activate_https_verification_wordpress',
