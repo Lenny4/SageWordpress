@@ -24,7 +24,8 @@ const stringAuthorization = $("[data-sage-authorization]").attr(
 );
 const language = $("[data-sage-language]").attr("data-sage-language");
 
-const containerSelector = "#sage_tasks";
+const containerSelector = "#sage_appstate";
+const joinApiContainerSelector = "#sage_join_api";
 
 let translations: any = getTranslations();
 
@@ -197,6 +198,7 @@ const AppStateComponent = () => {
 
       ws.onopen = () => {
         console.log(`ws.onopen`);
+        $(joinApiContainerSelector).addClass("hidden");
         clearTimeout(connectionTimeout);
         ws.send(
           JSON.stringify({
@@ -323,18 +325,18 @@ const AppStateComponent = () => {
   return (
     <div>
       {errorWebsocket !== null ? (
-        <p>
-          {translations.sentences.errorWebsocket}
-          {errorWebsocket !== "" && (
-            <>
-              {":"}
-              <code>{errorWebsocket}</code>
-            </>
-          )}
+        <div>
+          <p>
+            {translations.sentences.errorWebsocket}
+            {errorWebsocket !== "" && (
+              <>
+                {":"}
+                <code>{errorWebsocket}</code>
+              </>
+            )}
+          </p>
           {errorSolveAuthorizationError !== "" && (
-            <>
-              <pre>{errorSolveAuthorizationError}</pre>
-            </>
+            <pre>{errorSolveAuthorizationError}</pre>
           )}
           {hasErrorWebsocketAuthorization && (
             <>
@@ -351,7 +353,7 @@ const AppStateComponent = () => {
               </button>
             </>
           )}
-        </p>
+        </div>
       ) : (
         appState?.SyncWebsiteJob && (
           <>

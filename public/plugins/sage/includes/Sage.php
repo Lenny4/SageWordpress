@@ -172,7 +172,7 @@ final class Sage
                 $isWooCommerceInstalled = array_key_exists($pluginId, $allPlugins);
                 add_action('admin_notices', static function () use ($isWooCommerceInstalled, $pluginId, $sage): void {
                     ?>
-                    <div id="<?= Sage::TOKEN ?>_tasks" class="notice notice-info is-dismissible hidden">
+                    <div id="<?= Sage::TOKEN ?>_appstate" class="notice notice-info is-dismissible hidden">
                         <div class="content"></div>
                     </div>
                     <?php

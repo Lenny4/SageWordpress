@@ -101,7 +101,7 @@ final class SageGraphQl
         if (!$this->pingApi) {
             add_action('admin_notices', static function () use ($errorMsg): void {
                 ?>
-                <div class="error"><p>
+                <div id="<?= Sage::TOKEN ?>_join_api" class="error"><p>
                         <?= __("L'API Sage n'est pas joignable. Avez vous lancé le serveur ?", 'sage') ?>
                         <?php
                         if (!is_null($errorMsg)) {
