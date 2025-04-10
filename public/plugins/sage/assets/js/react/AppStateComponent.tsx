@@ -139,6 +139,9 @@ const AppStateComponent = () => {
   const [errorWebsocket, setErrorWebsocket] = React.useState<string | null>(
     null,
   );
+  const [errorSolveAuthorizationError, setErrorSolveAuthorizationError] = React.useState<string | null>(
+    null,
+  );
   const [hasErrorWebsocketAuthorization, setHasErrorWebsocketAuthorization] =
     React.useState<boolean>(false);
   const [loadingAuthorizationError, setLoadingAuthorizationError] =
@@ -269,6 +272,7 @@ const AppStateComponent = () => {
     if (loadingAuthorizationError) {
       return;
     }
+    setErrorSolveAuthorizationError(null);
     setLoadingAuthorizationError(true);
     const response = await fetch(
       siteUrl +
@@ -277,7 +281,18 @@ const AppStateComponent = () => {
         "&_wpnonce=" +
         wpnonce,
     );
-    window.location.reload();
+    if (response.ok) {
+      window.location.reload();
+    } else {
+      setLoadingAuthorizationError(false);
+      let data: any = await response.json();
+      try {
+        data = JSON.stringify(JSON.parse(data), undefined, 2);
+      } catch (e) {
+        // nothing
+      }
+      setErrorSolveAuthorizationError(data.toString());
+    }
   };
 
   React.useEffect(() => {
@@ -301,6 +316,11 @@ const AppStateComponent = () => {
             <>
               {":"}
               <code>{errorWebsocket}</code>
+            </>
+          )}
+          {errorSolveAuthorizationError !== "" && (
+            <>
+              <pre>{errorSolveAuthorizationError}</pre>
             </>
           )}
           {hasErrorWebsocketAuthorization && (

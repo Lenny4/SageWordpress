@@ -120,6 +120,20 @@ final class SageSettings
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
+                    [
+                        'id' => 'auto_update_sage_fcomptet_when_edit_account',
+                        'label' => __("Mettre à jour automatiquement un compte Sage lorsqu'un compte Wordpress est modifié", 'sage'),
+                        'description' => __("Lorsque qu’un utilisateur WordPress met à jour ses informations, ou lorsqu’un administrateur modifie les informations d’un compte WordPress, celles-ci sont également mises à jour dans Sage si un compte y est lié.", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => 'off'
+                    ],
+                    [
+                        'id' => 'auto_update_account_when_edit_sage_fcomptet',
+                        'label' => __("Mettre à jour automatiquement un compte Wordpress lorsqu'un compte Sage est modifié", 'sage'),
+                        'description' => __("Lorsque les informations d’un compte Sage sont modifiées, elles sont également mises à jour dans WordPress si un compte y est lié.", 'sage'),
+                        'type' => 'checkbox',
+                        'default' => 'off'
+                    ],
                 ],
                 actions: [
                     'import_from_sage' => static function (array $data) use ($sageSettings): string {
@@ -1123,7 +1137,7 @@ WHERE meta_key = %s
 
     // woocommerce/includes/admin/class-wc-admin-meta-boxes.php:134 add_meta_box( 'woocommerce-product-data
 
-    public function addWebsiteSageApi(bool $force = false): void
+    public function addWebsiteSageApi(bool $force = false): bool|string
     {
         $optionFormSubmitted =
             array_key_exists('settings-updated', $_GET) &&
@@ -1131,7 +1145,7 @@ WHERE meta_key = %s
             $_GET["settings-updated"] === 'true' &&
             $_GET["page"] === Sage::TOKEN . '_settings';
         if (!($force || ($optionFormSubmitted && current_user_can(self::$capability)))) {
-            return;
+            return false;
         }
 
         $applicationPasswordOption = Sage::TOKEN . '_application-passwords';
@@ -1148,7 +1162,9 @@ WHERE meta_key = %s
             !$this->isApiAuthenticated()
         ) {
             $newPassword = $this->createApplicationPassword($user_id, $applicationPasswordOption);
+            return $this->createUpdateWebsite($user_id, $newPassword);
         }
+        return false;
     }
 
     private function isApiAuthenticated(): bool
@@ -1176,17 +1192,20 @@ WHERE meta_key = %s
         ]);
         $newPassword = $newApplicationPassword[0];
         update_option($applicationPasswordOption, $user_id);
-        $this->createUpdateWebsite($user_id, $newPassword);
         return $newPassword;
     }
 
-    private function createUpdateWebsite(string $user_id, string $password): bool
+    private function createUpdateWebsite(string $user_id, string $password): bool|string
     {
         $user = get_user_by('id', $user_id);
         $stdClass = $this->sage->sageGraphQl->createUpdateWebsite(
             username: $user->data->user_login,
             password: $password,
+            getError: true,
         );
+        if (is_string($stdClass)) {
+            return $stdClass;
+        }
         if (is_null($stdClass)) {
             return false;
         }
@@ -1194,22 +1213,7 @@ WHERE meta_key = %s
         update_option(Sage::TOKEN . '_pCattarifs', json_encode($pCattarifs, JSON_THROW_ON_ERROR));
         update_option(Sage::TOKEN . '_authorization', $stdClass->data->createUpdateWebsite->authorization);
         update_option(Sage::TOKEN . '_website_id', $stdClass->data->createUpdateWebsite->id);
-        // woocommerce/includes/class-wc-ajax.php : shipping_zone_add_method
-        if (get_option(Sage::TOKEN . '_shipping_methods_init', false) === false) {
-            // add all sage expeditions to all shipping methods
-            $pExpeditions = $this->sage->sageGraphQl->getPExpeditions();
-            $zones = WC_Shipping_Zones::get_zones();
-            $zoneIds = [0, ...array_map(static function (array $zone) {
-                return $zone['id'];
-            }, $zones)];
-            foreach ($zoneIds as $zoneId) {
-                $zone = new WC_Shipping_Zone($zoneId);
-                foreach ($pExpeditions as $pExpedition) {
-                    $zone->add_shipping_method($pExpedition->slug);
-                }
-            }
-            update_option(Sage::TOKEN . '_shipping_methods_init', true);
-        }
+        $this->updateShippingMethodsWithSage();
 
         add_action('admin_notices', static function (): void {
             ?>
@@ -1219,6 +1223,24 @@ WHERE meta_key = %s
             <?php
         });
         return true;
+    }
+
+    private function updateShippingMethodsWithSage(): void
+    {
+        // woocommerce/includes/class-wc-ajax.php : shipping_zone_add_method
+        $pExpeditions = $this->sage->sageGraphQl->getPExpeditions();
+        $zones = WC_Shipping_Zones::get_zones();
+        $zoneIds = [0, ...array_map(static function (array $zone) {
+            return $zone['id'];
+        }, $zones)];
+        foreach ($zoneIds as $zoneId) {
+            $zone = new WC_Shipping_Zone($zoneId);
+            foreach ($pExpeditions as $pExpedition) {
+                // todo éviter les doublons
+                $zone->add_shipping_method($pExpedition->slug);
+            }
+        }
+        update_option(Sage::TOKEN . '_shipping_methods_updated', new DateTime());
     }
 
     private function showMetaBoxProduct(array $wp_meta_boxes, string $screen): void

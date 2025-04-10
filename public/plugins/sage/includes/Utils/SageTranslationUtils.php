@@ -546,6 +546,8 @@ final class SageTranslationUtils
                     6 => __('Créer automatiquement le produit Woocommerce', 'sage'), // AutoCreateWebsiteArticle => auto_create_wordpress_article
                     7 => __('Importer automatiquement les anciens produits Sage', 'sage'), // AutoImportWebsiteArticle => auto_import_wordpress_article
                     8 => __('Importer automatiquement les anciens documents de vente Sage', 'sage'), // AutoImportWebsiteOrder => auto_import_wordpress_order
+                    9 => __("Mettre à jour automatiquement un compte Sage lorsqu'un compte Wordpress est modifié", 'sage'), // AutoUpdateSageFComptetWhenEditAccount => auto_update_sage_fcomptet_when_edit_account
+                    10 => __("Mettre à jour automatiquement un compte Wordpress lorsqu'un compte Sage est modifié", 'sage'), // AutoUpdateAccountWhenEditSageFcomptet => auto_update_account_when_edit_sage_fcomptet
                 ]
             ]
         ];

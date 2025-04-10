@@ -17,6 +17,7 @@ use DateTime;
 use StdClass;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
@@ -590,7 +591,7 @@ final class Sage
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
                         'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true, message: $message)
-                    ], 200);
+                    ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);
@@ -664,7 +665,7 @@ final class Sage
                     if ($fDocentetes === []) {
                         return new WP_REST_Response(null, 404);
                     }
-                    return new WP_REST_Response($fDocentetes, 200);
+                    return new WP_REST_Response($fDocentetes, Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);
@@ -678,7 +679,7 @@ final class Sage
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
                         'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true)
-                    ], 200);
+                    ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);
@@ -695,7 +696,7 @@ final class Sage
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
                         'html' => $sageWoocommerce->getMetaboxSage($order, ignorePingApi: true)
-                    ], 200);
+                    ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);
@@ -722,8 +723,11 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             register_rest_route(Sage::TOKEN . '/v1', '/add-website-sage-api', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($settings) {
-                    $settings->addWebsiteSageApi(true);
-                    return new WP_REST_Response(null, 200);
+                    $result = $settings->addWebsiteSageApi(true);
+                    if ($result !== true) {
+                        return new WP_REST_Response($result, Response::HTTP_INTERNAL_SERVER_ERROR);
+                    }
+                    return new WP_REST_Response(null, Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);
@@ -732,7 +736,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             register_rest_route(Sage::TOKEN . '/v1', '/healthz', [
                 'methods' => 'GET',
                 'callback' => static function () {
-                    return new WP_REST_Response(null, 200);
+                    return new WP_REST_Response(null, Response::HTTP_OK);
                 },
                 'permission_callback' => static function () {
                     return true;
@@ -747,7 +751,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     $html = $settings->getMetaBoxOrder($order);
                     return new WP_REST_Response([
                         'html' => $html
-                    ], 200);
+                    ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);
@@ -806,7 +810,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     return new WP_REST_Response([
                         'fComptet' => $fComptet,
                         'user' => $user,
-                    ], 200);
+                    ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);
@@ -1309,7 +1313,7 @@ WHERE user_login LIKE %s
             $responseError = "<div class='notice notice-error is-dismissible'>
                                 <pre>" . json_encode($response, JSON_THROW_ON_ERROR) . "</pre>
                                 </div>";
-        } else if (!in_array($response["response"]["code"], [200, 201], true)) {
+        } else if (!in_array($response["response"]["code"], [Response::HTTP_OK, Response::HTTP_CREATED], true)) {
             $responseError = "<div class='notice notice-error is-dismissible'>
                                 <pre>" . $response['response']['code'] . "</pre>
                                 <pre>" . $response['body'] . "</pre>

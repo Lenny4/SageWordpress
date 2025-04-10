@@ -13,6 +13,7 @@ use GraphQL\Client;
 use GraphQL\Mutation;
 use GraphQL\Query;
 use GraphQL\RawObject;
+use GraphQL\Variable;
 use StdClass;
 use Throwable;
 
@@ -125,7 +126,8 @@ final class SageGraphQl
     public function createUpdateWebsite(
         string $username,
         string $password,
-    ): StdClass|null
+        bool   $getError = false,
+    ): StdClass|null|string
     {
         global $wpdb;
         $hasError = false;
@@ -160,50 +162,56 @@ final class SageGraphQl
         $autoImportWordpressOrderDoType = empty($autoImportWordpressOrderDoType = get_option(Sage::TOKEN . '_auto_import_wordpress_order_dotype')) ? null : $autoImportWordpressOrderDoType;
         $autoCreateWordpressOrder = empty($autoCreateWordpressOrder = get_option(Sage::TOKEN . '_auto_create_wordpress_order')) ? null : $autoCreateWordpressOrder;
         $autoImportWordpressArticle = SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article');
-        $query = (new Mutation('createUpdateWebsite'))
-            ->setArguments([
-                'name' => new RawObject('"' . get_bloginfo() . '"'),
-                'username' => new RawObject('"' . $username . '"'),
-                'password' => new RawObject('"' . $password . '"'),
-                'type' => new RawObject(strtoupper(WebsiteEnum::Wordpress->name)),
-                'host' => new RawObject('"' . $wordpressHostUrl["host"] . '"'),
-                'protocol' => new RawObject('"' . $wordpressHostUrl["scheme"] . '"'),
-                'forceSsl' => new RawObject(get_option(Sage::TOKEN . '_activate_https_verification_wordpress') ? 'true' : 'false'),
-                'dbHost' => new RawObject('"' . get_option(Sage::TOKEN . '_wordpress_db_host') . '"'),
-                'dbUsername' => new RawObject('"' . get_option(Sage::TOKEN . '_wordpress_db_username') . '"'),
-                'dbPassword' => new RawObject('"' . get_option(Sage::TOKEN . '_wordpress_db_password') . '"'),
-                'tablePrefix' => new RawObject('"' . $wpdb->prefix . '"'),
-                'dbName' => new RawObject('"' . get_option(Sage::TOKEN . '_wordpress_db_name') . '"'),
-                'autoCreateSageFcomptet' => new RawObject(get_option(Sage::TOKEN . '_auto_create_sage_fcomptet') ? 'true' : 'false'),
-                'autoImportSageFcomptet' => new RawObject(!is_null($autoImportSageFcomptet) ? '"' . $autoImportSageFcomptet->format('Y-m-d H:i:s') . '"' : 'null'),
-                'autoCreateWebsiteAccount' => new RawObject(get_option(Sage::TOKEN . '_auto_create_wordpress_account') ? 'true' : 'false'),
-                'autoImportWebsiteAccount' => new RawObject(!is_null($autoImportWordpressAccount) ? '"' . $autoImportWordpressAccount->format('Y-m-d H:i:s') . '"' : 'null'),
-                'autoCreateSageFdocentete' => new RawObject(get_option(Sage::TOKEN . '_auto_create_sage_fdocentete') ? 'true' : 'false'),
-                'autoImportWebsiteOrderDate' => new RawObject(!is_null($autoImportWordpressOrderDate) ? '"' . $autoImportWordpressOrderDate->format('Y-m-d H:i:s') . '"' : 'null'),
-                'autoImportWebsiteOrderDoType' => new RawObject(is_array($autoImportWordpressOrderDoType) ? json_encode($autoImportWordpressOrderDoType, JSON_THROW_ON_ERROR) : 'null'),
-                'autoCreateWebsiteOrder' => new RawObject(is_array($autoCreateWordpressOrder) ? json_encode($autoCreateWordpressOrder, JSON_THROW_ON_ERROR) : 'null'),
-                'autoCreateWebsiteArticle' => new RawObject(get_option(Sage::TOKEN . '_auto_create_wordpress_article') ? 'true' : 'false'),
-                'autoImportWebsiteArticle' => new RawObject(!is_null($autoImportWordpressArticle) ? '"' . $autoImportWordpressArticle->format('Y-m-d H:i:s') . '"' : 'null'),
-                'pluginVersion' => get_plugin_data($this->sage->file)['Version'],
-            ])
+        $mutation = (new Mutation('createUpdateWebsite'))
+            ->setVariables([new Variable('websiteDto', 'WebsiteDtoInput', true)])
+            ->setArguments(['websiteDto' => '$websiteDto'])
             ->setSelectionSet(
                 [
                     'id',
                     'authorization',
                 ]
             );
-        $r = $this->runQuery($query);
-        if (is_string($r)) {
-            return null;
-        }
-        return $r;
+        $variables = [
+            'websiteDto' => [
+                'name' => get_bloginfo(),
+                'username' => $username,
+                'password' => $password,
+                'type' => strtoupper(WebsiteEnum::Wordpress->name),
+                'host' => $wordpressHostUrl["host"],
+                'protocol' => $wordpressHostUrl["scheme"],
+                'forceSsl' => (bool)get_option(Sage::TOKEN . '_activate_https_verification_wordpress'),
+                'dbHost' => get_option(Sage::TOKEN . '_wordpress_db_host'),
+                'dbUsername' => get_option(Sage::TOKEN . '_wordpress_db_username'),
+                'dbPassword' => get_option(Sage::TOKEN . '_wordpress_db_password'),
+                'tablePrefix' => $wpdb->prefix,
+                'dbName' => get_option(Sage::TOKEN . '_wordpress_db_name'),
+                'autoCreateSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet'),
+                'autoImportSageFcomptet' => $autoImportSageFcomptet?->format('Y-m-d H:i:s'),
+                'autoCreateWebsiteAccount' => (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_account'),
+                'autoImportWebsiteAccount' => $autoImportWordpressAccount?->format('Y-m-d H:i:s'),
+                'autoCreateSageFdocentete' => (bool)get_option(Sage::TOKEN . '_auto_create_sage_fdocentete'),
+                'autoImportWebsiteOrderDate' => $autoImportWordpressOrderDate?->format('Y-m-d H:i:s'),
+                'autoImportWebsiteOrderDoType' => is_array($autoImportWordpressOrderDoType) ? json_encode($autoImportWordpressOrderDoType, JSON_THROW_ON_ERROR) : null,
+                'autoCreateWebsiteOrder' => is_array($autoCreateWordpressOrder) ? json_encode($autoCreateWordpressOrder, JSON_THROW_ON_ERROR) : null,
+                'autoCreateWebsiteArticle' => (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_article'),
+                'autoImportWebsiteArticle' => $autoImportWordpressArticle?->format('Y-m-d H:i:s'),
+                'pluginVersion' => get_plugin_data($this->sage->file)['Version'],
+                'autoUpdateSageFComptetWhenEditAccount' => (bool)get_option(Sage::TOKEN . '_auto_update_sage_fcomptet_when_edit_account'),
+                'autoUpdateAccountWhenEditSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_update_account_when_edit_sage_fcomptet'),
+            ]
+        ];
+        return $this->runQuery($mutation, $getError, $variables);
     }
 
-    private function runQuery(Query|Mutation $gql, bool $getError = false): array|object|null|string
+    private function runQuery(
+        Query|Mutation $gql,
+        bool           $getError = false,
+        array          $variables = []
+    ): array|object|null|string
     {
         $client = $this->getClient();
         try {
-            return $client->runQuery($gql)?->getResults();
+            return $client->runQuery($gql, variables: $variables)?->getResults();
         } catch (Throwable $throwable) {
             // todo store logs
             $message = $throwable->getMessage();
@@ -265,18 +273,21 @@ final class SageGraphQl
             $ctIntitule = $user->data->user_login;
         }
         $arguments = [
-            'ctIntitule' => new RawObject('"' . $ctIntitule . '"'),
-            'ctEmail' => new RawObject('"' . $ctEmail . '"'),
-            'websiteId' => new RawObject('"' . get_option(Sage::TOKEN . '_website_id') . '"'),
+            'ctIntitule' => $ctIntitule,
+            'ctEmail' => $ctEmail,
+            'websiteId' => get_option(Sage::TOKEN . '_website_id'),
+            'autoGenerateCtNum' => $autoGenerateCtNum,
         ];
         if (!is_null($ctNum)) {
-            $arguments['ctNum'] = new RawObject('"' . $ctNum . '"');
+            $arguments['ctNum'] = $ctNum;
         }
-        $arguments['autoGenerateCtNum'] = new RawObject($autoGenerateCtNum ? 'true' : 'false');
-        $query = (new Mutation('createFComptet'))
-            ->setArguments($arguments)
+        $mutation = (new Mutation('createFComptet'))
+            ->setVariables([new Variable('createFComptetDto', 'CreateFComptetDtoInput', true)])
+            ->setArguments(['createFComptetDto' => '$createFComptetDto'])
             ->setSelectionSet($this->formatSelectionSet($this->_getFComptetSelectionSet()));
-        $result = $this->runQuery($query, $getError);
+        $variables = ['createFComptetDto' => $arguments];
+        $result = $this->runQuery($mutation, $getError, $variables);
+
         if (!is_null($result) && !is_string($result)) {
             return $result->data->createFComptet;
         }
@@ -1318,13 +1329,16 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     ): StdClass|null|string
     {
         $arguments = [
-            'ctNum' => new RawObject('"' . $ctNum . '"'),
-            'websiteId' => new RawObject(get_option(Sage::TOKEN . '_website_id')),
+            'ctNum' => $ctNum,
+            'websiteId' => get_option(Sage::TOKEN . '_website_id'),
         ];
-        $query = (new Mutation('updateFComptetFromWebsite'))
-            ->setArguments($arguments)
+        $mutation = (new Mutation('updateFComptetFromWebsite'))
+            ->setVariables([new Variable('updateFComptetFromWebsiteDto', 'UpdateFComptetFromWebsiteDtoInput', true)])
+            ->setArguments(['updateFComptetFromWebsiteDto' => '$updateFComptetFromWebsiteDto'])
             ->setSelectionSet($this->formatSelectionSet($this->_getFComptetSelectionSet()));
-        $result = $this->runQuery($query, $getError);
+        $variables = ['updateFComptetFromWebsiteDto' => $arguments];
+        $result = $this->runQuery($mutation, $getError, $variables);
+
         if (!is_null($result) && !is_string($result)) {
             return $result->data->updateFComptetFromWebsite;
         }
