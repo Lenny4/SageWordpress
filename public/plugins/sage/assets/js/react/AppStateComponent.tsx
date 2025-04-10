@@ -165,9 +165,16 @@ const AppStateComponent = () => {
         return;
       }
       let hasError = false;
+      let ignoreErrorTimeout = false;
       const url =
         "wss://" + apiHostUrl.host + "/ws?authorization=" + stringAuthorization;
       const ws = new WebSocket(url);
+      const connectionTimeout = setTimeout(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          ignoreErrorTimeout = true;
+          ws.close();
+        }
+      }, 10_000);
       let intervalPing: number | null = null;
       let alreadyClose = false;
       let nbLost = 0;
@@ -184,12 +191,13 @@ const AppStateComponent = () => {
           () => {
             createWebsocket();
           },
-          hasError ? 5000 : 1000,
+          ignoreErrorTimeout ? 0 : hasError ? 5000 : 1000,
         );
       };
 
       ws.onopen = () => {
         console.log(`ws.onopen`);
+        clearTimeout(connectionTimeout);
         ws.send(
           JSON.stringify({
             Get: "appState",
@@ -252,11 +260,13 @@ const AppStateComponent = () => {
 
       ws.onerror = (evt) => {
         console.log("ws.onerror", evt);
+        clearTimeout(connectionTimeout);
         hasError = true;
       };
 
       ws.onclose = (evt) => {
         console.log("ws.onclose alreadyClose: " + alreadyClose, evt);
+        clearTimeout(connectionTimeout);
         $(containerSelector).removeClass("hidden");
         $(containerSelector).removeClass("notice-info");
         $(containerSelector).addClass("notice-error");
