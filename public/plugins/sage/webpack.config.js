@@ -1,16 +1,16 @@
-const path = require('path');
+const path = require("path");
 const webpack = require("webpack");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = {
   entry: {
-    'admin': './assets/js/admin.ts',
-    'frontend': './assets/js/frontend.ts',
+    admin: "./assets/js/admin.ts",
+    frontend: "./assets/js/frontend.ts",
   },
   plugins: [
     new webpack.ProvidePlugin({
       $: "jquery",
-      jQuery: "jquery"
+      jQuery: "jquery",
     }),
     new MiniCssExtractPlugin(),
   ],
@@ -18,7 +18,7 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
+        use: "ts-loader",
         exclude: /node_modules/,
       },
       {
@@ -35,10 +35,10 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js', '.css', '.scss'],
+    extensions: [".tsx", ".ts", ".js", ".css", ".scss"],
   },
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: '[name].js'
-  }
+    path: path.resolve(__dirname, "dist"),
+    filename: "[name].js",
+  },
 };
