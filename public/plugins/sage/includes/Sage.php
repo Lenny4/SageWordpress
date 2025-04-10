@@ -822,6 +822,16 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         add_filter('woocommerce_shipping_rate_cost', static function (string $cost, WC_Shipping_Rate $wcShippingRate) use ($sageWoocommerce) {
             return (string)($sageWoocommerce->getShippingRateCosts(WC()->cart, $wcShippingRate) ?? $cost);
         }, accepted_args: 2);
+        add_filter('woocommerce_shipping_rate_label', static function (string $label, WC_Shipping_Rate $wcShippingRate) {
+            if (!str_starts_with($wcShippingRate->get_method_id(), self::TOKEN . '-')) {
+                return $label;
+            }
+            $remove = '[Sage] ';
+            if (str_starts_with($label, $remove)) {
+                $label = substr($label, strlen($remove));
+            }
+            return $label;
+        }, accepted_args: 2);
     }
 
     /**

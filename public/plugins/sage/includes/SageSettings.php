@@ -1229,15 +1229,29 @@ WHERE meta_key = %s
     {
         // woocommerce/includes/class-wc-ajax.php : shipping_zone_add_method
         $pExpeditions = $this->sage->sageGraphQl->getPExpeditions();
+        $newSlugs = array_map(static function (stdClass $pExpedition) {
+            return $pExpedition->slug;
+        }, $pExpeditions);
         $zones = WC_Shipping_Zones::get_zones();
         $zoneIds = [0, ...array_map(static function (array $zone) {
             return $zone['id'];
         }, $zones)];
         foreach ($zoneIds as $zoneId) {
             $zone = new WC_Shipping_Zone($zoneId);
+            $oldSlugs = [];
+            foreach ($zone->get_shipping_methods() as $shippingMethod) {
+                if (!str_starts_with($shippingMethod->id, Sage::TOKEN . '-')) {
+                    continue;
+                }
+                $oldSlugs[] = $shippingMethod->id;
+                if (!in_array($shippingMethod->id, $newSlugs, true)) {
+                    $zone->delete_shipping_method($shippingMethod->get_instance_id());
+                }
+            }
             foreach ($pExpeditions as $pExpedition) {
-                // todo éviter les doublons
-                $zone->add_shipping_method($pExpedition->slug);
+                if (!in_array($pExpedition->slug, $oldSlugs, true)) {
+                    $zone->add_shipping_method($pExpedition->slug);
+                }
             }
         }
         update_option(Sage::TOKEN . '_shipping_methods_updated', new DateTime());
