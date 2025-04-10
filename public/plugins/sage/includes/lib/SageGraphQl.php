@@ -156,12 +156,6 @@ final class SageGraphQl
         if ($hasError) {
             return null;
         }
-        $autoImportSageFcomptet = SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_sage_fcomptet');
-        $autoImportWordpressAccount = SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_account');
-        $autoImportWordpressOrderDate = SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_order_date');
-        $autoImportWordpressOrderDoType = empty($autoImportWordpressOrderDoType = get_option(Sage::TOKEN . '_auto_import_wordpress_order_dotype')) ? null : $autoImportWordpressOrderDoType;
-        $autoCreateWordpressOrder = empty($autoCreateWordpressOrder = get_option(Sage::TOKEN . '_auto_create_wordpress_order')) ? null : $autoCreateWordpressOrder;
-        $autoImportWordpressArticle = SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article');
         $mutation = (new Mutation('createUpdateWebsite'))
             ->setVariables([new Variable('websiteDto', 'WebsiteDtoInput', true)])
             ->setArguments(['websiteDto' => '$websiteDto'])
@@ -186,15 +180,15 @@ final class SageGraphQl
                 'tablePrefix' => $wpdb->prefix,
                 'dbName' => get_option(Sage::TOKEN . '_wordpress_db_name'),
                 'autoCreateSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet'),
-                'autoImportSageFcomptet' => $autoImportSageFcomptet?->format('Y-m-d H:i:s'),
+                'autoImportSageFcomptet' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_sage_fcomptet')?->format('Y-m-d H:i:s'),
                 'autoCreateWebsiteAccount' => (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_account'),
-                'autoImportWebsiteAccount' => $autoImportWordpressAccount?->format('Y-m-d H:i:s'),
+                'autoImportWebsiteAccount' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_account')?->format('Y-m-d H:i:s'),
                 'autoCreateSageFdocentete' => (bool)get_option(Sage::TOKEN . '_auto_create_sage_fdocentete'),
-                'autoImportWebsiteOrderDate' => $autoImportWordpressOrderDate?->format('Y-m-d H:i:s'),
-                'autoImportWebsiteOrderDoType' => is_array($autoImportWordpressOrderDoType) ? json_encode($autoImportWordpressOrderDoType, JSON_THROW_ON_ERROR) : null,
-                'autoCreateWebsiteOrder' => is_array($autoCreateWordpressOrder) ? json_encode($autoCreateWordpressOrder, JSON_THROW_ON_ERROR) : null,
+                'autoImportWebsiteOrderDate' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_order_date')?->format('Y-m-d H:i:s'),
+                'autoImportWebsiteOrderDoType' => get_option(Sage::TOKEN . '_auto_import_wordpress_order_dotype', null),
+                'autoCreateWebsiteOrder' => get_option(Sage::TOKEN . '_auto_create_wordpress_order', null),
                 'autoCreateWebsiteArticle' => (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_article'),
-                'autoImportWebsiteArticle' => $autoImportWordpressArticle?->format('Y-m-d H:i:s'),
+                'autoImportWebsiteArticle' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article')?->format('Y-m-d H:i:s'),
                 'pluginVersion' => get_plugin_data($this->sage->file)['Version'],
                 'autoUpdateSageFComptetWhenEditAccount' => (bool)get_option(Sage::TOKEN . '_auto_update_sage_fcomptet_when_edit_account'),
                 'autoUpdateAccountWhenEditSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_update_account_when_edit_sage_fcomptet'),
@@ -1330,7 +1324,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     {
         $arguments = [
             'ctNum' => $ctNum,
-            'websiteId' => get_option(Sage::TOKEN . '_website_id'),
+            'websiteId' => (int)get_option(Sage::TOKEN . '_website_id'),
         ];
         $mutation = (new Mutation('updateFComptetFromWebsite'))
             ->setVariables([new Variable('updateFComptetFromWebsiteDto', 'UpdateFComptetFromWebsiteDtoInput', true)])

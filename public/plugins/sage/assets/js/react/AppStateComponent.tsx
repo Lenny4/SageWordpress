@@ -139,9 +139,8 @@ const AppStateComponent = () => {
   const [errorWebsocket, setErrorWebsocket] = React.useState<string | null>(
     null,
   );
-  const [errorSolveAuthorizationError, setErrorSolveAuthorizationError] = React.useState<string | null>(
-    null,
-  );
+  const [errorSolveAuthorizationError, setErrorSolveAuthorizationError] =
+    React.useState<string | null>(null);
   const [hasErrorWebsocketAuthorization, setHasErrorWebsocketAuthorization] =
     React.useState<boolean>(false);
   const [loadingAuthorizationError, setLoadingAuthorizationError] =
@@ -300,10 +299,14 @@ const AppStateComponent = () => {
   }, []);
 
   React.useEffect(() => {
-    if (appState && appState.SyncWebsiteJob !== null) {
-      $(containerSelector).removeClass("notice-error");
-      $(containerSelector).addClass("notice-info");
-      $(containerSelector).removeClass("hidden");
+    if (appState) {
+      if (appState.SyncWebsiteJob !== null) {
+        $(containerSelector).removeClass("notice-error");
+        $(containerSelector).addClass("notice-info");
+        $(containerSelector).removeClass("hidden");
+      } else {
+        $(containerSelector).addClass("hidden");
+      }
     }
   }, [appState]);
 

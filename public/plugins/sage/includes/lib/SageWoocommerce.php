@@ -704,6 +704,9 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $userChanges = [];
         $userMetaWordpress = get_user_meta($userId);
         [$userId, $userFromSage, $metadata] = $this->convertSageUserToWoocommerce($fComptet, userId: $userId);
+        if (!($userFromSage instanceof WP_User)) {
+            return $userChanges;
+        }
         foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
             $old = new stdClass();
             $new = new stdClass();
