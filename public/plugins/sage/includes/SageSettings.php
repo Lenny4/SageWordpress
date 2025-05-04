@@ -12,6 +12,8 @@ use App\Utils\TaxeUtils;
 use Automattic\WooCommerce\Utilities\OrderUtil;
 use DateTime;
 use PHPHtmlParser\Dom;
+use ReflectionClass;
+use ReflectionMethod;
 use stdClass;
 use WC_Meta_Box_Order_Data;
 use WC_Order;
@@ -1169,7 +1171,12 @@ WHERE meta_key = %s
             !$this->isApiAuthenticated()
         ) {
             $newPassword = $this->createApplicationPassword($user_id, $applicationPasswordOption);
-            return $this->createUpdateWebsite($user_id, $newPassword);
+            $r = $this->createUpdateWebsite($user_id, $newPassword);
+            if ($r) {
+                $this->updateAllSageEntitiesInOption(['getFTaxes']);
+                $this->updateTaxes(showMessage: false);
+            }
+            return $r;
         }
         return false;
     }
@@ -1179,8 +1186,6 @@ WHERE meta_key = %s
         $response = SageRequest::apiRequest('/Website/' . $_SERVER['HTTP_HOST'] . '/Authorization');
         return $response === 'true';
     }
-
-    // woocommerce/src/Internal/Admin/Orders/Edit.php:78 add_meta_box( 'woocommerce-order-data'
 
     /**
      * https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password
@@ -1264,70 +1269,46 @@ WHERE meta_key = %s
         update_option(Sage::TOKEN . '_shipping_methods_updated', new DateTime());
     }
 
-    private function showMetaBoxProduct(array $wp_meta_boxes, string $screen): void
+    private function updateAllSageEntitiesInOption(array $ignores = []): void
     {
-        $arRef = Sage::getArRef(get_the_ID());
-        if (empty($arRef)) {
-            return;
+        $reflection = new ReflectionClass($this->sage->sageGraphQl);
+        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+            $methodName = $method->getName();
+            if (in_array($methodName, $ignores, true)) {
+                continue;
+            }
+            // Check if the method name starts with "get"
+            if (str_starts_with($methodName, 'get')) {
+                $parameters = $method->getParameters();
+                $paramNames = array_map(fn($param) => $param->getName(), $parameters);
+
+                // Check if both 'useCache' and 'getFromSage' are in the parameter list
+                if (in_array('useCache', $paramNames, true) && in_array('getFromSage', $paramNames, true)) {
+                    // Build argument list in correct order with values (example: true, false)
+                    $args = [];
+
+                    foreach ($parameters as $param) {
+                        if ($param->getName() === 'useCache') {
+                            $args[] = false;
+                        } elseif ($param->getName() === 'getFromSage') {
+                            $args[] = true;
+                        } else {
+                            // Provide default or null for other parameters
+                            $args[] = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;
+                        }
+                    }
+
+                    // Call the method with constructed arguments
+                    $method->invokeArgs($this->sage->sageGraphQl, $args);
+                }
+            }
         }
-
-        $id = 'woocommerce-product-data';
-        $context = 'normal';
-        remove_meta_box($id, $screen, $context);
-
-        $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
-        add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $wpPost) use ($arRef, $callback): void {
-            ob_start();
-            $callback($wpPost);
-            $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
-            $dom->loadStr(ob_get_clean());
-
-            $a = $dom->find('span.product-data-wrapper')[0];
-            echo str_replace($a->innerHtml(), ': <span style="display: initial" class="h4">' . $arRef . '</span>', $dom);
-        }, $screen, $context, 'high');
-    }
-
-    private function showMetaBoxOrder(array $wp_meta_boxes, string $screen): void
-    {
-        $settings = $this;
-        $id = 'woocommerce-order-data';
-        $context = 'normal';
-        remove_meta_box($id, $screen, $context);
-
-        $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
-        add_meta_box($id, sprintf(__('%s data', 'woocommerce'), __('Order', 'woocommerce')), static function (WC_Order $order) use ($callback, $settings): void {
-            echo $settings->getMetaBoxOrder($order, $callback);
-        }, $screen, $context, 'high');
-    }
-
-    public function getMetaBoxOrder(WC_Order $order, ?callable $callback = null): string
-    {
-        ob_start();
-        if (is_null($callback)) {
-            WC_Meta_Box_Order_Data::output($order);
-        } else {
-            $callback($order);
-        }
-        $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
-        $dom->loadStr(ob_get_clean());
-        $fDocenteteIdentifier = $this->sage->sageWoocommerce->getFDocenteteIdentifierFromOrder($order);
-        $translations = SageTranslationUtils::getTranslations();
-        if (!empty($fDocenteteIdentifier)) {
-            $a = $dom->find('.woocommerce-order-data__heading')[0];
-            $title = $a->innerHtml();
-            return str_replace($title, $title . '['
-                . $translations["fDocentetes"]["doType"]["values"][__("Documents des ventes", 'sage')][$fDocenteteIdentifier["doType"]]
-                . ': n° '
-                . $fDocenteteIdentifier["doPiece"]
-                . ']', $dom);
-        }
-        return $dom;
     }
 
     public function updateTaxes(bool $showMessage = true): void
     {
         [$taxe, $rates] = $this->getWordpressTaxes();
-        $fTaxes = $this->sage->sageGraphQl->getFTaxes(false);
+        $fTaxes = $this->sage->sageGraphQl->getFTaxes(useCache: false, getFromSage: true);
         if (!Sage::showErrors($fTaxes)) {
             $taxeChanges = $this->getTaxesChanges($fTaxes, $rates);
             $this->applyTaxesChanges($taxeChanges);
@@ -1415,6 +1396,69 @@ WHERE meta_key = %s
                 WC_Tax::_delete_tax_rate($taxeChange["old"]->tax_rate_id);
             }
         }
+    }
+
+    private function showMetaBoxProduct(array $wp_meta_boxes, string $screen): void
+    {
+        $arRef = Sage::getArRef(get_the_ID());
+        if (empty($arRef)) {
+            return;
+        }
+
+        $id = 'woocommerce-product-data';
+        $context = 'normal';
+        remove_meta_box($id, $screen, $context);
+
+        $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
+        add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $wpPost) use ($arRef, $callback): void {
+            ob_start();
+            $callback($wpPost);
+            $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
+            $dom->loadStr(ob_get_clean());
+
+            $a = $dom->find('span.product-data-wrapper')[0];
+            echo str_replace($a->innerHtml(), ': <span style="display: initial" class="h4">' . $arRef . '</span>', $dom);
+        }, $screen, $context, 'high');
+    }
+
+    /**
+     * woocommerce/src/Internal/Admin/Orders/Edit.php:78 add_meta_box('woocommerce-order-data'
+     */
+    private function showMetaBoxOrder(array $wp_meta_boxes, string $screen): void
+    {
+        $settings = $this;
+        $id = 'woocommerce-order-data';
+        $context = 'normal';
+        remove_meta_box($id, $screen, $context);
+
+        $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
+        add_meta_box($id, sprintf(__('%s data', 'woocommerce'), __('Order', 'woocommerce')), static function (WC_Order $order) use ($callback, $settings): void {
+            echo $settings->getMetaBoxOrder($order, $callback);
+        }, $screen, $context, 'high');
+    }
+
+    public function getMetaBoxOrder(WC_Order $order, ?callable $callback = null): string
+    {
+        ob_start();
+        if (is_null($callback)) {
+            WC_Meta_Box_Order_Data::output($order);
+        } else {
+            $callback($order);
+        }
+        $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
+        $dom->loadStr(ob_get_clean());
+        $fDocenteteIdentifier = $this->sage->sageWoocommerce->getFDocenteteIdentifierFromOrder($order);
+        $translations = SageTranslationUtils::getTranslations();
+        if (!empty($fDocenteteIdentifier)) {
+            $a = $dom->find('.woocommerce-order-data__heading')[0];
+            $title = $a->innerHtml();
+            return str_replace($title, $title . '['
+                . $translations["fDocentetes"]["doType"]["values"][__("Documents des ventes", 'sage')][$fDocenteteIdentifier["doType"]]
+                . ': n° '
+                . $fDocenteteIdentifier["doPiece"]
+                . ']', $dom);
+        }
+        return $dom;
     }
 
     public static function get_option_date_or_null(string $option, bool $default_value = false): ?DateTime

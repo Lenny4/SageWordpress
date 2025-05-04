@@ -459,7 +459,7 @@ final class SageGraphQl
         bool  $ignorePingApi = false
     ): stdClass|null|string
     {
-        if (!is_null($this->pDossier)) {
+        if (!is_null($this->pDossier) && $getFromSage !== true) {
             return $this->pDossier;
         }
         $entityName = SageEntityMenu::PDOSSIER_ENTITY_NAME;
@@ -679,10 +679,7 @@ final class SageGraphQl
         bool  $ignorePingApi = false
     ): array|null|string
     {
-//        $this->pExpeditions = null;
-//        $useCache = false;
-//        $getFromSage = true;
-        if (!is_null($this->pExpeditions)) {
+        if (!is_null($this->pExpeditions) && $getFromSage !== true) {
             return $this->pExpeditions;
         }
         $entityName = SageEntityMenu::PEXPEDITION_ENTITY_NAME;
@@ -1132,7 +1129,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $ignorePingApi = false
     ): array|null|string
     {
-        if (!is_null($this->pCattarifs)) {
+        if (!is_null($this->pCattarifs) && $getFromSage !== true) {
             return $this->pCattarifs;
         }
         $entityName = SageEntityMenu::PCATTARIF_ENTITY_NAME;
@@ -1191,7 +1188,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $ignorePingApi = false
     ): array|null|string
     {
-        if (!is_null($this->fPays)) {
+        if (!is_null($this->fPays) && $getFromSage !== true) {
             return $this->fPays;
         }
         $entityName = SageEntityMenu::FPAYS_ENTITY_NAME;
@@ -1230,7 +1227,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $ignorePingApi = false
     ): array|null|string
     {
-        if (!is_null($this->fTaxes)) {
+        if (!is_null($this->fTaxes) && $getFromSage !== true) {
             return $this->fTaxes;
         }
         $entityName = SageEntityMenu::FTAXES_ENTITY_NAME;
@@ -1259,7 +1256,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $ignorePingApi = false
     ): array|null|string
     {
-        if (!is_null($this->pCatComptas)) {
+        if (!is_null($this->pCatComptas) && $getFromSage !== true) {
             return $this->pCatComptas;
         }
         $entityName = SageEntityMenu::PCATCOMPTA_ENTITY_NAME;
@@ -1288,7 +1285,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 if ($pCatCompta === '') {
                     continue;
                 }
-                list($tiers, $i) = preg_split('/(?<=.{' . $pos . '})/', str_replace('caCompta', '', $key), 2);
+                [$tiers, $i] = preg_split('/(?<=.{' . $pos . '})/', str_replace('caCompta', '', $key), 2);
                 $stdClass = new stdClass();
                 $stdClass->label = $pCatCompta;
                 $stdClass->cbIndice = (int)$i;

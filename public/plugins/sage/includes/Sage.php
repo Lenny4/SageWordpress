@@ -172,7 +172,7 @@ final class Sage
                 $isWooCommerceInstalled = array_key_exists($pluginId, $allPlugins);
                 add_action('admin_notices', static function () use ($isWooCommerceInstalled, $pluginId, $sage): void {
                     ?>
-                    <div id="<?= Sage::TOKEN ?>_appstate" class="notice notice-info is-dismissible hidden">
+                    <div id="<?= self::TOKEN ?>_appstate" class="notice notice-info is-dismissible hidden">
                         <div class="content"></div>
                     </div>
                     <?php
@@ -193,8 +193,8 @@ final class Sage
                             $sage->showWrongOptions();
                         }
                     }
-                    if (array_key_exists(Sage::TOKEN . '_message', $_GET)) {
-                        echo str_replace("\'", "'", $_GET[Sage::TOKEN . '_message']);
+                    if (array_key_exists(self::TOKEN . '_message', $_GET)) {
+                        echo str_replace("\'", "'", $_GET[self::TOKEN . '_message']);
                     }
                     ?>
                     <?php
@@ -516,8 +516,8 @@ final class Sage
             return array_map(static function (SageEntityMenu $sageEntityMenu) {
                 $entityName = $sageEntityMenu->getEntityName();
                 return [
-                    'entityName' => Sage::TOKEN . '_' . $entityName,
-                    'value' => get_option(Sage::TOKEN . '_default_filter_' . $entityName, null),
+                    'entityName' => self::TOKEN . '_' . $entityName,
+                    'value' => get_option(self::TOKEN . '_default_filter_' . $entityName, null),
                 ];
             }, $settings->sageEntityMenus);
         }));
@@ -561,13 +561,13 @@ final class Sage
             $sage->afterCreateOrEditOrder($order);
         }, accepted_args: 2);
         add_action('woocommerce_new_order', static function (int $orderId, WC_Order $order) use ($sage): void {
-            $sage->afterCreateOrEditOrder($order);
+            $sage->afterCreateOrEditOrder($order, true);
         }, accepted_args: 2);
         // endregion
 
         // region api endpoint
         add_action('rest_api_init', static function () use ($sageWoocommerce, $sageGraphQl, $settings) {
-            register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/sync', [
+            register_rest_route(self::TOKEN . '/v1', '/orders/(?P<id>\d+)/sync', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $order = new WC_Order($request['id']);
@@ -597,7 +597,7 @@ final class Sage
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/farticle/(?P<arRef>([^&]*))/import', args: [ // https://stackoverflow.com/a/10126995/6824121
+            register_rest_route(self::TOKEN . '/v1', '/farticle/(?P<arRef>([^&]*))/import', args: [ // https://stackoverflow.com/a/10126995/6824121
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $arRef = $request['arRef'];
@@ -632,7 +632,7 @@ final class Sage
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+$)', [
+            register_rest_route(self::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+$)', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageGraphQl) {
                     $extended = false;
@@ -671,7 +671,7 @@ final class Sage
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/desynchronize', [
+            register_rest_route(self::TOKEN . '/v1', '/orders/(?P<id>\d+)/desynchronize', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $order = new WC_Order($request['id']);
@@ -685,13 +685,13 @@ final class Sage
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/fdocentete', [
+            register_rest_route(self::TOKEN . '/v1', '/orders/(?P<id>\d+)/fdocentete', [
                 'methods' => 'POST',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $order = new WC_Order($request['id']);
                     $body = json_decode($request->get_body(), false);
-                    $doPiece = $body->{Sage::TOKEN . "-fdocentete-dopiece"};
-                    $doType = (int)$body->{Sage::TOKEN . "-fdocentete-dotype"};
+                    $doPiece = $body->{self::TOKEN . "-fdocentete-dopiece"};
+                    $doType = (int)$body->{self::TOKEN . "-fdocentete-dotype"};
                     $order = $sageWoocommerce->linkOrderFDocentete($order, $doPiece, $doType, true);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
@@ -702,14 +702,14 @@ final class Sage
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/deactivate-shipping-zones', [
+            register_rest_route(self::TOKEN . '/v1', '/deactivate-shipping-zones', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
                     global $wpdb;
                     $wpdb->get_results($wpdb->prepare("
 UPDATE {$wpdb->prefix}woocommerce_shipping_zone_methods
 SET is_enabled = 0
-WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
+WHERE method_id NOT LIKE '" . self::TOKEN . "%'
   AND is_enabled = 1
 "));
                     $redirect = wp_get_referer();
@@ -720,7 +720,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/add-website-sage-api', [
+            register_rest_route(self::TOKEN . '/v1', '/add-website-sage-api', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($settings) {
                     $result = $settings->addWebsiteSageApi(true);
@@ -733,7 +733,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/healthz', [
+            register_rest_route(self::TOKEN . '/v1', '/healthz', [
                 'methods' => 'GET',
                 'callback' => static function () {
                     return new WP_REST_Response(null, Response::HTTP_OK);
@@ -742,7 +742,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     return true;
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/meta-box-order', [
+            register_rest_route(self::TOKEN . '/v1', '/orders/(?P<id>\d+)/meta-box-order', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($settings) {
                     // this includes import woocommerce_wp_text_input
@@ -757,7 +757,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+)/(?P<doType>\d+)/import', args: [
+            register_rest_route(self::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+)/(?P<doType>\d+)/import', args: [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
                     $doPiece = $request['doPiece'];
@@ -793,13 +793,13 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     return current_user_can(SageSettings::$capability);
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/user/(?P<ctNum>([^&]*))', [
+            register_rest_route(self::TOKEN . '/v1', '/user/(?P<ctNum>([^&]*))', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageGraphQl) {
                     $ctNum = $request['ctNum'];
                     $fComptet = $sageGraphQl->getFComptet($ctNum, ignorePingApi: true);
                     $user = get_users([
-                        'meta_key' => Sage::META_KEY_CT_NUM,
+                        'meta_key' => self::META_KEY_CT_NUM,
                         'meta_value' => strtoupper($ctNum)
                     ]);
                     if (!empty($user)) {
@@ -852,7 +852,6 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         // endregion
         $this->settings->applyDefaultSageEntityMenuOptions();
         $this->settings->addWebsiteSageApi(true);
-        $this->settings->updateTaxes(showMessage: false);
 
         // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
         $this->init();
@@ -1165,20 +1164,26 @@ WHERE user_id = %s AND meta_key LIKE '_" . self::TOKEN . "_%'
         return self::$_instance;
     }
 
-    private function afterCreateOrEditOrder(WC_Order $order): void
+    private function afterCreateOrEditOrder(WC_Order $order, bool $isNewOrder = false): void
     {
         if (
-            array_key_exists(Sage::TOKEN . '-fdocentete-dotype', $_POST) &&
-            array_key_exists(Sage::TOKEN . '-fdocentete-dopiece', $_POST) &&
-            is_numeric($_POST[Sage::TOKEN . '-fdocentete-dotype']) &&
-            !empty($_POST[Sage::TOKEN . '-fdocentete-dopiece'])
+            array_key_exists(self::TOKEN . '-fdocentete-dotype', $_POST) &&
+            array_key_exists(self::TOKEN . '-fdocentete-dopiece', $_POST) &&
+            is_numeric($_POST[self::TOKEN . '-fdocentete-dotype']) &&
+            !empty($_POST[self::TOKEN . '-fdocentete-dopiece'])
         ) {
             $this->sageWoocommerce->linkOrderFDocentete(
                 $order,
-                $_POST[Sage::TOKEN . '-fdocentete-dopiece'],
-                (int)$_POST[Sage::TOKEN . '-fdocentete-dotype'],
+                $_POST[self::TOKEN . '-fdocentete-dopiece'],
+                (int)$_POST[self::TOKEN . '-fdocentete-dotype'],
                 true,
             );
+        } else if ($isNewOrder) {
+            $optionName = self::TOKEN . '_auto_create_sage_fdocentete';
+            if (get_option($optionName)) {
+                $order->update_meta_data($optionName, true);
+                $order->save();
+            }
         }
     }
 
