@@ -3,7 +3,7 @@
   'data': {
     'ctNum': item.ctNum
   }
-}|json_encode()) }}" data-tippy-content="<div>
+}|json_encode()) }}" data-tippy-placement="left" data-tippy-content="<div>
     {% if item._sage_postId != null %}
       {{ 'Mettre à jour le client'|trans }}
     {% else %}
@@ -13,7 +13,8 @@
   <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
 </a>
 {% if item._sage_postId != null %}
-  <a href="{{ get_admin_url() }}user-edit.php?user_id={{ item._sage_postId }}" data-tippy-content="<div>
+  <a href="{{ get_admin_url() }}user-edit.php?user_id={{ item._sage_postId }}" data-tippy-placement="left"
+     data-tippy-content="<div>
       {{ 'Voir l\'utilisateur Wordpress'|trans }}
     </div>">
     <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>

@@ -3,8 +3,10 @@ import tippy from "tippy.js";
 import "jquery-blockui";
 import "./react/AppStateComponent";
 import "./react/UserComponent";
-import { getTranslations } from "./functions/translations"; // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
+import { getTranslations } from "./functions/translations";
+import { basePlacements } from "@popperjs/core/lib/enums"; // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 
+// todo intégrer: https://github.com/woocommerce/woocommerce/pull/55508
 // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 $(() => {
   let allFilterContainer = $("#filters_container");
@@ -23,10 +25,22 @@ $(() => {
   }
 
   function applyTippy() {
-    // https://atomiks.github.io/tippyjs/v6/constructor/
-    tippy("[data-tippy-content]", {
+    const tippyOptions = {
       interactive: true,
       allowHTML: true,
+    };
+    const selector = "[data-tippy-content]";
+    let notSelector = "";
+    for (const placement of basePlacements) {
+      tippy(selector + "[data-tippy-placement='" + placement + "']", {
+        ...tippyOptions,
+        placement: placement,
+      });
+      notSelector += ":not([data-tippy-placement='" + placement + "'])";
+    }
+    // https://atomiks.github.io/tippyjs/v6/constructor/
+    tippy(selector + notSelector, {
+      ...tippyOptions,
     });
   }
 
@@ -355,6 +369,7 @@ $(() => {
       const data = await response.json();
       const blockInside = $(blockDom).find(".inside");
       setContentHtml(blockInside, data.html);
+      window.dispatchEvent(new CustomEvent("wc_meta_boxes_order_items_init"));
     } else {
       // todo toastr
     }
@@ -656,7 +671,6 @@ $(() => {
       const data = await response.json();
       const blockInside = $(blockDom).find(".inside");
       setContentHtml(blockInside, data.html);
-      // woocommerce/assets/js/admin/meta-boxes-order.js .on( 'wc_order_items_reload', this.reload_items )
       $("#woocommerce-order-items").trigger("wc_order_items_reload");
       reloadWooCommerceOrderDataBox();
     } else {

@@ -67,6 +67,7 @@ final class SageSettings
         $this->sageEntityMenus = [
             new SageEntityMenu(
                 title: __("Clients", 'sage'),
+                // todo afficher les clients Sage qui partagent le même email et expliqués qu'il ne seront pas dupliqués sur le site
                 description: __("Gestion des clients.", 'sage'),
                 entityName: SageEntityMenu::FCOMPTET_ENTITY_NAME,
                 typeModel: SageEntityMenu::FCOMPTET_TYPE_MODEL,
@@ -1018,7 +1019,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         // region user
         // region user save meta with API: https://wordpress.stackexchange.com/a/422521/201039
         $userMetaProp = self::PREFIX_META_DATA;
-        add_filter('rest_pre_insert_user', static function (
+        add_filter('rest_pre_insert_user', static function ( // /!\ aussi trigger lorsque l'on update un user
             stdClass        $prepared_user,
             WP_REST_Request $request
         ) use ($userMetaProp): stdClass {
@@ -1041,7 +1042,13 @@ FROM {$wpdb->usermeta}
 WHERE meta_key = %s
   AND meta_value = %s
 ", [Sage::META_KEY_CT_NUM, $ctNum]));
-                    if (!empty($r)) {
+                    if (
+                        !empty($r) &&
+                        (
+                            !property_exists($prepared_user, 'ID') ||
+                            (int)$r[0]->ID !== $prepared_user->ID
+                        )
+                    ) {
                         wp_send_json_error([
                             'existing_user_ctNum' => __("Le compte Sage [" . $ctNum . "] est déjà lié au compte Wordpress [" . $r[0]->user_login . " (id: " . $r[0]->ID . ")]"),
                         ]);

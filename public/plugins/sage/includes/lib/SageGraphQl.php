@@ -1033,7 +1033,7 @@ WHERE meta_key = %s
             ]),
         ];
         if ($getLotSerie) {
-            $r['fLotserieNavigation'] = [
+            $r['fLotseriesNavigation'] = [
                 ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                     'lsNoSerie',
                 ]),

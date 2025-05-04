@@ -405,6 +405,9 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
 
     public function getMainFDocenteteOfExtendedFDocentetes(WC_Order $order, array|null|string $extendedFDocentetes): stdClass|null|string
     {
+        if (empty($extendedFDocentetes)) {
+            return null;
+        }
         if (!is_array($extendedFDocentetes)) {
             return $extendedFDocentetes;
         }
@@ -1527,7 +1530,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
                                 <pre>" . $order->get_error_message() . "</pre>
                                 </div>"];
             }
-            $order->add_order_note(__('Le document de vente Sage a été synchronisé de la commande.', 'sage') . ' [' . $fDocentete->doPiece["doPiece"] . ']');
+            $order->add_order_note(__('Le document Sage a été synchronisé avec la commande.', 'sage') . 'doPiece:[' . $fDocentete->doPiece . '] doType:[' . $fDocentete->doType . '].');
             $order->update_meta_data(Sage::META_KEY_IDENTIFIER, json_encode([
                 'doPiece' => $fDocentete->doPiece,
                 'doType' => $fDocentete->doType,

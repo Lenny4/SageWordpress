@@ -3,7 +3,7 @@
   'data': {
     'arRef': item.arRef
   }
-}|json_encode()) }}" data-tippy-content="<div>
+}|json_encode()) }}" data-tippy-placement="left" data-tippy-content="<div>
   {% if item._sage_postId != null %}
     {{ 'Mettre à jour l\'article'|trans }}
   {% else %}
@@ -13,7 +13,8 @@
   <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
 </a>
 {% if item._sage_postId != null %}
-  <a href="{{ get_admin_url() }}post.php?post={{ item._sage_postId }}&action=edit" data-tippy-content="<div>
+  <a href="{{ get_admin_url() }}post.php?post={{ item._sage_postId }}&action=edit" data-tippy-placement="left"
+     data-tippy-content="<div>
       {{ 'Voir l\'article Wordpress'|trans }}
     </div>">
     <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>

@@ -192,7 +192,9 @@
                     <div data-tippy-content="<div>
                         {{ 'Numéro de série/lot'|trans }}
                       </div>">
-                      {{ fDocligneFormatted.fLotserieNavigation.lsNoSerie }}
+                      {% for fLotserieNavigation in fDocligneFormatted.fLotseriesNavigation %}
+                        {{ fLotserieNavigation.lsNoSerie }}
+                      {% endfor %}
                     </div>
                   </td>
                   <td class="{% if display.showBorderX %} border-right {% endif %} {{ className }}">
