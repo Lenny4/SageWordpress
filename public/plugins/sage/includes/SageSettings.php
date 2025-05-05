@@ -1171,12 +1171,7 @@ WHERE meta_key = %s
             !$this->isApiAuthenticated()
         ) {
             $newPassword = $this->createApplicationPassword($user_id, $applicationPasswordOption);
-            $r = $this->createUpdateWebsite($user_id, $newPassword);
-            if ($r) {
-                $this->updateAllSageEntitiesInOption(['getFTaxes']);
-                $this->updateTaxes(showMessage: false);
-            }
-            return $r;
+            return $this->createUpdateWebsite($user_id, $newPassword);
         }
         return false;
     }
@@ -1221,10 +1216,11 @@ WHERE meta_key = %s
         if (is_null($stdClass)) {
             return false;
         }
-        $pCattarifs = $this->sage->sageGraphQl->getPCattarifs(useCache: false);
-        update_option(Sage::TOKEN . '_pCattarifs', json_encode($pCattarifs, JSON_THROW_ON_ERROR));
         update_option(Sage::TOKEN . '_authorization', $stdClass->data->createUpdateWebsite->authorization);
         update_option(Sage::TOKEN . '_website_id', $stdClass->data->createUpdateWebsite->id);
+
+        $this->updateAllSageEntitiesInOption(ignores: ['getFTaxes']);
+        $this->updateTaxes(showMessage: false);
         $this->updateShippingMethodsWithSage();
 
         add_action('admin_notices', static function (): void {
