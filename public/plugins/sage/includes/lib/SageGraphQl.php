@@ -14,6 +14,8 @@ use GraphQL\Mutation;
 use GraphQL\Query;
 use GraphQL\RawObject;
 use GraphQL\Variable;
+use ReflectionClass;
+use ReflectionMethod;
 use StdClass;
 use Throwable;
 
@@ -1334,5 +1336,41 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             return $result->data->updateFComptetFromWebsite;
         }
         return $result;
+    }
+
+    public function updateAllSageEntitiesInOption(array $ignores = []): void
+    {
+        $reflection = new ReflectionClass($this);
+        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+            $methodName = $method->getName();
+            if (in_array($methodName, $ignores, true)) {
+                continue;
+            }
+            // Check if the method name starts with "get"
+            if (str_starts_with($methodName, 'get')) {
+                $parameters = $method->getParameters();
+                $paramNames = array_map(fn($param) => $param->getName(), $parameters);
+
+                // Check if both 'useCache' and 'getFromSage' are in the parameter list
+                if (in_array('useCache', $paramNames, true) && in_array('getFromSage', $paramNames, true)) {
+                    // Build argument list in correct order with values (example: true, false)
+                    $args = [];
+
+                    foreach ($parameters as $param) {
+                        if ($param->getName() === 'useCache') {
+                            $args[] = false;
+                        } elseif ($param->getName() === 'getFromSage') {
+                            $args[] = true;
+                        } else {
+                            // Provide default or null for other parameters
+                            $args[] = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;
+                        }
+                    }
+
+                    // Call the method with constructed arguments
+                    $method->invokeArgs($this->sage->sageGraphQl, $args);
+                }
+            }
+        }
     }
 }

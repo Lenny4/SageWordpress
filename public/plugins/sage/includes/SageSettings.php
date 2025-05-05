@@ -12,8 +12,6 @@ use App\Utils\TaxeUtils;
 use Automattic\WooCommerce\Utilities\OrderUtil;
 use DateTime;
 use PHPHtmlParser\Dom;
-use ReflectionClass;
-use ReflectionMethod;
 use stdClass;
 use WC_Meta_Box_Order_Data;
 use WC_Order;
@@ -1219,7 +1217,7 @@ WHERE meta_key = %s
         update_option(Sage::TOKEN . '_authorization', $stdClass->data->createUpdateWebsite->authorization);
         update_option(Sage::TOKEN . '_website_id', $stdClass->data->createUpdateWebsite->id);
 
-        $this->updateAllSageEntitiesInOption(ignores: ['getFTaxes']);
+        $this->sage->sageGraphQl->updateAllSageEntitiesInOption(ignores: ['getFTaxes']);
         $this->updateTaxes(showMessage: false);
         $this->updateShippingMethodsWithSage();
 
@@ -1231,74 +1229,6 @@ WHERE meta_key = %s
             <?php
         });
         return true;
-    }
-
-    private function updateShippingMethodsWithSage(): void
-    {
-        // woocommerce/includes/class-wc-ajax.php : shipping_zone_add_method
-        $pExpeditions = $this->sage->sageGraphQl->getPExpeditions();
-        $newSlugs = array_map(static function (stdClass $pExpedition) {
-            return $pExpedition->slug;
-        }, $pExpeditions);
-        $zones = WC_Shipping_Zones::get_zones();
-        $zoneIds = [0, ...array_map(static function (array $zone) {
-            return $zone['id'];
-        }, $zones)];
-        foreach ($zoneIds as $zoneId) {
-            $zone = new WC_Shipping_Zone($zoneId);
-            $oldSlugs = [];
-            foreach ($zone->get_shipping_methods() as $shippingMethod) {
-                if (!str_starts_with($shippingMethod->id, Sage::TOKEN . '-')) {
-                    continue;
-                }
-                $oldSlugs[] = $shippingMethod->id;
-                if (!in_array($shippingMethod->id, $newSlugs, true)) {
-                    $zone->delete_shipping_method($shippingMethod->get_instance_id());
-                }
-            }
-            foreach ($pExpeditions as $pExpedition) {
-                if (!in_array($pExpedition->slug, $oldSlugs, true)) {
-                    $zone->add_shipping_method($pExpedition->slug);
-                }
-            }
-        }
-        update_option(Sage::TOKEN . '_shipping_methods_updated', new DateTime());
-    }
-
-    private function updateAllSageEntitiesInOption(array $ignores = []): void
-    {
-        $reflection = new ReflectionClass($this->sage->sageGraphQl);
-        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            $methodName = $method->getName();
-            if (in_array($methodName, $ignores, true)) {
-                continue;
-            }
-            // Check if the method name starts with "get"
-            if (str_starts_with($methodName, 'get')) {
-                $parameters = $method->getParameters();
-                $paramNames = array_map(fn($param) => $param->getName(), $parameters);
-
-                // Check if both 'useCache' and 'getFromSage' are in the parameter list
-                if (in_array('useCache', $paramNames, true) && in_array('getFromSage', $paramNames, true)) {
-                    // Build argument list in correct order with values (example: true, false)
-                    $args = [];
-
-                    foreach ($parameters as $param) {
-                        if ($param->getName() === 'useCache') {
-                            $args[] = false;
-                        } elseif ($param->getName() === 'getFromSage') {
-                            $args[] = true;
-                        } else {
-                            // Provide default or null for other parameters
-                            $args[] = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;
-                        }
-                    }
-
-                    // Call the method with constructed arguments
-                    $method->invokeArgs($this->sage->sageGraphQl, $args);
-                }
-            }
-        }
     }
 
     public function updateTaxes(bool $showMessage = true): void
@@ -1392,6 +1322,38 @@ WHERE meta_key = %s
                 WC_Tax::_delete_tax_rate($taxeChange["old"]->tax_rate_id);
             }
         }
+    }
+
+    private function updateShippingMethodsWithSage(): void
+    {
+        // woocommerce/includes/class-wc-ajax.php : shipping_zone_add_method
+        $pExpeditions = $this->sage->sageGraphQl->getPExpeditions();
+        $newSlugs = array_map(static function (stdClass $pExpedition) {
+            return $pExpedition->slug;
+        }, $pExpeditions);
+        $zones = WC_Shipping_Zones::get_zones();
+        $zoneIds = [0, ...array_map(static function (array $zone) {
+            return $zone['id'];
+        }, $zones)];
+        foreach ($zoneIds as $zoneId) {
+            $zone = new WC_Shipping_Zone($zoneId);
+            $oldSlugs = [];
+            foreach ($zone->get_shipping_methods() as $shippingMethod) {
+                if (!str_starts_with($shippingMethod->id, Sage::TOKEN . '-')) {
+                    continue;
+                }
+                $oldSlugs[] = $shippingMethod->id;
+                if (!in_array($shippingMethod->id, $newSlugs, true)) {
+                    $zone->delete_shipping_method($shippingMethod->get_instance_id());
+                }
+            }
+            foreach ($pExpeditions as $pExpedition) {
+                if (!in_array($pExpedition->slug, $oldSlugs, true)) {
+                    $zone->add_shipping_method($pExpedition->slug);
+                }
+            }
+        }
+        update_option(Sage::TOKEN . '_shipping_methods_updated', new DateTime());
     }
 
     private function showMetaBoxProduct(array $wp_meta_boxes, string $screen): void
