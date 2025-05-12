@@ -6,7 +6,6 @@ use App\class\SageEntityMenu;
 use App\class\SageEntityMetadata;
 use App\class\SageShippingMethod__index__;
 use App\lib\SageRequest;
-use App\Utils\PCatComptaUtils;
 use App\Utils\SageTranslationUtils;
 use App\Utils\TaxeUtils;
 use Automattic\WooCommerce\Utilities\OrderUtil;
@@ -35,6 +34,8 @@ final class SageSettings
 {
     public final const PREFIX_META_DATA = 'metaData';
     public static string $capability = 'manage_options';
+    public final const TARGET_PANEl = Sage::TOKEN . '_product_data';
+
     public static array $paginationRange = [20, 50, 100];
 
     public static int $defaultPagination = 20;
@@ -291,6 +292,7 @@ final class SageSettings
                         'default' => '',
                         'placeholder' => __('', 'sage')
                     ],
+                    // todo ajouter une option pour considérer les catalogues comme des catégories
                 ],
                 actions: [
                     'import_from_sage' => function (array $data) use ($sageWoocommerce): string {
@@ -880,6 +882,14 @@ final class SageSettings
         add_filter(Sage::TOKEN . '_menu_settings', static fn(array $settings = []): array => $settings);
 
         // region WooCommerce
+        add_filter('product_type_selector', static function (array $types): array {
+            $arRef = Sage::getArRef(get_the_ID());
+            if (!empty($arRef)) {
+                return [Sage::TOKEN => __('Sage', 'sage')];
+            }
+            return array_merge([Sage::TOKEN => __('Sage', 'sage')], $types);
+        });
+
         add_action('add_meta_boxes', static function (string $screen, mixed $obj) use ($sageSettings): void { // remove [Product type | virtual | downloadable] add product arRef
             if ($screen === 'product') {
                 global $wp_meta_boxes;
@@ -891,45 +901,37 @@ final class SageSettings
         }, 40, 2); // woocommerce/includes/admin/class-wc-admin-meta-boxes.php => 40 > 30 : add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 30 );
 
         // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
-        $productTabs = [
-            ['name' => 'general', 'trans' => __('General', 'woocommerce')],
-            ['name' => 'inventory', 'trans' => __('Inventory', 'woocommerce')],
-            ['name' => 'shipping', 'trans' => __('Shipping', 'woocommerce')],
-//            ['name' => 'linked_product', 'trans' => __('Linked Products', 'woocommerce')],
-//            ['name' => 'attribute', 'trans' => __('Attributes', 'woocommerce')],
-            ['name' => 'variations', 'trans' => __('Variations', 'woocommerce')],
-//            ['name' => 'advanced', 'trans' => __('Advanced', 'woocommerce')],
-        ];
-        add_filter('woocommerce_product_data_tabs', static function (array $tabs) use ($productTabs) { // Code to Create Tab in the Backend
-            $arRef = Sage::getArRef(get_the_ID());
-            if (empty($arRef)) {
-                return $tabs;
+        add_filter('woocommerce_product_data_tabs', static function (array $tabs) { // Code to Create Tab in the Backend
+            foreach ($tabs as $tabName => $value) {
+                if (!in_array($tabName, [
+                    'linked_product',
+                    'advanced',
+                ])) {
+                    $tabs[$tabName]["class"][] = 'hide_if_' . Sage::TOKEN;
+                }
             }
 
-            foreach ($productTabs as $productTab) {
-                $tabs[$productTab['name']] = [
-                    ...$tabs[$productTab['name']],
-                    'label' => $productTab['trans'],
-                    'target' => Sage::TOKEN . '_product_data_panel_' . $productTab['name'],
-                ];
-            }
-
+            $tabs[Sage::TOKEN] = [
+                'label' => __('Sage', 'sage'),
+                'target' => self::TARGET_PANEl,
+                'class' => ['show_if_' . Sage::TOKEN],
+                'priority' => 0,
+            ];
             return $tabs;
         });
 
-        add_action('woocommerce_product_data_panels', static function () use ($sageSettings, $productTabs): void { // Code to Add Data Panel to the Tab
+        add_action('woocommerce_product_data_panels', static function () use ($sageSettings): void { // Code to Add Data Panel to the Tab
             $product = wc_get_product();
             if (!($product instanceof WC_Product)) {
                 return;
             }
             $pCattarifs = $sageSettings->sage->sageGraphQl->getPCattarifs();
             $pCatComptas = $sageSettings->sage->sageGraphQl->getPCatComptas();
-            echo $sageSettings->sage->twig->render('woocommerce/tabs.html.twig', [
-                'tabNames' => array_map(static fn(array $productTab): string => $productTab['name'], $productTabs),
-                'product' => $product,
+            echo $sageSettings->sage->twig->render('woocommerce/tabs/sage.html.twig', [
                 'pCattarifs' => $pCattarifs,
-                'pCatComptas' => $pCatComptas[PCatComptaUtils::TIERS_TYPE_VEN],
-                'htTtcs' => ['Ht', 'Ttc'],
+                'pCatComptas' => $pCatComptas,
+                'panelId' => self::TARGET_PANEl,
+                'productMeta' => json_encode($product->get_meta_data(), JSON_THROW_ON_ERROR),
             ]);
         });
         // endregion
@@ -1359,10 +1361,6 @@ WHERE meta_key = %s
     private function showMetaBoxProduct(array $wp_meta_boxes, string $screen): void
     {
         $arRef = Sage::getArRef(get_the_ID());
-        if (empty($arRef)) {
-            return;
-        }
-
         $id = 'woocommerce-product-data';
         $context = 'normal';
         remove_meta_box($id, $screen, $context);
@@ -1375,7 +1373,21 @@ WHERE meta_key = %s
             $dom->loadStr(ob_get_clean());
 
             $a = $dom->find('span.product-data-wrapper')[0];
-            echo str_replace($a->innerHtml(), ': <span style="display: initial" class="h4">' . $arRef . '</span>', $dom);
+            $content = $a->innerHtml();
+            $hasArRef = !empty($arRef);
+            $labelArRef = '';
+            if ($hasArRef) {
+                $labelArRef = ': <span style="display: initial" class="h4">' . $arRef . '</span>';
+            }
+            $content = str_replace($content, $labelArRef . $content, $dom);
+            if ($hasArRef || str_contains($wpPost->post_status, 'draft')) {
+                $content = str_replace(
+                    ["selected='selected'", "option value=\"sage\""],
+                    ['', "option value=\"sage\" selected='selected'"],
+                    $content
+                );
+            }
+            echo $content;
         }, $screen, $context, 'high');
     }
 
@@ -1417,6 +1429,13 @@ WHERE meta_key = %s
                 . ']', $dom);
         }
         return $dom;
+    }
+
+    public function getMetaBoxOrderItems(WC_Order $order): string
+    {
+        ob_start();
+        include __DIR__ . '/../../woocommerce/includes/admin/meta-boxes/views/html-order-items.php';
+        return ob_get_clean();
     }
 
     public static function get_option_date_or_null(string $option, bool $default_value = false): ?DateTime

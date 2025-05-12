@@ -45,6 +45,7 @@ $(() => {
   }
 
   function setContentHtml(blockInside: JQuery, html: string) {
+    window.dispatchEvent(new CustomEvent("wc_meta_boxes_order_items_init"));
     $(blockInside).html(html);
     applyTippy();
   }
@@ -369,7 +370,6 @@ $(() => {
       const data = await response.json();
       const blockInside = $(blockDom).find(".inside");
       setContentHtml(blockInside, data.html);
-      window.dispatchEvent(new CustomEvent("wc_meta_boxes_order_items_init"));
     } else {
       // todo toastr
     }
@@ -380,9 +380,18 @@ $(() => {
   }
 
   async function reloadWooCommerceOrderDataBox() {
-    const blockDom = $("#woocommerce-order-data");
+    const blockDomData = $("#woocommerce-order-data");
+    const blockDomItems = $("#woocommerce-order-items");
     // @ts-ignore
-    $(blockDom).block({
+    $(blockDomData).block({
+      message: null,
+      overlayCSS: {
+        background: "#fff",
+        opacity: 0.6,
+      },
+    });
+    // @ts-ignore
+    $(blockDomItems).block({
       message: null,
       overlayCSS: {
         background: "#fff",
@@ -398,11 +407,13 @@ $(() => {
         wpnonce,
     );
     // @ts-ignore
-    $(blockDom).unblock();
+    $(blockDomData).unblock();
+    // @ts-ignore
+    $(blockDomItems).unblock();
     if (response.status === 200) {
       const data = await response.json();
-      const blockInside = $(blockDom).find(".inside");
-      setContentHtml(blockInside, data.html);
+      setContentHtml($(blockDomData).find(".inside"), data.orderHtml);
+      setContentHtml($(blockDomItems).find(".inside"), data.itemHtml);
       $(document.body).trigger("wc-enhanced-select-init"); // woocommerce/assets/js/admin/wc-enhanced-select.js
     } else {
       // todo toastr

@@ -162,6 +162,10 @@ final class Sage
         $sage = $this;
 
         add_action('admin_init', static function () use ($sage): void {
+            $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+            if (str_contains($accept, 'application/json')) {
+                return;
+            }
             echo $sage->twig->render('data.html.twig');
             // like register_order_origin_column in woocommerce/src/Internal/Orders/OrderAttributionController.php
             $sage->settings->registerOrderSageColumn();
@@ -748,9 +752,11 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                     // this includes import woocommerce_wp_text_input
                     include_once __DIR__ . '/../../woocommerce/includes/admin/wc-meta-box-functions.php';
                     $order = new WC_Order($request['id']);
-                    $html = $settings->getMetaBoxOrder($order);
+                    $orderHtml = $settings->getMetaBoxOrder($order);
+                    $itemHtml = $settings->getMetaBoxOrderItems($order);
                     return new WP_REST_Response([
-                        'html' => $html
+                        'orderHtml' => $orderHtml,
+                        'itemHtml' => $itemHtml
                     ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
