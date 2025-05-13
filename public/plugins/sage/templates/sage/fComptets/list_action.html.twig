@@ -1,17 +1,26 @@
-<a href="{{ getUrlWithParam('action', {
-  'type': 'import_from_sage',
-  'data': {
-    'ctNum': item.ctNum
-  }
-}|json_encode()) }}" data-tippy-placement="left" data-tippy-content="<div>
+{% if item.ctType == 0 %}
+  <a href="{{ getUrlWithParam('action', {
+    'type': 'import_from_sage',
+    'data': {
+      'ctNum': item.ctNum
+    }
+  }|json_encode()) }}" data-tippy-placement="left" data-tippy-content="<div>
     {% if item._sage_postId != null %}
       {{ 'Mettre à jour le client'|trans }}
     {% else %}
       {{ 'Importer le client'|trans }}
     {% endif %}
   </div>">
-  <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
-</a>
+    <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
+  </a>
+{% else %}
+  <span class="dashicons dashicons-download button text-error" style="padding-right: 22px" data-tippy-placement="left"
+        data-tippy-content="<div class='text-error'>
+      {{ 'Seuls les clients peuvent être importés.'|trans }}
+    </div>"></span>
+{% endif %}
+
+
 {% if item._sage_postId != null %}
   <a href="{{ get_admin_url() }}user-edit.php?user_id={{ item._sage_postId }}" data-tippy-placement="left"
      data-tippy-content="<div>

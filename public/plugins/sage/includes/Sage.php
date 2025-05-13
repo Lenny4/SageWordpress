@@ -4,6 +4,7 @@ namespace App;
 
 use App\class\SageEntityMenu;
 use App\class\SageExpectedOption;
+use App\enum\Sage\TiersTypeEnum;
 use App\lib\SageAdminApi;
 use App\lib\SageGraphQl;
 use App\lib\SagePostType;
@@ -1060,6 +1061,11 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
             }
             return [null, "<div class='error'>
                     " . __("Le compte Sage n'a pas pu être " . $word, 'sage') . "
+                            </div>"];
+        }
+        if ($fComptet->ctType !== TiersTypeEnum::TiersTypeClient->value) {
+            return [null, "<div class='error'>
+                    " . __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", 'sage') . "
                             </div>"];
         }
         $ctNum = $fComptet->ctNum;

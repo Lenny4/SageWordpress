@@ -36,6 +36,8 @@ final class SageSettings
     public static string $capability = 'manage_options';
     public final const TARGET_PANEL = Sage::TOKEN . '_product_data';
 
+    public const META_DATA_PREFIX = self::PREFIX_META_DATA . '_' . Sage::TOKEN;
+
     public static array $paginationRange = [20, 50, 100];
 
     public static int $defaultPagination = 20;
@@ -78,10 +80,13 @@ final class SageSettings
                     'ctIntitule',
                     'ctContact',
                     'ctEmail',
-                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update',
-                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
+                    self::META_DATA_PREFIX . '_last_update',
+                    self::META_DATA_PREFIX . '_postId',
                 ],
-                mandatoryFields: ['ctNum'],
+                mandatoryFields: [
+                    'ctNum',
+                    'ctType', // to show import in sage button on not
+                ],
                 filterType: SageEntityMenu::FCOMPTET_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
                 options: [
@@ -177,7 +182,7 @@ final class SageSettings
                     'doPiece',
                     'doType',
                     'doDate',
-                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
+                    self::META_DATA_PREFIX . '_postId',
                 ],
                 mandatoryFields: [
                     'doDomaine', // to show import in sage button on not
@@ -263,10 +268,14 @@ final class SageSettings
                 defaultFields: [
                     'arRef',
                     'arDesign',
-                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_last_update',
-                    self::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId',
+                    'arType',
+                    self::META_DATA_PREFIX . '_last_update',
+                    self::META_DATA_PREFIX . '_postId',
                 ],
-                mandatoryFields: ['arRef'],
+                mandatoryFields: [
+                    'arRef',
+                    'arType', // to show import in sage button on not
+                ],
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
                 options: [
@@ -323,6 +332,45 @@ final class SageSettings
                         return (new DateTime())->format('Y-m-d H:i:s');
                     }),
                     new SageEntityMetadata(field: '_postId', value: null),
+                    new SageEntityMetadata(field: '_arType', value: static function (StdClass $fArticle) {
+                        return $fArticle->arType;
+                    }),
+                    new SageEntityMetadata(field: '_arDesign', value: static function (StdClass $fArticle) {
+                        return $fArticle->arDesign;
+                    }),
+                    new SageEntityMetadata(field: '_faCodeFamille', value: static function (StdClass $fArticle) {
+                        return $fArticle->faCodeFamille;
+                    }),
+                    new SageEntityMetadata(field: '_arNomencl', value: static function (StdClass $fArticle) {
+                        return $fArticle->arNomencl;
+                    }),
+                    new SageEntityMetadata(field: '_arSuiviStock', value: static function (StdClass $fArticle) {
+                        return $fArticle->arSuiviStock;
+                    }),
+                    new SageEntityMetadata(field: '_arCondition', value: static function (StdClass $fArticle) {
+                        return $fArticle->arCondition;
+                    }),
+                    new SageEntityMetadata(field: '_arPrixAch', value: static function (StdClass $fArticle) {
+                        return $fArticle->arPrixAch;
+                    }),
+                    new SageEntityMetadata(field: '_arCoef', value: static function (StdClass $fArticle) {
+                        return $fArticle->arCoef;
+                    }),
+                    new SageEntityMetadata(field: '_arPrixVen', value: static function (StdClass $fArticle) {
+                        return $fArticle->arPrixVen;
+                    }),
+                    new SageEntityMetadata(field: '_arPrixTtc', value: static function (StdClass $fArticle) {
+                        return $fArticle->arPrixTtc;
+                    }),
+                    new SageEntityMetadata(field: '_arPunet', value: static function (StdClass $fArticle) {
+                        return $fArticle->arPunet;
+                    }),
+                    new SageEntityMetadata(field: '_arCoutStd', value: static function (StdClass $fArticle) {
+                        return $fArticle->arCoutStd;
+                    }),
+                    new SageEntityMetadata(field: '_arUniteVen', value: static function (StdClass $fArticle) {
+                        return $fArticle->arUniteVen;
+                    }),
                 ],
                 metaKeyIdentifier: Sage::META_KEY_AR_REF,
                 metaTable: $wpdb->postmeta,
@@ -1134,7 +1182,7 @@ WHERE meta_key = %s
         }
 
         // region custom meta fields
-        $prefix = self::PREFIX_META_DATA . '_' . Sage::TOKEN;
+        $prefix = self::META_DATA_PREFIX;
         foreach ($sageEntityMenu->getMetadata() as $metadata) {
             $fieldName = $prefix . $metadata->getField();
             $objectFields[$fieldName] = $trans[$transDomain][$fieldName];

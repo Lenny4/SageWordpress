@@ -3,6 +3,7 @@
 namespace App\lib;
 
 use App\class\SageEntityMenu;
+use App\enum\Sage\ArticleTypeEnum;
 use App\enum\Sage\DocumentFraisTypeEnum;
 use App\enum\Sage\ETypeCalculEnum;
 use App\enum\Sage\TaxeTauxType;
@@ -230,7 +231,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         }
 
         $includePostId = array_filter($fields, static function (array $field) {
-                return $field['name'] === SageSettings::PREFIX_META_DATA . '_' . Sage::TOKEN . '_postId';
+                return $field['name'] === SageSettings::META_DATA_PREFIX . '_postId';
             }) !== [];
         $mapping = array_flip($mapping);
         foreach ($data["data"][$entityName]["items"] as &$item) {
@@ -1003,6 +1004,14 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         if (is_null($fArticle)) {
             return [null, null, "<div class='error'>
                         " . __("L'article n'a pas pu être importé", 'sage') . "
+                                </div>"];
+        }
+        if (
+            $fArticle->arType !== ArticleTypeEnum::ArticleTypeStandard->value &&
+            $fArticle->arType !== ArticleTypeEnum::ArticleTypeGamme->value
+        ) {
+            return [null, null, "<div class='error'>
+                        " . __("Seuls les articles standard ou à gamme peuvent être importés", 'sage') . "
                                 </div>"];
         }
         $articlePostId = $this->sage->sageWoocommerce->getWooCommerceIdArticle($arRef);

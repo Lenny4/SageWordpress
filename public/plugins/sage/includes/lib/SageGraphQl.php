@@ -324,6 +324,9 @@ final class SageGraphQl
                 'nCatTarif',
                 'nCatCompta',
             ]),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'ctType',
+            ]),
             'fLivraisons' => $this->_getFLivraisonSelectionSet(),
         ];
     }
@@ -741,12 +744,34 @@ final class SageGraphQl
     {
         if ($forExpedition) {
             return [
-                ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['arRef']),
+                ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                    'arRef',
+                ]),
             ];
         }
         return [
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['arPoidsNet', 'arPoidsBrut']),
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['arRef', 'arDesign']),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'arType',
+                'arPoidsNet',
+                'arPoidsBrut',
+                'arNomencl', // enum
+                'arSuiviStock', // enum
+                'arCondition', // enum U. Vente
+                'arPrixTtc',
+                'arUniteVen', // Unité de vente
+            ]),
+            ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
+                'arPrixAch',
+                'arCoef',
+                'arPrixVen',
+                'arPunet', // dernier prix d'achat
+                'arCoutStd',
+            ]),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'arRef',
+                'arDesign',
+                'faCodeFamille',
+            ]),
             'prices' => [
                 ...$this->_getPriceSelectionSet(),
                 ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
