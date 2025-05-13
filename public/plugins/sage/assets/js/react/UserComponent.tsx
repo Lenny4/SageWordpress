@@ -43,6 +43,7 @@ interface State {
   list: any;
 }
 
+// todo replace by assets/js/functions/getMetadata.ts
 const getMetadataValue = (prop: string, ignoreCase: boolean = true): string => {
   let v = "";
   prop = "_sage_" + prop;

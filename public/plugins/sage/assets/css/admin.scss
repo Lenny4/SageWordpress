@@ -322,3 +322,6 @@ table {
   background-color: #2196F3 !important;
 }
 
+#woocommerce-coupon-data ul.wc-tabs li.sage_options a::before, #woocommerce-product-data ul.wc-tabs li.sage_options a::before, .woocommerce ul.wc-tabs li.sage_options a::before {
+  content: "\f124";
+}

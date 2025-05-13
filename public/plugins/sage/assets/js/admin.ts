@@ -3,6 +3,7 @@ import tippy from "tippy.js";
 import "jquery-blockui";
 import "./react/AppStateComponent";
 import "./react/UserComponent";
+import "./react/Article/ArticleComponent";
 import { getTranslations } from "./functions/translations";
 import { basePlacements } from "@popperjs/core/lib/enums"; // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 

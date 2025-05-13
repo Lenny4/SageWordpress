@@ -522,6 +522,11 @@ final class SageTranslationUtils
                 'taskJobDoneSpeed' => __("Nombre d'opérations par seconde", 'sage'),
                 'remainingTime' => __("Temps restant", 'sage'),
                 'fixTheProblem' => __("Résoudre le problème", 'sage'),
+                'identification' => __("Identififcation", 'sage'),
+                'descriptif' => __("Descriptif", 'sage'),
+                'freeFields' => __("Champs libres", 'sage'),
+                'settings' => __("Paramètres", 'sage'),
+                'arRef' => __("Référence", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),

@@ -34,7 +34,7 @@ final class SageSettings
 {
     public final const PREFIX_META_DATA = 'metaData';
     public static string $capability = 'manage_options';
-    public final const TARGET_PANEl = Sage::TOKEN . '_product_data';
+    public final const TARGET_PANEL = Sage::TOKEN . '_product_data';
 
     public static array $paginationRange = [20, 50, 100];
 
@@ -913,7 +913,7 @@ final class SageSettings
 
             $tabs[Sage::TOKEN] = [
                 'label' => __('Sage', 'sage'),
-                'target' => self::TARGET_PANEl,
+                'target' => self::TARGET_PANEL,
                 'class' => ['show_if_' . Sage::TOKEN],
                 'priority' => 0,
             ];
@@ -930,8 +930,8 @@ final class SageSettings
             echo $sageSettings->sage->twig->render('woocommerce/tabs/sage.html.twig', [
                 'pCattarifs' => $pCattarifs,
                 'pCatComptas' => $pCatComptas,
-                'panelId' => self::TARGET_PANEl,
-                'productMeta' => json_encode($product->get_meta_data(), JSON_THROW_ON_ERROR),
+                'panelId' => self::TARGET_PANEL,
+                'productMeta' => $product->get_meta_data(),
             ]);
         });
         // endregion
