@@ -195,21 +195,23 @@ $(() => {
       .each(function (index, option) {
         oldOptions.push($(option).val());
       });
-    const filterType = allFields.find((x: any) => x.name === field).type;
-    if (filterType === "DateTimeOperationFilterInput") {
-      $(chooseValueInput).prop("type", "date");
-    }
-    const newOptions = allFilterType[filterType];
-    if (JSON.stringify(oldOptions) !== JSON.stringify(newOptions)) {
-      $(chooseFilterTypeSelect).html("");
-      for (let option of newOptions) {
-        let typeName = option;
-        if (translations.words.hasOwnProperty(option)) {
-          typeName = translations.words[option];
+    if (field) { // if we filter on a fields which is not in the list of available filter anymore
+      const filterType = allFields.find((x: any) => x.name === field).type;
+      if (filterType === "DateTimeOperationFilterInput") {
+        $(chooseValueInput).prop("type", "date");
+      }
+      const newOptions = allFilterType[filterType];
+      if (JSON.stringify(oldOptions) !== JSON.stringify(newOptions)) {
+        $(chooseFilterTypeSelect).html("");
+        for (let option of newOptions) {
+          let typeName = option;
+          if (translations.words.hasOwnProperty(option)) {
+            typeName = translations.words[option];
+          }
+          let chooseTypeOption = $(
+            '<option value="' + option + '">' + typeName + "</option>",
+          ).appendTo(chooseFilterTypeSelect);
         }
-        let chooseTypeOption = $(
-          '<option value="' + option + '">' + typeName + "</option>",
-        ).appendTo(chooseFilterTypeSelect);
       }
     }
 

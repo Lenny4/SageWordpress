@@ -101,6 +101,7 @@ final class SageEntityMenu
         private array    $actions,
         /**
          * Callback which transform data of Sage entity to the metadata
+         * @var SageEntityMetadata[]
          */
         private array    $metadata,
         /**

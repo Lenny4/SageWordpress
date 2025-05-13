@@ -85,7 +85,7 @@ final class SageSettings
                 ],
                 mandatoryFields: [
                     'ctNum',
-                    'ctType', // to show import in sage button on not
+                    'ctType', // to show import in sage button or not
                 ],
                 filterType: SageEntityMenu::FCOMPTET_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
@@ -164,8 +164,8 @@ final class SageSettings
                     }),
                     new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {
                         return (new DateTime())->format('Y-m-d H:i:s');
-                    }),
-                    new SageEntityMetadata(field: '_postId', value: null),
+                    }, showInOptions: true),
+                    new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
                 ],
                 metaKeyIdentifier: Sage::META_KEY_CT_NUM,
                 metaTable: $wpdb->usermeta,
@@ -185,7 +185,7 @@ final class SageSettings
                     self::META_DATA_PREFIX . '_postId',
                 ],
                 mandatoryFields: [
-                    'doDomaine', // to show import in sage button on not
+                    'doDomaine', // to show import in sage button or not
                     'doPiece',
                     'doType',
                 ],
@@ -250,7 +250,7 @@ final class SageSettings
                     },
                 ],
                 metadata: [
-                    new SageEntityMetadata(field: '_postId', value: null),
+                    new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
                 ],
                 metaKeyIdentifier: Sage::META_KEY_IDENTIFIER,
                 metaTable: $wpdb->prefix . 'wc_orders_meta',
@@ -274,7 +274,7 @@ final class SageSettings
                 ],
                 mandatoryFields: [
                     'arRef',
-                    'arType', // to show import in sage button on not
+                    'arType', // to show import in sage button or not
                 ],
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
@@ -330,8 +330,8 @@ final class SageSettings
                     }),
                     new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
                         return (new DateTime())->format('Y-m-d H:i:s');
-                    }),
-                    new SageEntityMetadata(field: '_postId', value: null),
+                    }, showInOptions: true),
+                    new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
                     new SageEntityMetadata(field: '_arType', value: static function (StdClass $fArticle) {
                         return $fArticle->arType;
                     }),
@@ -1184,6 +1184,9 @@ WHERE meta_key = %s
         // region custom meta fields
         $prefix = self::META_DATA_PREFIX;
         foreach ($sageEntityMenu->getMetadata() as $metadata) {
+            if (!$metadata->getShowInOptions()) {
+                continue;
+            }
             $fieldName = $prefix . $metadata->getField();
             $objectFields[$fieldName] = $trans[$transDomain][$fieldName];
         }

@@ -10,6 +10,7 @@ final class SageEntityMetadata
     public function __construct(
         private string $field,
         private        $value,
+        private bool   $showInOptions = false,
     )
     {
     }
@@ -33,6 +34,17 @@ final class SageEntityMetadata
     public function setValue($value): self
     {
         $this->value = $value;
+        return $this;
+    }
+
+    public function getShowInOptions(): bool
+    {
+        return $this->showInOptions;
+    }
+
+    public function setShowInOptions(bool $showInOptions): self
+    {
+        $this->showInOptions = $showInOptions;
         return $this;
     }
 }
