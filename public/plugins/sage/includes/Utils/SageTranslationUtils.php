@@ -548,6 +548,8 @@ final class SageTranslationUtils
                 'freeFields' => __("Champs libres", 'sage'),
                 'settings' => __("Paramètres", 'sage'),
                 'arRef' => __("Référence", 'sage'),
+                'allOptions' => __("Toutes les options", 'sage'),
+                'selectedOptions' => __("Options sélectionnées", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),

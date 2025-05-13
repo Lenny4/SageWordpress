@@ -1,0 +1,304 @@
+import { createRoot } from "react-dom/client";
+import React from "react";
+import Grid from "@mui/material/Grid";
+import List from "@mui/material/List";
+import Card from "@mui/material/Card";
+import CardHeader from "@mui/material/CardHeader";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import Checkbox from "@mui/material/Checkbox";
+import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import {
+  closestCenter,
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { getTranslations } from "../functions/translations";
+
+let translations: any = getTranslations();
+
+interface FieldInterface {
+  id: string;
+  default: string[];
+  description: string;
+  label: string;
+  type: string;
+  options: { [key: string]: string };
+}
+
+interface DataInterface {
+  optionName: string;
+  field: FieldInterface;
+  values: string[];
+}
+
+interface State {
+  data: DataInterface;
+}
+
+function not(a: string[], b: string[]) {
+  return a.filter((value) => !b.includes(value));
+}
+
+function intersection(a: string[], b: string[]) {
+  return a.filter((value) => b.includes(value));
+}
+
+function union(a: string[], b: string[]) {
+  return [...a, ...not(b, a)];
+}
+
+const SortableItem = ({
+  id,
+  label,
+  checked,
+  onToggle,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onToggle: (id: string) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <ListItemButton role="listitem" onClick={() => onToggle(id)}>
+        <ListItemIcon
+          {...attributes}
+          {...listeners}
+          sx={{ cursor: "grab", minWidth: "auto" }}
+        >
+          <DragIndicatorIcon fontSize="small" />
+        </ListItemIcon>
+        <ListItemIcon>
+          <Checkbox checked={checked} tabIndex={-1} disableRipple />
+        </ListItemIcon>
+        <ListItemText primary={label} />
+      </ListItemButton>
+    </div>
+  );
+};
+
+const SharedListComponent: React.FC<State> = ({ data }) => {
+  const [checked, setChecked] = React.useState<string[]>([]);
+  const compareOption = (a: string, b: string): number => {
+    const realA = Object.prototype.hasOwnProperty.call(data.field.options, a)
+      ? data.field.options[a]
+      : a;
+    const realB = Object.prototype.hasOwnProperty.call(data.field.options, b)
+      ? data.field.options[b]
+      : b;
+    return realA.localeCompare(realB, undefined, { sensitivity: "base" });
+  };
+
+  const [left, setLeft] = React.useState<string[]>(() => {
+    let result = Object.keys(data.field.options).filter(
+      (x) => !data.values.includes(x),
+    );
+    result.sort(compareOption);
+    return result;
+  });
+  const [right, setRight] = React.useState<string[]>(data.values);
+
+  const leftChecked = intersection(checked, left);
+  const rightChecked = intersection(checked, right);
+
+  const handleToggle = (value: string) => {
+    const currentIndex = checked.indexOf(value);
+    const newChecked = [...checked];
+
+    if (currentIndex === -1) {
+      newChecked.push(value);
+    } else {
+      newChecked.splice(currentIndex, 1);
+    }
+
+    setChecked(newChecked);
+  };
+
+  const numberOfChecked = (items: string[]) =>
+    intersection(checked, items).length;
+
+  const handleToggleAll = (items: string[]) => () => {
+    if (numberOfChecked(items) === items.length) {
+      setChecked(not(checked, items));
+    } else {
+      setChecked(union(checked, items));
+    }
+  };
+
+  const handleCheckedRight = () => {
+    setRight(right.concat(leftChecked));
+    setLeftAsc(not(left, leftChecked));
+    setChecked(not(checked, leftChecked));
+  };
+
+  const handleCheckedLeft = () => {
+    setLeftAsc(left.concat(rightChecked));
+    setRight(not(right, rightChecked));
+    setChecked(not(checked, rightChecked));
+  };
+
+  const setLeftAsc = (value: string[]) => {
+    value.sort(compareOption);
+    setLeft(value);
+  };
+
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      const oldIndex = right.indexOf(active.id);
+      const newIndex = right.indexOf(over.id);
+      setRight((items) => arrayMove(items, oldIndex, newIndex));
+    }
+  };
+
+  const customList = (
+    title: React.ReactNode,
+    items: string[],
+    sortable = false,
+  ) => (
+    <Card>
+      <CardHeader
+        sx={{ px: 2, py: 1 }}
+        avatar={
+          <Checkbox
+            onClick={handleToggleAll(items)}
+            checked={
+              numberOfChecked(items) === items.length && items.length !== 0
+            }
+            indeterminate={
+              numberOfChecked(items) !== items.length &&
+              numberOfChecked(items) !== 0
+            }
+            disabled={items.length === 0}
+          />
+        }
+        title={title}
+        subheader={`${numberOfChecked(items)}/${items.length}`}
+      />
+      <Divider />
+      <List
+        sx={{
+          maxWidth: 500,
+          height: 230,
+          bgcolor: "background.paper",
+          overflow: "auto",
+        }}
+        dense
+        component="div"
+        role="list"
+      >
+        {sortable ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={items}
+              strategy={verticalListSortingStrategy}
+            >
+              {items.map((id) => (
+                <SortableItem
+                  key={id}
+                  id={id}
+                  label={data.field.options[id]}
+                  checked={checked.includes(id)}
+                  onToggle={handleToggle}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        ) : (
+          items.map((value: string) => {
+            const labelId = `transfer-list-all-item-${value}-label`;
+            return (
+              <ListItemButton
+                key={value}
+                role="listitem"
+                onClick={() => handleToggle(value)}
+              >
+                <ListItemIcon>
+                  <Checkbox
+                    checked={checked.includes(value)}
+                    tabIndex={-1}
+                    disableRipple
+                  />
+                </ListItemIcon>
+                <ListItemText
+                  id={labelId}
+                  primary={data.field.options[value]}
+                />
+              </ListItemButton>
+            );
+          })
+        )}
+      </List>
+    </Card>
+  );
+
+  React.useEffect(() => {
+  }, [right]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <Grid
+      container
+      spacing={2}
+      sx={{ justifyContent: "flex-start", alignItems: "center" }}
+    >
+      <Grid>{customList(translations.words.allOptions, left)}</Grid>
+      <Grid>
+        <Grid container direction="column" sx={{ alignItems: "center" }}>
+          <Button
+            sx={{ my: 0.5 }}
+            variant="outlined"
+            size="small"
+            onClick={handleCheckedRight}
+            disabled={leftChecked.length === 0}
+          >
+            &gt;
+          </Button>
+          <Button
+            sx={{ my: 0.5 }}
+            variant="outlined"
+            size="small"
+            onClick={handleCheckedLeft}
+            disabled={rightChecked.length === 0}
+          >
+            &lt;
+          </Button>
+        </Grid>
+      </Grid>
+      <Grid>{customList(translations.words.selectedOptions, right, true)}</Grid>
+    </Grid>
+  );
+};
+
+const doms = document.querySelectorAll("[data-shared-lists]");
+doms.forEach((dom) => {
+  const root = createRoot(dom.querySelector("[data-shared-lists-content]"));
+  root.render(
+    <SharedListComponent data={JSON.parse($(dom).attr("data-shared-lists"))} />,
+  );
+});

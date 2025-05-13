@@ -4,6 +4,7 @@ import "jquery-blockui";
 import "./react/AppStateComponent";
 import "./react/UserComponent";
 import "./react/Article/ArticleComponent";
+import "./react/SharedListComponent";
 import { getTranslations } from "./functions/translations";
 import { basePlacements } from "@popperjs/core/lib/enums"; // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 
@@ -195,7 +196,8 @@ $(() => {
       .each(function (index, option) {
         oldOptions.push($(option).val());
       });
-    if (field) { // if we filter on a fields which is not in the list of available filter anymore
+    if (field) {
+      // if we filter on a fields which is not in the list of available filter anymore
       const filterType = allFields.find((x: any) => x.name === field).type;
       if (filterType === "DateTimeOperationFilterInput") {
         $(chooseValueInput).prop("type", "date");
@@ -428,34 +430,19 @@ $(() => {
     let thisSelect = $(e.target).closest("select");
     let otherSelect;
     let attr = $(thisSelect).attr("name");
-    let sort = false;
     if (typeof attr !== "undefined") {
-      const dataSort = $(thisSelect).attr("data-sort");
-      sort = dataSort !== "0";
       otherSelect = $(thisSelect).parent().prev().find("select");
     } else {
       otherSelect = $(thisSelect).parent().next().find("select");
     }
-
     let optionElement = $(e.target).detach().appendTo(otherSelect);
     $(optionElement).prop("selected", false);
-
-    if (sort) {
-      let listItems = otherSelect.children("option").get();
-      listItems.sort((a, b) => {
-        return $(a)
-          .text()
-          .toUpperCase()
-          .localeCompare($(b).text().toUpperCase());
-      });
-      $.each(listItems, (idx, itm) => {
-        otherSelect.append(itm);
-      });
-    }
   });
 
   $(document).on("submit", "#form_settings_sage", function (e) {
-    $(e.target).find("[data-2-select-target] option").prop("selected", true);
+    $(e.target)
+      .find("[data-2-select-target][name] option")
+      .prop("selected", true);
   });
   // endregion
 
