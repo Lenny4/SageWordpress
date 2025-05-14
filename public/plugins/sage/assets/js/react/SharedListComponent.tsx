@@ -26,6 +26,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { getTranslations } from "../functions/translations";
+import { IconButton, InputAdornment, TextField } from "@mui/material";
+import Box from "@mui/material/Box";
+import ClearIcon from "@mui/icons-material/Clear";
 
 let translations: any = getTranslations();
 
@@ -46,6 +49,7 @@ interface DataInterface {
 
 interface State {
   data: DataInterface;
+  formDom: Element;
 }
 
 function not(a: string[], b: string[]) {
@@ -110,7 +114,7 @@ const SortableItem = ({
   );
 };
 
-const SharedListComponent: React.FC<State> = ({ data }) => {
+const SharedListComponent: React.FC<State> = ({ data, formDom }) => {
   // https://mui.com/material-ui/react-transfer-list/
   const [checked, setChecked] = React.useState<string[]>([]);
   const compareOption = (a: string, b: string): number => {
@@ -125,6 +129,9 @@ const SharedListComponent: React.FC<State> = ({ data }) => {
       : b;
     return realA.localeCompare(realB, undefined, { sensitivity: "base" });
   };
+
+  const [leftSearch, setLeftSearch] = React.useState("");
+  const [rightSearch, setRightSearch] = React.useState("");
 
   const [left, setLeft] = React.useState<string[]>(() => {
     let result = Object.keys(data.field.options).filter(
@@ -190,93 +197,162 @@ const SharedListComponent: React.FC<State> = ({ data }) => {
     }
   };
 
+  const filterItems = (items: string[], search: string): string[] => {
+    if (!search.trim()) return items;
+    const lowered = search.toLowerCase();
+    return items.filter(
+      (key) =>
+        data.field.options[key].toLowerCase().includes(lowered) ||
+        key.toLowerCase().includes(lowered),
+    );
+  };
+
   const customList = (
     title: React.ReactNode,
     items: string[],
     sortable = false,
-  ) => (
-    <Card>
-      <CardHeader
-        sx={{ px: 2, py: 1 }}
-        avatar={
-          <Checkbox
-            onClick={handleToggleAll(items)}
-            checked={
-              numberOfChecked(items) === items.length && items.length !== 0
-            }
-            indeterminate={
-              numberOfChecked(items) !== items.length &&
-              numberOfChecked(items) !== 0
-            }
-            disabled={items.length === 0}
+    search: string,
+    setSearch: React.Dispatch<React.SetStateAction<string>>,
+  ) => {
+    const filteredItems = filterItems(items, search);
+
+    return (
+      <Card>
+        <CardHeader
+          sx={{ px: 2, py: 1 }}
+          avatar={
+            <Checkbox
+              onClick={handleToggleAll(filteredItems)}
+              checked={
+                numberOfChecked(filteredItems) === filteredItems.length &&
+                filteredItems.length !== 0
+              }
+              indeterminate={
+                numberOfChecked(filteredItems) !== filteredItems.length &&
+                numberOfChecked(filteredItems) !== 0
+              }
+              disabled={filteredItems.length === 0}
+            />
+          }
+          title={title}
+          subheader={`${numberOfChecked(filteredItems)}/${filteredItems.length}`}
+        />
+        <Divider />
+        <Box sx={{ padding: 1 }}>
+          <TextField
+            size="small"
+            placeholder="Rechercher..."
+            variant="outlined"
+            fullWidth
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            slotProps={{
+              input: {
+                endAdornment: search ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="Effacer"
+                      onClick={() => setSearch("")}
+                      edge="end"
+                      size="small"
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null,
+              },
+            }}
           />
-        }
-        title={title}
-        subheader={`${numberOfChecked(items)}/${items.length}`}
-      />
-      <Divider />
-      <List
-        sx={{
-          maxWidth: 500,
-          height: 230,
-          bgcolor: "background.paper",
-          overflow: "auto",
-        }}
-        dense
-        component="div"
-        role="list"
-      >
-        {sortable ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={items}
-              strategy={verticalListSortingStrategy}
+        </Box>
+        <List
+          sx={{
+            maxWidth: 500,
+            height: 230,
+            bgcolor: "background.paper",
+            overflow: "auto",
+          }}
+          dense
+          component="div"
+          role="list"
+        >
+          {sortable ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
             >
-              {items.map((id) => (
-                <SortableItem
-                  key={id}
-                  id={id}
-                  label={data.field.options[id]}
-                  checked={checked.includes(id)}
-                  onToggle={handleToggle}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
-        ) : (
-          items.map((value: string) => {
-            const labelId = `transfer-list-all-item-${value}-label`;
-            return (
-              <ListItemButton
-                key={value}
-                role="listitem"
-                onClick={() => handleToggle(value)}
+              <SortableContext
+                items={filteredItems}
+                strategy={verticalListSortingStrategy}
               >
-                <ListItemIcon>
-                  <Checkbox
-                    checked={checked.includes(value)}
-                    tabIndex={-1}
-                    disableRipple
+                {filteredItems.map((id) => (
+                  <SortableItem
+                    key={id}
+                    id={id}
+                    label={data.field.options[id]}
+                    checked={checked.includes(id)}
+                    onToggle={handleToggle}
                   />
-                </ListItemIcon>
-                <ListItemText
-                  id={labelId}
-                  primary={data.field.options[value]}
-                />
-              </ListItemButton>
-            );
-          })
-        )}
-      </List>
-    </Card>
-  );
+                ))}
+              </SortableContext>
+            </DndContext>
+          ) : (
+            filteredItems.map((value: string) => {
+              const labelId = `transfer-list-all-item-${value}-label`;
+              return (
+                <ListItemButton
+                  key={value}
+                  role="listitem"
+                  onClick={() => handleToggle(value)}
+                >
+                  <ListItemIcon>
+                    <Checkbox
+                      checked={checked.includes(value)}
+                      tabIndex={-1}
+                      disableRipple
+                    />
+                  </ListItemIcon>
+                  <ListItemText
+                    id={labelId}
+                    primary={data.field.options[value]}
+                  />
+                </ListItemButton>
+              );
+            })
+          )}
+        </List>
+      </Card>
+    );
+  };
+
+  const updateFormDom = () => {
+    const allSelectDom = formDom.querySelector('[data-2-select-target="all"]');
+    const selectedSelectDom = formDom.querySelector(
+      '[data-2-select-target="selected"]',
+    );
+
+    $(allSelectDom).html("");
+    for (const field of left) {
+      $(allSelectDom).append(
+        '<option value="' + field + '">' + field + "</option>",
+      );
+    }
+
+    $(selectedSelectDom).html("");
+    for (const field of right) {
+      $(selectedSelectDom).append(
+        '<option value="' + field + '">' + field + "</option>",
+      );
+    }
+  };
 
   React.useEffect(() => {
+    updateFormDom();
   }, [right]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  React.useEffect(() => {
+    $(formDom).hide();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Grid
@@ -284,7 +360,15 @@ const SharedListComponent: React.FC<State> = ({ data }) => {
       spacing={2}
       sx={{ justifyContent: "flex-start", alignItems: "center" }}
     >
-      <Grid>{customList(translations.words.allOptions, left)}</Grid>
+      <Grid>
+        {customList(
+          translations.words.allOptions,
+          left,
+          false,
+          leftSearch,
+          setLeftSearch,
+        )}
+      </Grid>
       <Grid>
         <Grid container direction="column" sx={{ alignItems: "center" }}>
           <Button
@@ -307,15 +391,26 @@ const SharedListComponent: React.FC<State> = ({ data }) => {
           </Button>
         </Grid>
       </Grid>
-      <Grid>{customList(translations.words.selectedOptions, right, true)}</Grid>
+      <Grid>
+        {customList(
+          translations.words.selectedOptions,
+          right,
+          true,
+          rightSearch,
+          setRightSearch,
+        )}
+      </Grid>
     </Grid>
   );
 };
 
 const doms = document.querySelectorAll("[data-shared-lists]");
 doms.forEach((dom) => {
-  const root = createRoot(dom.querySelector("[data-shared-lists-content]"));
+  const root = createRoot(dom.querySelector("[data-shared-lists-react]"));
   root.render(
-    <SharedListComponent data={JSON.parse($(dom).attr("data-shared-lists"))} />,
+    <SharedListComponent
+      data={JSON.parse($(dom).attr("data-shared-lists"))}
+      formDom={dom.querySelector("[data-shared-lists-content]")}
+    />,
   );
 });
