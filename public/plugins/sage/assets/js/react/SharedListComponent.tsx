@@ -71,8 +71,18 @@ const SortableItem = ({
   checked: boolean;
   onToggle: (id: string) => void;
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  // Conditionally apply the cursor style based on whether the item is being dragged
+  const cursorStyle = isDragging ? "move" : "grab";
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -84,7 +94,10 @@ const SortableItem = ({
         <ListItemIcon
           {...attributes}
           {...listeners}
-          sx={{ cursor: "grab", minWidth: "auto" }}
+          sx={{
+            cursor: cursorStyle,
+            minWidth: "auto",
+          }}
         >
           <DragIndicatorIcon fontSize="small" />
         </ListItemIcon>
@@ -98,8 +111,12 @@ const SortableItem = ({
 };
 
 const SharedListComponent: React.FC<State> = ({ data }) => {
+  // https://mui.com/material-ui/react-transfer-list/
   const [checked, setChecked] = React.useState<string[]>([]);
   const compareOption = (a: string, b: string): number => {
+    if (!isNaN(Number(a)) && !isNaN(Number(b))) {
+      return Number(a) - Number(b);
+    }
     const realA = Object.prototype.hasOwnProperty.call(data.field.options, a)
       ? data.field.options[a]
       : a;
