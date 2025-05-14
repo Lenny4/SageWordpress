@@ -26,7 +26,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { getTranslations } from "../functions/translations";
-import { IconButton, InputAdornment, TextField } from "@mui/material";
+import { IconButton, InputAdornment, TextField, Tooltip } from "@mui/material";
 import Box from "@mui/material/Box";
 import ClearIcon from "@mui/icons-material/Clear";
 
@@ -94,22 +94,24 @@ const SortableItem = ({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <ListItemButton role="listitem" onClick={() => onToggle(id)}>
-        <ListItemIcon
-          {...attributes}
-          {...listeners}
-          sx={{
-            cursor: cursorStyle,
-            minWidth: "auto",
-          }}
-        >
-          <DragIndicatorIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemIcon>
-          <Checkbox checked={checked} tabIndex={-1} disableRipple />
-        </ListItemIcon>
-        <ListItemText primary={label} />
-      </ListItemButton>
+      <Tooltip title={id} arrow placement="left">
+        <ListItemButton role="listitem" onClick={() => onToggle(id)}>
+          <ListItemIcon
+            {...attributes}
+            {...listeners}
+            sx={{
+              cursor: cursorStyle,
+              minWidth: "auto",
+            }}
+          >
+            <DragIndicatorIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemIcon>
+            <Checkbox checked={checked} tabIndex={-1} disableRipple />
+          </ListItemIcon>
+          <ListItemText primary={label} />
+        </ListItemButton>
+      </Tooltip>
     </div>
   );
 };
@@ -300,23 +302,25 @@ const SharedListComponent: React.FC<State> = ({ data, formDom }) => {
             filteredItems.map((value: string) => {
               const labelId = `transfer-list-all-item-${value}-label`;
               return (
-                <ListItemButton
-                  key={value}
-                  role="listitem"
-                  onClick={() => handleToggle(value)}
-                >
-                  <ListItemIcon>
-                    <Checkbox
-                      checked={checked.includes(value)}
-                      tabIndex={-1}
-                      disableRipple
+                <Tooltip title={value} arrow placement="left">
+                  <ListItemButton
+                    key={value}
+                    role="listitem"
+                    onClick={() => handleToggle(value)}
+                  >
+                    <ListItemIcon>
+                      <Checkbox
+                        checked={checked.includes(value)}
+                        tabIndex={-1}
+                        disableRipple
+                      />
+                    </ListItemIcon>
+                    <ListItemText
+                      id={labelId}
+                      primary={data.field.options[value]}
                     />
-                  </ListItemIcon>
-                  <ListItemText
-                    id={labelId}
-                    primary={data.field.options[value]}
-                  />
-                </ListItemButton>
+                  </ListItemButton>
+                </Tooltip>
               );
             })
           )}
