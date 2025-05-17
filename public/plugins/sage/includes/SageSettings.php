@@ -12,6 +12,7 @@ use Automattic\WooCommerce\Utilities\OrderUtil;
 use DateTime;
 use PHPHtmlParser\Dom;
 use stdClass;
+use Swaggest\JsonDiff\JsonDiff;
 use WC_Meta_Box_Order_Data;
 use WC_Order;
 use WC_Product;
@@ -975,11 +976,48 @@ final class SageSettings
             }
             $pCattarifs = $sageSettings->sage->sageGraphQl->getPCattarifs();
             $pCatComptas = $sageSettings->sage->sageGraphQl->getPCatComptas();
+            $arRef = $product->get_meta(Sage::META_KEY_AR_REF);
+            $oldMetaData = $product->get_meta_data();
+            $meta = [
+                'changes' => [],
+                'old' => $oldMetaData,
+                'new' => $oldMetaData,
+            ];
+            $responseError = null;
+            if (!empty($arRef)) {
+                [$response, $responseError, $message, $postId] = $sageSettings->sage->sageWoocommerce->importFArticleFromSage($arRef);
+                if (is_null($responseError)) {
+                    $product->read_meta_data(true);
+                    $meta['new'] = $product->get_meta_data();
+                    foreach ($meta as $key => $value) {
+                        $meta[$key . 'Array'] = new stdClass();
+                        foreach ($value as $metaItem) {
+                            $data = $metaItem->get_data();
+                            if ($data['key'] === '_' . Sage::TOKEN . '_last_update') {
+                                continue;
+                            }
+                            $meta[$key . 'Array']->{$data['key']} = $data['value'];
+                        }
+                    }
+                    $jsonDiff = new JsonDiff($meta['oldArray'], $meta['newArray']);
+                    $meta['changes'] = [
+                        'removed' => (array)$jsonDiff->getRemoved(),
+                        'added' => (array)$jsonDiff->getAdded(),
+                        'modified' => (array)$jsonDiff->getModifiedNew(),
+                    ];
+                }
+            }
             echo $sageSettings->sage->twig->render('woocommerce/tabs/sage.html.twig', [
                 'pCattarifs' => $pCattarifs,
                 'pCatComptas' => $pCatComptas,
                 'panelId' => self::TARGET_PANEL,
-                'productMeta' => $product->get_meta_data(),
+                'responseError' => $responseError,
+                'metaChanges' => $meta['changes'],
+                'productMeta' => $meta['new'],
+                'hasChanges' =>
+                    count($meta['changes']['added']) > 0 ||
+                    count($meta['changes']['removed']) > 0 ||
+                    count($meta['changes']['modified']) > 0,
             ]);
         });
         // endregion

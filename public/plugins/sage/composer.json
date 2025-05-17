@@ -16,7 +16,8 @@
     "twig/intl-extra": "^3.10",
     "symfony/filesystem": "^7.0",
     "symfony/string": "^7.1",
-    "symfony/translation-contracts": "^3.5"
+    "symfony/translation-contracts": "^3.5",
+    "swaggest/json-diff": "^3.12"
   },
   "autoload": {
     "psr-4": {

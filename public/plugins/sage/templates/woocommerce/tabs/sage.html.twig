@@ -1,3 +1,28 @@
+{% if responseError is not null %}
+  {{ responseError }}
+{% endif %}
+{% if hasChanges %}
+  <div class="notice notice-info is-dismissible">
+    {% for action in ['removed', 'added', 'modified'] %}
+      {% if metaChanges[action] is iterable and metaChanges[action] is not empty %}
+        <ul>
+          {% for key, value in metaChanges[action] %}
+            <li>
+              <code>{{ key }}</code>:
+              {% if action == 'modified' %}
+                {{ 'changé en' | trans }} <strong>{{ value }}</strong>
+              {% elseif action == 'added' %}
+                {{ 'ajouté avec la valeur' | trans }} <strong>{{ value }}</strong>
+              {% elseif action == 'removed' %}
+                {{ 'supprimé' | trans }} ({{ 'la valeur précédente était' | trans }} <strong>{{ value }}</strong>)
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}
 <div data-sage-pcattarifs="{{ pCattarifs|json_encode }}"></div>
 <div data-sage-pcatcomptas="{{ pCatComptas|json_encode }}"></div>
 <div data-sage-product="{{ productMeta|json_encode }}"></div>
