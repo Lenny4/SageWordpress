@@ -21,6 +21,8 @@ export interface FieldInterface {
   name: string;
   DomField: FC<FormInputProps>;
   readOnly?: boolean;
+  hideLabel?: boolean;
+  options?: FormInputOptions[];
 }
 
 export type FormInputProps = {
@@ -28,5 +30,14 @@ export type FormInputProps = {
   name: string;
   value: string;
   readOnly?: boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChangeSelect?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  hideLabel?: boolean;
+  options?: FormInputOptions[];
+};
+
+export type FormInputOptions = {
+  label: string;
+  value: string;
+  disabled?: boolean;
 };

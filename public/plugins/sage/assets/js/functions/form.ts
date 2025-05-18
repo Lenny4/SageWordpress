@@ -1,4 +1,4 @@
-import { FormInterface } from "../interface/InputInterface";
+import { FormInputOptions, FormInterface } from "../interface/InputInterface";
 
 export const stringValidator = (
   value: string | null,
@@ -40,4 +40,13 @@ export function getFieldNames(form: FormInterface): string[] {
 
   extract(form.content);
   return names;
+}
+
+export function transformOptionsObject(
+  obj: Record<string | number, string>,
+): FormInputOptions[] {
+  return Object.entries(obj).map(([key, label]) => ({
+    label,
+    value: key.toString(),
+  }));
 }

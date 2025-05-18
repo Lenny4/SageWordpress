@@ -54,6 +54,10 @@ final class SageEntityMenu
 
     public const PDOSSIER_ENTITY_NAME = 'pDossiers';
 
+    public const FFAMILLE_ENTITY_NAME = 'fFamilles';
+
+    public const PUNITE_ENTITY_NAME = 'pUnites';
+
     /**
      * @param string[] $mandatoryFields
      * @param string[] $defaultFields

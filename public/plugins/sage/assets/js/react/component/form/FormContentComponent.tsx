@@ -32,31 +32,38 @@ export const FormContentComponent: React.FC<State> = ({
         return (
           <Container {...props} key={indexContainer}>
             {Dom}
-            {fields?.map(({ name, DomField, readOnly }, indexField) => {
-              let label = "";
-              if (
-                transPrefix &&
-                translations[transPrefix].hasOwnProperty(name)
-              ) {
-                if (translations[transPrefix][name].hasOwnProperty("label")) {
-                  label = translations[transPrefix][name].label;
+            {fields?.map(
+              (
+                { name, DomField, readOnly, hideLabel, options },
+                indexField,
+              ) => {
+                let label = "";
+                if (
+                  transPrefix &&
+                  translations[transPrefix].hasOwnProperty(name)
+                ) {
+                  if (translations[transPrefix][name].hasOwnProperty("label")) {
+                    label = translations[transPrefix][name].label;
+                  } else {
+                    label = translations[transPrefix][name];
+                  }
                 } else {
-                  label = translations[transPrefix][name];
+                  label = translations.words[name] ?? name;
                 }
-              } else {
-                label = translations.words[name] ?? name;
-              }
-              return (
-                <DomField
-                  key={indexField}
-                  label={label}
-                  name={`_sage_${name}`}
-                  value={values[name].value}
-                  readOnly={readOnly ?? false}
-                  onChange={handleChange(name)}
-                />
-              );
-            })}
+                return (
+                  <DomField
+                    key={indexField}
+                    label={label}
+                    name={`_sage_${name}`}
+                    value={values[name].value}
+                    readOnly={readOnly ?? false}
+                    onChange={handleChange(name)}
+                    hideLabel={hideLabel}
+                    options={options}
+                  />
+                );
+              },
+            )}
             {children && children.length > 0 && (
               <FormContentComponent
                 content={children}

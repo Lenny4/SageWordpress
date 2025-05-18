@@ -7,9 +7,16 @@ export const FormInput: React.FC<FormInputProps> = ({
   value,
   readOnly,
   onChange,
+  hideLabel,
 }) => (
   <>
-    <label htmlFor={name} style={{ display: "block", marginBottom: 4 }}>
+    <label
+      htmlFor={name}
+      style={{
+        display: hideLabel ? "none" : "block",
+        marginBottom: 4,
+      }}
+    >
       {label}
     </label>
     <input

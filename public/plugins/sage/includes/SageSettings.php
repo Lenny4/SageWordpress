@@ -34,11 +34,9 @@ if (!defined('ABSPATH')) {
 final class SageSettings
 {
     public final const PREFIX_META_DATA = 'metaData';
-    public static string $capability = 'manage_options';
     public final const TARGET_PANEL = Sage::TOKEN . '_product_data';
-
     public const META_DATA_PREFIX = self::PREFIX_META_DATA . '_' . Sage::TOKEN;
-
+    public static string $capability = 'manage_options';
     public static array $paginationRange = [20, 50, 100];
 
     public static int $defaultPagination = 20;
@@ -974,8 +972,6 @@ final class SageSettings
             if (!($product instanceof WC_Product)) {
                 return;
             }
-            $pCattarifs = $sageSettings->sage->sageGraphQl->getPCattarifs();
-            $pCatComptas = $sageSettings->sage->sageGraphQl->getPCatComptas();
             $arRef = $product->get_meta(Sage::META_KEY_AR_REF);
             $oldMetaData = $product->get_meta_data();
             $meta = [
@@ -1008,16 +1004,21 @@ final class SageSettings
                 }
             }
             echo $sageSettings->sage->twig->render('woocommerce/tabs/sage.html.twig', [
-                'pCattarifs' => $pCattarifs,
-                'pCatComptas' => $pCatComptas,
+                'pCattarifs' => $sageSettings->sage->sageGraphQl->getPCattarifs(),
+                'pCatComptas' => $sageSettings->sage->sageGraphQl->getPCatComptas(),
+                'fFamilles' => $sageSettings->sage->sageGraphQl->getFFamilles(),
+                'pUnites' => $sageSettings->sage->sageGraphQl->getPUnites(),
                 'panelId' => self::TARGET_PANEL,
                 'responseError' => $responseError,
                 'metaChanges' => $meta['changes'],
                 'productMeta' => $meta['new'],
                 'hasChanges' =>
-                    count($meta['changes']['added']) > 0 ||
-                    count($meta['changes']['removed']) > 0 ||
-                    count($meta['changes']['modified']) > 0,
+                    isset($meta['changes']['added'], $meta['changes']['removed'], $meta['changes']['modified']) &&
+                    (
+                        count($meta['changes']['added']) > 0 ||
+                        count($meta['changes']['removed']) > 0 ||
+                        count($meta['changes']['modified']) > 0
+                    ),
             ]);
         });
         // endregion
@@ -1520,13 +1521,6 @@ WHERE meta_key = %s
         return $dom;
     }
 
-    public function getMetaBoxOrderItems(WC_Order $order): string
-    {
-        ob_start();
-        include __DIR__ . '/../../woocommerce/includes/admin/meta-boxes/views/html-order-items.php';
-        return ob_get_clean();
-    }
-
     public static function get_option_date_or_null(string $option, bool $default_value = false): ?DateTime
     {
         $dateString = get_option($option, $default_value);
@@ -1555,6 +1549,13 @@ WHERE meta_key = %s
         }
 
         return self::$_instance;
+    }
+
+    public function getMetaBoxOrderItems(WC_Order $order): string
+    {
+        ob_start();
+        include __DIR__ . '/../../woocommerce/includes/admin/meta-boxes/views/html-order-items.php';
+        return ob_get_clean();
     }
 
     /**

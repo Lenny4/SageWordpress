@@ -4,9 +4,10 @@ import { getTranslations } from "../../functions/translations";
 import { FormInterface, InputInterface } from "../../interface/InputInterface";
 import { getSageMetadata } from "../../functions/getMetadata";
 import { FormInput } from "../component/form/FormInput";
-import { getFieldNames } from "../../functions/form";
+import { getFieldNames, transformOptionsObject } from "../../functions/form";
 import { FormContentComponent } from "../component/form/FormContentComponent";
 import { DividerText } from "../component/DividerText";
+import { FormSelect } from "../component/form/FormSelect";
 
 const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
 let translations: any = getTranslations();
@@ -15,6 +16,12 @@ const articleMeta = JSON.parse(
 );
 const arRef = getSageMetadata("arRef", articleMeta);
 const isCreation = !arRef;
+const fFamilles: any[] = JSON.parse(
+  $("[data-sage-ffamilles]").attr("data-sage-ffamilles") ?? "[]",
+);
+const pUnites: any[] = JSON.parse(
+  $("[data-sage-punites]").attr("data-sage-punites") ?? "[]",
+);
 
 const form: FormInterface = {
   content: [
@@ -43,7 +50,19 @@ const form: FormInterface = {
         },
         {
           fields: [
-            { name: "arType", DomField: FormInput, readOnly: !isCreation },
+            {
+              name: "arType",
+              DomField: FormSelect,
+              readOnly: !isCreation,
+              options: transformOptionsObject(
+                translations.fArticles.arType.values,
+              ).map((v) => {
+                return {
+                  ...v,
+                  disabled: !["0", "1"].includes(v.value),
+                };
+              }),
+            },
           ],
         },
         {
@@ -54,14 +73,41 @@ const form: FormInterface = {
         },
         {
           fields: [
-            { name: "faCodeFamille", DomField: FormInput },
-            { name: "arSuiviStock", DomField: FormInput },
+            {
+              name: "faCodeFamille",
+              DomField: FormSelect,
+              options: fFamilles.map((f) => {
+                return {
+                  value: f.faCodeFamille,
+                  label: f.faCodeFamille + " " + f.faIntitule,
+                };
+              }),
+            },
+            {
+              name: "arSuiviStock",
+              DomField: FormSelect,
+              options: transformOptionsObject(
+                translations.fArticles.arSuiviStock.values,
+              ),
+            },
           ],
         },
         {
           fields: [
-            { name: "arNomencl", DomField: FormInput },
-            { name: "arCondition", DomField: FormInput },
+            {
+              name: "arNomencl",
+              DomField: FormSelect,
+              options: transformOptionsObject(
+                translations.fArticles.arNomencl.values,
+              ),
+            },
+            {
+              name: "arCondition",
+              DomField: FormSelect,
+              options: transformOptionsObject(
+                translations.fArticles.arCondition.values,
+              ),
+            },
           ],
         },
         {
@@ -84,6 +130,9 @@ const form: FormInterface = {
             {
               props: {
                 container: true,
+                sx: {
+                  alignItems: "flex-end",
+                },
               },
               children: [
                 {
@@ -96,7 +145,9 @@ const form: FormInterface = {
                   props: {
                     size: { xs: 12, md: 4 },
                   },
-                  fields: [{ name: "arPrixTtc", DomField: FormInput }],
+                  fields: [
+                    { name: "arPrixTtc", DomField: FormInput, hideLabel: true },
+                  ],
                 },
               ],
             },
@@ -106,7 +157,16 @@ const form: FormInterface = {
           fields: [
             { name: "arPunet", DomField: FormInput },
             { name: "arCoutStd", DomField: FormInput },
-            { name: "arUniteVen", DomField: FormInput },
+            {
+              name: "arUniteVen",
+              DomField: FormSelect,
+              options: pUnites.map((f) => {
+                return {
+                  value: f.cbIndice,
+                  label: f.uIntitule,
+                };
+              }),
+            },
           ],
         },
       ],

@@ -27,21 +27,15 @@ if (!defined('ABSPATH')) {
 final class SageGraphQl
 {
     private static ?self $_instance = null;
-
     private ?Client $client = null;
-
     private bool $pingApi = false;
-
     private ?array $pExpeditions = null;
-
+    private ?array $fFamilles = null;
+    private ?array $pUnites = null;
     private ?array $pCatComptas = null;
-
     private ?array $pCattarifs = null;
-
     private ?array $fPays = null;
-
     private ?array $fTaxes = null;
-
     private ?stdClass $pDossier = null;
 
     private function __construct(public ?Sage $sage)
@@ -508,6 +502,7 @@ final class SageGraphQl
         array   $selectionSets,
         bool    $getError,
         bool    $ignorePingApi,
+        bool    $allPages = false,
     ): array|null|string
     {
         $entities = null;
@@ -524,14 +519,44 @@ final class SageGraphQl
             $tryGetOption = true;
         }
         if (is_null($entities)) {
-            $entities = $this->searchEntities(
-                $entityName,
-                $queryParams,
-                $selectionSets,
-                $cacheName,
-                $getError,
-                $ignorePingApi
-            );
+            $entities = null;
+            if ($allPages) {
+                $queryParams["paged"] = 0;
+                do {
+                    $queryParams["paged"]++;
+                    $result = $this->searchEntities(
+                        $entityName,
+                        $queryParams,
+                        $selectionSets,
+                        $cacheName . '_' . $queryParams["paged"],
+                        $getError,
+                        $ignorePingApi
+                    );
+
+                    if (is_null($result) || is_string($result)) {
+                        $entities = $result;
+                        break;
+                    }
+
+                    if (is_null($entities)) {
+                        $entities = $result;
+                    } else {
+                        $entities->data->{$entityName}->items = [
+                            ...$entities->data->{$entityName}->items,
+                            ...$result->data->{$entityName}->items,
+                        ];
+                    }
+                } while (count($result->data->{$entityName}->items) > 0);
+            } else {
+                $entities = $this->searchEntities(
+                    $entityName,
+                    $queryParams,
+                    $selectionSets,
+                    $cacheName,
+                    $getError,
+                    $ignorePingApi
+                );
+            }
             if (is_null($entities) || is_string($entities)) {
                 if (!$tryGetOption) {
                     $entitiesBdd = get_option($optionName, null);
@@ -697,7 +722,7 @@ final class SageGraphQl
                 "neq"
             ],
             "filter_value" => [
-                ""
+                ''
             ],
             "paged" => "1",
             "per_page" => "50"
@@ -824,6 +849,101 @@ final class SageGraphQl
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                 'egBorne',
                 'egFrais',
+            ]),
+        ];
+    }
+
+    public function getPUnites(
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false,
+        bool  $ignorePingApi = false
+    ): array|null|string
+    {
+        if (!is_null($this->pUnites) && $getFromSage !== true) {
+            return $this->pUnites;
+        }
+
+        $entityName = SageEntityMenu::PUNITE_ENTITY_NAME;
+        $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
+        $queryParams = [
+            "filter_field" => [
+                "uIntitule"
+            ],
+            "filter_type" => [
+                "neq"
+            ],
+            "filter_value" => [
+                ''
+            ],
+            "sort" => '{"uIntitule": "asc"}',
+            "paged" => "1",
+            "per_page" => "50"
+        ];
+        $selectionSets = $this->_getPUniteSelectionSet();
+        $this->pUnites = $this->getEntitiesAndSaveInOption(
+            $cacheName,
+            $getFromSage,
+            $entityName,
+            $queryParams,
+            $selectionSets,
+            $getError,
+            $ignorePingApi,
+        );
+        return $this->pUnites;
+    }
+
+    private function _getPUniteSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'cbIndice',
+                'uIntitule',
+            ]),
+        ];
+    }
+
+    public function getFFamilles(
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false,
+        bool  $ignorePingApi = false
+    ): array|null|string
+    {
+        if (!is_null($this->fFamilles) && $getFromSage !== true) {
+            return $this->fFamilles;
+        }
+
+        $entityName = SageEntityMenu::FFAMILLE_ENTITY_NAME;
+        $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
+        $queryParams = [
+            "filter_field" => [],
+            "filter_type" => [],
+            "filter_value" => [],
+            "sort" => '{"faCodeFamille": "asc"}',
+            "paged" => "1",
+            "per_page" => "100"
+        ];
+        $selectionSets = $this->_getFFamilleSelectionSet();
+        $this->fFamilles = $this->getEntitiesAndSaveInOption(
+            $cacheName,
+            $getFromSage,
+            $entityName,
+            $queryParams,
+            $selectionSets,
+            $getError,
+            $ignorePingApi,
+            allPages: true,
+        );
+        return $this->fFamilles;
+    }
+
+    private function _getFFamilleSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'faCodeFamille',
+                'faIntitule',
             ]),
         ];
     }
