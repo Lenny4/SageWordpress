@@ -1,3 +1,5 @@
+import { FormInterface } from "../interface/InputInterface";
+
 export const stringValidator = (
   value: string | null,
   maxLength: null | number = null,
@@ -16,3 +18,26 @@ export const stringValidator = (
   }
   return "";
 };
+
+export function getFieldNames(form: FormInterface): string[] {
+  const names: string[] = [];
+
+  const extract = (nodes: any[]) => {
+    for (const node of nodes) {
+      if (node.fields) {
+        for (const field of node.fields) {
+          if (field.name) {
+            names.push(field.name);
+          }
+        }
+      }
+
+      if (node.children) {
+        extract(node.children);
+      }
+    }
+  };
+
+  extract(form.content);
+  return names;
+}

@@ -5,10 +5,10 @@ import { getTranslations } from "../../functions/translations";
 import Box from "@mui/material/Box";
 import { CustomTabPanel } from "../component/CustomTabPanel";
 import { Tab, Tabs } from "@mui/material";
-import {ArticleTab1Component} from "./ArticleTab1Component";
-import {ArticleTab2Component} from "./ArticleTab2Component";
-import {ArticleTab3Component} from "./ArticleTab3Component";
-import {ArticleTab4Component} from "./ArticleTab4Component";
+import { ArticleTab1Component } from "./ArticleTab1Component";
+import { ArticleTab2Component } from "./ArticleTab2Component";
+import { ArticleTab3Component } from "./ArticleTab3Component";
+import { ArticleTab4Component } from "./ArticleTab4Component";
 
 const containerSelector = "#sage_product_data";
 const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
@@ -23,29 +23,22 @@ interface ArticleTabs {
 export default function ArticleComponent() {
   const [value, setValue] = React.useState(0);
   const [tabs] = React.useState<ArticleTabs[]>(() => {
-    const refs = [0, 1, 2, 3].map(() => React.createRef());
     return [
       {
         label: translations.words.identification,
-        dom: <ArticleTab1Component ref={refs[0]} />,
-        ref: refs[0],
+        Component: ArticleTab1Component,
       },
-      {
-        label: translations.words.descriptif,
-        dom: <ArticleTab2Component ref={refs[1]} />,
-        ref: refs[1],
-      },
-      {
-        label: translations.words.freeFields,
-        dom: <ArticleTab3Component ref={refs[2]} />,
-        ref: refs[2],
-      },
-      {
-        label: translations.words.settings,
-        dom: <ArticleTab4Component ref={refs[3]} />,
-        ref: refs[3],
-      },
-    ];
+      { label: translations.words.descriptif, Component: ArticleTab2Component },
+      { label: translations.words.freeFields, Component: ArticleTab3Component },
+      { label: translations.words.settings, Component: ArticleTab4Component },
+    ].map(({ label, Component }) => {
+      const ref = React.createRef();
+      return {
+        label,
+        dom: <Component ref={ref} />,
+        ref,
+      };
+    });
   });
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
