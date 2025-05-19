@@ -15,7 +15,7 @@ const articleMeta = JSON.parse(
   $("[data-sage-product]").attr("data-sage-product") ?? "null",
 );
 const arRef = getSageMetadata("arRef", articleMeta);
-const canEditArSuiviStock = getSageMetadata("canEditArSuiviStock", articleMeta);
+const canEditArSuiviStock = getSageMetadata("canEditArSuiviStock", articleMeta) ?? 1;
 const isCreation = !arRef;
 const fFamilles: any[] = JSON.parse(
   $("[data-sage-ffamilles]").attr("data-sage-ffamilles") ?? "[]",
@@ -269,6 +269,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
         handleChangeSelect={handleChangeSelect}
         transPrefix="fArticles"
       />
+      <input type="hidden" name="product-type" value={values.arType.value === "1" ? "variable" : "simple"} />
     </>
   );
 });

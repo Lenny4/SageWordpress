@@ -20,6 +20,8 @@ interface ArticleTabs {
   ref: React.RefObject<any>;
 }
 
+const selectProductTypeSelector = "form[name='post'] select[name='product-type']";
+
 export default function ArticleComponent() {
   const [value, setValue] = React.useState(0);
   const [tabs] = React.useState<ArticleTabs[]>(() => {
@@ -40,25 +42,45 @@ export default function ArticleComponent() {
       };
     });
   });
+  const getIsSageProductType = () => {
+    return $(selectProductTypeSelector).val() === "sage";
+  };
+  const [isSageProductType, setIsSageProductType] = React.useState(
+    getIsSageProductType(),
+  );
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
+  React.useEffect(() => {
+    $(selectProductTypeSelector).on("change", () => {
+      setIsSageProductType(getIsSageProductType());
+    });
+  }, []);
+
   return (
     <Box sx={{ width: "100%" }}>
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tabs value={value} onChange={handleChange} aria-label="article tabs">
+      {isSageProductType && (
+        <>
+          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Tabs
+              value={value}
+              onChange={handleChange}
+              aria-label="article tabs"
+            >
+              {tabs.map((tab, index) => (
+                <Tab label={tab.label} key={index} />
+              ))}
+            </Tabs>
+          </Box>
           {tabs.map((tab, index) => (
-            <Tab label={tab.label} key={index} />
+            <CustomTabPanel value={value} index={index} key={index}>
+              {tab.dom}
+            </CustomTabPanel>
           ))}
-        </Tabs>
-      </Box>
-      {tabs.map((tab, index) => (
-        <CustomTabPanel value={value} index={index} key={index}>
-          {tab.dom}
-        </CustomTabPanel>
-      ))}
+        </>
+      )}
     </Box>
   );
 }

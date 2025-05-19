@@ -530,7 +530,8 @@ final class SageGraphQl
                         $selectionSets,
                         $cacheName . '_' . $queryParams["paged"],
                         $getError,
-                        $ignorePingApi
+                        $ignorePingApi,
+                        $getFromSage,
                     );
 
                     if (is_null($result) || is_string($result)) {
@@ -554,7 +555,8 @@ final class SageGraphQl
                     $selectionSets,
                     $cacheName,
                     $getError,
-                    $ignorePingApi
+                    $ignorePingApi,
+                    $getFromSage,
                 );
             }
             if (is_null($entities) || is_string($entities)) {
@@ -582,6 +584,7 @@ final class SageGraphQl
         ?string $cacheName = null,
         bool    $getError = false,
         bool    $ignorePingApi = false,
+        bool    $getFromSage = true,
     ): StdClass|null|string
     {
         if (!is_null($cacheName)) {
@@ -664,6 +667,9 @@ final class SageGraphQl
         };
         if (is_null($cacheName)) {
             return $function();
+        }
+        if ($getFromSage) {
+            $this->sage->cache->delete($cacheName);
         }
         $results = $this->sage->cache->get($cacheName, $function);
         if (empty($results) || is_string($results)) { // if $results is string it means it's an error
@@ -877,7 +883,7 @@ final class SageGraphQl
             "filter_value" => [
                 ''
             ],
-            "sort" => '{"uIntitule": "asc"}',
+            "sort" => '{"cbIndice": "asc"}',
             "paged" => "1",
             "per_page" => "50"
         ];
@@ -918,9 +924,19 @@ final class SageGraphQl
         $entityName = SageEntityMenu::FFAMILLE_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter_field" => [],
-            "filter_type" => [],
-            "filter_value" => [],
+            "filter_field" => [
+                "faType"
+            ],
+            "filter_type" => [
+                "eq"
+            ],
+            "filter_value" => [
+                // enum FamilleType
+                // 0 -> Centralisatrice
+                // 1 -> Détail
+                // 2 -> Total
+                "0"
+            ],
             "sort" => '{"faCodeFamille": "asc"}',
             "paged" => "1",
             "per_page" => "100"
@@ -1498,13 +1514,16 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 $paramNames = array_map(fn($param) => $param->getName(), $parameters);
 
                 // Check if both 'useCache' and 'getFromSage' are in the parameter list
-                if (in_array('useCache', $paramNames, true) && in_array('getFromSage', $paramNames, true)) {
+                if (
+                    in_array('useCache', $paramNames, true) &&
+                    in_array('getFromSage', $paramNames, true)
+                ) {
                     // Build argument list in correct order with values (example: true, false)
                     $args = [];
 
                     foreach ($parameters as $param) {
                         if ($param->getName() === 'useCache') {
-                            $args[] = false;
+                            $args[] = true;
                         } elseif ($param->getName() === 'getFromSage') {
                             $args[] = true;
                         } else {
