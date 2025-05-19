@@ -1,4 +1,6 @@
-{% if item.arType == 0 or item.arType == 1 %}
+{% set arTypeOk = item.arType == 0 or item.arType == 1 %}
+{% set arNomenclOk = item.arNomencl == 0 %}
+{% if arTypeOk and arNomenclOk %}
   <a href="{{ getUrlWithParam('action', {
     'type': 'import_from_sage',
     'data': {
@@ -16,7 +18,12 @@
 {% else %}
   <span class="dashicons dashicons-download button text-error" style="padding-right: 22px" data-tippy-placement="left"
         data-tippy-content="<div class='text-error'>
-      {{ 'Seuls les articles standard ou à gamme peuvent être importés.'|trans }}
+        {% if arTypeOk == false %}
+          {{ 'Seuls les articles standard ou à gamme peuvent être importés.'|trans }}
+        {% endif %}
+        {% if arNomenclOk == false %}
+          {{ 'Seuls les articles ayant une nomenclature Aucun peuvent être importés.'|trans }}
+        {% endif %}
     </div>"></span>
 {% endif %}
 

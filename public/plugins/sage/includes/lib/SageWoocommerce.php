@@ -6,6 +6,7 @@ use App\class\SageEntityMenu;
 use App\enum\Sage\ArticleTypeEnum;
 use App\enum\Sage\DocumentFraisTypeEnum;
 use App\enum\Sage\ETypeCalculEnum;
+use App\enum\Sage\NomenclatureTypeEnum;
 use App\enum\Sage\TaxeTauxType;
 use App\Sage;
 use App\SageSettings;
@@ -1011,7 +1012,12 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $fArticle->arType !== ArticleTypeEnum::ArticleTypeGamme->value
         ) {
             return [null, null, "<div class='error'>
-                        " . __("Seuls les articles standard ou à gamme peuvent être importés", 'sage') . "
+                        " . __("Seuls les articles standard ou à gamme peuvent être importés.", 'sage') . "
+                                </div>"];
+        }
+        if ($fArticle->arNomencl !== NomenclatureTypeEnum::NomenclatureTypeAucun->value) {
+            return [null, null, "<div class='error'>
+                        " . __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", 'sage') . "
                                 </div>"];
         }
         $articlePostId = $this->sage->sageWoocommerce->getWooCommerceIdArticle($arRef);

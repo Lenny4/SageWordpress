@@ -4,7 +4,13 @@ interface MetadataInterface {
   value: string;
 }
 
-export const getSageMetadata = (key: string, object: MetadataInterface[]) => {
+export const getSageMetadata = (
+  key: string,
+  object: MetadataInterface[] | null,
+) => {
+  if (object == null) {
+    return null;
+  }
   let value = object.find((o) => o.key === "_sage_" + key);
   if (value) {
     try {

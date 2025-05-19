@@ -99,6 +99,7 @@ const form: FormInterface = {
             {
               name: "arNomencl",
               DomField: FormSelect,
+              readOnly: true, // pour l'instant
               options: transformOptionsObject(
                 translations.fArticles.arNomencl.values,
               ),

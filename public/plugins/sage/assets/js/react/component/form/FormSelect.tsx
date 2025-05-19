@@ -11,6 +11,9 @@ export const FormSelect: React.FC<FormInputProps> = ({
   hideLabel,
   options = [],
 }) => {
+  const hasOption = !!options.find(
+    (o) => o.value.toString() === value.toString(),
+  );
   return (
     <>
       <label
@@ -32,18 +35,24 @@ export const FormSelect: React.FC<FormInputProps> = ({
         className={readOnly ? "grayed-out-select" : ""}
         style={{ width: "100%" }}
       >
-        {options.map((opt) => (
-          <option
-            disabled={
-              opt.disabled ||
-              (readOnly && opt.value.toString() !== value.toString())
-            }
-            key={opt.value}
-            value={opt.value}
-          >
-            {opt.label}
-          </option>
-        ))}
+        {options.map((opt, index) => {
+          return (
+            <option
+              disabled={
+                opt.disabled ||
+                (readOnly &&
+                  !(
+                    opt.value.toString() === value.toString() ||
+                    (!hasOption && index === 0)
+                  ))
+              }
+              key={opt.value}
+              value={opt.value}
+            >
+              {opt.label}
+            </option>
+          );
+        })}
       </select>
     </>
   );

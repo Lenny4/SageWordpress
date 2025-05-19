@@ -274,6 +274,7 @@ final class SageSettings
                 mandatoryFields: [
                     'arRef',
                     'arType', // to show import in sage button or not
+                    'arNomencl', // to show import in sage button or not
                 ],
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
