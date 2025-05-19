@@ -11,6 +11,7 @@ if (!defined('ABSPATH')) {
 
 final class FDocenteteUtils
 {
+    // todo replace by DomaineTypeEnum
     public const DO_TYPE_DEVIS = 0;
     public const DO_TYPE_COMMANDE = 1;
     public const DO_TYPE_PREPA_LIVRAISON = 2;

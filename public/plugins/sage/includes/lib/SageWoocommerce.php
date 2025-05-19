@@ -5,6 +5,7 @@ namespace App\lib;
 use App\class\SageEntityMenu;
 use App\enum\Sage\ArticleTypeEnum;
 use App\enum\Sage\DocumentFraisTypeEnum;
+use App\enum\Sage\DomaineTypeEnum;
 use App\enum\Sage\ETypeCalculEnum;
 use App\enum\Sage\NomenclatureTypeEnum;
 use App\enum\Sage\TaxeTauxType;
@@ -999,6 +1000,22 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$message, $order];
     }
 
+    public function canImportFArticle(stdClass $fArticle): array
+    {
+        // all fields here must be [IsProjected(false)]
+        $result = [];
+        if (
+            $fArticle->arType !== ArticleTypeEnum::ArticleTypeStandard->value &&
+            $fArticle->arType !== ArticleTypeEnum::ArticleTypeGamme->value
+        ) {
+            $result[] = __("Seuls les articles standard ou à gamme peuvent être importés.", 'sage');
+        }
+        if ($fArticle->arNomencl !== NomenclatureTypeEnum::NomenclatureTypeAucun->value) {
+            $result[] = __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", 'sage');
+        }
+        return $result;
+    }
+
     public function importFArticleFromSage(string $arRef, bool $ignorePingApi = false, array $headers = []): array
     {
         $fArticle = $this->sage->sageGraphQl->getFArticle($arRef, ignorePingApi: $ignorePingApi);
@@ -1007,17 +1024,10 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         " . __("L'article n'a pas pu être importé", 'sage') . "
                                 </div>"];
         }
-        if (
-            $fArticle->arType !== ArticleTypeEnum::ArticleTypeStandard->value &&
-            $fArticle->arType !== ArticleTypeEnum::ArticleTypeGamme->value
-        ) {
+        $canImportFArticle = $this->canImportFArticle($fArticle);
+        if (!empty($canImportFArticle)) {
             return [null, null, "<div class='error'>
-                        " . __("Seuls les articles standard ou à gamme peuvent être importés.", 'sage') . "
-                                </div>"];
-        }
-        if ($fArticle->arNomencl !== NomenclatureTypeEnum::NomenclatureTypeAucun->value) {
-            return [null, null, "<div class='error'>
-                        " . __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", 'sage') . "
+                        " . implode(' ', $canImportFArticle) . "
                                 </div>"];
         }
         $articlePostId = $this->sage->sageWoocommerce->getWooCommerceIdArticle($arRef);
@@ -1499,6 +1509,16 @@ WHERE {$wpdb->posts}.post_type = 'product'
         ]);
     }
 
+    public function canImportOrderFromSage(stdClass $fDocentete): array
+    {
+        // all fields here must be [IsProjected(false)]
+        $result = [];
+        if ($fDocentete->doDomaine !== DomaineTypeEnum::DomaineTypeVente->value) {
+            $result[] = __("Seuls les documents de ventes peuvent être importés.", 'sage');
+        }
+        return $result;
+    }
+
     public function importOrderFromSage(
         string                     $doPiece,
         int                        $doType,
@@ -1527,6 +1547,12 @@ WHERE {$wpdb->posts}.post_type = 'product'
         if (is_null($fDocentete) || $fDocentete === false) {
             return [null, "<div class='error'>
                         " . __("Le document de vente Sage n'a pas pu être importé", 'sage') . "
+                                </div>"];
+        }
+        $canImportFDocentete = $this->canImportOrderFromSage($fDocentete);
+        if (!empty($canImportFDocentete)) {
+            return [null, null, "<div class='error'>
+                        " . implode(' ', $canImportFDocentete) . "
                                 </div>"];
         }
         $orderId = $this->getOrderIdWithDoPieceDoType($doPiece, $doType);

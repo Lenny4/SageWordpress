@@ -1,4 +1,5 @@
-{% if item.doDomaine == 0 %}
+{% set errors = canImportOrderFromSage(item) %}
+{% if errors is empty %}
   <a href="{{ getUrlWithParam('action', {
     'type': 'import_from_sage',
     'data': {
@@ -15,10 +16,7 @@
     <span class="dashicons dashicons-download button" style="padding-right: 22px"></span>
   </a>
 {% else %}
-  <span class="dashicons dashicons-download button text-error" style="padding-right: 22px" data-tippy-placement="left"
-        data-tippy-content="<div class='text-error'>
-      {{ 'Seuls les documents de ventes peuvent être importés.'|trans }}
-    </div>"></span>
+  {% include 'common/errors_tippy.html.twig' %}
 {% endif %}
 
 {% if item._sage_postId != null %}

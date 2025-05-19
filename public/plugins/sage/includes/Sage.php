@@ -541,6 +541,15 @@ final class Sage
             }
             return null;
         }));
+        $this->twig->addFunction(new TwigFunction('canUpdateUserOrFComptet', static function (array $fComptet) use($sage): array {
+            return $sage->canUpdateUserOrFComptet(json_decode(json_encode($fComptet), false));
+        }));
+        $this->twig->addFunction(new TwigFunction('canImportFArticle', static function (array $fArticle) use($sageWoocommerce): array {
+            return $sageWoocommerce->canImportFArticle(json_decode(json_encode($fArticle), false));
+        }));
+        $this->twig->addFunction(new TwigFunction('canImportOrderFromSage', static function (array $fDocentete) use($sageWoocommerce): array {
+            return $sageWoocommerce->canImportOrderFromSage(json_decode(json_encode($fDocentete), false));
+        }));
         // endregion
 
         // region link wordpress order to sage order
@@ -1013,6 +1022,16 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
         }
     }
 
+    public function canUpdateUserOrFComptet(stdClass $fComptet): array
+    {
+        // all fields here must be [IsProjected(false)]
+        $result = [];
+        if ($fComptet->ctType !== TiersTypeEnum::TiersTypeClient->value) {
+            $result[] = __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", 'sage');
+        }
+        return $result;
+    }
+
     /**
      * If fComptet is more up to date than user -> update user in wordpress
      * If user is more up to date than fComptet -> update fComptet in sage
@@ -1063,10 +1082,11 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                     " . __("Le compte Sage n'a pas pu être " . $word, 'sage') . "
                             </div>"];
         }
-        if ($fComptet->ctType !== TiersTypeEnum::TiersTypeClient->value) {
-            return [null, "<div class='error'>
-                    " . __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", 'sage') . "
-                            </div>"];
+        $canImportFComptet = $this->canUpdateUserOrFComptet($fComptet);
+        if (!empty($canImportFComptet)) {
+            return [null, null, "<div class='error'>
+                        " . implode(' ', $canImportFComptet) . "
+                                </div>"];
         }
         $ctNum = $fComptet->ctNum;
         $userId = $this->getUserIdWithCtNum($ctNum);
