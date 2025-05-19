@@ -1094,9 +1094,13 @@ WHERE {$wpdb->posts}.post_type = 'product'
         foreach ($sageEntityMenu->getMetadata() as $metadata) {
             $value = $metadata->getValue();
             if (!is_null($value)) {
+                $v = $value($fArticle);
+                if (is_bool($v)) {
+                    $v = (int)$v;
+                }
                 $result['meta_data'][] = [
                     'key' => '_' . Sage::TOKEN . $metadata->getField(),
-                    'value' => $value($fArticle),
+                    'value' => $v,
                 ];
             }
         }

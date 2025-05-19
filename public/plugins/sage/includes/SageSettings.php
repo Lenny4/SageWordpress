@@ -370,6 +370,9 @@ final class SageSettings
                     new SageEntityMetadata(field: '_arUniteVen', value: static function (StdClass $fArticle) {
                         return $fArticle->arUniteVen;
                     }),
+                    new SageEntityMetadata(field: '_canEditArSuiviStock', value: static function (StdClass $fArticle) {
+                        return $fArticle->canEditArSuiviStock;
+                    }),
                 ],
                 metaKeyIdentifier: Sage::META_KEY_AR_REF,
                 metaTable: $wpdb->postmeta,

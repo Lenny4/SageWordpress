@@ -325,3 +325,7 @@ table {
 #woocommerce-coupon-data ul.wc-tabs li.sage_options a::before, #woocommerce-product-data ul.wc-tabs li.sage_options a::before, .woocommerce ul.wc-tabs li.sage_options a::before {
   content: "\f124";
 }
+
+.grayed-out-select {
+  background-color: #f5f5f5 !important;
+}

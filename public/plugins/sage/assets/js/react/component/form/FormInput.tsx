@@ -1,5 +1,6 @@
 import * as React from "react";
 import { FormInputProps } from "../../../interface/InputInterface";
+import { Tooltip } from "@mui/material";
 
 export const FormInput: React.FC<FormInputProps> = ({
   label,
@@ -8,6 +9,7 @@ export const FormInput: React.FC<FormInputProps> = ({
   readOnly,
   onChange,
   hideLabel,
+  type,
 }) => (
   <>
     <label
@@ -17,12 +19,14 @@ export const FormInput: React.FC<FormInputProps> = ({
         marginBottom: 4,
       }}
     >
-      {label}
+      <Tooltip title={name} arrow>
+        <span>{label}</span>
+      </Tooltip>
     </label>
     <input
       id={name}
       name={name}
-      type="text"
+      type={type ?? "text"}
       value={value}
       readOnly={readOnly}
       onChange={onChange}

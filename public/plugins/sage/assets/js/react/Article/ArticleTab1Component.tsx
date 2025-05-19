@@ -1,5 +1,5 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React from "react";
+import React, { ChangeEvent } from "react";
 import { getTranslations } from "../../functions/translations";
 import { FormInterface, InputInterface } from "../../interface/InputInterface";
 import { getSageMetadata } from "../../functions/getMetadata";
@@ -15,6 +15,7 @@ const articleMeta = JSON.parse(
   $("[data-sage-product]").attr("data-sage-product") ?? "null",
 );
 const arRef = getSageMetadata("arRef", articleMeta);
+const canEditArSuiviStock = getSageMetadata("canEditArSuiviStock", articleMeta);
 const isCreation = !arRef;
 const fFamilles: any[] = JSON.parse(
   $("[data-sage-ffamilles]").attr("data-sage-ffamilles") ?? "[]",
@@ -86,6 +87,7 @@ const form: FormInterface = {
             {
               name: "arSuiviStock",
               DomField: FormSelect,
+              readOnly: canEditArSuiviStock.toString() === "0",
               options: transformOptionsObject(
                 translations.fArticles.arSuiviStock.values,
               ),
@@ -123,8 +125,8 @@ const form: FormInterface = {
         },
         {
           fields: [
-            { name: "arPrixAch", DomField: FormInput },
-            { name: "arCoef", DomField: FormInput },
+            { name: "arPrixAch", DomField: FormInput, type: "number" },
+            { name: "arCoef", DomField: FormInput, type: "number" },
           ],
           children: [
             {
@@ -139,14 +141,23 @@ const form: FormInterface = {
                   props: {
                     size: { xs: 12, md: 8 },
                   },
-                  fields: [{ name: "arPrixVen", DomField: FormInput }],
+                  fields: [
+                    { name: "arPrixVen", DomField: FormInput, type: "number" },
+                  ],
                 },
                 {
                   props: {
                     size: { xs: 12, md: 4 },
                   },
                   fields: [
-                    { name: "arPrixTtc", DomField: FormInput, hideLabel: true },
+                    {
+                      name: "arPrixTtc",
+                      DomField: FormSelect,
+                      hideLabel: true,
+                      options: transformOptionsObject(
+                        translations.fArticles.arPrixTtc.values,
+                      ),
+                    },
                   ],
                 },
               ],
@@ -155,8 +166,8 @@ const form: FormInterface = {
         },
         {
           fields: [
-            { name: "arPunet", DomField: FormInput },
-            { name: "arCoutStd", DomField: FormInput },
+            { name: "arPunet", DomField: FormInput, type: "number" },
+            { name: "arCoutStd", DomField: FormInput, type: "number" },
             {
               name: "arUniteVen",
               DomField: FormSelect,
@@ -188,7 +199,6 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
       (acc, field) => {
         acc[field] = {
           value: getSageMetadata(field, articleMeta) ?? "",
-          error: "",
         };
         return acc;
       },
@@ -196,7 +206,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
     );
 
     return {
-      isCreation: { value: !arRef, error: "" },
+      isCreation: { value: !arRef },
       ...fieldValues,
     };
   };
@@ -212,12 +222,51 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
       });
     };
 
+  const handleChangeSelect =
+    (prop: keyof FormState) => (event: ChangeEvent<HTMLSelectElement>) => {
+      setValues((v) => {
+        return {
+          ...v,
+          [prop]: {
+            ...v[prop],
+            value: event.target.value as string,
+            error: "",
+          },
+        };
+      });
+    };
+
+  const handleDisabledFields = () => {
+    const disabledArCondition = ["1", "5"].includes(
+      values.arSuiviStock.value.toString(),
+    );
+
+    const changeDisabledArCondition =
+      disabledArCondition !== !!values.arCondition.readOnly;
+
+    if (changeDisabledArCondition) {
+      setValues((v) => ({
+        ...v,
+        arCondition: {
+          ...v.arCondition,
+          readOnly: disabledArCondition,
+          value: disabledArCondition ? "0" : v.arCondition.value,
+        },
+      }));
+    }
+  };
+
+  React.useEffect(() => {
+    handleDisabledFields();
+  }, [values]);
+
   return (
     <>
       <FormContentComponent
         content={form.content}
         values={values}
         handleChange={handleChange}
+        handleChangeSelect={handleChangeSelect}
         transPrefix="fArticles"
       />
     </>

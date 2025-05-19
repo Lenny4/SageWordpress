@@ -15,6 +15,7 @@ export interface FormContentInterface {
 export interface InputInterface {
   value: any;
   error?: string | null;
+  readOnly?: boolean;
 }
 
 export interface FieldInterface {
@@ -23,6 +24,7 @@ export interface FieldInterface {
   readOnly?: boolean;
   hideLabel?: boolean;
   options?: FormInputOptions[];
+  type?: string;
 }
 
 export type FormInputProps = {
@@ -34,6 +36,7 @@ export type FormInputProps = {
   onChangeSelect?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   hideLabel?: boolean;
   options?: FormInputOptions[];
+  type?: string;
 };
 
 export type FormInputOptions = {

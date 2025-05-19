@@ -15,6 +15,7 @@ type State = {
   values: any;
   transPrefix?: string;
   handleChange: any;
+  handleChangeSelect: any;
 };
 
 export const FormContentComponent: React.FC<State> = ({
@@ -22,6 +23,7 @@ export const FormContentComponent: React.FC<State> = ({
   values,
   transPrefix,
   handleChange,
+  handleChangeSelect,
 }) => (
   <>
     {content.map(
@@ -34,7 +36,7 @@ export const FormContentComponent: React.FC<State> = ({
             {Dom}
             {fields?.map(
               (
-                { name, DomField, readOnly, hideLabel, options },
+                { name, DomField, readOnly, hideLabel, options, type },
                 indexField,
               ) => {
                 let label = "";
@@ -56,10 +58,12 @@ export const FormContentComponent: React.FC<State> = ({
                     label={label}
                     name={`_sage_${name}`}
                     value={values[name].value}
-                    readOnly={readOnly ?? false}
+                    readOnly={!!readOnly || !!values[name].readOnly}
                     onChange={handleChange(name)}
+                    onChangeSelect={handleChangeSelect(name)}
                     hideLabel={hideLabel}
                     options={options}
+                    type={type}
                   />
                 );
               },
@@ -69,6 +73,7 @@ export const FormContentComponent: React.FC<State> = ({
                 content={children}
                 values={values}
                 handleChange={handleChange}
+                handleChangeSelect={handleChangeSelect}
                 transPrefix={transPrefix}
               />
             )}

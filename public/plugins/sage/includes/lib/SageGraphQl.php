@@ -784,6 +784,7 @@ final class SageGraphQl
                 'arCondition', // enum U. Vente
                 'arPrixTtc',
                 'arUniteVen', // Unité de vente
+                'canEditArSuiviStock',
             ]),
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
                 'arPrixAch',
