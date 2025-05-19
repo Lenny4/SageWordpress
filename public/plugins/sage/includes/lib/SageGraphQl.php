@@ -360,8 +360,7 @@ final class SageGraphQl
     {
         $cacheName = 'TypeModel_' . $object;
         if (!$this->pingApi) {
-            $this->sage->cache->delete($cacheName);
-            return null;
+            return $this->sage->cache->get($cacheName, static fn() => null);
         }
 
         $sageGraphQl = $this;
@@ -410,8 +409,7 @@ final class SageGraphQl
     {
         $cacheName = 'TypeFilter_' . $object;
         if (!$this->pingApi) {
-            $this->sage->cache->delete($cacheName);
-            return null;
+            return $this->sage->cache->get($cacheName, static fn() => null);
         }
 
         $sageGraphQl = $this;
@@ -592,7 +590,7 @@ final class SageGraphQl
         }
         if (!$this->pingApi && !$ignorePingApi) {
             if (!is_null($cacheName)) {
-                $this->sage->cache->delete($cacheName);
+                return $this->sage->cache->get($cacheName, static fn() => null);
             }
             return null;
         }
