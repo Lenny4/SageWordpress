@@ -1054,9 +1054,10 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                     " . __("Vous devez spécifier l'id compte Wordpress", 'sage') . "
                             </div>"];
             }
-            $fComptet = $this->sageGraphQl->createFComptet(
+            $fComptet = $this->sageGraphQl->createUpdateFComptet(
                 userId: $shouldBeUserId,
                 ctNum: $ctNum,
+                new: true,
                 getError: true,
             );
             if (is_string($fComptet)) {
@@ -1116,7 +1117,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                 update_user_meta($userId, $key, $value);
             }
         } else {
-            if (!$newFComptet) { // no need update fComptet as sageGraphQl->createFComptet already update fComptet
+            if (!$newFComptet) { // no need update fComptet as sageGraphQl->createUpdateFComptet already update fComptet
                 $fComptet = $this->sageGraphQl->updateFComptetFromWebsite(
                     ctNum: $ctNum,
                     getError: true,

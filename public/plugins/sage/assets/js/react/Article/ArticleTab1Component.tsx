@@ -125,6 +125,7 @@ const form: FormInterface = {
             },
             {
               name: "arCondition",
+              readOnly: true, // can't change with Objet métier
               DomField: FormSelect,
               options: transformOptionsObject(
                 translations.fArticles.arCondition.values,
@@ -191,6 +192,7 @@ const form: FormInterface = {
             {
               name: "arUniteVen",
               DomField: FormSelect,
+              readOnly: true, // can't change with Objet métier
               options: pUnites.map((f) => {
                 return {
                   value: f.cbIndice,

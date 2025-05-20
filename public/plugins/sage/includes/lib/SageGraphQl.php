@@ -242,9 +242,10 @@ final class SageGraphQl
         return $this->client;
     }
 
-    public function createFComptet(
+    public function createUpdateFComptet(
         int     $userId,
         ?string $ctNum = null,
+        bool    $new = false,
         bool    $getError = false,
     ): StdClass|null|string
     {
@@ -265,21 +266,22 @@ final class SageGraphQl
         $arguments = [
             'ctIntitule' => $ctIntitule,
             'ctEmail' => $ctEmail,
+            'new' => $new,
             'websiteId' => get_option(Sage::TOKEN . '_website_id'),
             'autoGenerateCtNum' => $autoGenerateCtNum,
         ];
         if (!is_null($ctNum)) {
             $arguments['ctNum'] = $ctNum;
         }
-        $mutation = (new Mutation('createFComptet'))
-            ->setVariables([new Variable('createFComptetDto', 'CreateFComptetDtoInput', true)])
-            ->setArguments(['createFComptetDto' => '$createFComptetDto'])
+        $mutation = (new Mutation('createUpdateFComptet'))
+            ->setVariables([new Variable('createUpdateFComptetDto', 'CreateFComptetDtoInput', true)])
+            ->setArguments(['createUpdateFComptetDto' => '$createUpdateFComptetDto'])
             ->setSelectionSet($this->formatSelectionSet($this->_getFComptetSelectionSet()));
-        $variables = ['createFComptetDto' => $arguments];
+        $variables = ['createUpdateFComptetDto' => $arguments];
         $result = $this->runQuery($mutation, $getError, $variables);
 
         if (!is_null($result) && !is_string($result)) {
-            return $result->data->createFComptet;
+            return $result->data->createUpdateFComptet;
         }
         return $result;
     }
