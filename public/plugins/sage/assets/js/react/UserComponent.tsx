@@ -269,7 +269,12 @@ const UserComponent = () => {
       values.creationType.value === "link" ||
       (values.creationType.value === "new" && !values.autoGenerateCtNum.value)
     ) {
-      ctNumError = stringValidator(values.ctNum.value, 19, false, false);
+      ctNumError = stringValidator({
+        value: values.ctNum.value,
+        maxLength: 19,
+        canBeEmpty: false,
+        canHaveSpace: false,
+      });
     }
     if (result || ctNumError) {
       setValues((v) => {

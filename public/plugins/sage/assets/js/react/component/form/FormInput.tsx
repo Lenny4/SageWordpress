@@ -10,6 +10,7 @@ export const FormInput: React.FC<FormInputProps> = ({
   onChange,
   hideLabel,
   type,
+  errorMessage,
 }) => (
   <>
     <label
@@ -32,5 +33,6 @@ export const FormInput: React.FC<FormInputProps> = ({
       onChange={onChange}
       style={{ width: "100%" }}
     />
+    {errorMessage && <div className="sage_error_field">{errorMessage}</div>}
   </>
 );

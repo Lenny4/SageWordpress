@@ -64,6 +64,7 @@ export const FormContentComponent: React.FC<State> = ({
                     hideLabel={hideLabel}
                     options={options}
                     type={type}
+                    errorMessage={values[name].error}
                   />
                 );
               },

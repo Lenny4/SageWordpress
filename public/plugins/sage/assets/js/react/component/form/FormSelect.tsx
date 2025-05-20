@@ -10,6 +10,7 @@ export const FormSelect: React.FC<FormInputProps> = ({
   onChangeSelect,
   hideLabel,
   options = [],
+  errorMessage,
 }) => {
   const hasOption = !!options.find(
     (o) => o.value.toString() === value.toString(),
@@ -54,6 +55,7 @@ export const FormSelect: React.FC<FormInputProps> = ({
           );
         })}
       </select>
+      {errorMessage && <div className="sage_error_field">{errorMessage}</div>}
     </>
   );
 };

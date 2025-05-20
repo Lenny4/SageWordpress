@@ -1,11 +1,23 @@
-import { FormInputOptions, FormInterface } from "../interface/InputInterface";
+import {
+  ErrorMessageInterface,
+  FieldInterface,
+  FormInputOptions,
+  FormInterface,
+  InputInterface,
+} from "../interface/InputInterface";
+import React, { ChangeEvent, Dispatch, SetStateAction } from "react";
 
-export const stringValidator = (
-  value: string | null,
-  maxLength: null | number = null,
-  canBeEmpty: boolean = false,
-  canHaveSpace: boolean = true,
-) => {
+export const stringValidator = ({
+  value,
+  maxLength = null,
+  canBeEmpty = false,
+  canHaveSpace = true,
+}: {
+  value: string | null;
+  maxLength: null | number;
+  canBeEmpty: boolean;
+  canHaveSpace: boolean;
+}) => {
   value = (value?.replace(/\s\s+/g, " ") ?? "").trim() ?? "";
   if (!canBeEmpty && value.length === 0) {
     return "Ce champ ne peut pas être vide";
@@ -19,15 +31,15 @@ export const stringValidator = (
   return "";
 };
 
-export function getFieldNames(form: FormInterface): string[] {
-  const names: string[] = [];
+export function getFlatFields(form: FormInterface): FieldInterface[] {
+  const result: FieldInterface[] = [];
 
   const extract = (nodes: any[]) => {
     for (const node of nodes) {
       if (node.fields) {
         for (const field of node.fields) {
           if (field.name) {
-            names.push(field.name);
+            result.push(field);
           }
         }
       }
@@ -39,7 +51,7 @@ export function getFieldNames(form: FormInterface): string[] {
   };
 
   extract(form.content);
-  return names;
+  return result;
 }
 
 export function transformOptionsObject(
@@ -50,3 +62,75 @@ export function transformOptionsObject(
     value: key.toString(),
   }));
 }
+
+export function isValid(
+  values: Record<string, InputInterface>,
+  setValues: Dispatch<SetStateAction<Record<string, InputInterface>>>,
+) {
+  let hasError = false;
+  let errorMessages: ErrorMessageInterface[] = [];
+  for (const fieldName in values) {
+    if (values[fieldName].validator) {
+      const errorMessage = values[fieldName].validator.functionName({
+        ...values[fieldName].validator.params,
+        value: values[fieldName].value,
+      });
+      const thisHasError = errorMessage !== "";
+      hasError = hasError || thisHasError;
+      if (thisHasError) {
+        errorMessages.push({
+          fieldName: fieldName,
+          message: errorMessage,
+        });
+      }
+    }
+  }
+  if (hasError) {
+    setValues((v) => {
+      const result = { ...v };
+      for (const errorMessage of errorMessages) {
+        result[errorMessage.fieldName].error = errorMessage.message;
+      }
+      return result;
+    });
+  }
+  return !hasError;
+}
+
+export const handleChangeInputGeneric = (
+  event: React.ChangeEvent<HTMLInputElement>,
+  prop: any,
+  setValues: Dispatch<SetStateAction<Record<string, InputInterface>>>,
+) => {
+  setValues((v) => {
+    const result = {
+      ...v,
+      [prop]: { ...v[prop], value: event.target.value, error: "" },
+    };
+    setTimeout(() => {
+      isValid(result, setValues);
+    });
+    return result;
+  });
+};
+
+export const handleChangeSelectGeneric = (
+  event: ChangeEvent<HTMLSelectElement>,
+  prop: any,
+  setValues: Dispatch<SetStateAction<Record<string, InputInterface>>>,
+) => {
+  setValues((v) => {
+    const result = {
+      ...v,
+      [prop]: {
+        ...v[prop],
+        value: event.target.value as string,
+        error: "",
+      },
+    };
+    setTimeout(() => {
+      isValid(result, setValues);
+    });
+    return result;
+  });
+};

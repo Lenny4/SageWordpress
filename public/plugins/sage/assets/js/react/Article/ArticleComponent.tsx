@@ -20,7 +20,8 @@ interface ArticleTabs {
   ref: React.RefObject<any>;
 }
 
-const selectProductTypeSelector = "form[name='post'] select[name='product-type']";
+const formSelector = "form[name='post']";
+const selectProductTypeSelector = formSelector + " select[name='product-type']";
 
 export default function ArticleComponent() {
   const [value, setValue] = React.useState(0);
@@ -56,6 +57,17 @@ export default function ArticleComponent() {
   React.useEffect(() => {
     $(selectProductTypeSelector).on("change", () => {
       setIsSageProductType(getIsSageProductType());
+    });
+    $(formSelector).on("submit", (e) => {
+      let hasError = false;
+      for (const tab of tabs) {
+        if (tab.ref.current) {
+          hasError = hasError || !tab.ref.current.isValid();
+        }
+      }
+      if (hasError) {
+        e.preventDefault();
+      }
     });
   }, []);
 

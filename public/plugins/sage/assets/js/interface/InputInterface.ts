@@ -12,19 +12,36 @@ export interface FormContentInterface {
   children?: FormContentInterface[];
 }
 
-export interface InputInterface {
+export interface ErrorMessageInterface {
+  fieldName: string;
+  message: string;
+}
+
+export interface InputInterface<
+  F extends (arg: any) => any = (arg: any) => any,
+> {
   value: any;
   error?: string | null;
   readOnly?: boolean;
+  validator?: FieldValidatorInterface<F>;
 }
 
-export interface FieldInterface {
+export interface FieldValidatorInterface<F extends (arg: any) => any> {
+  functionName: F;
+  params?: Parameters<F>[0]; // Extracts the shape of the single object parameter
+}
+
+export interface FieldInterface<
+  F extends (arg: any) => any = (arg: any) => any,
+> {
   name: string;
   DomField: FC<FormInputProps>;
   readOnly?: boolean;
   hideLabel?: boolean;
   options?: FormInputOptions[];
   type?: string;
+  validator?: FieldValidatorInterface<F>;
+  errorMessage?: string;
 }
 
 export type FormInputProps = {
@@ -37,6 +54,7 @@ export type FormInputProps = {
   hideLabel?: boolean;
   options?: FormInputOptions[];
   type?: string;
+  errorMessage?: string;
 };
 
 export type FormInputOptions = {

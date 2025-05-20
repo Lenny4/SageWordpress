@@ -1,10 +1,17 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, useImperativeHandle } from "react";
 import { getTranslations } from "../../functions/translations";
 import { FormInterface, InputInterface } from "../../interface/InputInterface";
 import { getSageMetadata } from "../../functions/getMetadata";
 import { FormInput } from "../component/form/FormInput";
-import { getFieldNames, transformOptionsObject } from "../../functions/form";
+import {
+  getFlatFields,
+  handleChangeInputGeneric,
+  handleChangeSelectGeneric,
+  isValid,
+  stringValidator,
+  transformOptionsObject,
+} from "../../functions/form";
 import { FormContentComponent } from "../component/form/FormContentComponent";
 import { DividerText } from "../component/DividerText";
 import { FormSelect } from "../component/form/FormSelect";
@@ -15,7 +22,8 @@ const articleMeta = JSON.parse(
   $("[data-sage-product]").attr("data-sage-product") ?? "null",
 );
 const arRef = getSageMetadata("arRef", articleMeta);
-const canEditArSuiviStock = getSageMetadata("canEditArSuiviStock", articleMeta) ?? 1;
+const canEditArSuiviStock =
+  getSageMetadata("canEditArSuiviStock", articleMeta) ?? 1;
 const isCreation = !arRef;
 const fFamilles: any[] = JSON.parse(
   $("[data-sage-ffamilles]").attr("data-sage-ffamilles") ?? "[]",
@@ -70,7 +78,18 @@ const form: FormInterface = {
           props: {
             size: { xs: 12 },
           },
-          fields: [{ name: "arDesign", DomField: FormInput }],
+          fields: [
+            {
+              name: "arDesign",
+              DomField: FormInput,
+              validator: {
+                functionName: stringValidator,
+                params: {
+                  maxLength: 69,
+                },
+              },
+            },
+          ],
         },
         {
           fields: [
@@ -186,7 +205,8 @@ const form: FormInterface = {
   ],
 };
 
-const fieldNames = getFieldNames(form);
+const flatFields = getFlatFields(form);
+const fieldNames = flatFields.map((f) => f.name);
 
 type FieldKeys = (typeof fieldNames)[number];
 
@@ -196,10 +216,11 @@ interface FormState extends Record<FieldKeys, InputInterface> {
 
 export const ArticleTab1Component = React.forwardRef((props, ref) => {
   const getDefaultValue = (): FormState => {
-    const fieldValues = fieldNames.reduce(
+    const fieldValues = flatFields.reduce(
       (acc, field) => {
-        acc[field] = {
-          value: getSageMetadata(field, articleMeta) ?? "",
+        acc[field.name] = {
+          value: getSageMetadata(field.name, articleMeta) ?? "",
+          validator: field.validator,
         };
         return acc;
       },
@@ -215,26 +236,12 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
 
   const handleChange =
     (prop: keyof FormState) => (event: React.ChangeEvent<HTMLInputElement>) => {
-      setValues((v) => {
-        return {
-          ...v,
-          [prop]: { ...v[prop], value: event.target.value, error: "" },
-        };
-      });
+      handleChangeInputGeneric(event, prop, setValues);
     };
 
   const handleChangeSelect =
     (prop: keyof FormState) => (event: ChangeEvent<HTMLSelectElement>) => {
-      setValues((v) => {
-        return {
-          ...v,
-          [prop]: {
-            ...v[prop],
-            value: event.target.value as string,
-            error: "",
-          },
-        };
-      });
+      handleChangeSelectGeneric(event, prop, setValues);
     };
 
   const handleDisabledFields = () => {
@@ -257,6 +264,12 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
     }
   };
 
+  useImperativeHandle(ref, () => ({
+    isValid(): boolean {
+      return isValid(values, setValues);
+    },
+  }));
+
   React.useEffect(() => {
     handleDisabledFields();
   }, [values]);
@@ -270,7 +283,11 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
         handleChangeSelect={handleChangeSelect}
         transPrefix="fArticles"
       />
-      <input type="hidden" name="product-type" value={values.arType.value === "1" ? "variable" : "simple"} />
+      <input
+        type="hidden"
+        name="product-type"
+        value={values.arType.value === "1" ? "variable" : "simple"}
+      />
     </>
   );
 });
