@@ -279,13 +279,6 @@ final class SageSettings
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
                 options: [
-//                    [
-//                        'id' => 'auto_create_sage_farticle',
-//                        'label' => __('Créer automatiquement le produit Sage', 'sage'),
-//                        'description' => __("Créer automatiquement le article dans Sage lorsqu'un produit Woocommerce est crée.", 'sage'),
-//                        'type' => 'checkbox',
-//                        'default' => 'off'
-//                    ],
                     [
                         'id' => 'auto_create_wordpress_article',
                         'label' => __('Créer automatiquement le produit Woocommerce', 'sage'),
@@ -322,10 +315,10 @@ final class SageSettings
                     new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
                         return $sageWoocommerce->getMaxPrice($fArticle->prices);
                     }),
-                    new SageEntityMetadata(field: '_poids_net', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
+                    new SageEntityMetadata(field: '_arPoidsNet', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
                         return $fArticle->arPoidsNet;
                     }),
-                    new SageEntityMetadata(field: '_poids_brut', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
+                    new SageEntityMetadata(field: '_arPoidsBrut', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
                         return $fArticle->arPoidsBrut;
                     }),
                     new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
@@ -976,15 +969,16 @@ final class SageSettings
             if (!($product instanceof WC_Product)) {
                 return;
             }
-            $arRef = $product->get_meta(Sage::META_KEY_AR_REF);
             $oldMetaData = $product->get_meta_data();
+            $arRef = $product->get_meta(Sage::META_KEY_AR_REF);
             $meta = [
                 'changes' => [],
                 'old' => $oldMetaData,
                 'new' => $oldMetaData,
             ];
             $responseError = null;
-            if (!empty($arRef)) {
+            $updateWordpress = $product->get_meta('_' . Sage::TOKEN . '_updateApi');
+            if (!empty($arRef) && empty($updateWordpress)) {
                 [$response, $responseError, $message, $postId] = $sageSettings->sage->sageWoocommerce->importFArticleFromSage($arRef);
                 if (is_null($responseError)) {
                     $product->read_meta_data(true);
@@ -1016,6 +1010,7 @@ final class SageSettings
                 'responseError' => $responseError,
                 'metaChanges' => $meta['changes'],
                 'productMeta' => $meta['new'],
+                'updateWordpress' => $updateWordpress,
                 'hasChanges' =>
                     isset($meta['changes']['added'], $meta['changes']['removed'], $meta['changes']['modified']) &&
                     (

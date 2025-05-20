@@ -3,6 +3,7 @@
 namespace App\lib;
 
 use App\Sage;
+use DateTime;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -19,56 +20,26 @@ final class SageAdminApi
      */
     public function __construct(public ?Sage $sage)
     {
-        add_action('save_post', function (int $post_id = 0): void {
-            $this->save_meta_boxes($post_id);
-        }, 10, 1);
-    }
-
-    /**
-     * Save metabox fields.
-     *
-     * @param integer $post_id Post ID.
-     */
-    public function save_meta_boxes(int $post_id = 0): void
-    {
-
-        if ($post_id === 0) {
-            return;
-        }
-
-        $post_type = get_post_type($post_id);
-
-        $fields = apply_filters($post_type . '_custom_fields', [], $post_type);
-
-        if (!is_array($fields) || [] === $fields) {
-            return;
-        }
-
-        foreach ($fields as $field) {
-            if (isset($_REQUEST[$field['id']])) {
-                update_post_meta($post_id, $field['id'], $this->validate_field($_REQUEST[$field['id']], $field['type']));
-            } else {
-                update_post_meta($post_id, $field['id'], '');
+        add_action('save_post', function (int $postId = 0) use ($sage): void {
+            if ($postId === 0) {
+                return;
             }
-        }
-    }
-
-    /**
-     * Validate form field
-     *
-     * @param string $data Submitted value.
-     * @param string $type Type of field to validate.
-     * @return string       Validated value
-     */
-    public function validate_field(string $data = '', string $type = 'text'): string
-    {
-
-        return match ($type) {
-            'text' => esc_attr($data),
-            'url' => esc_url($data),
-            'email' => is_email($data),
-            default => $data,
-        };
+            $arRef = null;
+            foreach ($_REQUEST as $key => $value) {
+                if (str_starts_with($key, '_' . Sage::TOKEN)) {
+                    if ($key === Sage::META_KEY_AR_REF) {
+                        $arRef = $value;
+                    }
+                    update_post_meta($postId, $key, $value);
+                }
+            }
+            if (!empty($arRef)) {
+                update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
+                $sage->sageGraphQl->updateFArticleFromWebsite($arRef);
+                // no need because it's done directly by Sage Api
+                // update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', null);
+            }
+        }, 10, 1);
     }
 
     /**

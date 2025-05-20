@@ -541,13 +541,13 @@ final class Sage
             }
             return null;
         }));
-        $this->twig->addFunction(new TwigFunction('canUpdateUserOrFComptet', static function (array $fComptet) use($sage): array {
+        $this->twig->addFunction(new TwigFunction('canUpdateUserOrFComptet', static function (array $fComptet) use ($sage): array {
             return $sage->canUpdateUserOrFComptet(json_decode(json_encode($fComptet), false));
         }));
-        $this->twig->addFunction(new TwigFunction('canImportFArticle', static function (array $fArticle) use($sageWoocommerce): array {
+        $this->twig->addFunction(new TwigFunction('canImportFArticle', static function (array $fArticle) use ($sageWoocommerce): array {
             return $sageWoocommerce->canImportFArticle(json_decode(json_encode($fArticle), false));
         }));
-        $this->twig->addFunction(new TwigFunction('canImportOrderFromSage', static function (array $fDocentete) use($sageWoocommerce): array {
+        $this->twig->addFunction(new TwigFunction('canImportOrderFromSage', static function (array $fDocentete) use ($sageWoocommerce): array {
             return $sageWoocommerce->canImportOrderFromSage(json_decode(json_encode($fDocentete), false));
         }));
         // endregion
@@ -1010,7 +1010,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
         if (!$inSage || $nbUpdatedMeta === 0) {
             return;
         }
-        update_user_meta($userId, '_' . self::TOKEN . '_updateApi', new DateTime());
+        update_user_meta($userId, '_' . self::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
         [$createdOrUpdatedUserId, $message] = $this->updateUserOrFComptet($ctNum, $userId, newFComptet: $newFComptet);
         if ($newFComptet && is_null($createdOrUpdatedUserId)) {
             $this->deleteSageMetadataForUser($userId);
@@ -1020,16 +1020,6 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
             wp_redirect($redirect);
             exit;
         }
-    }
-
-    public function canUpdateUserOrFComptet(stdClass $fComptet): array
-    {
-        // all fields here must be [IsProjected(false)]
-        $result = [];
-        if ($fComptet->ctType !== TiersTypeEnum::TiersTypeClient->value) {
-            $result[] = __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", 'sage');
-        }
-        return $result;
     }
 
     /**
@@ -1148,6 +1138,16 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
         return [$userId, "<div class='notice notice-success is-dismissible'>
                         " . __('L\'utilisateur a été créé', 'sage') . $url . "
                                 </div>"];
+    }
+
+    public function canUpdateUserOrFComptet(stdClass $fComptet): array
+    {
+        // all fields here must be [IsProjected(false)]
+        $result = [];
+        if ($fComptet->ctType !== TiersTypeEnum::TiersTypeClient->value) {
+            $result[] = __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", 'sage');
+        }
+        return $result;
     }
 
     public function getUserIdWithCtNum(string $ctNum): int|null

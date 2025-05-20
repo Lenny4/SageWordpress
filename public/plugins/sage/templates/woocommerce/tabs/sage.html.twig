@@ -23,6 +23,12 @@
     {% endfor %}
   </div>
 {% endif %}
+{% if updateWordpress is not empty %}
+  <div class="notice notice-warning is-dismissible">
+    <p>{{ 'Les modifications effectuées sur ce produit n\'ont pas encore été prises en compte dans Sage'|trans }}</p>
+    <p>{{ 'Date des modifications'|trans }} : {{ updateWordpress }}</p>
+  </div>
+{% endif %}
 <div data-sage-pcattarifs="{{ pCattarifs|json_encode }}"></div>
 <div data-sage-pcatcomptas="{{ pCatComptas|json_encode }}"></div>
 <div data-sage-ffamilles="{{ fFamilles|json_encode }}"></div>

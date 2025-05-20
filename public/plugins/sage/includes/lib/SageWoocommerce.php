@@ -100,7 +100,6 @@ final class SageWoocommerce
             }
         }, 10, 2);
         // endregion
-
     }
 
     private function custom_price(string $price, WC_Product $product, int $userId = 0, ?bool $withTaxes = null): float|string
@@ -1000,22 +999,6 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$message, $order];
     }
 
-    public function canImportFArticle(stdClass $fArticle): array
-    {
-        // all fields here must be [IsProjected(false)]
-        $result = [];
-        if (
-            $fArticle->arType !== ArticleTypeEnum::ArticleTypeStandard->value &&
-            $fArticle->arType !== ArticleTypeEnum::ArticleTypeGamme->value
-        ) {
-            $result[] = __("Seuls les articles standard ou à gamme peuvent être importés.", 'sage');
-        }
-        if ($fArticle->arNomencl !== NomenclatureTypeEnum::NomenclatureTypeAucun->value) {
-            $result[] = __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", 'sage');
-        }
-        return $result;
-    }
-
     public function importFArticleFromSage(string $arRef, bool $ignorePingApi = false, array $headers = []): array
     {
         $fArticle = $this->sage->sageGraphQl->getFArticle($arRef, ignorePingApi: $ignorePingApi);
@@ -1080,6 +1063,22 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $message = $response["body"];
         }
         return [$response, $responseError, $message, $postId];
+    }
+
+    public function canImportFArticle(stdClass $fArticle): array
+    {
+        // all fields here must be [IsProjected(false)]
+        $result = [];
+        if (
+            $fArticle->arType !== ArticleTypeEnum::ArticleTypeStandard->value &&
+            $fArticle->arType !== ArticleTypeEnum::ArticleTypeGamme->value
+        ) {
+            $result[] = __("Seuls les articles standard ou à gamme peuvent être importés.", 'sage');
+        }
+        if ($fArticle->arNomencl !== NomenclatureTypeEnum::NomenclatureTypeAucun->value) {
+            $result[] = __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", 'sage');
+        }
+        return $result;
     }
 
     public function getWooCommerceIdArticle(string $arRef): int|null
@@ -1509,16 +1508,6 @@ WHERE {$wpdb->posts}.post_type = 'product'
         ]);
     }
 
-    public function canImportOrderFromSage(stdClass $fDocentete): array
-    {
-        // all fields here must be [IsProjected(false)]
-        $result = [];
-        if ($fDocentete->doDomaine !== DomaineTypeEnum::DomaineTypeVente->value) {
-            $result[] = __("Seuls les documents de ventes peuvent être importés.", 'sage');
-        }
-        return $result;
-    }
-
     public function importOrderFromSage(
         string                     $doPiece,
         int                        $doType,
@@ -1610,6 +1599,16 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return [$orderId, $message . "<div class='notice notice-success is-dismissible'>
                         " . __('La commande a été créée', 'sage') . $url . "
                                 </div>"];
+    }
+
+    public function canImportOrderFromSage(stdClass $fDocentete): array
+    {
+        // all fields here must be [IsProjected(false)]
+        $result = [];
+        if ($fDocentete->doDomaine !== DomaineTypeEnum::DomaineTypeVente->value) {
+            $result[] = __("Seuls les documents de ventes peuvent être importés.", 'sage');
+        }
+        return $result;
     }
 
     public function getOrderIdWithDoPieceDoType(string $doPiece, int $doType): int|null

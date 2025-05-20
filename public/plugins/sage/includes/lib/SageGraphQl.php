@@ -1548,4 +1548,26 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             }
         }
     }
+
+    public function updateFArticleFromWebsite(
+        string $arRef,
+        bool   $getError = false,
+    ): StdClass|null|string
+    {
+        $arguments = [
+            'arRef' => $arRef,
+            'websiteId' => (int)get_option(Sage::TOKEN . '_website_id'),
+        ];
+        $mutation = (new Mutation('updateFArticleFromWebsite'))
+            ->setVariables([new Variable('updateFArticleFromWebsiteDto', 'UpdateFArticleFromWebsiteDtoInput', true)])
+            ->setArguments(['updateFArticleFromWebsiteDto' => '$updateFArticleFromWebsiteDto'])
+            ->setSelectionSet($this->formatSelectionSet($this->_getFArticleSelectionSet()));
+        $variables = ['updateFArticleFromWebsiteDto' => $arguments];
+        $result = $this->runQuery($mutation, $getError, $variables);
+
+        if (!is_null($result) && !is_string($result)) {
+            return $result->data->updateFArticleFromWebsite;
+        }
+        return $result;
+    }
 }
