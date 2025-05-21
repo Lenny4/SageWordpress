@@ -1107,8 +1107,8 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                                 <pre>" . $userId->get_error_message() . "</pre>
                                 </div>"];
         }
-        $updateWordpress = empty(get_user_meta($userId, '_' . self::TOKEN . '_updateApi', true));
-        if ($updateWordpress) {
+        $updateApi = empty(get_user_meta($userId, '_' . self::TOKEN . '_updateApi', true));
+        if ($updateApi) {
             $wpUser = new WP_User($userId);
             if ($wpUser->user_login !== $userFromSage->user_login) {
                 wp_update_user($userFromSage);

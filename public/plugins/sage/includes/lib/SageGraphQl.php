@@ -783,9 +783,9 @@ final class SageGraphQl
         ];
     }
 
-    private function _getFArticleSelectionSet(bool $forExpedition = false): array
+    private function _getFArticleSelectionSet(bool $checkIfExists = false): array
     {
-        if ($forExpedition) {
+        if ($checkIfExists) {
             return [
                 ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                     'arRef',
@@ -977,7 +977,11 @@ final class SageGraphQl
         ];
     }
 
-    public function getFArticle(string $arRef, bool $ignorePingApi = false): StdClass|null
+    public function getFArticle(
+        string $arRef,
+        bool $ignorePingApi = false,
+        bool $checkIfExists = false,
+    ): StdClass|null
     {
         $fArticle = $this->searchEntities(
             SageEntityMenu::FARTICLE_ENTITY_NAME,
@@ -994,7 +998,7 @@ final class SageGraphQl
                 "paged" => "1",
                 "per_page" => "1"
             ],
-            $this->_getFArticleSelectionSet(),
+            $this->_getFArticleSelectionSet(checkIfExists: $checkIfExists),
             ignorePingApi: $ignorePingApi,
         );
         if (is_null($fArticle) || $fArticle->data->fArticles->totalCount !== 1) {
@@ -1553,11 +1557,13 @@ WHERE {$wpdb->postmeta}.meta_key = %s
 
     public function updateFArticleFromWebsite(
         string $arRef,
+        bool   $new,
         bool   $getError = false,
     ): StdClass|null|string
     {
         $arguments = [
             'arRef' => $arRef,
+            'new' => $new,
             'websiteId' => (int)get_option(Sage::TOKEN . '_website_id'),
         ];
         $mutation = (new Mutation('updateFArticleFromWebsite'))

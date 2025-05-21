@@ -977,8 +977,8 @@ final class SageSettings
                 'new' => $oldMetaData,
             ];
             $responseError = null;
-            $updateWordpress = $product->get_meta('_' . Sage::TOKEN . '_updateApi');
-            if (!empty($arRef) && empty($updateWordpress)) {
+            $updateApi = $product->get_meta('_' . Sage::TOKEN . '_updateApi'); // returns "" if not exists in bdd
+            if (!empty($arRef) && empty($updateApi)) {
                 [$response, $responseError, $message, $postId] = $sageSettings->sage->sageWoocommerce->importFArticleFromSage($arRef);
                 if (is_null($responseError)) {
                     $product->read_meta_data(true);
@@ -1010,7 +1010,7 @@ final class SageSettings
                 'responseError' => $responseError,
                 'metaChanges' => $meta['changes'],
                 'productMeta' => $meta['new'],
-                'updateWordpress' => $updateWordpress,
+                'updateApi' => $updateApi,
                 'hasChanges' =>
                     isset($meta['changes']['added'], $meta['changes']['removed'], $meta['changes']['modified']) &&
                     (

@@ -35,7 +35,8 @@ final class SageAdminApi
             }
             if (!empty($arRef)) {
                 update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
-                $sage->sageGraphQl->updateFArticleFromWebsite($arRef);
+                $fArticle = $this->sage->sageGraphQl->getFArticle($arRef, checkIfExists: true);
+                $sage->sageGraphQl->updateFArticleFromWebsite($arRef, is_null($fArticle));
                 // no need because it's done directly by Sage Api
                 // update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', null);
             }

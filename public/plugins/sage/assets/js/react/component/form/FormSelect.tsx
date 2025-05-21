@@ -24,7 +24,7 @@ export const FormSelect: React.FC<FormInputProps> = ({
           marginBottom: 4,
         }}
       >
-        <Tooltip title={name} arrow>
+        <Tooltip title={name.replace("_sage_", "")} arrow>
           <span>{label}</span>
         </Tooltip>
       </label>
