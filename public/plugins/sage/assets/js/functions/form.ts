@@ -63,7 +63,7 @@ export function transformOptionsObject(
   }));
 }
 
-export function isValid(
+export function isValidGeneric(
   values: Record<string, InputInterface>,
   setValues: Dispatch<SetStateAction<Record<string, InputInterface>>>,
 ) {
@@ -108,7 +108,7 @@ export const handleChangeInputGeneric = (
       [prop]: { ...v[prop], value: event.target.value, error: "" },
     };
     setTimeout(() => {
-      isValid(result, setValues);
+      isValidGeneric(result, setValues);
     });
     return result;
   });
@@ -129,7 +129,7 @@ export const handleChangeSelectGeneric = (
       },
     };
     setTimeout(() => {
-      isValid(result, setValues);
+      isValidGeneric(result, setValues);
     });
     return result;
   });
