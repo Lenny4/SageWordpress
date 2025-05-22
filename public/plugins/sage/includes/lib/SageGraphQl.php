@@ -979,8 +979,8 @@ final class SageGraphQl
 
     public function getFArticle(
         string $arRef,
-        bool $ignorePingApi = false,
-        bool $checkIfExists = false,
+        bool   $ignorePingApi = false,
+        bool   $checkIfExists = false,
     ): StdClass|null
     {
         $fArticle = $this->searchEntities(
@@ -1006,6 +1006,19 @@ final class SageGraphQl
         }
 
         return $fArticle->data->fArticles->items[0];
+    }
+
+    public function getAvailableArRef(
+        ?string $arRef = null,
+        ?string $faCodeFamille = null,
+    ): string
+    {
+        $query = (new Query('availableArRef'))
+            ->setArguments([
+                'arRef' => $arRef,
+                'faCodeFamille' => $faCodeFamille,
+            ]);
+        return $this->runQuery($query)->data->availableArRef;
     }
 
     public function getFDocentetes(

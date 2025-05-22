@@ -21,7 +21,6 @@ export const FormSelect: React.FC<FormInputProps> = ({
         htmlFor={name}
         style={{
           display: hideLabel ? "none" : "block",
-          marginBottom: 4,
         }}
       >
         <Tooltip title={name.replace("_sage_", "")} arrow>

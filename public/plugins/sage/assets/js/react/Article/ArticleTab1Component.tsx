@@ -17,7 +17,6 @@ import { DividerText } from "../component/DividerText";
 import { FormSelect } from "../component/form/FormSelect";
 import { ArRefInput } from "../component/form/ArRefInput";
 
-const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
 let translations: any = getTranslations();
 const articleMeta = JSON.parse(
   $("[data-sage-product]").attr("data-sage-product") ?? "null",
@@ -67,12 +66,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
           },
           {
             Dom: (
-              <ArRefInput
-                isNew={isNew}
-                value={arRef}
-                onChange={handleChange("arRef")}
-                ref={arRefRef}
-              />
+              <ArRefInput isNew={isNew} defaultValue={arRef} ref={arRefRef} />
             ),
           },
           {

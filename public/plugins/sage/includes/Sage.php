@@ -581,6 +581,17 @@ final class Sage
 
         // region api endpoint
         add_action('rest_api_init', static function () use ($sageWoocommerce, $sageGraphQl, $settings) {
+            register_rest_route(self::TOKEN . '/v1', '/farticle/(?P<arRef>([^&]*))/available', args: [ // https://stackoverflow.com/a/10126995/6824121
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($sageGraphQl) {
+                    return new WP_REST_Response([
+                        'availableArRef' => $sageGraphQl->getAvailableArRef(arRef: $request['arRef']),
+                    ], Response::HTTP_OK);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
             register_rest_route(self::TOKEN . '/v1', '/orders/(?P<id>\d+)/sync', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageWoocommerce) {
@@ -669,15 +680,15 @@ final class Sage
                     if (is_string($fDocentetes)) {
                         return new WP_REST_Response([
                             'message' => $fDocentetes
-                        ], 400);
+                        ], Response::HTTP_BAD_REQUEST);
                     }
                     if (is_null($fDocentetes)) {
                         return new WP_REST_Response([
                             'message' => 'Unknown error'
-                        ], 500);
+                        ], Response::HTTP_INTERNAL_SERVER_ERROR);
                     }
                     if ($fDocentetes === []) {
-                        return new WP_REST_Response(null, 404);
+                        return new WP_REST_Response(null, Response::HTTP_NOT_FOUND);
                     }
                     return new WP_REST_Response($fDocentetes, Response::HTTP_OK);
                 },
@@ -803,7 +814,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                     return new WP_REST_Response([
                         'id' => $order->get_id(),
                         'message' => $message,
-                    ], $message === "" ? 201 : 500);
+                    ], $message === "" ? Response::HTTP_CREATED : Response::HTTP_INTERNAL_SERVER_ERROR);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);

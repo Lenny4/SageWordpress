@@ -598,6 +598,7 @@ final class SageTranslationUtils
                 'desynchronizeOrder' => __("Voulez vous vraiment désynchroniser la commande Woocommerce avec le document de vente Sage ?", "sage"),
                 'nbThreads' => __("Nombre de d'opérations simultanées (nb threads)", "sage"),
                 'errorWebsocket' => __("Wordpress n'arrive pas à se connecter à l'API Sage", "sage"),
+                'availableArRef' => __("Votre article sera créé avec cette référence. Vous pouvez la modifier à l’aide du champ prévu à cet effet.", "sage"),
             ],
             'enum' => [
                 'syncWebsiteState' => [

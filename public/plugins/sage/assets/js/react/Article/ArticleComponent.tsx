@@ -11,7 +11,6 @@ import { ArticleTab3Component } from "./ArticleTab3Component";
 import { ArticleTab4Component } from "./ArticleTab4Component";
 
 const containerSelector = "#sage_product_data";
-const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
 let translations: any = getTranslations();
 
 interface ArticleTabs {
