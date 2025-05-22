@@ -1,9 +1,12 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { ChangeEvent, useImperativeHandle, useRef } from "react";
-import { getTranslations } from "../../functions/translations";
-import { FormInterface, InputInterface } from "../../interface/InputInterface";
-import { getSageMetadata } from "../../functions/getMetadata";
-import { FormInput } from "../component/form/FormInput";
+import { getTranslations } from "../../../functions/translations";
+import {
+  FormInterface,
+  InputInterface,
+} from "../../../interface/InputInterface";
+import { getSageMetadata } from "../../../functions/getMetadata";
+import { FormInput } from "../../component/form/FormInput";
 import {
   getFlatFields,
   handleChangeInputGeneric,
@@ -11,11 +14,16 @@ import {
   isValidGeneric,
   stringValidator,
   transformOptionsObject,
-} from "../../functions/form";
-import { FormContentComponent } from "../component/form/FormContentComponent";
-import { DividerText } from "../component/DividerText";
-import { FormSelect } from "../component/form/FormSelect";
-import { ArRefInput } from "../component/form/ArRefInput";
+} from "../../../functions/form";
+import { FormContentComponent } from "../../component/form/FormContentComponent";
+import { DividerText } from "../../component/DividerText";
+import { FormSelect } from "../../component/form/FormSelect";
+import { ArRefInput } from "../../component/form/ArRefInput";
+import { TabInterface } from "../../../interface/TabInterface";
+import { TabsComponent } from "../../component/tab/TabsComponent";
+import Grid from "@mui/material/Grid";
+import { ArticleCatTarifComponent } from "./ArticleCatTarifComponent";
+import { ArticleFournisseursComponent } from "./ArticleFournisseursComponent";
 
 let translations: any = getTranslations();
 const articleMeta = JSON.parse(
@@ -43,6 +51,26 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
       handleChangeSelectGeneric(event, prop, setValues);
     };
   const arRefRef = useRef<any>(null);
+
+  const [tabs] = React.useState<TabInterface[]>(() => {
+    return [
+      {
+        label: translations.words.nCatTarif,
+        Component: ArticleCatTarifComponent,
+      },
+      {
+        label: translations.words.suppliers,
+        Component: ArticleFournisseursComponent,
+      },
+    ].map(({ label, Component }) => {
+      const ref = React.createRef();
+      return {
+        label,
+        dom: <Component ref={ref} />,
+        ref,
+      };
+    });
+  });
 
   const [form] = React.useState<FormInterface>({
     content: [
@@ -287,19 +315,24 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
   }, [values]);
 
   return (
-    <>
-      <FormContentComponent
-        content={form.content}
-        values={values}
-        handleChange={handleChange}
-        handleChangeSelect={handleChangeSelect}
-        transPrefix="fArticles"
-      />
+    <Grid container>
+      <Grid size={{ xs: 12 }}>
+        <FormContentComponent
+          content={form.content}
+          values={values}
+          handleChange={handleChange}
+          handleChangeSelect={handleChangeSelect}
+          transPrefix="fArticles"
+        />
+      </Grid>
       <input
         type="hidden"
         name="product-type"
         value={values.arType.value === "1" ? "variable" : "simple"}
       />
-    </>
+      <Grid size={{ xs: 12 }}>
+        <TabsComponent tabs={tabs} />
+      </Grid>
+    </Grid>
   );
 });

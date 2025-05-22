@@ -590,6 +590,8 @@ final class SageTranslationUtils
                 'arRef' => __("Référence", 'sage'),
                 'allOptions' => __("Toutes les options", 'sage'),
                 'selectedOptions' => __("Options sélectionnées", 'sage'),
+                'nCatTarif' => __("Catégories tarifaires", 'sage'),
+                'suppliers' => __("Fournisseurs", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),
