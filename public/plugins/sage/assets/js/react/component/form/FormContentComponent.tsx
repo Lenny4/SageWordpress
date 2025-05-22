@@ -14,8 +14,12 @@ type State = {
   content: FormContentInterface[];
   values: any;
   transPrefix?: string;
-  handleChange: any;
-  handleChangeSelect: any;
+  handleChange?: (
+    prop: keyof any,
+  ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
+  handleChangeSelect?: (
+    prop: keyof any,
+  ) => (event: React.ChangeEvent<HTMLSelectElement>) => void;
 };
 
 export const FormContentComponent: React.FC<State> = ({
