@@ -312,6 +312,9 @@ final class SageSettings
                     new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {
                         return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
                     }),
+                    new SageEntityMetadata(field: '_fArtclients', value: static function (StdClass $fArticle) {
+                        return json_encode($fArticle->fArtclients, JSON_THROW_ON_ERROR);
+                    }),
                     new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
                         return $sageWoocommerce->getMaxPrice($fArticle->prices);
                     }),
@@ -1001,6 +1004,24 @@ final class SageSettings
                     ];
                 }
             }
+            $changeTypes = ['added', 'removed', 'modified'];
+            $hasChanges = false;
+            foreach ($changeTypes as $type) {
+                if (!empty($meta['changes'][$type])) {
+                    $hasChanges = true;
+                    break;
+                }
+            }
+            if ($hasChanges) {
+                foreach ($changeTypes as $type) {
+                    foreach ($meta['changes'][$type] as $key => $value) {
+                        $decoded = json_decode($value, true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $meta['changes'][$type][$key] = json_encode($decoded, JSON_PRETTY_PRINT);
+                        }
+                    }
+                }
+            }
             echo $sageSettings->sage->twig->render('woocommerce/tabs/sage.html.twig', [
                 'pCattarifs' => $sageSettings->sage->sageGraphQl->getPCattarifs(),
                 'pCatComptas' => $sageSettings->sage->sageGraphQl->getPCatComptas(),
@@ -1011,13 +1032,7 @@ final class SageSettings
                 'metaChanges' => $meta['changes'],
                 'productMeta' => $meta['new'],
                 'updateApi' => $updateApi,
-                'hasChanges' =>
-                    isset($meta['changes']['added'], $meta['changes']['removed'], $meta['changes']['modified']) &&
-                    (
-                        count($meta['changes']['added']) > 0 ||
-                        count($meta['changes']['removed']) > 0 ||
-                        count($meta['changes']['modified']) > 0
-                    ),
+                'hasChanges' => $hasChanges,
             ]);
         });
         // endregion

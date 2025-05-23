@@ -335,3 +335,15 @@ table {
   margin-top: 4px;
   font-size: 0.875em;
 }
+
+.json-inline {
+  display: inline-block;
+  max-width: 600px; /* or any suitable width */
+  white-space: nowrap;
+  overflow-x: auto;
+  background: #f8f8f8;
+  border: 1px solid #ccc;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}

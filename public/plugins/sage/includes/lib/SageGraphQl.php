@@ -783,6 +783,22 @@ final class SageGraphQl
         ];
     }
 
+    private function _getFArtclientsSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'acCategorie',
+                'acPrixVen',
+                'acCoef',
+                'acPrixTtc',
+                'acRemise',
+            ]),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'ctNum',
+            ]),
+        ];
+    }
+
     private function _getFArticleSelectionSet(bool $checkIfExists = false): array
     {
         if ($checkIfExists) {
@@ -816,12 +832,17 @@ final class SageGraphQl
                 'arDesign',
                 'faCodeFamille',
             ]),
+            'fArtclients' => [
+                ...$this->_getFArtclientsSelectionSet(),
+            ],
             'prices' => [
                 ...$this->_getPriceSelectionSet(),
-                ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
-                    'nCatTarif',
-                    'nCatCompta'
-                ]),
+                'nCatTarif' => [
+                    ...$this->_getNCatTarifSelectionSet(),
+                ],
+                'nCatCompta' => [
+                    ...$this->_getNCatComptaSelectionSet(),
+                ],
             ],
         ];
     }
@@ -858,6 +879,25 @@ final class SageGraphQl
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                 'taTtaux',
                 'taNp',
+            ]),
+        ];
+    }
+
+    private function _getNCatTarifSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'cbIndice',
+                'ctPrixTtc',
+            ]),
+        ];
+    }
+
+    private function _getNCatComptaSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'cbIndice',
             ]),
         ];
     }

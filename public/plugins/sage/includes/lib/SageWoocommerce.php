@@ -163,7 +163,7 @@ final class SageWoocommerce
                 if ($flat) {
                     $r[] = $price;
                 } else {
-                    $r[$price->nCatTarif][$price->nCatCompta] = $price;
+                    $r[$price->nCatTarif->cbIndice][$price->nCatCompta->cbIndice] = $price;
                 }
             }
             break;
@@ -1653,7 +1653,7 @@ WHERE meta_key = %s
         $price = false;
         if (!is_null($pExpedition->arRefNavigation)) {
             $price = current(array_filter($pExpedition->arRefNavigation->prices, static function (stdClass $price) use ($userNCatTarif, $userNCatCompta) {
-                return $price->nCatTarif === $userNCatTarif && $price->nCatCompta === $userNCatCompta;
+                return $price->nCatTarif->cbIndice === $userNCatTarif && $price->nCatCompta->cbIndice === $userNCatCompta;
             }));
         }
         $result = null;

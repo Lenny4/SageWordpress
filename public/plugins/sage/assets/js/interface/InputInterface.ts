@@ -4,12 +4,23 @@ export interface FormInterface {
   content: FormContentInterface[];
 }
 
+export interface TableLineInterface {
+  Dom?: React.ReactNode;
+  field?: FieldInterface;
+}
+
+interface TableInterface {
+  headers: string[];
+  lines: TableLineInterface[][];
+}
+
 export interface FormContentInterface {
   Container?: any;
   props?: any;
   Dom?: React.ReactNode;
   fields?: FieldInterface[];
   children?: FormContentInterface[];
+  table?: TableInterface;
 }
 
 export interface ErrorMessageInterface {

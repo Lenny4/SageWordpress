@@ -592,6 +592,10 @@ final class SageTranslationUtils
                 'selectedOptions' => __("Options sélectionnées", 'sage'),
                 'nCatTarif' => __("Catégories tarifaires", 'sage'),
                 'suppliers' => __("Fournisseurs", 'sage'),
+                'category' => __("Catégorie", 'sage'),
+                'coefficient' => __("Coefficient", 'sage'),
+                'sellPrice' => __("Prix de vente", 'sage'),
+                'discount' => __("Remise", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),

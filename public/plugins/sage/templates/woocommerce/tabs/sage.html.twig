@@ -9,13 +9,14 @@
           {% for key, value in metaChanges[action] %}
             <li>
               <code>{{ key }}</code>:
-              {% if action == 'modified' %}
-                {{ 'changé en' | trans }} <strong>{{ value }}</strong>
+              {% if action == 'modified ' %}
+                {{ 'changé en' | trans }}
               {% elseif action == 'added' %}
-                {{ 'ajouté avec la valeur' | trans }} <strong>{{ value }}</strong>
+                {{ 'ajouté avec la valeur ' | trans }}
               {% elseif action == 'removed' %}
-                {{ 'supprimé' | trans }} ({{ 'la valeur précédente était' | trans }} <strong>{{ value }}</strong>)
+                {{ 'supprimé' | trans }} ({{ 'la valeur précédente était ' | trans }}
               {% endif %}
+              <span class="json-inline">{{ value }}</span>
             </li>
           {% endfor %}
         </ul>
