@@ -2,6 +2,7 @@
 
 namespace App\lib;
 
+use App\class\Dto\ArgumentSelectionSetDto;
 use App\class\SageEntityMenu;
 use App\enum\WebsiteEnum;
 use App\Sage;
@@ -295,7 +296,14 @@ final class SageGraphQl
                     $result[] = $value['name'];
                 }
             } else {
-                $result[] = (new Query($key))->setSelectionSet($this->formatSelectionSet($value));
+                $query = (new Query($key));
+                if ($value instanceof ArgumentSelectionSetDto) {
+                    $result[] = $query
+                        ->setArguments($value->getArguments())
+                        ->setSelectionSet($this->formatSelectionSet($value->getSelectionSet()));
+                } else {
+                    $result[] = $query->setSelectionSet($this->formatSelectionSet($value));
+                }
             }
         }
         return $result;
@@ -615,7 +623,12 @@ final class SageGraphQl
             $page = (int)($queryParams["paged"] ?? 1);
             $where = [];
             if (array_key_exists('filter_field', $queryParams)) {
-                $primaryFields = array_filter($selectionSets, static fn(array $field): bool => array_key_exists('name', $field));
+                $primaryFields = array_filter($selectionSets, static function (array|ArgumentSelectionSetDto $field): bool {
+                    if ($field instanceof ArgumentSelectionSetDto) {
+                        return array_key_exists('name', $field->getSelectionSet());
+                    }
+                    return array_key_exists('name', $field);
+                });
                 foreach ($queryParams["filter_field"] as $index => $field) {
                     $fieldValue = $queryParams["filter_value"][$index];
                     $fieldType = $queryParams["filter_type"][$index];
@@ -832,9 +845,14 @@ final class SageGraphQl
                 'arDesign',
                 'faCodeFamille',
             ]),
-            'fArtclients' => [
-                ...$this->_getFArtclientsSelectionSet(),
-            ],
+            'fArtclients' => new ArgumentSelectionSetDto(
+                [
+                    ...$this->_getFArtclientsSelectionSet(),
+                ],
+                [
+                    'where' => new RawObject('{ ctNum: { eq: null } }'),
+                ],
+            ),
             'prices' => [
                 ...$this->_getPriceSelectionSet(),
                 'nCatTarif' => [
