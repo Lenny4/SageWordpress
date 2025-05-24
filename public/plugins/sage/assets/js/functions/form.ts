@@ -1,6 +1,7 @@
 import {
   ErrorMessageInterface,
   FieldInterface,
+  FormContentInterface,
   FormInputOptions,
   FormInterface,
   InputInterface,
@@ -34,20 +35,45 @@ export const stringValidator = ({
 export function getFlatFields(form: FormInterface): FieldInterface[] {
   const result: FieldInterface[] = [];
 
-  const extract = (nodes: any[]) => {
+  const extractField = (array: any[]) => {
+    if (Array.isArray(array)) {
+      for (const item of array) {
+        if (item.name) {
+          result.push(item);
+        } else if (item.field?.name) {
+          result.push(item.field);
+        } else if (Array.isArray(item)) {
+          extractField(item);
+        }
+      }
+    }
+  };
+
+  const extract = (nodes: FormContentInterface[]) => {
+    const paths = ["fields", "table.lines"];
     for (const node of nodes) {
-      if (node.fields) {
-        for (const field of node.fields) {
-          if (field.name) {
-            result.push(field);
+      for (const path of paths) {
+        const parts = path.split(".");
+        let current: any = node;
+
+        for (const part of parts) {
+          if (current && typeof current === "object") {
+            current = current[part];
+          } else {
+            current = undefined;
+            break;
           }
         }
+
+        extractField(current);
       }
 
       if (node.children) {
         extract(node.children);
       }
     }
+
+    return result;
   };
 
   extract(form.content);

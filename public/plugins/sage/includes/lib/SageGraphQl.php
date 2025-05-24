@@ -796,22 +796,6 @@ final class SageGraphQl
         ];
     }
 
-    private function _getFArtclientsSelectionSet(): array
-    {
-        return [
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
-                'acCategorie',
-                'acPrixVen',
-                'acCoef',
-                'acPrixTtc',
-                'acRemise',
-            ]),
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
-                'ctNum',
-            ]),
-        ];
-    }
-
     private function _getFArticleSelectionSet(bool $checkIfExists = false): array
     {
         if ($checkIfExists) {
@@ -862,6 +846,22 @@ final class SageGraphQl
                     ...$this->_getNCatComptaSelectionSet(),
                 ],
             ],
+        ];
+    }
+
+    private function _getFArtclientsSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'acCategorie',
+                'acPrixVen',
+                'acCoef',
+                'acPrixTtc',
+                'acRemise',
+            ]),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'ctNum',
+            ]),
         ];
     }
 
@@ -1062,8 +1062,14 @@ final class SageGraphQl
         if (is_null($fArticle) || $fArticle->data->fArticles->totalCount !== 1) {
             return null;
         }
+        $fArticle = $fArticle->data->fArticles->items[0];
+        $fArtclients = [];
+        foreach ($fArticle->fArtclients as $fArtclient) {
+            $fArtclients[$fArtclient->acCategorie] = $fArtclient;
+        }
+        $fArticle->fArtclients = $fArtclients;
 
-        return $fArticle->data->fArticles->items[0];
+        return $fArticle;
     }
 
     public function getAvailableArRef(

@@ -58,10 +58,11 @@ final class SageEntityMenu
 
     public const PUNITE_ENTITY_NAME = 'pUnites';
 
+    private ?array $_metadata = null;
+
     /**
      * @param string[] $mandatoryFields
      * @param string[] $defaultFields
-     * @param SageEntityMetadata[] $metadata
      */
     public function __construct(
         /**
@@ -105,9 +106,8 @@ final class SageEntityMenu
         private array    $actions,
         /**
          * Callback which transform data of Sage entity to the metadata
-         * @var SageEntityMetadata[]
          */
-        private array    $metadata,
+        private Closure  $metadata,
         /**
          * Meta key which give the identifier value
          */
@@ -249,17 +249,6 @@ final class SageEntityMenu
         return $this;
     }
 
-    public function getMetadata(): array
-    {
-        return $this->metadata;
-    }
-
-    public function setMetadata(array $metadata): self
-    {
-        $this->metadata = $metadata;
-        return $this;
-    }
-
     public function getMetaKeyIdentifier(): string
     {
         return $this->metaKeyIdentifier;
@@ -301,6 +290,21 @@ final class SageEntityMenu
     public function setMetaColumnIdentifier(string $metaColumnIdentifier): self
     {
         $this->metaColumnIdentifier = $metaColumnIdentifier;
+        return $this;
+    }
+
+    public function getMetadata(): array
+    {
+        if (!is_null($this->_metadata)) {
+            return $this->_metadata;
+        }
+        $this->_metadata = ($this->metadata)();
+        return $this->_metadata;
+    }
+
+    public function setMetadata(Closure $metadata): self
+    {
+        $this->metadata = $metadata;
         return $this;
     }
 }

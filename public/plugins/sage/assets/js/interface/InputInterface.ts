@@ -9,7 +9,7 @@ export interface TableLineInterface {
   field?: FieldInterface;
 }
 
-interface TableInterface {
+export interface TableInterface {
   headers: string[];
   lines: TableLineInterface[][];
 }

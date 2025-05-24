@@ -1,5 +1,5 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React from "react";
+import React, { ChangeEvent } from "react";
 import {
   FormInterface,
   InputInterface,
@@ -8,12 +8,13 @@ import {
 import {
   getFlatFields,
   handleChangeInputGeneric,
+  handleChangeSelectGeneric,
 } from "../../../functions/form";
 import { FormContentComponent } from "../../component/form/FormContentComponent";
 import { getSageMetadata } from "../../../functions/getMetadata";
 import { getTranslations } from "../../../functions/translations";
 import { FormInput } from "../../component/form/FormInput";
-import {FArticleClientInterface} from "../../../interface/FArticleInterface";
+import { FArticleClientInterface } from "../../../interface/FArticleInterface";
 
 let translations: any = getTranslations();
 
@@ -31,8 +32,18 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
       handleChangeInputGeneric(event, prop, setValues);
     };
 
+  const handleChangeSelect =
+    (prop: keyof FormState) => (event: ChangeEvent<HTMLSelectElement>) => {
+      handleChangeSelectGeneric(event, prop, setValues);
+    };
+
   const [form] = React.useState<FormInterface>(() => {
-    const fArtclients: FArticleClientInterface[] = getSageMetadata("fArtclients", articleMeta);
+    const fArtclients: FArticleClientInterface[] = getSageMetadata(
+      "fArtclients",
+      articleMeta,
+      true,
+    );
+    const prefix = "fArtclients";
     const lines: TableLineInterface[][] = fArtclients.map(
       (p): TableLineInterface[] => {
         return [
@@ -41,23 +52,26 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
           },
           {
             field: {
-              name: "acCoef[" + p.acCategorie + "]",
+              name: prefix + ".acCoef[" + p.acCategorie + "]",
               DomField: FormInput,
               type: "number",
+              hideLabel: true,
             },
           },
           {
             field: {
-              name: "acPrixVen[" + p.acCategorie + "]",
+              name: prefix + ".acPrixVen[" + p.acCategorie + "]",
               DomField: FormInput,
               type: "number",
+              hideLabel: true,
             },
           },
           {
             field: {
-              name: "acRemise[" + p.acCategorie + "]",
+              name: prefix + ".acRemise[" + p.acCategorie + "]",
               DomField: FormInput,
               type: "number",
+              hideLabel: true,
             },
           },
         ];
@@ -123,6 +137,7 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
       values={values}
       handleChange={handleChange}
       transPrefix="fArticles"
+      handleChangeSelect={handleChangeSelect}
     />
   );
 });

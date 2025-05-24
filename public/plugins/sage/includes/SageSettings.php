@@ -65,6 +65,7 @@ final class SageSettings
     {
         $sageSettings = $this;
         $sageWoocommerce = $this->sage->sageWoocommerce;
+        $sageGraphQl = $this->sage->sageGraphQl;
         global $wpdb;
         $this->sageEntityMenus = [
             new SageEntityMenu(
@@ -151,21 +152,23 @@ final class SageSettings
                         return $sageSettings->setDefaultFilter($data, $_GET);
                     },
                 ],
-                metadata: [
-                    new SageEntityMetadata(field: '_ctNum', value: static function (StdClass $fComptet) {
-                        return $fComptet->ctNum;
-                    }),
-                    new SageEntityMetadata(field: '_nCatTarif', value: static function (StdClass $fComptet) {
-                        return $fComptet->nCatTarif;
-                    }),
-                    new SageEntityMetadata(field: '_nCatCompta', value: static function (StdClass $fComptet) {
-                        return $fComptet->nCatCompta;
-                    }),
-                    new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {
-                        return (new DateTime())->format('Y-m-d H:i:s');
-                    }, showInOptions: true),
-                    new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
-                ],
+                metadata: static function (): array {
+                    return [
+                        new SageEntityMetadata(field: '_ctNum', value: static function (StdClass $fComptet) {
+                            return $fComptet->ctNum;
+                        }),
+                        new SageEntityMetadata(field: '_nCatTarif', value: static function (StdClass $fComptet) {
+                            return $fComptet->nCatTarif;
+                        }),
+                        new SageEntityMetadata(field: '_nCatCompta', value: static function (StdClass $fComptet) {
+                            return $fComptet->nCatCompta;
+                        }),
+                        new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {
+                            return (new DateTime())->format('Y-m-d H:i:s');
+                        }, showInOptions: true),
+                        new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
+                    ];
+                },
                 metaKeyIdentifier: Sage::META_KEY_CT_NUM,
                 metaTable: $wpdb->usermeta,
                 metaColumnIdentifier: 'user_id',
@@ -248,9 +251,11 @@ final class SageSettings
                         return $sageSettings->setDefaultFilter($data, $_GET);
                     },
                 ],
-                metadata: [
-                    new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
-                ],
+                metadata: static function (): array {
+                    return [
+                        new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
+                    ];
+                },
                 metaKeyIdentifier: Sage::META_KEY_IDENTIFIER,
                 metaTable: $wpdb->prefix . 'wc_orders_meta',
                 metaColumnIdentifier: 'order_id',
@@ -305,72 +310,84 @@ final class SageSettings
                         return $sageSettings->setDefaultFilter($data, $_GET);
                     },
                 ],
-                metadata: [
-                    new SageEntityMetadata(field: '_arRef', value: static function (StdClass $fArticle) {
-                        return $fArticle->arRef;
-                    }),
-                    new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {
-                        return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
-                    }),
-                    new SageEntityMetadata(field: '_fArtclients', value: static function (StdClass $fArticle) {
-                        return json_encode($fArticle->fArtclients, JSON_THROW_ON_ERROR);
-                    }),
-                    new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
-                        return $sageWoocommerce->getMaxPrice($fArticle->prices);
-                    }),
-                    new SageEntityMetadata(field: '_arPoidsNet', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
-                        return $fArticle->arPoidsNet;
-                    }),
-                    new SageEntityMetadata(field: '_arPoidsBrut', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
-                        return $fArticle->arPoidsBrut;
-                    }),
-                    new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
-                        return (new DateTime())->format('Y-m-d H:i:s');
-                    }, showInOptions: true),
-                    new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
-                    new SageEntityMetadata(field: '_arType', value: static function (StdClass $fArticle) {
-                        return $fArticle->arType;
-                    }),
-                    new SageEntityMetadata(field: '_arDesign', value: static function (StdClass $fArticle) {
-                        return $fArticle->arDesign;
-                    }),
-                    new SageEntityMetadata(field: '_faCodeFamille', value: static function (StdClass $fArticle) {
-                        return $fArticle->faCodeFamille;
-                    }),
-                    new SageEntityMetadata(field: '_arNomencl', value: static function (StdClass $fArticle) {
-                        return $fArticle->arNomencl;
-                    }),
-                    new SageEntityMetadata(field: '_arSuiviStock', value: static function (StdClass $fArticle) {
-                        return $fArticle->arSuiviStock;
-                    }),
-                    new SageEntityMetadata(field: '_arCondition', value: static function (StdClass $fArticle) {
-                        return $fArticle->arCondition;
-                    }),
-                    new SageEntityMetadata(field: '_arPrixAch', value: static function (StdClass $fArticle) {
-                        return $fArticle->arPrixAch;
-                    }),
-                    new SageEntityMetadata(field: '_arCoef', value: static function (StdClass $fArticle) {
-                        return $fArticle->arCoef;
-                    }),
-                    new SageEntityMetadata(field: '_arPrixVen', value: static function (StdClass $fArticle) {
-                        return $fArticle->arPrixVen;
-                    }),
-                    new SageEntityMetadata(field: '_arPrixTtc', value: static function (StdClass $fArticle) {
-                        return $fArticle->arPrixTtc;
-                    }),
-                    new SageEntityMetadata(field: '_arPunet', value: static function (StdClass $fArticle) {
-                        return $fArticle->arPunet;
-                    }),
-                    new SageEntityMetadata(field: '_arCoutStd', value: static function (StdClass $fArticle) {
-                        return $fArticle->arCoutStd;
-                    }),
-                    new SageEntityMetadata(field: '_arUniteVen', value: static function (StdClass $fArticle) {
-                        return $fArticle->arUniteVen;
-                    }),
-                    new SageEntityMetadata(field: '_canEditArSuiviStock', value: static function (StdClass $fArticle) {
-                        return $fArticle->canEditArSuiviStock;
-                    }),
-                ],
+                metadata: static function () use ($sageWoocommerce, $sageGraphQl): array {
+                    $result = [
+                        new SageEntityMetadata(field: '_arRef', value: static function (StdClass $fArticle) {
+                            return $fArticle->arRef;
+                        }),
+                        new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {
+                            return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
+                        }),
+                        new SageEntityMetadata(field: '_fArtclients', value: static function (StdClass $fArticle) {
+                            return json_encode($fArticle->fArtclients, JSON_THROW_ON_ERROR);
+                        }),
+                        new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
+                            return $sageWoocommerce->getMaxPrice($fArticle->prices);
+                        }),
+                        new SageEntityMetadata(field: '_arPoidsNet', value: static function (StdClass $fArticle) {
+                            return $fArticle->arPoidsNet;
+                        }),
+                        new SageEntityMetadata(field: '_arPoidsBrut', value: static function (StdClass $fArticle) {
+                            return $fArticle->arPoidsBrut;
+                        }),
+                        new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
+                            return (new DateTime())->format('Y-m-d H:i:s');
+                        }, showInOptions: true),
+                        new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
+                        new SageEntityMetadata(field: '_arType', value: static function (StdClass $fArticle) {
+                            return $fArticle->arType;
+                        }),
+                        new SageEntityMetadata(field: '_arDesign', value: static function (StdClass $fArticle) {
+                            return $fArticle->arDesign;
+                        }),
+                        new SageEntityMetadata(field: '_faCodeFamille', value: static function (StdClass $fArticle) {
+                            return $fArticle->faCodeFamille;
+                        }),
+                        new SageEntityMetadata(field: '_arNomencl', value: static function (StdClass $fArticle) {
+                            return $fArticle->arNomencl;
+                        }),
+                        new SageEntityMetadata(field: '_arSuiviStock', value: static function (StdClass $fArticle) {
+                            return $fArticle->arSuiviStock;
+                        }),
+                        new SageEntityMetadata(field: '_arCondition', value: static function (StdClass $fArticle) {
+                            return $fArticle->arCondition;
+                        }),
+                        new SageEntityMetadata(field: '_arPrixAch', value: static function (StdClass $fArticle) {
+                            return $fArticle->arPrixAch;
+                        }),
+                        new SageEntityMetadata(field: '_arCoef', value: static function (StdClass $fArticle) {
+                            return $fArticle->arCoef;
+                        }),
+                        new SageEntityMetadata(field: '_arPrixVen', value: static function (StdClass $fArticle) {
+                            return $fArticle->arPrixVen;
+                        }),
+                        new SageEntityMetadata(field: '_arPrixTtc', value: static function (StdClass $fArticle) {
+                            return $fArticle->arPrixTtc;
+                        }),
+                        new SageEntityMetadata(field: '_arPunet', value: static function (StdClass $fArticle) {
+                            return $fArticle->arPunet;
+                        }),
+                        new SageEntityMetadata(field: '_arCoutStd', value: static function (StdClass $fArticle) {
+                            return $fArticle->arCoutStd;
+                        }),
+                        new SageEntityMetadata(field: '_arUniteVen', value: static function (StdClass $fArticle) {
+                            return $fArticle->arUniteVen;
+                        }),
+                        new SageEntityMetadata(field: '_canEditArSuiviStock', value: static function (StdClass $fArticle) {
+                            return $fArticle->canEditArSuiviStock;
+                        }),
+                    ];
+                    $pCattarifs = $sageGraphQl->getPCattarifs();
+                    foreach ($pCattarifs as $pCattarif) {
+                        foreach (["acCoef", "acPrixVen", "acRemise"] as $field) {
+                            $result[] = new SageEntityMetadata(field: '_fArtclients.' . $field . '[' . $pCattarif->cbIndice . ']',
+                                value: static function (StdClass $fArticle) use ($pCattarif, $field) {
+                                    return $fArticle->fArtclients[$pCattarif->cbIndice]->{$field};
+                                });
+                        }
+                    }
+                    return $result;
+                },
                 metaKeyIdentifier: Sage::META_KEY_AR_REF,
                 metaTable: $wpdb->postmeta,
                 metaColumnIdentifier: 'post_id',

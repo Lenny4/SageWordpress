@@ -1,9 +1,8 @@
 import * as React from "react";
 import { FormContentInterface } from "../../../interface/InputInterface";
 import { Grid } from "@mui/material";
-import { getTranslations } from "../../../functions/translations";
-
-let translations: any = getTranslations();
+import { FormTableComponent } from "./FormTableComponent";
+import { FormFieldComponent } from "./FormFieldComponent";
 
 const defaultContainer = Grid;
 const defaultProps = {
@@ -13,11 +12,11 @@ const defaultProps = {
 type State = {
   content: FormContentInterface[];
   values: any;
-  transPrefix?: string;
-  handleChange?: (
+  transPrefix: string;
+  handleChange: (
     prop: keyof any,
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
-  handleChangeSelect?: (
+  handleChangeSelect: (
     prop: keyof any,
   ) => (event: React.ChangeEvent<HTMLSelectElement>) => void;
 };
@@ -31,47 +30,31 @@ export const FormContentComponent: React.FC<State> = ({
 }) => (
   <>
     {content.map(
-      ({ Container, props, Dom, fields, children }, indexContainer) => {
+      ({ Container, props, Dom, fields, children, table }, indexContainer) => {
         Container = Container ?? defaultContainer;
         props = props ?? defaultProps;
 
         return (
           <Container {...props} key={indexContainer}>
             {Dom}
-            {fields?.map(
-              (
-                { name, DomField, readOnly, hideLabel, options, type },
-                indexField,
-              ) => {
-                let label = "";
-                if (
-                  transPrefix &&
-                  translations[transPrefix].hasOwnProperty(name)
-                ) {
-                  if (translations[transPrefix][name].hasOwnProperty("label")) {
-                    label = translations[transPrefix][name].label;
-                  } else {
-                    label = translations[transPrefix][name];
-                  }
-                } else {
-                  label = translations.words[name] ?? name;
-                }
-                return (
-                  <DomField
-                    key={indexField}
-                    label={label}
-                    name={`_sage_${name}`}
-                    value={values[name].value}
-                    readOnly={!!readOnly || !!values[name].readOnly}
-                    onChange={handleChange(name)}
-                    onChangeSelect={handleChangeSelect(name)}
-                    hideLabel={hideLabel}
-                    options={options}
-                    type={type}
-                    errorMessage={values[name].error}
-                  />
-                );
-              },
+            {fields?.map((field, indexField) => (
+              <FormFieldComponent
+                key={indexField}
+                field={field}
+                values={values}
+                transPrefix={transPrefix}
+                handleChange={handleChange}
+                handleChangeSelect={handleChangeSelect}
+              />
+            ))}
+            {table && (
+              <FormTableComponent
+                table={table}
+                values={values}
+                transPrefix={transPrefix}
+                handleChange={handleChange}
+                handleChangeSelect={handleChangeSelect}
+              />
             )}
             {children && children.length > 0 && (
               <FormContentComponent
