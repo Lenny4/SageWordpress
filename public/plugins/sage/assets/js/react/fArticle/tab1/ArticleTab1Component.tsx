@@ -165,7 +165,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
               },
               {
                 name: "arCondition",
-                readOnly: true, // can't change with Objet métier
+                readOnly: true,
                 DomField: FormSelect,
                 options: transformOptionsObject(
                   translations.fArticles.arCondition.values,
@@ -312,6 +312,9 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
 
   React.useEffect(() => {
     handleDisabledFields();
+    for (const tab of tabs) {
+      tab.ref.current?.onParentFormChange(values);
+    }
   }, [values]);
 
   return (

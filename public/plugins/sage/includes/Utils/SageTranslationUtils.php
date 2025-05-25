@@ -605,6 +605,7 @@ final class SageTranslationUtils
                 'nbThreads' => __("Nombre de d'opérations simultanées (nb threads)", "sage"),
                 'errorWebsocket' => __("Wordpress n'arrive pas à se connecter à l'API Sage", "sage"),
                 'availableArRef' => __("Votre article sera créé avec cette référence. Vous pouvez la modifier à l’aide du champ prévu à cet effet.", "sage"),
+                'acPrixVenInput' => __("Le prix de vente ne correspond pas au résultat du prix d'achat multiplié par le coefficient.", "sage"),
             ],
             'enum' => [
                 'syncWebsiteState' => [

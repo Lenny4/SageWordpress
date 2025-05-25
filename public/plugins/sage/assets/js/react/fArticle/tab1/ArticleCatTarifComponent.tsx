@@ -1,5 +1,5 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, useImperativeHandle } from "react";
 import {
   FormInterface,
   InputInterface,
@@ -15,6 +15,7 @@ import { getSageMetadata } from "../../../functions/getMetadata";
 import { getTranslations } from "../../../functions/translations";
 import { FormInput } from "../../component/form/FormInput";
 import { FArticleClientInterface } from "../../../interface/FArticleInterface";
+import { AcPrixVenInput } from "../../component/form/AcPrixVenInput";
 
 let translations: any = getTranslations();
 
@@ -37,38 +38,44 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
       handleChangeSelectGeneric(event, prop, setValues);
     };
 
+  const [acPrixVenRefs, setAcPrixVenRefs] = React.useState<any[]>([]);
+
   const [form] = React.useState<FormInterface>(() => {
     const fArtclients: FArticleClientInterface[] = getSageMetadata(
       "fArtclients",
       articleMeta,
       true,
     );
+
     const prefix = "fArtclients";
     const lines: TableLineInterface[][] = fArtclients.map(
-      (p): TableLineInterface[] => {
+      (fArtclient): TableLineInterface[] => {
+        const ref = React.createRef();
+        setAcPrixVenRefs((x) => [...x, ref]);
         return [
           {
-            Dom: <>{pCattarifs[p.acCategorie].ctIntitule}</>,
+            Dom: <>{pCattarifs[fArtclient.acCategorie].ctIntitule}</>,
           },
           {
             field: {
-              name: prefix + ".acCoef[" + p.acCategorie + "]",
+              name: prefix + ".acCoef[" + fArtclient.acCategorie + "]",
               DomField: FormInput,
               type: "number",
               hideLabel: true,
             },
           },
           {
-            field: {
-              name: prefix + ".acPrixVen[" + p.acCategorie + "]",
-              DomField: FormInput,
-              type: "number",
-              hideLabel: true,
-            },
+            Dom: (
+              <AcPrixVenInput
+                defaultValue={fArtclient.acPrixVen}
+                acCategorie={fArtclient.acCategorie}
+                ref={ref}
+              />
+            ),
           },
           {
             field: {
-              name: prefix + ".acRemise[" + p.acCategorie + "]",
+              name: prefix + ".acRemise[" + fArtclient.acCategorie + "]",
               DomField: FormInput,
               type: "number",
               hideLabel: true,
@@ -130,6 +137,22 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
     };
   };
   const [values, setValues] = React.useState<FormState>(getDefaultValue());
+  const [arPrixAch, setArPrixAch] = React.useState<string>("0");
+
+  useImperativeHandle(ref, () => ({
+    onParentFormChange(v: any): void {
+      setArPrixAch(v.arPrixAch.value);
+    },
+  }));
+
+  React.useEffect(() => {
+    for (const acPrixVenRef of acPrixVenRefs) {
+      acPrixVenRef.current.onParentFormChange({
+        arPrixAch,
+        ...values,
+      });
+    }
+  }, [values, arPrixAch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <FormContentComponent
