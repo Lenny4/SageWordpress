@@ -6,10 +6,11 @@ import { TabInterface } from "../../../interface/TabInterface";
 
 type State = {
   tabs: TabInterface[];
+  defaultActiveTab?: number;
 };
 
-export const TabsComponent = ({ tabs }: State) => {
-  const [tabValue, setValue] = React.useState(0);
+export const TabsComponent = ({ tabs, defaultActiveTab }: State) => {
+  const [tabValue, setValue] = React.useState(defaultActiveTab ?? 0);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);

@@ -19,6 +19,7 @@ import { getTranslations } from "../../../functions/translations";
 import { FormInput } from "../../component/form/FormInput";
 import { FArtfournisseInterface } from "../../../interface/FArticleInterface";
 import { MetadataInterface } from "../../../interface/WordpressInterface";
+import { AfPrincipalInput } from "../../component/form/fArticle/AfPrincipalInput";
 
 let translations: any = getTranslations();
 
@@ -37,44 +38,27 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
       handleChangeSelectGeneric(event, prop, setValues);
     };
 
+  const prefix = "fArtfournisses";
+
+  const [selectedCtNum, setSelectedCtNum] = React.useState<string>(() => {
+    const fArtfournisses: FArtfournisseInterface[] = getListObjectSageMetadata(
+      prefix,
+      articleMeta,
+      "ctNum",
+    );
+    return (
+      fArtfournisses.find((x) => x.afPrincipal.toString() === "1")?.ctNum ?? ""
+    );
+  });
+  const [afPrincipalRefs, setAfPrincipalRefs] = React.useState<any[]>([]);
+
   const [form] = React.useState<FormInterface>(() => {
-    const prefix = "fArtfournisses";
     const fArtfournisses: FArtfournisseInterface[] = getListObjectSageMetadata(
       prefix,
       articleMeta,
       "ctNum",
     );
 
-    const lines: TableLineInterface[][] = fArtfournisses.map(
-      (fArtclient): TableLineInterface[] => {
-        return [
-          {
-            Dom: <>{fArtclient.ctNum}</>,
-          },
-          {
-            field: {
-              name: prefix + "[" + fArtclient.ctNum + "].afPrincipal",
-              DomField: FormInput,
-              hideLabel: true,
-            },
-          },
-          {
-            field: {
-              name: prefix + "[" + fArtclient.ctNum + "].afRefFourniss",
-              DomField: FormInput,
-              hideLabel: true,
-            },
-          },
-          {
-            field: {
-              name: prefix + "[" + fArtclient.ctNum + "].afPrixAch",
-              DomField: FormInput,
-              hideLabel: true,
-            },
-          },
-        ];
-      },
-    );
     return {
       content: [
         {
@@ -95,7 +79,43 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                   translations.words.supplierRef,
                   translations.words.buyPrice,
                 ],
-                lines: lines,
+                lines: fArtfournisses.map(
+                  (fArtclient): TableLineInterface[] => {
+                    const refAfPrincipal = React.createRef();
+                    setAfPrincipalRefs((x) => [...x, refAfPrincipal]);
+
+                    return [
+                      {
+                        Dom: <>{fArtclient.ctNum}</>,
+                      },
+                      {
+                        Dom: (
+                          <AfPrincipalInput
+                            defaultCtNum={selectedCtNum}
+                            ctNum={fArtclient.ctNum}
+                            setSelectedCtNumParent={setSelectedCtNum}
+                            ref={refAfPrincipal}
+                          />
+                        ),
+                      },
+                      {
+                        field: {
+                          name:
+                            prefix + "[" + fArtclient.ctNum + "].afRefFourniss",
+                          DomField: FormInput,
+                          hideLabel: true,
+                        },
+                      },
+                      {
+                        field: {
+                          name: prefix + "[" + fArtclient.ctNum + "].afPrixAch",
+                          DomField: FormInput,
+                          hideLabel: true,
+                        },
+                      },
+                    ];
+                  },
+                ),
               },
             },
           ],
@@ -128,6 +148,12 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
     };
   };
   const [values, setValues] = React.useState<FormState>(getDefaultValue());
+
+  React.useEffect(() => {
+    for (const afPrincipalRef of afPrincipalRefs) {
+      afPrincipalRef.current.onParentFormChange(selectedCtNum);
+    }
+  }, [selectedCtNum]);
 
   return (
     <FormContentComponent

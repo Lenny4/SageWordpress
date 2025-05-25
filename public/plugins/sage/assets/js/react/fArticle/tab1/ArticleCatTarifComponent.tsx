@@ -52,43 +52,6 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
       articleMeta,
       "acCategorie",
     );
-
-    const lines: TableLineInterface[][] = fArtclients.map(
-      (fArtclient): TableLineInterface[] => {
-        const ref = React.createRef();
-        setAcPrixVenRefs((x) => [...x, ref]);
-        return [
-          {
-            Dom: <>{pCattarifs[fArtclient.acCategorie].ctIntitule}</>,
-          },
-          {
-            field: {
-              name: prefix + "[" + fArtclient.acCategorie + "].acCoef",
-              DomField: FormInput,
-              type: "number",
-              hideLabel: true,
-            },
-          },
-          {
-            Dom: (
-              <AcPrixVenInput
-                defaultValue={fArtclient.acPrixVen}
-                acCategorie={fArtclient.acCategorie}
-                ref={ref}
-              />
-            ),
-          },
-          {
-            field: {
-              name: prefix + "[" + fArtclient.acCategorie + "].acRemise",
-              DomField: FormInput,
-              type: "number",
-              hideLabel: true,
-            },
-          },
-        ];
-      },
-    );
     return {
       content: [
         {
@@ -109,7 +72,42 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
                   translations.words.sellPrice,
                   translations.words.discount,
                 ],
-                lines: lines,
+                lines: fArtclients.map((fArtclient): TableLineInterface[] => {
+                  const refAcPrixVen = React.createRef();
+                  setAcPrixVenRefs((x) => [...x, refAcPrixVen]);
+                  return [
+                    {
+                      Dom: <>{pCattarifs[fArtclient.acCategorie].ctIntitule}</>,
+                    },
+                    {
+                      field: {
+                        name:
+                          prefix + "[" + fArtclient.acCategorie + "].acCoef",
+                        DomField: FormInput,
+                        type: "number",
+                        hideLabel: true,
+                      },
+                    },
+                    {
+                      Dom: (
+                        <AcPrixVenInput
+                          defaultValue={fArtclient.acPrixVen}
+                          acCategorie={fArtclient.acCategorie}
+                          ref={refAcPrixVen}
+                        />
+                      ),
+                    },
+                    {
+                      field: {
+                        name:
+                          prefix + "[" + fArtclient.acCategorie + "].acRemise",
+                        DomField: FormInput,
+                        type: "number",
+                        hideLabel: true,
+                      },
+                    },
+                  ];
+                }),
               },
             },
             {
