@@ -7,6 +7,13 @@ export interface FArticleClientInterface {
   acRemise: number;
 }
 
+export interface FArtfournisseInterface {
+  ctNum: string;
+  afRefFourniss: string;
+  afPrincipal: number;
+  afPrixAch: number;
+}
+
 export interface FArticlePriceInterface {
   priceHt: number;
   priceTtc: number;

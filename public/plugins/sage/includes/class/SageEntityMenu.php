@@ -296,6 +296,9 @@ final class SageEntityMenu
 
     public function getMetadata(?stdClass $obj = null): array
     {
+        if (!is_null($obj)) {
+            return ($this->metadata)($obj);
+        }
         if (!is_null($this->_metadata)) {
             return $this->_metadata;
         }

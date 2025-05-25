@@ -1014,53 +1014,72 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                                 </div>"];
         }
         $articlePostId = $this->sage->sageWoocommerce->getWooCommerceIdArticle($arRef);
+        $isCreation = is_null($articlePostId);
         $article = $this->sage->sageWoocommerce->convertSageArticleToWoocommerce($fArticle,
             current(array_filter($this->sage->settings->sageEntityMenus,
                 static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_AR_REF
-            ))
-        );
-        $url = '/wc/v3/products';
-        if (!is_null($articlePostId)) {
-            $url .= '/' . $articlePostId;
-        }
-
-        // cannot create an article without request
-        // ========================================
-        // created with: (new WC_REST_Products_Controller())->create_item($request);
-        // woocommerce/includes/rest-api/Controllers/Version3/class-wc-rest-crud-controller.php : public function create_item( $request )
-        // which extends
-        // woocommerce/includes/rest-api/Controllers/Version3/class-wc-rest-products-controller.php
-        [$response, $responseError] = $this->sage->createResource(
-            $url,
-            is_null($articlePostId) ? 'POST' : 'PUT',
-            $article,
-            Sage::META_KEY_AR_REF,
-            $arRef,
-            headers: $headers
-        );
+            )));
         $dismissNotice = "<button type='button' class='notice-dismiss sage-notice-dismiss'><span class='screen-reader-text'>" . __('Dismiss this notice.') . "</span></button>";
-        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "post.php?post=%id%&action=edit'>" . __("Voir l'article", 'sage') . "</a></span></strong>";
-        $postId = null;
-        if (is_string($responseError)) {
-            $message = $responseError;
-        } else if ($response["response"]["code"] === 200) {
-            $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
-            $url = str_replace('%id%', $body->id, $url);
-            $postId = $body->id;
-            $message = "<div class='notice notice-success is-dismissible'>
-                    <p>" . __('Article mis à jour: ' . $body->name, 'sage') . "</p>" . $url . "
+        $urlArticle = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "post.php?post=%id%&action=edit'>" . __("Voir l'article", 'sage') . "</a></span></strong>";
+        if ($isCreation) {
+            // cannot create an article without request
+            // ========================================
+            // created with: (new WC_REST_Products_Controller())->create_item($request);
+            // woocommerce/includes/rest-api/Controllers/Version3/class-wc-rest-crud-controller.php : public function create_item( $request )
+            // which extends
+            // woocommerce/includes/rest-api/Controllers/Version3/class-wc-rest-products-controller.php
+            [$response, $responseError] = $this->sage->createResource(
+                '/wc/v3/products/' . $articlePostId,
+                'POST',
+                $article,
+                Sage::META_KEY_AR_REF,
+                $arRef,
+                headers: $headers
+            );
+            $postId = null;
+            if (is_string($responseError)) {
+                $message = $responseError;
+            } else if ($response["response"]["code"] === 200) {
+                $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
+                $urlArticle = str_replace('%id%', $body->id, $urlArticle);
+                $postId = $body->id;
+                $message = "<div class='notice notice-success is-dismissible'>
+                    <p>" . __('Article mis à jour: ' . $body->name, 'sage') . "</p>" . $urlArticle . "
                     $dismissNotice
                             </div>";
-        } else if ($response["response"]["code"] === 201) {
-            $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
-            $url = str_replace('%id%', $body->id, $url);
-            $postId = $body->id;
-            $message = "<div class='notice notice-success is-dismissible'>
-                    <p>" . __('Article créé: ' . $body->name, 'sage') . "</p>" . $url . "
+            } else if ($response["response"]["code"] === 201) {
+                $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
+                $urlArticle = str_replace('%id%', $body->id, $urlArticle);
+                $postId = $body->id;
+                $message = "<div class='notice notice-success is-dismissible'>
+                    <p>" . __('Article créé: ' . $body->name, 'sage') . "</p>" . $urlArticle . "
                     $dismissNotice
                             </div>";
+            } else {
+                $message = $response["body"];
+            }
         } else {
-            $message = $response["body"];
+            $product = wc_get_product($articlePostId);
+            $product->read_meta_data(true);
+            $oldMetadata = $product->get_meta_data();
+            $allMetadataNames = array_map(static fn(array $meta) => $meta['key'], $article["meta_data"]);
+            foreach ($oldMetadata as $old) {
+                if (!in_array($old->key, $allMetadataNames, true)) {
+                    $product->delete_meta_data($old->key);
+                }
+            }
+            foreach ($article["meta_data"] as $meta) {
+                $product->update_meta_data($meta['key'], $meta['value']);
+            }
+            $product->save();
+            $response = ['response' => ['code' => 200]];
+            $responseError = null;
+            $urlArticle = str_replace('%id%', $articlePostId, $urlArticle);
+            $postId = $articlePostId;
+            $message = "<div class='notice notice-success is-dismissible'>
+                    <p>" . __('Article mis à jour: ' . $article["name"], 'sage') . "</p>" . $urlArticle . "
+                    $dismissNotice
+                            </div>";
         }
         return [$response, $responseError, $message, $postId];
     }
@@ -1106,7 +1125,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
             'name' => $fArticle->arDesign,
             'meta_data' => [],
         ];
-        foreach ($sageEntityMenu->getMetadata() as $metadata) {
+        foreach ($sageEntityMenu->getMetadata($fArticle) as $metadata) {
             $value = $metadata->getValue();
             if (!is_null($value)) {
                 $v = $value($fArticle);

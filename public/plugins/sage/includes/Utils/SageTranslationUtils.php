@@ -601,6 +601,10 @@ final class SageTranslationUtils
                 'fareCategory' => __("Catégorie tarifaire", 'sage'),
                 'ttc' => __("TTC", 'sage'),
                 'ht' => __("HT", 'sage'),
+                'supplier' => __("Fournisseur", 'sage'),
+                'supplierRef' => __("Réf. fournisseur", 'sage'),
+                'buyPrice' => __("Prix d'achat", 'sage'),
+                'main' => __("Principal", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),
