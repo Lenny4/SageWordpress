@@ -1,6 +1,7 @@
 import * as React from "react";
 import { FormInputProps } from "../../../interface/InputInterface";
 import { Tooltip } from "@mui/material";
+import { CannotBeChangeOnWebsiteComponent } from "./FormFieldComponent";
 
 export const FormInput: React.FC<FormInputProps> = ({
   label,
@@ -11,6 +12,7 @@ export const FormInput: React.FC<FormInputProps> = ({
   hideLabel,
   type,
   errorMessage,
+  cannotBeChangeOnWebsite,
 }) => (
   <>
     <label
@@ -23,15 +25,22 @@ export const FormInput: React.FC<FormInputProps> = ({
         <span>{label}</span>
       </Tooltip>
     </label>
-    <input
-      id={name}
-      name={name}
-      type={type ?? "text"}
-      value={value}
-      readOnly={readOnly}
-      onChange={onChange}
-      style={{ width: "100%" }}
-    />
+    <div style={{ display: "flex" }}>
+      <div style={{ flex: 1 }}>
+        <input
+          id={name}
+          name={name}
+          type={type ?? "text"}
+          value={value}
+          readOnly={readOnly}
+          onChange={onChange}
+          style={{ width: "100%" }}
+        />
+      </div>
+      <CannotBeChangeOnWebsiteComponent
+        cannotBeChangeOnWebsite={cannotBeChangeOnWebsite}
+      />
+    </div>
     {errorMessage && <div className="sage_error_field">{errorMessage}</div>}
   </>
 );

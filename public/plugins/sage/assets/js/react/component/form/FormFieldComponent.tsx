@@ -1,6 +1,8 @@
 import * as React from "react";
 import { FieldInterface } from "../../../interface/InputInterface";
 import { getTranslations } from "../../../functions/translations";
+import { IconButton, Tooltip } from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
 
 let translations: any = getTranslations();
 
@@ -14,6 +16,28 @@ type State = {
   handleChangeSelect: (
     prop: keyof any,
   ) => (event: React.ChangeEvent<HTMLSelectElement>) => void | undefined;
+};
+
+type State2 = {
+  cannotBeChangeOnWebsite: boolean | undefined;
+};
+
+export const CannotBeChangeOnWebsiteComponent: React.FC<State2> = ({
+  cannotBeChangeOnWebsite,
+}) => {
+  return (
+    <>
+      {cannotBeChangeOnWebsite && (
+        <div style={{ position: "relative", top: "-2px" }}>
+          <Tooltip title={translations.sentences.cannotBeChangeOnWebsite} arrow>
+            <IconButton>
+              <InfoIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </div>
+      )}
+    </>
+  );
 };
 
 export const FormFieldComponent: React.FC<State> = ({
@@ -46,6 +70,7 @@ export const FormFieldComponent: React.FC<State> = ({
       options={options}
       type={type}
       errorMessage={values[name].error}
+      cannotBeChangeOnWebsite={field.cannotBeChangeOnWebsite}
     />
   );
 };

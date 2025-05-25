@@ -166,6 +166,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
               {
                 name: "arCondition",
                 readOnly: true,
+                cannotBeChangeOnWebsite: true,
                 DomField: FormSelect,
                 options: transformOptionsObject(
                   translations.fArticles.arCondition.values,
@@ -236,7 +237,8 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
               {
                 name: "arUniteVen",
                 DomField: FormSelect,
-                readOnly: true, // can't change with Objet métier
+                readOnly: true,
+                cannotBeChangeOnWebsite: true,
                 options: pUnites.map((f) => {
                   return {
                     value: f.cbIndice,

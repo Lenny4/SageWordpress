@@ -48,6 +48,7 @@ export interface FieldInterface<
   name: string;
   DomField: FC<FormInputProps>;
   readOnly?: boolean;
+  cannotBeChangeOnWebsite?: boolean;
   hideLabel?: boolean;
   options?: FormInputOptions[];
   type?: string;
@@ -66,6 +67,7 @@ export type FormInputProps = {
   options?: FormInputOptions[];
   type?: string;
   errorMessage?: string;
+  cannotBeChangeOnWebsite?: boolean;
 };
 
 export type FormInputOptions = {
