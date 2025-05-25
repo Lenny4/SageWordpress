@@ -310,16 +310,13 @@ final class SageSettings
                         return $sageSettings->setDefaultFilter($data, $_GET);
                     },
                 ],
-                metadata: static function () use ($sageWoocommerce, $sageGraphQl): array {
+                metadata: static function (?stdClass $obj = null) use ($sageWoocommerce, $sageGraphQl): array {
                     $result = [
                         new SageEntityMetadata(field: '_arRef', value: static function (StdClass $fArticle) {
                             return $fArticle->arRef;
                         }),
                         new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {
                             return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
-                        }),
-                        new SageEntityMetadata(field: '_fArtclients', value: static function (StdClass $fArticle) {
-                            return json_encode($fArticle->fArtclients, JSON_THROW_ON_ERROR);
                         }),
                         new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
                             return $sageWoocommerce->getMaxPrice($fArticle->prices);
@@ -380,10 +377,20 @@ final class SageSettings
                     $pCattarifs = $sageGraphQl->getPCattarifs();
                     foreach ($pCattarifs as $pCattarif) {
                         foreach (["acCoef", "acPrixVen", "acRemise"] as $field) {
-                            $result[] = new SageEntityMetadata(field: '_fArtclients.' . $field . '[' . $pCattarif->cbIndice . ']',
+                            $result[] = new SageEntityMetadata(field: '_fArtclients[' . $pCattarif->cbIndice . '].' . $field,
                                 value: static function (StdClass $fArticle) use ($pCattarif, $field) {
                                     return $fArticle->fArtclients[$pCattarif->cbIndice]->{$field};
                                 });
+                        }
+                    }
+                    if (!is_null($obj)) {
+                        foreach ($obj->fArtfournisses as $fArtfournisse) {
+                            foreach (["afRefFourniss", "afPrincipal", "afPrixAch"] as $field) {
+                                $result[] = new SageEntityMetadata(field: '_fArtfournisses[' . $fArtfournisse->ctNumNavigation->ctNum . '].' . $field,
+                                    value: static function (StdClass $fArticle) use ($fArtfournisse, $field) {
+                                        return $fArticle->fArtfournisses[$fArtfournisse->ctNumNavigation->ctNum]->{$field};
+                                    });
+                            }
                         }
                     }
                     return $result;

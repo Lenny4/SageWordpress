@@ -837,6 +837,9 @@ final class SageGraphQl
                     'where' => new RawObject('{ ctNum: { eq: null } }'),
                 ],
             ),
+            'fArtfournisses' => [
+                ...$this->_getFArtfournisseSelectionSet(),
+            ],
             'prices' => [
                 ...$this->_getPriceSelectionSet(),
                 'nCatTarif' => [
@@ -862,6 +865,23 @@ final class SageGraphQl
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'ctNum',
             ]),
+        ];
+    }
+
+    private function _getFArtfournisseSelectionSet()
+    {
+        return [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'afRefFourniss',
+                'afPrincipal',
+                'afPrixAch',
+            ]),
+            'ctNumNavigation' => [
+                ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                    'ctNum',
+                    'ctIntitule',
+                ]),
+            ],
         ];
     }
 
@@ -1063,11 +1083,18 @@ final class SageGraphQl
             return null;
         }
         $fArticle = $fArticle->data->fArticles->items[0];
+
         $fArtclients = [];
         foreach ($fArticle->fArtclients as $fArtclient) {
             $fArtclients[$fArtclient->acCategorie] = $fArtclient;
         }
         $fArticle->fArtclients = $fArtclients;
+
+        $fArtfournisses = [];
+        foreach ($fArticle->fArtfournisses as $fArtfournisse) {
+            $fArtfournisses[$fArtfournisse->ctNumNavigation->ctNum] = $fArtfournisse;
+        }
+        $fArticle->fArtfournisses = $fArtfournisses;
 
         return $fArticle;
     }

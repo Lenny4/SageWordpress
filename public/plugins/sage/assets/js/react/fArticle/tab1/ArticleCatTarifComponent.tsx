@@ -11,7 +11,10 @@ import {
   handleChangeSelectGeneric,
 } from "../../../functions/form";
 import { FormContentComponent } from "../../component/form/FormContentComponent";
-import { getSageMetadata } from "../../../functions/getMetadata";
+import {
+  getListObjectSageMetadata,
+  getSageMetadata,
+} from "../../../functions/getMetadata";
 import { getTranslations } from "../../../functions/translations";
 import { FormInput } from "../../component/form/FormInput";
 import { FArticleClientInterface } from "../../../interface/FArticleInterface";
@@ -43,13 +46,13 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
   const [acPrixVenRefs, setAcPrixVenRefs] = React.useState<any[]>([]);
 
   const [form] = React.useState<FormInterface>(() => {
-    const fArtclients: FArticleClientInterface[] = getSageMetadata(
-      "fArtclients",
+    const prefix = "fArtclients";
+    const fArtclients: FArticleClientInterface[] = getListObjectSageMetadata(
+      prefix,
       articleMeta,
-      true,
+      "acCategorie",
     );
 
-    const prefix = "fArtclients";
     const lines: TableLineInterface[][] = fArtclients.map(
       (fArtclient): TableLineInterface[] => {
         const ref = React.createRef();
@@ -60,7 +63,7 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
           },
           {
             field: {
-              name: prefix + ".acCoef[" + fArtclient.acCategorie + "]",
+              name: prefix + "[" + fArtclient.acCategorie + "].acCoef",
               DomField: FormInput,
               type: "number",
               hideLabel: true,
@@ -77,7 +80,7 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
           },
           {
             field: {
-              name: prefix + ".acRemise[" + fArtclient.acCategorie + "]",
+              name: prefix + "[" + fArtclient.acCategorie + "].acRemise",
               DomField: FormInput,
               type: "number",
               hideLabel: true,

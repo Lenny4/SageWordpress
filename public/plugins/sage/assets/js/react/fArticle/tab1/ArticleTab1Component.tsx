@@ -32,7 +32,7 @@ const articleMeta: MetadataInterface[] = JSON.parse(
 );
 const arRef = getSageMetadata("arRef", articleMeta);
 const canEditArSuiviStock =
-  getSageMetadata("canEditArSuiviStock", articleMeta) ?? 1;
+  (getSageMetadata("canEditArSuiviStock", articleMeta) ?? 1).toString() !== "0";
 const isNew = !arRef;
 const fFamilles: any[] = JSON.parse(
   $("[data-sage-ffamilles]").attr("data-sage-ffamilles") ?? "[]",
@@ -148,7 +148,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
               {
                 name: "arSuiviStock",
                 DomField: FormSelect,
-                readOnly: canEditArSuiviStock.toString() === "0",
+                readOnly: !canEditArSuiviStock,
                 options: transformOptionsObject(
                   translations.fArticles.arSuiviStock.values,
                 ),

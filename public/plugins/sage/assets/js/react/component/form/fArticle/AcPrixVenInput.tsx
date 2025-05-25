@@ -10,7 +10,7 @@ let translations: any = getTranslations();
 
 export type AcPrixVenInputState = {
   defaultValue: number;
-  acCategorie: number;
+  acCategorie: number | string;
 };
 
 type FormState = {
@@ -93,7 +93,7 @@ export const AcPrixVenInput = React.forwardRef(
       onParentFormChange(parentForm: any): void {
         setParentFormData({
           acCoef: Number(
-            parentForm["fArtclients.acCoef[" + acCategorie + "]"].value,
+            parentForm["fArtclients[" + acCategorie + "].acCoef"].value,
           ),
           arPrixAch: Number(parentForm.arPrixAch),
         });
@@ -118,8 +118,8 @@ export const AcPrixVenInput = React.forwardRef(
         <div style={{ display: "flex", alignItems: "flex-start" }}>
           <div style={{ position: "relative", flex: 1 }}>
             <input
-              id={"_sage_fArtclients.acPrixVen[" + acCategorie + "]"}
-              name={"_sage_fArtclients.acPrixVen[" + acCategorie + "]"}
+              id={"_sage_fArtclients[" + acCategorie + "].acPrixVen"}
+              name={"_sage_fArtclients[" + acCategorie + "].acPrixVen"}
               type={"hidden"}
               value={values.realAcPrixVen.value}
             />

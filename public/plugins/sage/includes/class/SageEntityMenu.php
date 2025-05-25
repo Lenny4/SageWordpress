@@ -3,6 +3,7 @@
 namespace App\class;
 
 use Closure;
+use stdClass;
 
 final class SageEntityMenu
 {
@@ -293,12 +294,12 @@ final class SageEntityMenu
         return $this;
     }
 
-    public function getMetadata(): array
+    public function getMetadata(?stdClass $obj = null): array
     {
         if (!is_null($this->_metadata)) {
             return $this->_metadata;
         }
-        $this->_metadata = ($this->metadata)();
+        $this->_metadata = ($this->metadata)($obj);
         return $this->_metadata;
     }
 
