@@ -612,6 +612,8 @@ final class SageTranslationUtils
                 'availableArRef' => __("Votre article sera créé avec cette référence. Vous pouvez la modifier à l’aide du champ prévu à cet effet.", "sage"),
                 'acPrixVenInput' => __("Le prix de vente ne correspond pas au résultat du prix d'achat multiplié par le coefficient.", "sage"),
                 'cannotBeChangeOnWebsite' => __("Ce champ ne peut pas être modifié depuis le site internet. Vous pouvez le modifier directement dans Sage.", "sage"),
+                'arNomencl' => __("Le site internet sait uniquement gérer des article qui ont pour nomenclature \"Aucun\".", "sage"),
+                'arType' => __("Le site internet sait uniquement gérer des article qui ont pour type \"Standard\".", "sage"),
             ],
             'enum' => [
                 'syncWebsiteState' => [

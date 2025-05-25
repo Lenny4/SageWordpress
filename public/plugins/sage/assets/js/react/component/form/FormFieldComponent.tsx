@@ -22,6 +22,26 @@ type State2 = {
   cannotBeChangeOnWebsite: boolean | undefined;
 };
 
+type State3 = {
+  tooltip: string | undefined;
+};
+
+export const FieldTooltipComponent: React.FC<State3> = ({ tooltip }) => {
+  return (
+    <>
+      {tooltip && (
+        <div style={{ position: "relative", top: "-2px" }}>
+          <Tooltip title={tooltip} arrow>
+            <IconButton>
+              <InfoIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </div>
+      )}
+    </>
+  );
+};
+
 export const CannotBeChangeOnWebsiteComponent: React.FC<State2> = ({
   cannotBeChangeOnWebsite,
 }) => {
@@ -47,7 +67,16 @@ export const FormFieldComponent: React.FC<State> = ({
   handleChange,
   handleChangeSelect,
 }) => {
-  const { name, DomField, readOnly, hideLabel, options, type } = field;
+  const {
+    name,
+    DomField,
+    readOnly,
+    hideLabel,
+    options,
+    type,
+    cannotBeChangeOnWebsite,
+    tooltip,
+  } = field;
   let label = "";
   if (transPrefix && translations[transPrefix].hasOwnProperty(name)) {
     if (translations[transPrefix][name].hasOwnProperty("label")) {
@@ -70,7 +99,8 @@ export const FormFieldComponent: React.FC<State> = ({
       options={options}
       type={type}
       errorMessage={values[name].error}
-      cannotBeChangeOnWebsite={field.cannotBeChangeOnWebsite}
+      cannotBeChangeOnWebsite={cannotBeChangeOnWebsite}
+      tooltip={tooltip}
     />
   );
 };

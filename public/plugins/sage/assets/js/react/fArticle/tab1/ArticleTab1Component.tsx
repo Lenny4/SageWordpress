@@ -104,6 +104,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 name: "arType",
                 DomField: FormSelect,
                 readOnly: !isNew,
+                tooltip: translations.sentences.arType,
                 options: transformOptionsObject(
                   translations.fArticles.arType.values,
                 ).map((v) => {
@@ -160,6 +161,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 name: "arNomencl",
                 DomField: FormSelect,
                 readOnly: true, // pour l'instant
+                tooltip: translations.sentences.arNomencl,
                 options: transformOptionsObject(
                   translations.fArticles.arNomencl.values,
                 ),

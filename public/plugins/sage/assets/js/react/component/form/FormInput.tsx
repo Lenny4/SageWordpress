@@ -1,19 +1,20 @@
 import * as React from "react";
-import { FormInputProps } from "../../../interface/InputInterface";
-import { Tooltip } from "@mui/material";
-import { CannotBeChangeOnWebsiteComponent } from "./FormFieldComponent";
+import {FormInputProps} from "../../../interface/InputInterface";
+import {Tooltip} from "@mui/material";
+import {CannotBeChangeOnWebsiteComponent, FieldTooltipComponent} from "./FormFieldComponent";
 
 export const FormInput: React.FC<FormInputProps> = ({
-  label,
-  name,
-  value,
-  readOnly,
-  onChange,
-  hideLabel,
-  type,
-  errorMessage,
-  cannotBeChangeOnWebsite,
-}) => (
+                                                      label,
+                                                      name,
+                                                      value,
+                                                      readOnly,
+                                                      onChange,
+                                                      hideLabel,
+                                                      type,
+                                                      errorMessage,
+                                                      cannotBeChangeOnWebsite,
+                                                      tooltip,
+                                                    }) => (
   <>
     <label
       htmlFor={name}
@@ -25,8 +26,8 @@ export const FormInput: React.FC<FormInputProps> = ({
         <span>{label}</span>
       </Tooltip>
     </label>
-    <div style={{ display: "flex" }}>
-      <div style={{ flex: 1 }}>
+    <div style={{display: "flex"}}>
+      <div style={{flex: 1}}>
         <input
           id={name}
           name={name}
@@ -34,12 +35,13 @@ export const FormInput: React.FC<FormInputProps> = ({
           value={value}
           readOnly={readOnly}
           onChange={onChange}
-          style={{ width: "100%" }}
+          style={{width: "100%"}}
         />
       </div>
       <CannotBeChangeOnWebsiteComponent
         cannotBeChangeOnWebsite={cannotBeChangeOnWebsite}
       />
+      <FieldTooltipComponent tooltip={tooltip}/>
     </div>
     {errorMessage && <div className="sage_error_field">{errorMessage}</div>}
   </>

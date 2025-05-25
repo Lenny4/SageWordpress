@@ -1,7 +1,10 @@
 import * as React from "react";
 import { FormInputProps } from "../../../interface/InputInterface";
 import { Tooltip } from "@mui/material";
-import { CannotBeChangeOnWebsiteComponent } from "./FormFieldComponent";
+import {
+  CannotBeChangeOnWebsiteComponent,
+  FieldTooltipComponent,
+} from "./FormFieldComponent";
 
 export const FormSelect: React.FC<FormInputProps> = ({
   label,
@@ -13,6 +16,7 @@ export const FormSelect: React.FC<FormInputProps> = ({
   options = [],
   errorMessage,
   cannotBeChangeOnWebsite,
+  tooltip,
 }) => {
   const hasOption = !!options.find(
     (o) => o.value.toString() === value.toString(),
@@ -62,6 +66,7 @@ export const FormSelect: React.FC<FormInputProps> = ({
         <CannotBeChangeOnWebsiteComponent
           cannotBeChangeOnWebsite={cannotBeChangeOnWebsite}
         />
+        <FieldTooltipComponent tooltip={tooltip} />
       </div>
       {errorMessage && <div className="sage_error_field">{errorMessage}</div>}
     </>
