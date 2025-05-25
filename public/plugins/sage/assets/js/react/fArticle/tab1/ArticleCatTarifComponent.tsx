@@ -15,11 +15,13 @@ import { getSageMetadata } from "../../../functions/getMetadata";
 import { getTranslations } from "../../../functions/translations";
 import { FormInput } from "../../component/form/FormInput";
 import { FArticleClientInterface } from "../../../interface/FArticleInterface";
-import { AcPrixVenInput } from "../../component/form/AcPrixVenInput";
+import { AcPrixVenInput } from "../../component/form/fArticle/AcPrixVenInput";
+import { ArticlePricesComponent } from "../ArticlePricesComponent";
+import { MetadataInterface } from "../../../interface/WordpressInterface";
 
 let translations: any = getTranslations();
 
-const articleMeta = JSON.parse(
+const articleMeta: MetadataInterface[] = JSON.parse(
   $("[data-sage-product]").attr("data-sage-product") ?? "null",
 );
 
@@ -106,6 +108,12 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
                 ],
                 lines: lines,
               },
+            },
+            {
+              props: {
+                size: { xs: 12 },
+              },
+              Dom: <ArticlePricesComponent />,
             },
           ],
         },

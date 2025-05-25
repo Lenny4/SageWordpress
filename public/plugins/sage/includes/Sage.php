@@ -372,6 +372,9 @@ final class Sage
         $this->twig->addFunction(new TwigFunction('get_woocommerce_currency_symbol', static function (): string {
             return html_entity_decode(get_woocommerce_currency_symbol());
         }));
+        $this->twig->addFunction(new TwigFunction('get_woocommerce_currency', static function (): string {
+            return get_woocommerce_currency();
+        }));
         $this->twig->addFunction(new TwigFunction('order_get_currency', static function (): string {
             return html_entity_decode(get_woocommerce_currency_symbol());
         }));

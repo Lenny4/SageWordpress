@@ -18,15 +18,16 @@ import {
 import { FormContentComponent } from "../../component/form/FormContentComponent";
 import { DividerText } from "../../component/DividerText";
 import { FormSelect } from "../../component/form/FormSelect";
-import { ArRefInput } from "../../component/form/ArRefInput";
 import { TabInterface } from "../../../interface/TabInterface";
 import { TabsComponent } from "../../component/tab/TabsComponent";
 import Grid from "@mui/material/Grid";
 import { ArticleCatTarifComponent } from "./ArticleCatTarifComponent";
 import { ArticleFournisseursComponent } from "./ArticleFournisseursComponent";
+import { ArRefInput } from "../../component/form/fArticle/ArRefInput";
+import { MetadataInterface } from "../../../interface/WordpressInterface";
 
 let translations: any = getTranslations();
-const articleMeta = JSON.parse(
+const articleMeta: MetadataInterface[] = JSON.parse(
   $("[data-sage-product]").attr("data-sage-product") ?? "null",
 );
 const arRef = getSageMetadata("arRef", articleMeta);

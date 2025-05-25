@@ -596,6 +596,11 @@ final class SageTranslationUtils
                 'coefficient' => __("Coefficient", 'sage'),
                 'sellPrice' => __("Prix de vente", 'sage'),
                 'discount' => __("Remise", 'sage'),
+                'seePrices' => __("Voir les prix", 'sage'),
+                'accountingCategory' => __("Catégorie comptable", 'sage'),
+                'fareCategory' => __("Catégorie tarifaire", 'sage'),
+                'ttc' => __("TTC", 'sage'),
+                'ht' => __("HT", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),

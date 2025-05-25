@@ -1,9 +1,9 @@
 import * as React from "react";
 import { useImperativeHandle } from "react";
 import { IconButton, Tooltip } from "@mui/material";
-import { getTranslations } from "../../../functions/translations";
-import { InputInterface } from "../../../interface/InputInterface";
-import { handleChangeInputGeneric } from "../../../functions/form";
+import { getTranslations } from "../../../../functions/translations";
+import { InputInterface } from "../../../../interface/InputInterface";
+import { handleChangeInputGeneric } from "../../../../functions/form";
 import InfoIcon from "@mui/icons-material/Info";
 
 let translations: any = getTranslations();
@@ -139,13 +139,14 @@ export const AcPrixVenInput = React.forwardRef(
             )}
           </div>
           {Number(values.acPrixVen.value) !==
-            parentFormData.arPrixAch * parentFormData.acCoef && (
-            <Tooltip title={translations.sentences.acPrixVenInput} arrow>
-              <IconButton>
-                <InfoIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
+            parentFormData.arPrixAch * parentFormData.acCoef &&
+            Number(values.acPrixVen.value) > 0 && (
+              <Tooltip title={translations.sentences.acPrixVenInput} arrow>
+                <IconButton>
+                  <InfoIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
         </div>
       </>
     );
