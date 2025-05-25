@@ -26,17 +26,19 @@ export const FormTableComponent: React.FC<State> = ({
       <thead>
         <tr>
           {table.headers.map((header, index) => (
-            <th key={index}>{header}</th>
+            <th key={index} style={{ paddingLeft: index === 0 ? 0 : 15 }}>
+              {header}
+            </th>
           ))}
         </tr>
       </thead>
       <tbody>
-        {table.lines.map((line, index) => (
-          <tr key={index}>
+        {table.lines.map((line, indexLine) => (
+          <tr key={indexLine}>
             {line.map((cell, indexCell) => {
               const Dom = cell.Dom;
               return (
-                <td key={indexCell}>
+                <td key={indexCell} style={{ paddingLeft: indexCell === 0 ? 0 : 15 }}>
                   {Dom}
                   {cell.field && (
                     <FormFieldComponent
