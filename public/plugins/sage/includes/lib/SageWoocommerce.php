@@ -999,7 +999,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$message, $order];
     }
 
-    public function importFArticleFromSage(string $arRef, bool $ignorePingApi = false, array $headers = []): array
+    public function importFArticleFromSage(string $arRef, bool $ignorePingApi = false, array $headers = [], bool $ignoreCanImport = false): array
     {
         $fArticle = $this->sage->sageGraphQl->getFArticle($arRef, ignorePingApi: $ignorePingApi);
         if (is_null($fArticle)) {
@@ -1007,11 +1007,13 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         " . __("L'article n'a pas pu être importé", 'sage') . "
                                 </div>"];
         }
-        $canImportFArticle = $this->canImportFArticle($fArticle);
-        if (!empty($canImportFArticle)) {
-            return [null, null, "<div class='error'>
+        if (!$ignoreCanImport) {
+            $canImportFArticle = $this->canImportFArticle($fArticle);
+            if (!empty($canImportFArticle)) {
+                return [null, null, "<div class='error'>
                         " . implode(' ', $canImportFArticle) . "
                                 </div>"];
+            }
         }
         $articlePostId = $this->sage->sageWoocommerce->getWooCommerceIdArticle($arRef);
         $isCreation = is_null($articlePostId);
@@ -1069,8 +1071,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 }
             }
             foreach ($article["meta_data"] as $meta) {
-                $value = $meta['value'] === null ? '' : $meta['value'];
-                $product->update_meta_data($meta['key'], $value);
+                $product->update_meta_data($meta['key'], $meta['value']);
             }
             $product->save();
             $response = ['response' => ['code' => 200]];
@@ -1097,6 +1098,9 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         }
         if ($fArticle->arNomencl !== NomenclatureTypeEnum::NomenclatureTypeAucun->value) {
             $result[] = __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", 'sage');
+        }
+        if (!$fArticle->arPublie) {
+            $result[] = __("Seuls les articles publiés sur le site marchand peuvent être importés.", 'sage');
         }
         return $result;
     }

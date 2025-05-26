@@ -7,6 +7,20 @@ export interface FArticleClientInterface {
   acRemise: number;
 }
 
+export interface FCatalogueInterface {
+  clNo: number;
+  clNiveau: number;
+  clNoParent: number;
+  clIntitule: string;
+}
+
+export interface FGlossaireInterface {
+  glNo: number;
+  glDomaine: number; // 0 -> Article, 1 => document
+  glIntitule: string;
+  glText: string;
+}
+
 export interface FArtfournisseInterface {
   ctNum: string;
   afRefFourniss: string;

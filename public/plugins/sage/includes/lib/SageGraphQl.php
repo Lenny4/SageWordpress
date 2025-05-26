@@ -38,6 +38,8 @@ final class SageGraphQl
     private ?array $fPays = null;
     private ?array $fTaxes = null;
     private ?stdClass $pDossier = null;
+    private ?array $fCatalogues = null;
+    private ?array $fGlossaires = null;
 
     private function __construct(public ?Sage $sage)
     {
@@ -816,6 +818,12 @@ final class SageGraphQl
                 'arPrixTtc',
                 'arUniteVen', // Unité de vente
                 'canEditArSuiviStock',
+                'clNo1',
+                'clNo2',
+                'clNo3',
+                'clNo4',
+                'arPublie',
+                'arSommeil',
             ]),
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
                 'arPrixAch',
@@ -831,6 +839,7 @@ final class SageGraphQl
                 'arCodeFiscal',
                 'arEdiCode',
                 'arPays',
+                'arRaccourci',
             ]),
             'fArtclients' => new ArgumentSelectionSetDto(
                 [
@@ -1464,6 +1473,102 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             ]),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'ctIntitule',
+            ]),
+        ];
+    }
+
+    public function getFGlossaires(
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false,
+        bool  $ignorePingApi = false
+    ): array|null|string
+    {
+        if (!is_null($this->fGlossaires) && $getFromSage !== true) {
+            return $this->fGlossaires;
+        }
+        $entityName = SageEntityMenu::FGLOSSAIRE_ENTITY_NAME;
+        $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
+        $queryParams = [
+            "filter_field" => [],
+            "filter_type" => [],
+            "filter_value" => [],
+            "sort" => '{"glNo": "asc"}',
+            "paged" => "1",
+            "per_page" => "100"
+        ];
+        $selectionSets = $this->_getFGlossaireSelectionSet();
+        $this->fGlossaires = $this->getEntitiesAndSaveInOption(
+            $cacheName,
+            $getFromSage,
+            $entityName,
+            $queryParams,
+            $selectionSets,
+            $getError,
+            $ignorePingApi,
+            allPages: true,
+        );
+        return $this->fGlossaires;
+    }
+
+    private function _getFGlossaireSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'glNo',
+                'glDomaine', // 0 -> Article, 1 => document
+            ]),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'glIntitule',
+                'glText',
+            ]),
+        ];
+    }
+
+    public function getFCatalogues(
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false,
+        bool  $ignorePingApi = false
+    ): array|null|string
+    {
+        if (!is_null($this->fCatalogues) && $getFromSage !== true) {
+            return $this->fCatalogues;
+        }
+        $entityName = SageEntityMenu::FCATALOGUE_ENTITY_NAME;
+        $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
+        $queryParams = [
+            "filter_field" => [],
+            "filter_type" => [],
+            "filter_value" => [],
+            "sort" => '{"clNo": "asc"}',
+            "paged" => "1",
+            "per_page" => "100"
+        ];
+        $selectionSets = $this->_getFCatalogueSelectionSet();
+        $this->fCatalogues = $this->getEntitiesAndSaveInOption(
+            $cacheName,
+            $getFromSage,
+            $entityName,
+            $queryParams,
+            $selectionSets,
+            $getError,
+            $ignorePingApi,
+            allPages: true,
+        );
+        return $this->fCatalogues;
+    }
+
+    private function _getFCatalogueSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'clNo',
+                'clNoParent',
+                'clNiveau',
+            ]),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'clIntitule',
             ]),
         ];
     }

@@ -18,11 +18,12 @@ const pCattarifs: any[] = Object.values(
   JSON.parse($("[data-sage-pcattarifs]").attr("data-sage-pcattarifs") ?? "[]"),
 );
 const pCatComptas: any[] = Object.values(
-  JSON.parse($("[data-sage-pcatcomptas]").attr("data-sage-pcatcomptas") ?? "[]")
-    .Ven,
+  JSON.parse(
+    $("[data-sage-pcatcomptas]").attr("data-sage-pcatcomptas") ?? '{"Ven": []}',
+  ).Ven,
 );
 const prices: FArticlePriceInterface[] = JSON.parse(
-  articleMeta.find((item) => item.key === "_sage_prices").value,
+  articleMeta?.find((item) => item.key === "_sage_prices")?.value ?? "[]",
 );
 
 const htTtcs = ["Ht", "Ttc"];

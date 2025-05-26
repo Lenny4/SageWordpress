@@ -59,6 +59,10 @@ final class SageEntityMenu
 
     public const PUNITE_ENTITY_NAME = 'pUnites';
 
+    public const FCATALOGUE_ENTITY_NAME = 'fCatalogues';
+
+    public const FGLOSSAIRE_ENTITY_NAME = 'fGlossaires';
+
     private ?array $_metadata = null;
 
     /**

@@ -952,7 +952,7 @@ final class SageSettings
             $responseError = null;
             $updateApi = $product->get_meta('_' . Sage::TOKEN . '_updateApi'); // returns "" if not exists in bdd
             if (!empty($arRef) && empty($updateApi)) {
-                [$response, $responseError, $message, $postId] = $sageSettings->sage->sageWoocommerce->importFArticleFromSage($arRef);
+                [$response, $responseError, $message, $postId] = $sageSettings->sage->sageWoocommerce->importFArticleFromSage($arRef, ignoreCanImport: true);
                 if (is_null($responseError)) {
                     $product->read_meta_data(true);
                     $meta['new'] = $product->get_meta_data();
@@ -994,9 +994,12 @@ final class SageSettings
             }
             echo $sageSettings->sage->twig->render('woocommerce/tabs/sage.html.twig', [
                 'pCattarifs' => $sageSettings->sage->sageGraphQl->getPCattarifs(),
+                'fCatalogues' => $sageSettings->sage->sageGraphQl->getFCatalogues(),
                 'pCatComptas' => $sageSettings->sage->sageGraphQl->getPCatComptas(),
                 'fFamilles' => $sageSettings->sage->sageGraphQl->getFFamilles(),
                 'pUnites' => $sageSettings->sage->sageGraphQl->getPUnites(),
+                'fPays' => $sageSettings->sage->sageGraphQl->getFPays(),
+                'fGlossaires' => $sageSettings->sage->sageGraphQl->getFGlossaires(),
                 'panelId' => self::TARGET_PANEL,
                 'responseError' => $responseError,
                 'metaChanges' => $meta['changes'],

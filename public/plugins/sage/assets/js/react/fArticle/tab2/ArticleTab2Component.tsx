@@ -17,12 +17,19 @@ import { FormContentComponent } from "../../component/form/FormContentComponent"
 import { DividerText } from "../../component/DividerText";
 import Grid from "@mui/material/Grid";
 import { MetadataInterface } from "../../../interface/WordpressInterface";
+import { ArticleCataloguesComponent } from "./ArticleCataloguesComponent";
+import { FormSelect } from "../../component/form/FormSelect";
+import { ArticleGlossairesComponent } from "./ArticleGlossairesComponent";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
   $("[data-sage-product]").attr("data-sage-product") ?? "null",
 );
 const arRef = getSageMetadata("arRef", articleMeta);
+
+const fPays: any[] = JSON.parse(
+  $("[data-sage-fpays]").attr("data-sage-fpays") ?? "[]",
+);
 
 export const ArticleTab2Component = React.forwardRef((props, ref) => {
   const handleChange =
@@ -59,6 +66,12 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
             props: {
               size: { xs: 12 },
             },
+            Dom: <ArticleCataloguesComponent />,
+          },
+          {
+            props: {
+              size: { xs: 12 },
+            },
             Dom: (
               <DividerText
                 textAlign="left"
@@ -71,13 +84,60 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
             ),
           },
           {
+            props: {
+              size: { xs: 12 },
+            },
+            fields: [{ name: "arLangue1", DomField: FormInput }],
+          },
+          {
+            props: {
+              size: { xs: 12 },
+            },
+            fields: [{ name: "arLangue2", DomField: FormInput }],
+          },
+          {
             fields: [
               { name: "arCodeFiscal", DomField: FormInput },
               { name: "arEdiCode", DomField: FormInput },
             ],
           },
           {
-            fields: [{ name: "arPays", DomField: FormInput }],
+            fields: [
+              {
+                name: "arPays",
+                DomField: FormSelect,
+                options: [
+                  {
+                    value: "",
+                    label: translations.words.none,
+                  },
+                  ...fPays.map((f) => {
+                    return {
+                      value: f.paIntitule,
+                      label: f.paIntitule,
+                    };
+                  }),
+                ],
+              },
+              { name: "arRaccourci", DomField: FormInput },
+            ],
+          },
+          {
+            props: {
+              size: { xs: 12 },
+            },
+            Dom: (
+              <DividerText
+                textAlign="left"
+                text={<h2>{translations.words.glossary}</h2>}
+              />
+            ),
+          },
+          {
+            props: {
+              size: { xs: 12 },
+            },
+            Dom: <ArticleGlossairesComponent />,
           },
         ],
       },
