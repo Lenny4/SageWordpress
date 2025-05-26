@@ -605,6 +605,8 @@ final class SageTranslationUtils
                 'supplierRef' => __("Réf. fournisseur", 'sage'),
                 'buyPrice' => __("Prix d'achat", 'sage'),
                 'main' => __("Principal", 'sage'),
+                'catalog' => __("Catalogue", 'sage'),
+                'futherDescription' => __("Description complémentaire", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),

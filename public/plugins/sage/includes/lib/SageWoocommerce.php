@@ -1069,7 +1069,8 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 }
             }
             foreach ($article["meta_data"] as $meta) {
-                $product->update_meta_data($meta['key'], $meta['value']);
+                $value = $meta['value'] === null ? '' : $meta['value'];
+                $product->update_meta_data($meta['key'], $value);
             }
             $product->save();
             $response = ['response' => ['code' => 200]];

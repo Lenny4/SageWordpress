@@ -309,7 +309,7 @@ final class SageGraphQl
         return $result;
     }
 
-    private function _getFComptetSelectionSet(): array
+    public function _getFComptetSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
@@ -796,7 +796,7 @@ final class SageGraphQl
         ];
     }
 
-    private function _getFArticleSelectionSet(bool $checkIfExists = false): array
+    public function _getFArticleSelectionSet(bool $checkIfExists = false): array
     {
         if ($checkIfExists) {
             return [
@@ -828,6 +828,9 @@ final class SageGraphQl
                 'arRef',
                 'arDesign',
                 'faCodeFamille',
+                'arCodeFiscal',
+                'arEdiCode',
+                'arPays',
             ]),
             'fArtclients' => new ArgumentSelectionSetDto(
                 [
@@ -1237,7 +1240,7 @@ WHERE meta_key = %s
         return $fDocentetes;
     }
 
-    private function _getFDocenteteSelectionSet(
+    public function _getFDocenteteSelectionSet(
         bool $getFDoclignes = false,
         bool $getExpedition = false,
         bool $getUser = false,
