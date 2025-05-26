@@ -1,20 +1,19 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { ChangeEvent } from "react";
 import {
+  FormContentInterface,
   FormInterface,
-  InputInterface,
   TableLineItemInterface,
 } from "../../../interface/InputInterface";
 import {
+  DefaultFormState,
+  getDefaultValue,
   getFlatFields,
   handleChangeInputGeneric,
   handleChangeSelectGeneric,
 } from "../../../functions/form";
 import { FormContentComponent } from "../../component/form/FormContentComponent";
-import {
-  getListObjectSageMetadata,
-  getSageMetadata,
-} from "../../../functions/getMetadata";
+import { getListObjectSageMetadata } from "../../../functions/getMetadata";
 import { getTranslations } from "../../../functions/translations";
 import { FormInput } from "../../component/form/FormInput";
 import { FArtfournisseInterface } from "../../../interface/FArticleInterface";
@@ -29,12 +28,14 @@ const articleMeta: MetadataInterface[] = JSON.parse(
 
 export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
   const handleChange =
-    (prop: keyof FormState) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    (prop: keyof DefaultFormState) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       handleChangeInputGeneric(event, prop, setValues);
     };
 
   const handleChangeSelect =
-    (prop: keyof FormState) => (event: ChangeEvent<HTMLSelectElement>) => {
+    (prop: keyof DefaultFormState) =>
+    (event: ChangeEvent<HTMLSelectElement>) => {
       handleChangeSelectGeneric(event, prop, setValues);
     };
 
@@ -52,108 +53,82 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
   });
   const [afPrincipalRefs, setAfPrincipalRefs] = React.useState<any[]>([]);
 
+  const [fArtfournisses] = React.useState<FArtfournisseInterface[]>(
+    getListObjectSageMetadata(prefix, articleMeta, "ctNum"),
+  );
   const [form] = React.useState<FormInterface>(() => {
-    const fArtfournisses: FArtfournisseInterface[] = getListObjectSageMetadata(
-      prefix,
-      articleMeta,
-      "ctNum",
-    );
-
-    return {
-      content: [
-        {
-          props: {
-            container: true,
-            spacing: 1,
-            sx: { p: 1 },
-          },
-          children: [
-            {
-              props: {
-                size: { xs: 12 },
-              },
-              table: {
-                headers: [
-                  translations.words.supplier,
-                  translations.words.main,
-                  translations.words.supplierRef,
-                  translations.words.buyPrice,
-                ],
-                items: fArtfournisses.map(
-                  (fArtclient): TableLineItemInterface => {
-                    const refAfPrincipal = React.createRef();
-                    setAfPrincipalRefs((x) => [...x, refAfPrincipal]);
-                    return {
-                      item: fArtclient,
-                      lines: [
-                        {
-                          Dom: <>{fArtclient.ctNum}</>,
-                        },
-                        {
-                          Dom: (
-                            <AfPrincipalInput
-                              defaultCtNum={selectedCtNum}
-                              ctNum={fArtclient.ctNum}
-                              setSelectedCtNumParent={setSelectedCtNum}
-                              ref={refAfPrincipal}
-                            />
-                          ),
-                        },
-                        {
-                          field: {
-                            name:
-                              prefix +
-                              "[" +
-                              fArtclient.ctNum +
-                              "].afRefFourniss",
-                            DomField: FormInput,
-                            hideLabel: true,
-                          },
-                        },
-                        {
-                          field: {
-                            name:
-                              prefix + "[" + fArtclient.ctNum + "].afPrixAch",
-                            DomField: FormInput,
-                            hideLabel: true,
-                          },
-                        },
-                      ],
-                    };
-                  },
-                ),
-              },
-            },
-          ],
+    const formContent: FormContentInterface[] = [
+      {
+        props: {
+          container: true,
+          spacing: 1,
+          sx: { p: 1 },
         },
-      ],
+        children: [
+          {
+            props: {
+              size: { xs: 12 },
+            },
+            table: {
+              headers: [
+                translations.words.supplier,
+                translations.words.main,
+                translations.words.supplierRef,
+                translations.words.buyPrice,
+              ],
+              items: fArtfournisses.map(
+                (fArtclient): TableLineItemInterface => {
+                  const refAfPrincipal = React.createRef();
+                  setAfPrincipalRefs((x) => [...x, refAfPrincipal]);
+                  return {
+                    item: fArtclient,
+                    lines: [
+                      {
+                        Dom: <>{fArtclient.ctNum}</>,
+                      },
+                      {
+                        Dom: (
+                          <AfPrincipalInput
+                            defaultCtNum={selectedCtNum}
+                            ctNum={fArtclient.ctNum}
+                            setSelectedCtNumParent={setSelectedCtNum}
+                            ref={refAfPrincipal}
+                          />
+                        ),
+                      },
+                      {
+                        field: {
+                          name:
+                            prefix + "[" + fArtclient.ctNum + "].afRefFourniss",
+                          DomField: FormInput,
+                          hideLabel: true,
+                        },
+                      },
+                      {
+                        field: {
+                          name: prefix + "[" + fArtclient.ctNum + "].afPrixAch",
+                          DomField: FormInput,
+                          hideLabel: true,
+                        },
+                      },
+                    ],
+                  };
+                },
+              ),
+            },
+          },
+        ],
+      },
+    ];
+    const flatFields = getFlatFields(formContent);
+    return {
+      content: formContent,
+      flatFields: flatFields,
+      fieldNames: flatFields.map((f) => f.name),
     };
   });
 
-  const [flatFields] = React.useState(getFlatFields(form));
-  const [fieldNames] = React.useState(flatFields.map((f) => f.name));
-
-  type FieldKeys = (typeof fieldNames)[number];
-
-  interface FormState extends Record<FieldKeys, InputInterface> {}
-
-  const getDefaultValue = (): FormState => {
-    const fieldValues = flatFields.reduce(
-      (acc, field) => {
-        acc[field.name] = {
-          value: getSageMetadata(field.name, articleMeta) ?? "",
-          validator: field.validator,
-        };
-        return acc;
-      },
-      {} as Record<(typeof fieldNames)[number], InputInterface>,
-    );
-
-    return {
-      ...fieldValues,
-    };
-  };
-  const [values, setValues] = React.useState<FormState>(getDefaultValue());
+  const [values, setValues] = React.useState(getDefaultValue(form));
 
   React.useEffect(() => {
     for (const afPrincipalRef of afPrincipalRefs) {

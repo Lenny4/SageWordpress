@@ -1,9 +1,5 @@
 import * as React from "react";
-import { Dispatch, SetStateAction } from "react";
-import {
-  FormContentInterface,
-  FormInterface,
-} from "../../../interface/InputInterface";
+import { FormContentInterface } from "../../../interface/InputInterface";
 import { Grid } from "@mui/material";
 import { FormTableComponent } from "./FormTableComponent";
 import { FormFieldComponent } from "./FormFieldComponent";
@@ -17,8 +13,6 @@ type State = {
   content: FormContentInterface[];
   values: any;
   transPrefix: string;
-  getForm?: Function;
-  setForm?: Dispatch<SetStateAction<FormInterface>>;
   handleChange: (
     prop: keyof any,
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -33,8 +27,6 @@ export const FormContentComponent: React.FC<State> = ({
   transPrefix,
   handleChange,
   handleChangeSelect,
-  getForm,
-  setForm,
 }) => (
   <>
     {content.map(
@@ -62,8 +54,6 @@ export const FormContentComponent: React.FC<State> = ({
                 transPrefix={transPrefix}
                 handleChange={handleChange}
                 handleChangeSelect={handleChangeSelect}
-                getForm={getForm}
-                setForm={setForm}
               />
             )}
             {children && children.length > 0 && (

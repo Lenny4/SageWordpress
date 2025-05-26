@@ -1,8 +1,7 @@
 import * as React from "react";
-import { Dispatch, SetStateAction } from "react";
 import {
-  FormInterface,
   TableInterface,
+  TableLineItemInterface,
 } from "../../../interface/InputInterface";
 import { FormFieldComponent } from "./FormFieldComponent";
 import {
@@ -22,8 +21,6 @@ type State = {
   table: TableInterface;
   values: any;
   transPrefix: string | undefined;
-  getForm: Function | undefined;
-  setForm: Dispatch<SetStateAction<FormInterface>> | undefined;
   handleChange: (
     prop: keyof any,
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void | undefined;
@@ -38,8 +35,6 @@ export const FormTableComponent: React.FC<State> = ({
   values,
   handleChange,
   handleChangeSelect,
-  getForm,
-  setForm,
 }) => {
   const padding = 15;
 
@@ -50,8 +45,13 @@ export const FormTableComponent: React.FC<State> = ({
     setOpen(true);
   };
 
-  const handleClose = (value: string) => {
+  const handleClose = () => {
     setOpen(false);
+  };
+
+  const thisOnSelectAdd = (item: TableLineItemInterface) => {
+    table.addItem(item.item);
+    handleClose();
   };
 
   return (
@@ -71,8 +71,6 @@ export const FormTableComponent: React.FC<State> = ({
               transPrefix={transPrefix}
               handleChange={handleChange}
               handleChangeSelect={handleChangeSelect}
-              getForm={getForm}
-              setForm={setForm}
             />
           </DialogContent>
         </Dialog>
@@ -98,6 +96,7 @@ export const FormTableComponent: React.FC<State> = ({
         <thead>
           <tr>
             {table.canDelete && <th></th>}
+            {table.addItem && <th></th>}
             {table.headers.map((header, index) => (
               <th
                 key={index}
@@ -133,6 +132,19 @@ export const FormTableComponent: React.FC<State> = ({
                     >
                       <IconButton>
                         <RemoveIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </td>
+                )}
+                {table.addItem && (
+                  <td>
+                    <Tooltip
+                      title={translations.sentences.addItem}
+                      arrow
+                      placement="left"
+                    >
+                      <IconButton onClick={() => thisOnSelectAdd(item)}>
+                        <AddIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                   </td>

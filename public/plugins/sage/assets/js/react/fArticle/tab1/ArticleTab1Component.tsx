@@ -2,12 +2,14 @@
 import React, { ChangeEvent, useImperativeHandle, useRef } from "react";
 import { getTranslations } from "../../../functions/translations";
 import {
+  FormContentInterface,
   FormInterface,
-  InputInterface,
 } from "../../../interface/InputInterface";
 import { getSageMetadata } from "../../../functions/getMetadata";
 import { FormInput } from "../../component/form/FormInput";
 import {
+  DefaultFormState,
+  getDefaultValue,
   getFlatFields,
   handleChangeInputGeneric,
   handleChangeSelectGeneric,
@@ -43,12 +45,14 @@ const pUnites: any[] = JSON.parse(
 
 export const ArticleTab1Component = React.forwardRef((props, ref) => {
   const handleChange =
-    (prop: keyof FormState) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    (prop: keyof DefaultFormState) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       handleChangeInputGeneric(event, prop, setValues);
     };
 
   const handleChangeSelect =
-    (prop: keyof FormState) => (event: ChangeEvent<HTMLSelectElement>) => {
+    (prop: keyof DefaultFormState) =>
+    (event: ChangeEvent<HTMLSelectElement>) => {
       handleChangeSelectGeneric(event, prop, setValues);
     };
   const arRefRef = useRef<any>(null);
@@ -73,8 +77,8 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
     });
   });
 
-  const [form] = React.useState<FormInterface>({
-    content: [
+  const [form] = React.useState<FormInterface>(() => {
+    const formContent: FormContentInterface[] = [
       {
         props: {
           container: true,
@@ -253,35 +257,16 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
           },
         ],
       },
-    ],
-  });
-  const [flatFields] = React.useState(getFlatFields(form));
-  const [fieldNames] = React.useState(flatFields.map((f) => f.name));
-
-  type FieldKeys = (typeof fieldNames)[number];
-
-  interface FormState extends Record<FieldKeys, InputInterface> {
-    isNew: InputInterface;
-  }
-
-  const getDefaultValue = (): FormState => {
-    const fieldValues = flatFields.reduce(
-      (acc, field) => {
-        acc[field.name] = {
-          value: getSageMetadata(field.name, articleMeta) ?? "",
-          validator: field.validator,
-        };
-        return acc;
-      },
-      {} as Record<(typeof fieldNames)[number], InputInterface>,
-    );
-
+    ];
+    const flatFields = getFlatFields(formContent);
     return {
-      isNew: { value: !arRef },
-      ...fieldValues,
+      content: formContent,
+      flatFields: flatFields,
+      fieldNames: flatFields.map((f) => f.name),
     };
-  };
-  const [values, setValues] = React.useState<FormState>(getDefaultValue());
+  });
+
+  const [values, setValues] = React.useState(getDefaultValue(form));
 
   const handleDisabledFields = () => {
     const disabledArCondition = ["1", "5"].includes(

@@ -2,6 +2,8 @@ import React, { FC } from "react";
 
 export interface FormInterface {
   content: FormContentInterface[];
+  flatFields: FieldInterface[];
+  fieldNames: string[];
 }
 
 export interface TableLineItemInterface {
@@ -21,6 +23,7 @@ export interface TableInterface {
   add?: TableAddInterface;
   canDelete?: boolean;
   search?: Function;
+  addItem?: Function;
   key?: string;
 }
 

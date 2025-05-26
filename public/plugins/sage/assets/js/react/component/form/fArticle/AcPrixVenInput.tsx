@@ -30,6 +30,14 @@ export const AcPrixVenInput = React.forwardRef(
       acCoef: 0,
       arPrixAch: 0,
     });
+    const getExpectedAcPrixVen = () => {
+      return Number(
+        (parentFormData.arPrixAch * parentFormData.acCoef).toFixed(2),
+      );
+    };
+    const [expectedAcPrixVen, setExpectedAcPrixVen] = React.useState(
+      getExpectedAcPrixVen(),
+    );
 
     const getDefaultValue = (): FormState => {
       const v = defaultValue ?? 0;
@@ -63,8 +71,7 @@ export const AcPrixVenInput = React.forwardRef(
             ...v.realAcPrixVen,
             value:
               v.valueLock.value &&
-              parentFormData.arPrixAch * parentFormData.acCoef !==
-                Number(v.acPrixVen.value)
+              expectedAcPrixVen !== Number(v.acPrixVen.value)
                 ? v.acPrixVen.value
                 : "0",
           },
@@ -73,7 +80,7 @@ export const AcPrixVenInput = React.forwardRef(
     };
 
     const resetAcPrixVen = () => {
-      const newValue = parentFormData.arPrixAch * parentFormData.acCoef;
+      const newValue = getExpectedAcPrixVen();
       setValues((v) => {
         return {
           ...v,
@@ -87,6 +94,7 @@ export const AcPrixVenInput = React.forwardRef(
           },
         };
       });
+      setExpectedAcPrixVen(newValue);
     };
 
     useImperativeHandle(ref, () => ({
@@ -102,7 +110,7 @@ export const AcPrixVenInput = React.forwardRef(
 
     React.useEffect(() => {
       handleRealAcPrixVen();
-    }, [values.acPrixVen.value]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [expectedAcPrixVen, values.acPrixVen.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     React.useEffect(() => {
       resetAcPrixVen();
@@ -138,8 +146,7 @@ export const AcPrixVenInput = React.forwardRef(
               <div className="sage_error_field">{values.acPrixVen.error}</div>
             )}
           </div>
-          {Number(values.acPrixVen.value) !==
-            parentFormData.arPrixAch * parentFormData.acCoef &&
+          {Number(values.acPrixVen.value) !== expectedAcPrixVen &&
             Number(values.acPrixVen.value) > 0 && (
               <Tooltip title={translations.sentences.acPrixVenInput} arrow>
                 <IconButton>

@@ -7,6 +7,8 @@ import {
   InputInterface,
 } from "../interface/InputInterface";
 import React, { ChangeEvent, Dispatch, SetStateAction } from "react";
+import { getSageMetadata } from "./getMetadata";
+import { MetadataInterface } from "../interface/WordpressInterface";
 
 export const stringValidator = ({
   value,
@@ -32,7 +34,32 @@ export const stringValidator = ({
   return "";
 };
 
-export function getFlatFields(form: FormInterface): FieldInterface[] {
+export interface DefaultFormState extends Record<string, InputInterface> {}
+
+const articleMeta: MetadataInterface[] = JSON.parse(
+  $("[data-sage-product]").attr("data-sage-product") ?? "null",
+);
+
+export const getDefaultValue = (form: FormInterface): DefaultFormState => {
+  const fieldValues = form.flatFields.reduce(
+    (acc, field) => {
+      acc[field.name] = {
+        value: getSageMetadata(field.name, articleMeta) ?? "",
+        validator: field.validator,
+      };
+      return acc;
+    },
+    {} as Record<(typeof form.fieldNames)[number], InputInterface>,
+  );
+
+  return {
+    ...fieldValues,
+  };
+};
+
+export function getFlatFields(
+  formContent: FormContentInterface[],
+): FieldInterface[] {
   const result: FieldInterface[] = [];
 
   const extractField = (array: any) => {
@@ -70,7 +97,7 @@ export function getFlatFields(form: FormInterface): FieldInterface[] {
     return result;
   };
 
-  extract(form.content);
+  extract(formContent);
   return result;
 }
 
