@@ -21,6 +21,10 @@ export interface FGlossaireInterface {
   glText: string;
 }
 
+export interface FArtglosseInterface {
+  glNo: number;
+}
+
 export interface FArtfournisseInterface {
   ctNum: string;
   afRefFourniss: string;

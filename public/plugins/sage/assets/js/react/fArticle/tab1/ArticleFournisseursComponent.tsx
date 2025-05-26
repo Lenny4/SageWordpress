@@ -3,7 +3,7 @@ import React, { ChangeEvent } from "react";
 import {
   FormInterface,
   InputInterface,
-  TableLineInterface,
+  TableLineItemInterface,
 } from "../../../interface/InputInterface";
 import {
   getFlatFields,
@@ -79,41 +79,47 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                   translations.words.supplierRef,
                   translations.words.buyPrice,
                 ],
-                lines: fArtfournisses.map(
-                  (fArtclient): TableLineInterface[] => {
+                items: fArtfournisses.map(
+                  (fArtclient): TableLineItemInterface => {
                     const refAfPrincipal = React.createRef();
                     setAfPrincipalRefs((x) => [...x, refAfPrincipal]);
-
-                    return [
-                      {
-                        Dom: <>{fArtclient.ctNum}</>,
-                      },
-                      {
-                        Dom: (
-                          <AfPrincipalInput
-                            defaultCtNum={selectedCtNum}
-                            ctNum={fArtclient.ctNum}
-                            setSelectedCtNumParent={setSelectedCtNum}
-                            ref={refAfPrincipal}
-                          />
-                        ),
-                      },
-                      {
-                        field: {
-                          name:
-                            prefix + "[" + fArtclient.ctNum + "].afRefFourniss",
-                          DomField: FormInput,
-                          hideLabel: true,
+                    return {
+                      item: fArtclient,
+                      lines: [
+                        {
+                          Dom: <>{fArtclient.ctNum}</>,
                         },
-                      },
-                      {
-                        field: {
-                          name: prefix + "[" + fArtclient.ctNum + "].afPrixAch",
-                          DomField: FormInput,
-                          hideLabel: true,
+                        {
+                          Dom: (
+                            <AfPrincipalInput
+                              defaultCtNum={selectedCtNum}
+                              ctNum={fArtclient.ctNum}
+                              setSelectedCtNumParent={setSelectedCtNum}
+                              ref={refAfPrincipal}
+                            />
+                          ),
                         },
-                      },
-                    ];
+                        {
+                          field: {
+                            name:
+                              prefix +
+                              "[" +
+                              fArtclient.ctNum +
+                              "].afRefFourniss",
+                            DomField: FormInput,
+                            hideLabel: true,
+                          },
+                        },
+                        {
+                          field: {
+                            name:
+                              prefix + "[" + fArtclient.ctNum + "].afPrixAch",
+                            DomField: FormInput,
+                            hideLabel: true,
+                          },
+                        },
+                      ],
+                    };
                   },
                 ),
               },

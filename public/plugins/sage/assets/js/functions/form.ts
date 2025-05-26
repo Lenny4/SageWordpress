@@ -35,7 +35,7 @@ export const stringValidator = ({
 export function getFlatFields(form: FormInterface): FieldInterface[] {
   const result: FieldInterface[] = [];
 
-  const extractField = (array: any[]) => {
+  const extractField = (array: any) => {
     if (Array.isArray(array)) {
       for (const item of array) {
         if (item.name) {
@@ -50,22 +50,16 @@ export function getFlatFields(form: FormInterface): FieldInterface[] {
   };
 
   const extract = (nodes: FormContentInterface[]) => {
-    const paths = ["fields", "table.lines"];
     for (const node of nodes) {
-      for (const path of paths) {
-        const parts = path.split(".");
-        let current: any = node;
-
-        for (const part of parts) {
-          if (current && typeof current === "object") {
-            current = current[part];
-          } else {
-            current = undefined;
-            break;
+      if (node.fields) {
+        extractField(node.fields);
+      }
+      if (node.table?.items) {
+        for (const item of node.table.items) {
+          if (item.lines) {
+            extractField(item.lines);
           }
         }
-
-        extractField(current);
       }
 
       if (node.children) {

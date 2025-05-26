@@ -609,6 +609,8 @@ final class SageTranslationUtils
                 'futherDescription' => __("Description complémentaire", 'sage'),
                 'glossary' => __("Glossaire", 'sage'),
                 'none' => __("Aucun", 'sage'),
+                'intitule' => __("Intitule", 'sage'),
+                'search' => __("Rechercher", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),
@@ -622,6 +624,8 @@ final class SageTranslationUtils
                 'cannotBeChangeOnWebsite' => __("Ce champ ne peut pas être modifié depuis le site internet. Vous pouvez le modifier directement dans Sage.", "sage"),
                 'arNomencl' => __("Le site internet sait uniquement gérer des article qui ont pour nomenclature \"Aucun\".", "sage"),
                 'arType' => __("Le site internet sait uniquement gérer des article qui ont pour type \"Standard\".", "sage"),
+                'deleteItem' => __("Supprimer cet élément.", "sage"),
+                'addItem' => __("Ajouter un élément.", "sage"),
             ],
             'enum' => [
                 'syncWebsiteState' => [

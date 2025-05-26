@@ -5,6 +5,7 @@ namespace App;
 use App\class\SageEntityMenu;
 use App\class\SageEntityMetadata;
 use App\class\SageShippingMethod__index__;
+use App\enum\Sage\GlossaireDomaineTypeEnum;
 use App\lib\SageRequest;
 use App\Utils\SageTranslationUtils;
 use App\Utils\TaxeUtils;
@@ -331,10 +332,20 @@ final class SageSettings
                     }
                     if (!is_null($obj)) {
                         foreach ($obj->fArtfournisses as $fArtfournisse) {
-                            foreach (["afRefFourniss", "afPrincipal", "afPrixAch"] as $field) {
+                            $fields = $sageSettings->getFirstLevelSelectionSet($sageGraphQl->_getFArtfournisseSelectionSet());
+                            foreach ($fields as $field) {
                                 $result[] = new SageEntityMetadata(field: '_fArtfournisses[' . $fArtfournisse->ctNumNavigation->ctNum . '].' . $field,
                                     value: static function (StdClass $fArticle) use ($fArtfournisse, $field) {
                                         return $fArticle->fArtfournisses[$fArtfournisse->ctNumNavigation->ctNum]->{$field};
+                                    });
+                            }
+                        }
+                        foreach ($obj->fArtglosses as $fArtglosse) {
+                            $fields = $sageSettings->getFirstLevelSelectionSet($sageGraphQl->_getFArtglossesSelectionSet());
+                            foreach ($fields as $field) {
+                                $result[] = new SageEntityMetadata(field: '_fArtglosses[' . $fArtglosse->glNo . '].' . $field,
+                                    value: static function (StdClass $fArticle) use ($fArtglosse, $field) {
+                                        return $fArticle->fArtglosses[$fArtglosse->glNo]->{$field};
                                     });
                             }
                         }
@@ -999,7 +1010,9 @@ final class SageSettings
                 'fFamilles' => $sageSettings->sage->sageGraphQl->getFFamilles(),
                 'pUnites' => $sageSettings->sage->sageGraphQl->getPUnites(),
                 'fPays' => $sageSettings->sage->sageGraphQl->getFPays(),
-                'fGlossaires' => $sageSettings->sage->sageGraphQl->getFGlossaires(),
+                'fGlossaires' => array_values(array_filter($sageSettings->sage->sageGraphQl->getFGlossaires(), static function (stdClass $fGlossaire) {
+                    return $fGlossaire->glDomaine === GlossaireDomaineTypeEnum::GlossaireDomaineTypeArticle->value;
+                })),
                 'panelId' => self::TARGET_PANEL,
                 'responseError' => $responseError,
                 'metaChanges' => $meta['changes'],
@@ -1197,6 +1210,15 @@ WHERE meta_key = %s
             }
         }
         return $sageEntityMetadatas;
+    }
+
+    public function getFirstLevelSelectionSet(array $selectionSets): array
+    {
+        return array_values(array_map(static function (array $selectionSet) {
+            return $selectionSet['name'];
+        }, array_filter($selectionSets, static function (array $selectionSet) {
+            return array_key_exists('name', $selectionSet);
+        })));
     }
 
     private function getFieldsForEntity(SageEntityMenu $sageEntityMenu): array

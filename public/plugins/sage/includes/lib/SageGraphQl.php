@@ -849,9 +849,8 @@ final class SageGraphQl
                     'where' => new RawObject('{ ctNum: { eq: null } }'),
                 ],
             ),
-            'fArtfournisses' => [
-                ...$this->_getFArtfournisseSelectionSet(),
-            ],
+            'fArtfournisses' => $this->_getFArtfournisseSelectionSet(),
+            'fArtglosses' => $this->_getFArtglossesSelectionSet(),
             'prices' => [
                 ...$this->_getPriceSelectionSet(),
                 'nCatTarif' => [
@@ -880,13 +879,14 @@ final class SageGraphQl
         ];
     }
 
-    private function _getFArtfournisseSelectionSet()
+    public function _getFArtfournisseSelectionSet()
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'afRefFourniss',
                 'afPrincipal',
                 'afPrixAch',
+                'ctNum'
             ]),
             'ctNumNavigation' => [
                 ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
@@ -894,6 +894,15 @@ final class SageGraphQl
                     'ctIntitule',
                 ]),
             ],
+        ];
+    }
+
+    public function _getFArtglossesSelectionSet()
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'glNo',
+            ]),
         ];
     }
 
@@ -1095,20 +1104,19 @@ final class SageGraphQl
             return null;
         }
         $fArticle = $fArticle->data->fArticles->items[0];
-
-        $fArtclients = [];
-        foreach ($fArticle->fArtclients as $fArtclient) {
-            $fArtclients[$fArtclient->acCategorie] = $fArtclient;
-        }
-        $fArticle->fArtclients = $fArtclients;
-
-        $fArtfournisses = [];
-        foreach ($fArticle->fArtfournisses as $fArtfournisse) {
-            $fArtfournisses[$fArtfournisse->ctNumNavigation->ctNum] = $fArtfournisse;
-        }
-        $fArticle->fArtfournisses = $fArtfournisses;
-
+        $this->addKeysToCollection($fArticle, 'fArtclients', 'acCategorie');
+        $this->addKeysToCollection($fArticle, 'fArtfournisses', 'ctNum');
+        $this->addKeysToCollection($fArticle, 'fArtglosses', 'glNo');
         return $fArticle;
+    }
+
+    private function addKeysToCollection(stdClass $object, string $prop, string $key): void
+    {
+        $collection = [];
+        foreach ($object->{$prop} as $value) {
+            $collection[$value->{$key}] = $value;
+        }
+        $object->{$prop} = $collection;
     }
 
     public function getAvailableArRef(

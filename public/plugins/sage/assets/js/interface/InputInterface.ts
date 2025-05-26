@@ -4,6 +4,11 @@ export interface FormInterface {
   content: FormContentInterface[];
 }
 
+export interface TableLineItemInterface {
+  item: any;
+  lines: TableLineInterface[];
+}
+
 export interface TableLineInterface {
   Dom?: React.ReactNode;
   field?: FieldInterface;
@@ -11,7 +16,16 @@ export interface TableLineInterface {
 
 export interface TableInterface {
   headers: string[];
-  lines: TableLineInterface[][];
+  items: TableLineItemInterface[];
+  fullWidth?: boolean;
+  add?: TableAddInterface;
+  canDelete?: boolean;
+  search?: Function;
+  key?: string;
+}
+
+export interface TableAddInterface {
+  table: TableInterface;
 }
 
 export interface FormContentInterface {
