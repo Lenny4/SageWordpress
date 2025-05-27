@@ -40,6 +40,7 @@ final class SageGraphQl
     private ?stdClass $pDossier = null;
     private ?array $fCatalogues = null;
     private ?array $fGlossaires = null;
+    private ?array $cbSysLibres = null;
 
     private function __construct(public ?Sage $sage)
     {
@@ -757,6 +758,7 @@ final class SageGraphQl
             "filter_value" => [
                 ''
             ],
+            "sort" => '{"cbIndice": "asc"}',
             "paged" => "1",
             "per_page" => "50"
         ];
@@ -1581,6 +1583,54 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         ];
     }
 
+    public function getCbSysLibres(
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false,
+        bool  $ignorePingApi = false
+    ): array|null|string
+    {
+        if (!is_null($this->cbSysLibres) && $getFromSage !== true) {
+            return $this->cbSysLibres;
+        }
+        $entityName = SageEntityMenu::CBSYSLIBRE_ENTITY_NAME;
+        $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
+        $queryParams = [
+            "filter_field" => [],
+            "filter_type" => [],
+            "filter_value" => [],
+            "sort" => '{"cbPos": "asc"}',
+            "paged" => "1",
+            "per_page" => "100"
+        ];
+        $selectionSets = $this->_getCbSysLibreSelectionSet();
+        $this->cbSysLibres = $this->getEntitiesAndSaveInOption(
+            $cacheName,
+            $getFromSage,
+            $entityName,
+            $queryParams,
+            $selectionSets,
+            $getError,
+            $ignorePingApi,
+            allPages: true,
+        );
+        return $this->cbSysLibres;
+    }
+
+    private function _getCbSysLibreSelectionSet()
+    {
+        return [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'cbFile',
+                'cbName',
+            ]),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'cbLen',
+                'cbType',
+            ]),
+        ];
+    }
+
     public function getFPays(
         bool  $useCache = true,
         ?bool $getFromSage = null,
@@ -1665,6 +1715,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             "filter_field" => [],
             "filter_type" => [],
             "filter_value" => [],
+            "sort" => '{"cbMarq": "asc"}',
             "paged" => "1",
             "per_page" => "1"
         ];

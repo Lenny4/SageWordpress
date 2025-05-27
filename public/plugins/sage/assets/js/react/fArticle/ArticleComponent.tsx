@@ -7,7 +7,6 @@ import { ArticleTab1Component } from "./tab1/ArticleTab1Component";
 import { TabInterface } from "../../interface/TabInterface";
 import { TabsComponent } from "../component/tab/TabsComponent";
 import { ArticleTab2Component } from "./tab2/ArticleTab2Component";
-import { ArticleTab3Component } from "./tab3/ArticleTab3Component";
 import { ArticleTab4Component } from "./tab4/ArticleTab4Component";
 
 const containerSelector = "#sage_product_data";
@@ -24,7 +23,7 @@ export const ArticleComponent = () => {
         Component: ArticleTab1Component,
       },
       { label: translations.words.descriptif, Component: ArticleTab2Component },
-      { label: translations.words.freeFields, Component: ArticleTab3Component },
+      // { label: translations.words.freeFields, Component: ArticleTab3Component },
       { label: translations.words.settings, Component: ArticleTab4Component },
     ].map(({ label, Component }) => {
       const ref = React.createRef();

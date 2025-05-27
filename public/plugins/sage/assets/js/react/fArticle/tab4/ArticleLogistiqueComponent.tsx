@@ -1,18 +1,21 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { useImperativeHandle } from "react";
+import { getTranslations } from "../../../functions/translations";
+import { MetadataInterface } from "../../../interface/WordpressInterface";
 import {
   FormContentInterface,
   FormInterface,
 } from "../../../interface/InputInterface";
 import { FormContentComponent } from "../../component/form/FormContentComponent";
-import Grid from "@mui/material/Grid";
-import { getTranslations } from "../../../functions/translations";
 
 let translations: any = getTranslations();
 
-export const ArticleTab3Component = React.forwardRef((props, ref) => {
-  // todo table F_ENUMSTATART for available options
-  const [form] = React.useState<FormInterface>(() => {
+const articleMeta: MetadataInterface[] = JSON.parse(
+  $("[data-sage-product]").attr("data-sage-product") ?? "null",
+);
+
+export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
+  const getForm = (): FormInterface => {
     const formContent: FormContentInterface[] = [
       {
         props: {
@@ -32,26 +35,17 @@ export const ArticleTab3Component = React.forwardRef((props, ref) => {
     return {
       content: formContent,
     };
-  });
-  const handleIsValid = () => {
-    console.log("handleIsValid");
-    return false;
   };
 
+  const [form, setForm] = React.useState<FormInterface>(getForm());
+
   useImperativeHandle(ref, () => ({
-    isValid(): boolean {
-      return handleIsValid();
-    },
     getForm() {
       return form;
     },
   }));
 
   return (
-    <Grid container>
-      <Grid size={{ xs: 12 }}>
-        <FormContentComponent content={form.content} transPrefix="fArticles" />
-      </Grid>
-    </Grid>
+    <FormContentComponent content={form.content} transPrefix="fArticles" />
   );
 });

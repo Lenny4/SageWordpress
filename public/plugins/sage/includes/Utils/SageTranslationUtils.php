@@ -611,6 +611,10 @@ final class SageTranslationUtils
                 'none' => __("Aucun", 'sage'),
                 'intitule' => __("Intitule", 'sage'),
                 'search' => __("Rechercher", 'sage'),
+                'statsFields' => __("Champs statistiques", 'sage'),
+                'treatmentOptions' => __("Options de traitement", 'sage'),
+                'logistics' => __("Logistique", 'sage'),
+                'deposit' => __("Dépôt", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),
