@@ -3,12 +3,12 @@ import { createRoot } from "react-dom/client";
 import React from "react";
 import { getTranslations } from "../../functions/translations";
 import Box from "@mui/material/Box";
-import { ArticleTab3Component } from "./ArticleTab3Component";
-import { ArticleTab4Component } from "./ArticleTab4Component";
 import { ArticleTab1Component } from "./tab1/ArticleTab1Component";
 import { TabInterface } from "../../interface/TabInterface";
 import { TabsComponent } from "../component/tab/TabsComponent";
 import { ArticleTab2Component } from "./tab2/ArticleTab2Component";
+import { ArticleTab3Component } from "./tab3/ArticleTab3Component";
+import { ArticleTab4Component } from "./tab4/ArticleTab4Component";
 
 const containerSelector = "#sage_product_data";
 let translations: any = getTranslations();

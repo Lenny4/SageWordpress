@@ -48,11 +48,17 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
             table: {
               headers: ["", translations.words.intitule, ""],
               fullWidth: true,
-              canDelete: true,
+              removeItem: (fGlossaire: FGlossaireInterface) => {
+                setFArtglosses((v) => {
+                  return v.filter(
+                    (fArtglosse) =>
+                      fArtglosse.glNo.toString() !== fGlossaire.glNo.toString(),
+                  );
+                });
+              },
               add: {
                 table: {
                   headers: [translations.words.intitule],
-                  key: "glNo",
                   addItem: (fGlossaire: FGlossaireInterface) => {
                     setFArtglosses((v) => {
                       return [
@@ -90,11 +96,11 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                           {
                             Dom: (
                               <Tooltip title={fGlossaire.glText} arrow>
-                                <p>
+                                <span>
                                   {fGlossaire.glText.length > 102
                                     ? fGlossaire.glText.slice(0, 102) + "..."
                                     : fGlossaire.glText}
-                                </p>
+                                </span>
                               </Tooltip>
                             ),
                           },
@@ -127,11 +133,11 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                     {
                       Dom: (
                         <Tooltip title={fGlossaire.glText} arrow>
-                          <p>
+                          <span>
                             {fGlossaire.glText.length > 102
                               ? fGlossaire.glText.slice(0, 102) + "..."
                               : fGlossaire.glText}
-                          </p>
+                          </span>
                         </Tooltip>
                       ),
                     },

@@ -48,6 +48,10 @@ export const FormTableComponent: React.FC<State> = ({
     }
   };
 
+  const thisOnSelectRemove = (item: TableLineItemInterface) => {
+    table.removeItem(item.item);
+  };
+
   return (
     <>
       {table.add && (
@@ -87,7 +91,7 @@ export const FormTableComponent: React.FC<State> = ({
       >
         <thead>
           <tr>
-            {table.canDelete && <th></th>}
+            {table.removeItem && <th></th>}
             {table.addItem && <th></th>}
             {table.headers.map((header, index) => (
               <th
@@ -95,7 +99,7 @@ export const FormTableComponent: React.FC<State> = ({
                 style={{
                   textAlign: "left",
                   paddingLeft:
-                    (index === 0 && !table.canDelete) || header === ""
+                    (index === 0 && !table.removeItem) || header === ""
                       ? 0
                       : padding,
                 }}
@@ -115,7 +119,7 @@ export const FormTableComponent: React.FC<State> = ({
             })
             .map((item, indexItem) => (
               <tr key={indexItem}>
-                {table.canDelete && (
+                {table.removeItem && (
                   <td>
                     <Tooltip
                       title={translations.sentences.deleteItem}
@@ -124,7 +128,7 @@ export const FormTableComponent: React.FC<State> = ({
                     >
                       <IconButton
                         onClick={() => {
-                          console.log("todo");
+                          thisOnSelectRemove(item);
                         }}
                       >
                         <RemoveIcon fontSize="small" />
@@ -168,7 +172,7 @@ export const FormTableComponent: React.FC<State> = ({
           {table.add && (
             <tr>
               <td
-                colSpan={table.headers.length + (table.canDelete ? 1 : 0)}
+                colSpan={table.headers.length + (table.removeItem ? 1 : 0)}
                 style={{ textAlign: "center" }}
               >
                 <Tooltip

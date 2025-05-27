@@ -1,7 +1,7 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React from "react";
-import { getTranslations } from "../../functions/translations";
 import Box from "@mui/material/Box";
+import { getTranslations } from "../../../functions/translations";
 
 const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
 let translations: any = getTranslations();

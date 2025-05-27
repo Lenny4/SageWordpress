@@ -20,10 +20,9 @@ export interface TableInterface {
   items: TableLineItemInterface[];
   fullWidth?: boolean;
   add?: TableAddInterface;
-  canDelete?: boolean;
+  removeItem?: Function;
   search?: Function;
   addItem?: Function;
-  key?: string;
 }
 
 export interface TableAddInterface {
