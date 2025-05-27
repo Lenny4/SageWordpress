@@ -36,6 +36,7 @@ export const FormInput: React.FC<FieldInterface> = ({
     }
   }, [values.value]);
 
+  name = "_sage_" + name;
   return (
     <>
       <label
@@ -44,7 +45,7 @@ export const FormInput: React.FC<FieldInterface> = ({
           display: hideLabel ? "none" : "block",
         }}
       >
-        <Tooltip title={name.replace("_sage_", "")} arrow>
+        <Tooltip title={name.replace("_sage_", "")} arrow placement="top">
           <span>{label}</span>
         </Tooltip>
       </label>

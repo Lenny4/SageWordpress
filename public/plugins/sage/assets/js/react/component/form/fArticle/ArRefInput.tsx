@@ -103,7 +103,7 @@ export const ArRefInput = React.forwardRef(
     return (
       <>
         <label htmlFor={"_sage_arRef"}>
-          <Tooltip title={"arRef"} arrow>
+          <Tooltip title={"arRef"} arrow placement="top">
             <span>{translations["fArticles"]["arRef"]}</span>
           </Tooltip>
         </label>

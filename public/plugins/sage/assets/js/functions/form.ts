@@ -116,6 +116,12 @@ export const getDomsToSetParentFormData = (
             }
           }
         }
+        if (child?.Dom?.ref) {
+          doms.push(child?.Dom);
+        }
+        if (child?.children) {
+          extract(child.children);
+        }
       }
     }
   };

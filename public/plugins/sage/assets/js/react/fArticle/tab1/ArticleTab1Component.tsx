@@ -21,6 +21,7 @@ import { ArticleCatTarifComponent } from "./ArticleCatTarifComponent";
 import { ArticleFournisseursComponent } from "./ArticleFournisseursComponent";
 import { ArRefInput } from "../../component/form/fArticle/ArRefInput";
 import { MetadataInterface } from "../../../interface/WordpressInterface";
+import { ArPrixVenInput } from "../../component/form/fArticle/ArPrixVenInput";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
@@ -42,6 +43,15 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
   const [arType, setArType] = React.useState<string>(
     (getSageMetadata("arType", articleMeta) ?? "0").toString(),
   );
+
+  const onArCoefChanged: TriggerFormContentChanged = (name, newValue) => {
+    const doms = getDomsToSetParentFormData(form.content);
+    for (const dom of doms) {
+      if (dom.ref.current?.onArCoefChanged) {
+        dom.ref.current.onArCoefChanged(newValue);
+      }
+    }
+  };
 
   const onArPrixAchChanged: TriggerFormContentChanged = (name, newValue) => {
     const doms = getDomsToSetParentFormData(form.content);
@@ -204,6 +214,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
               {
                 name: "arCoef",
                 DomField: FormInput,
+                triggerFormContentChanged: onArCoefChanged,
                 type: "number",
                 initValues: {
                   value: getSageMetadata("arCoef", articleMeta) ?? "",
@@ -223,17 +234,14 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                     props: {
                       size: { xs: 12, md: 8 },
                     },
-                    fields: [
-                      {
-                        name: "arPrixVen",
-                        DomField: FormInput,
-                        type: "number",
-                        initValues: {
-                          value:
-                            getSageMetadata("arPrixVen", articleMeta) ?? "",
-                        },
-                      },
-                    ],
+                    Dom: (
+                      <ArPrixVenInput
+                        defaultValue={(
+                          getSageMetadata("arPrixVen", articleMeta) ?? "0"
+                        ).toString()}
+                        ref={React.createRef()}
+                      />
+                    ),
                   },
                   {
                     props: {

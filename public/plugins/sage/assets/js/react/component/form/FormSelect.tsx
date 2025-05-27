@@ -39,6 +39,7 @@ export const FormSelect: React.FC<FieldInterface> = ({
     }
   }, [values.value]);
 
+  name = "_sage_" + name;
   const thisReadOnly = readOnly || values.readOnly;
   return (
     <>
@@ -48,7 +49,7 @@ export const FormSelect: React.FC<FieldInterface> = ({
           display: hideLabel ? "none" : "block",
         }}
       >
-        <Tooltip title={name.replace("_sage_", "")} arrow>
+        <Tooltip title={name.replace("_sage_", "")} arrow placement="top">
           <span>{label}</span>
         </Tooltip>
       </label>

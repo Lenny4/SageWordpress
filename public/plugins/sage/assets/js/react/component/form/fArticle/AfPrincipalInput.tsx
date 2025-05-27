@@ -29,7 +29,7 @@ export const AfPrincipalInput = React.forwardRef(
     return (
       <>
         <label htmlFor={name} style={{ display: "none" }}>
-          <Tooltip title={name} arrow>
+          <Tooltip title={name} arrow placement="top">
             <span>{translations.words.supplierRef}</span>
           </Tooltip>
         </label>

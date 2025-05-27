@@ -8,42 +8,41 @@ import InfoIcon from "@mui/icons-material/Info";
 
 let translations: any = getTranslations();
 
-export type AcPrixVenInputState = {
+export type ArPrixVenInputState = {
   defaultValue: number;
-  acCategorie: number | string;
 };
 
 type FormState = {
-  acPrixVen: InputInterface;
-  realAcPrixVen: InputInterface;
+  arPrixVen: InputInterface;
+  realArPrixVen: InputInterface;
   valueLock: InputInterface;
 };
 
 interface ParentFormData {
-  acCoef: number;
+  arCoef: number;
   arPrixAch: number;
 }
 
-export const AcPrixVenInput = React.forwardRef(
-  ({ defaultValue, acCategorie }: AcPrixVenInputState, ref) => {
+export const ArPrixVenInput = React.forwardRef(
+  ({ defaultValue }: ArPrixVenInputState, ref) => {
     const [parentFormData, setParentFormData] = React.useState<ParentFormData>({
-      acCoef: 0,
+      arCoef: 0,
       arPrixAch: 0,
     });
-    const getExpectedAcPrixVen = () => {
+    const getExpectedArPrixVen = () => {
       return Number(
-        (parentFormData.arPrixAch * parentFormData.acCoef).toFixed(2),
+        (parentFormData.arPrixAch * parentFormData.arCoef).toFixed(2),
       );
     };
-    const [expectedAcPrixVen, setExpectedAcPrixVen] = React.useState(
-      getExpectedAcPrixVen(),
+    const [expectedArPrixVen, setExpectedArPrixVen] = React.useState(
+      getExpectedArPrixVen(),
     );
 
     const getDefaultValue = (): FormState => {
       const v = defaultValue ?? 0;
       return {
-        acPrixVen: { value: v.toString() },
-        realAcPrixVen: { value: v.toString() },
+        arPrixVen: { value: v.toString() },
+        realArPrixVen: { value: v.toString() },
         valueLock: { value: v > 0 },
       };
     };
@@ -63,29 +62,29 @@ export const AcPrixVenInput = React.forwardRef(
         });
         handleChangeInputGeneric(event, prop, setValues);
       };
-    const handleRealAcPrixVen = () => {
+    const handleRealArPrixVen = () => {
       setValues((v) => {
         return {
           ...v,
-          realAcPrixVen: {
-            ...v.realAcPrixVen,
+          realArPrixVen: {
+            ...v.realArPrixVen,
             value:
               v.valueLock.value &&
-              expectedAcPrixVen !== Number(v.acPrixVen.value)
-                ? v.acPrixVen.value
+              expectedArPrixVen !== Number(v.arPrixVen.value)
+                ? v.arPrixVen.value
                 : "0",
           },
         };
       });
     };
 
-    const resetAcPrixVen = () => {
-      const newValue = getExpectedAcPrixVen();
+    const resetArPrixVen = () => {
+      const newValue = getExpectedArPrixVen();
       setValues((v) => {
         return {
           ...v,
-          acPrixVen: {
-            ...v.acPrixVen,
+          arPrixVen: {
+            ...v.arPrixVen,
             value: newValue.toString(),
           },
           valueLock: {
@@ -94,19 +93,17 @@ export const AcPrixVenInput = React.forwardRef(
           },
         };
       });
-      setExpectedAcPrixVen(newValue);
+      setExpectedArPrixVen(newValue);
     };
 
     useImperativeHandle(ref, () => ({
-      onAcCoefChanged(data: number, thisAcCategorie: number | string) {
-        if (acCategorie.toString() === thisAcCategorie.toString()) {
-          setParentFormData((x) => {
-            return {
-              ...x,
-              acCoef: data,
-            };
-          });
-        }
+      onArCoefChanged(data: number) {
+        setParentFormData((x) => {
+          return {
+            ...x,
+            arCoef: data,
+          };
+        });
       },
       onArPrixAchChanged(data: number) {
         setParentFormData((x) => {
@@ -119,45 +116,45 @@ export const AcPrixVenInput = React.forwardRef(
     }));
 
     React.useEffect(() => {
-      handleRealAcPrixVen();
-    }, [expectedAcPrixVen, values.acPrixVen.value]); // eslint-disable-line react-hooks/exhaustive-deps
+      handleRealArPrixVen();
+    }, [expectedArPrixVen, values.arPrixVen.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     React.useEffect(() => {
-      resetAcPrixVen();
+      resetArPrixVen();
     }, [parentFormData]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
       <>
-        <label htmlFor={"_sage_acPrixVen"}>
-          <Tooltip title={"acPrixVen"} arrow placement="top">
-            <span>{translations["fArticles"]["acPrixVen"]}</span>
+        <label htmlFor={"_sage_arPrixVen"}>
+          <Tooltip title={"arPrixVen"} arrow placement="top">
+            <span>{translations["fArticles"]["arPrixVen"]}</span>
           </Tooltip>
         </label>
         <div style={{ display: "flex", alignItems: "flex-start" }}>
           <div style={{ position: "relative", flex: 1 }}>
             <input
-              id={"_sage_fArtclients[" + acCategorie + "].acPrixVen"}
-              name={"_sage_fArtclients[" + acCategorie + "].acPrixVen"}
+              id={"_sage_arPrixVen"}
+              name={"_sage_arPrixVen"}
               type={"hidden"}
-              value={values.realAcPrixVen.value}
+              value={values.realArPrixVen.value}
             />
             <input
               type={"number"}
-              value={values.acPrixVen.value}
-              onChange={handleChange("acPrixVen")}
+              value={values.arPrixVen.value}
+              onChange={handleChange("arPrixVen")}
               style={{ width: "100%" }}
               onBlur={() => {
-                if (Number(values.acPrixVen.value) === 0) {
-                  resetAcPrixVen();
+                if (Number(values.arPrixVen.value) === 0) {
+                  resetArPrixVen();
                 }
               }}
             />
-            {values.acPrixVen.error && (
-              <div className="sage_error_field">{values.acPrixVen.error}</div>
+            {values.arPrixVen.error && (
+              <div className="sage_error_field">{values.arPrixVen.error}</div>
             )}
           </div>
-          {Number(values.acPrixVen.value) !== expectedAcPrixVen &&
-            Number(values.acPrixVen.value) > 0 && (
+          {Number(values.arPrixVen.value) !== expectedArPrixVen &&
+            Number(values.arPrixVen.value) > 0 && (
               <div style={{ position: "relative", top: "-2px" }}>
                 <Tooltip title={translations.sentences.acPrixVenInput} arrow>
                   <IconButton>
