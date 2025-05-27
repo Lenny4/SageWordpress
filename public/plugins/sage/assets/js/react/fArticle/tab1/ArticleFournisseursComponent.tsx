@@ -1,17 +1,11 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { ChangeEvent } from "react";
+import React, { useImperativeHandle } from "react";
 import {
   FormContentInterface,
   FormInterface,
   TableLineItemInterface,
+  TriggerFormContentChanged,
 } from "../../../interface/InputInterface";
-import {
-  DefaultFormState,
-  getDefaultValue,
-  getFlatFields,
-  handleChangeInputGeneric,
-  handleChangeSelectGeneric,
-} from "../../../functions/form";
 import { FormContentComponent } from "../../component/form/FormContentComponent";
 import { getListObjectSageMetadata } from "../../../functions/getMetadata";
 import { getTranslations } from "../../../functions/translations";
@@ -19,6 +13,7 @@ import { FormInput } from "../../component/form/FormInput";
 import { FArtfournisseInterface } from "../../../interface/FArticleInterface";
 import { MetadataInterface } from "../../../interface/WordpressInterface";
 import { AfPrincipalInput } from "../../component/form/fArticle/AfPrincipalInput";
+import { getDomsToSetParentFormData } from "../../../functions/form";
 
 let translations: any = getTranslations();
 
@@ -27,20 +22,7 @@ const articleMeta: MetadataInterface[] = JSON.parse(
 );
 
 export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
-  const handleChange =
-    (prop: keyof DefaultFormState) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      handleChangeInputGeneric(event, prop, setValues);
-    };
-
-  const handleChangeSelect =
-    (prop: keyof DefaultFormState) =>
-    (event: ChangeEvent<HTMLSelectElement>) => {
-      handleChangeSelectGeneric(event, prop, setValues);
-    };
-
   const prefix = "fArtfournisses";
-
   const [selectedCtNum, setSelectedCtNum] = React.useState<string>(() => {
     const fArtfournisses: FArtfournisseInterface[] = getListObjectSageMetadata(
       prefix,
@@ -51,11 +33,19 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
       fArtfournisses.find((x) => x.afPrincipal.toString() === "1")?.ctNum ?? ""
     );
   });
-  const [afPrincipalRefs, setAfPrincipalRefs] = React.useState<any[]>([]);
-
   const [fArtfournisses] = React.useState<FArtfournisseInterface[]>(
     getListObjectSageMetadata(prefix, articleMeta, "ctNum"),
   );
+
+  const onAfPrincipalChanged: TriggerFormContentChanged = (name, newValue) => {
+    const doms = getDomsToSetParentFormData(form.content);
+    for (const dom of doms) {
+      if (dom.ref.current?.onAfPrincipalChanged) {
+        dom.ref.current.onAfPrincipalChanged(newValue);
+      }
+    }
+  };
+
   const [form] = React.useState<FormInterface>(() => {
     const formContent: FormContentInterface[] = [
       {
@@ -78,8 +68,6 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
               ],
               items: fArtfournisses.map(
                 (fArtclient): TableLineItemInterface => {
-                  const refAfPrincipal = React.createRef();
-                  setAfPrincipalRefs((x) => [...x, refAfPrincipal]);
                   return {
                     item: fArtclient,
                     lines: [
@@ -91,8 +79,8 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                           <AfPrincipalInput
                             defaultCtNum={selectedCtNum}
                             ctNum={fArtclient.ctNum}
-                            setSelectedCtNumParent={setSelectedCtNum}
-                            ref={refAfPrincipal}
+                            onAfPrincipalChangedParent={onAfPrincipalChanged}
+                            ref={React.createRef()}
                           />
                         ),
                       },
@@ -102,6 +90,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                             prefix + "[" + fArtclient.ctNum + "].afRefFourniss",
                           DomField: FormInput,
                           hideLabel: true,
+                          initValues: { value: fArtclient.afRefFourniss },
                         },
                       },
                       {
@@ -109,6 +98,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                           name: prefix + "[" + fArtclient.ctNum + "].afPrixAch",
                           DomField: FormInput,
                           hideLabel: true,
+                          initValues: { value: fArtclient.afPrixAch },
                         },
                       },
                     ],
@@ -120,29 +110,18 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
         ],
       },
     ];
-    const flatFields = getFlatFields(formContent);
     return {
       content: formContent,
-      flatFields: flatFields,
-      fieldNames: flatFields.map((f) => f.name),
     };
   });
 
-  const [values, setValues] = React.useState(getDefaultValue(form));
-
-  React.useEffect(() => {
-    for (const afPrincipalRef of afPrincipalRefs) {
-      afPrincipalRef.current.onParentFormChange(selectedCtNum);
-    }
-  }, [selectedCtNum]);
+  useImperativeHandle(ref, () => ({
+    getForm() {
+      return form;
+    },
+  }));
 
   return (
-    <FormContentComponent
-      content={form.content}
-      values={values}
-      handleChange={handleChange}
-      transPrefix="fArticles"
-      handleChangeSelect={handleChangeSelect}
-    />
+    <FormContentComponent content={form.content} transPrefix="fArticles" />
   );
 });

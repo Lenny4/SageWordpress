@@ -626,6 +626,7 @@ final class SageTranslationUtils
                 'arType' => __("Le site internet sait uniquement gérer des article qui ont pour type \"Standard\".", "sage"),
                 'deleteItem' => __("Supprimer cet élément.", "sage"),
                 'addItem' => __("Ajouter un élément.", "sage"),
+                'addThisItem' => __("Ajouter cet élément.", "sage"),
             ],
             'enum' => [
                 'syncWebsiteState' => [

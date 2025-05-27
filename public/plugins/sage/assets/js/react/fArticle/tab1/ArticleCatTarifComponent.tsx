@@ -1,17 +1,11 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { ChangeEvent, useImperativeHandle } from "react";
+import React, { useImperativeHandle } from "react";
 import {
   FormContentInterface,
   FormInterface,
   TableLineItemInterface,
+  TriggerFormContentChanged,
 } from "../../../interface/InputInterface";
-import {
-  DefaultFormState,
-  getDefaultValue,
-  getFlatFields,
-  handleChangeInputGeneric,
-  handleChangeSelectGeneric,
-} from "../../../functions/form";
 import { FormContentComponent } from "../../component/form/FormContentComponent";
 import { getListObjectSageMetadata } from "../../../functions/getMetadata";
 import { getTranslations } from "../../../functions/translations";
@@ -20,6 +14,10 @@ import { FArticleClientInterface } from "../../../interface/FArticleInterface";
 import { AcPrixVenInput } from "../../component/form/fArticle/AcPrixVenInput";
 import { ArticlePricesComponent } from "../ArticlePricesComponent";
 import { MetadataInterface } from "../../../interface/WordpressInterface";
+import {
+  getDomsToSetParentFormData,
+  getKeyFromName,
+} from "../../../functions/form";
 
 let translations: any = getTranslations();
 
@@ -32,22 +30,22 @@ const pCattarifs: any[] = JSON.parse(
 );
 
 export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
-  const handleChange =
-    (prop: keyof DefaultFormState) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      handleChangeInputGeneric(event, prop, setValues);
-    };
-
-  const handleChangeSelect =
-    (prop: keyof DefaultFormState) =>
-    (event: ChangeEvent<HTMLSelectElement>) => {
-      handleChangeSelectGeneric(event, prop, setValues);
-    };
   const prefix = "fArtclients";
   const [fArtclients] = React.useState<FArticleClientInterface[]>(
     getListObjectSageMetadata(prefix, articleMeta, "acCategorie"),
   );
-  const [acPrixVenRefs, setAcPrixVenRefs] = React.useState<any[]>([]);
+
+  const onAcCoefChanged: TriggerFormContentChanged = (name, newValue) => {
+    const doms = getDomsToSetParentFormData(form.content);
+    for (const dom of doms) {
+      if (dom.ref.current?.onAcCoefChanged) {
+        dom.ref.current?.onAcCoefChanged(
+          Number(newValue),
+          getKeyFromName(name),
+        );
+      }
+    }
+  };
 
   const [form] = React.useState<FormInterface>(() => {
     const formContent: FormContentInterface[] = [
@@ -70,8 +68,6 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
                 translations.words.discount,
               ],
               items: fArtclients.map((fArtclient): TableLineItemInterface => {
-                const refAcPrixVen = React.createRef();
-                setAcPrixVenRefs((x) => [...x, refAcPrixVen]);
                 return {
                   item: fArtclient,
                   lines: [
@@ -85,6 +81,8 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
                         DomField: FormInput,
                         type: "number",
                         hideLabel: true,
+                        triggerFormContentChanged: onAcCoefChanged,
+                        initValues: { value: fArtclient.acCoef },
                       },
                     },
                     {
@@ -92,7 +90,7 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
                         <AcPrixVenInput
                           defaultValue={fArtclient.acPrixVen}
                           acCategorie={fArtclient.acCategorie}
-                          ref={refAcPrixVen}
+                          ref={React.createRef()}
                         />
                       ),
                     },
@@ -103,6 +101,7 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
                         DomField: FormInput,
                         type: "number",
                         hideLabel: true,
+                        initValues: { value: fArtclient.acRemise },
                       },
                     },
                   ],
@@ -119,39 +118,18 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
         ],
       },
     ];
-    const flatFields = getFlatFields(formContent);
     return {
       content: formContent,
-      flatFields: flatFields,
-      fieldNames: flatFields.map((f) => f.name),
     };
   });
 
-  const [values, setValues] = React.useState(getDefaultValue(form));
-  const [arPrixAch, setArPrixAch] = React.useState<string>("0");
-
   useImperativeHandle(ref, () => ({
-    onParentFormChange(v: any): void {
-      setArPrixAch(v.arPrixAch.value);
+    getForm() {
+      return form;
     },
   }));
 
-  React.useEffect(() => {
-    for (const acPrixVenRef of acPrixVenRefs) {
-      acPrixVenRef.current.onParentFormChange({
-        arPrixAch,
-        ...values,
-      });
-    }
-  }, [values, arPrixAch]); // eslint-disable-line react-hooks/exhaustive-deps
-
   return (
-    <FormContentComponent
-      content={form.content}
-      values={values}
-      handleChange={handleChange}
-      transPrefix="fArticles"
-      handleChangeSelect={handleChangeSelect}
-    />
+    <FormContentComponent content={form.content} transPrefix="fArticles" />
   );
 });

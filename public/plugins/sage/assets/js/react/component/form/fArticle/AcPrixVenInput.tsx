@@ -98,12 +98,22 @@ export const AcPrixVenInput = React.forwardRef(
     };
 
     useImperativeHandle(ref, () => ({
-      onParentFormChange(parentForm: any): void {
-        setParentFormData({
-          acCoef: Number(
-            parentForm["fArtclients[" + acCategorie + "].acCoef"].value,
-          ),
-          arPrixAch: Number(parentForm.arPrixAch),
+      onAcCoefChanged(data: number, thisAcCategorie: number | string) {
+        if (acCategorie.toString() === thisAcCategorie.toString()) {
+          setParentFormData((x) => {
+            return {
+              ...x,
+              acCoef: data,
+            };
+          });
+        }
+      },
+      onArPrixAchChanged(data: number) {
+        setParentFormData((x) => {
+          return {
+            ...x,
+            arPrixAch: data,
+          };
         });
       },
     }));

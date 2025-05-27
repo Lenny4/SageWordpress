@@ -1,14 +1,11 @@
 import {
   ErrorMessageInterface,
-  FieldInterface,
   FormContentInterface,
   FormInputOptions,
   FormInterface,
   InputInterface,
 } from "../interface/InputInterface";
-import React, { ChangeEvent, Dispatch, SetStateAction } from "react";
-import { getSageMetadata } from "./getMetadata";
-import { MetadataInterface } from "../interface/WordpressInterface";
+import React, { Dispatch, SetStateAction } from "react";
 
 export const stringValidator = ({
   value,
@@ -33,73 +30,6 @@ export const stringValidator = ({
   }
   return "";
 };
-
-export interface DefaultFormState extends Record<string, InputInterface> {}
-
-const articleMeta: MetadataInterface[] = JSON.parse(
-  $("[data-sage-product]").attr("data-sage-product") ?? "null",
-);
-
-export const getDefaultValue = (form: FormInterface): DefaultFormState => {
-  const fieldValues = form.flatFields.reduce(
-    (acc, field) => {
-      acc[field.name] = {
-        value: getSageMetadata(field.name, articleMeta) ?? "",
-        validator: field.validator,
-      };
-      return acc;
-    },
-    {} as Record<(typeof form.fieldNames)[number], InputInterface>,
-  );
-
-  return {
-    ...fieldValues,
-  };
-};
-
-export function getFlatFields(
-  formContent: FormContentInterface[],
-): FieldInterface[] {
-  const result: FieldInterface[] = [];
-
-  const extractField = (array: any) => {
-    if (Array.isArray(array)) {
-      for (const item of array) {
-        if (item.name) {
-          result.push(item);
-        } else if (item.field?.name) {
-          result.push(item.field);
-        } else if (Array.isArray(item)) {
-          extractField(item);
-        }
-      }
-    }
-  };
-
-  const extract = (nodes: FormContentInterface[]) => {
-    for (const node of nodes) {
-      if (node.fields) {
-        extractField(node.fields);
-      }
-      if (node.table?.items) {
-        for (const item of node.table.items) {
-          if (item.lines) {
-            extractField(item.lines);
-          }
-        }
-      }
-
-      if (node.children) {
-        extract(node.children);
-      }
-    }
-
-    return result;
-  };
-
-  extract(formContent);
-  return result;
-}
 
 export function transformOptionsObject(
   obj: Record<string | number, string>,
@@ -161,23 +91,41 @@ export const handleChangeInputGeneric = (
   });
 };
 
-export const handleChangeSelectGeneric = (
-  event: ChangeEvent<HTMLSelectElement>,
-  prop: any,
-  setValues: Dispatch<SetStateAction<Record<string, InputInterface>>>,
+export const getDomsToSetParentFormData = (
+  contents: FormContentInterface[],
 ) => {
-  setValues((v) => {
-    const result = {
-      ...v,
-      [prop]: {
-        ...v[prop],
-        value: event.target.value as string,
-        error: "",
-      },
-    };
-    setTimeout(() => {
-      isValidGeneric(result, setValues);
-    });
-    return result;
-  });
+  // todo améliorer pour que ce soit récursive et chercher autre part que dans table et tabs
+  const doms: any[] = [];
+  const extract = (contents: FormContentInterface[]) => {
+    for (const content of contents) {
+      for (const child of content.children) {
+        if (child?.tabs) {
+          for (const tab of child.tabs) {
+            if (tab?.ref?.current?.getForm) {
+              const form: FormInterface = tab?.ref?.current?.getForm();
+              extract(form.content);
+            }
+          }
+        }
+        if (child?.table) {
+          for (const item of child?.table.items) {
+            for (const line of item.lines) {
+              if (line?.Dom?.ref) {
+                doms.push(line?.Dom);
+              }
+            }
+          }
+        }
+      }
+    }
+  };
+  extract(contents);
+  return doms;
+};
+
+export const getKeyFromName = (name: string) => {
+  return name
+    .match(/\[[^\]]+\]/)[0]
+    .replace("[", "")
+    .replace("]", "");
 };

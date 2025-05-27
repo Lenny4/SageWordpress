@@ -1,26 +1,45 @@
 import * as React from "react";
-import { FormInputProps } from "../../../interface/InputInterface";
+import { ChangeEvent } from "react";
+import { FieldInterface } from "../../../interface/InputInterface";
 import { Tooltip } from "@mui/material";
 import {
   CannotBeChangeOnWebsiteComponent,
   FieldTooltipComponent,
 } from "./FormFieldComponent";
 
-export const FormSelect: React.FC<FormInputProps> = ({
+export const FormSelect: React.FC<FieldInterface> = ({
   label,
   name,
-  value,
   readOnly,
-  onChangeSelect,
   hideLabel,
   options = [],
   errorMessage,
   cannotBeChangeOnWebsite,
   tooltip,
+  initValues,
+  triggerFormContentChanged,
 }) => {
+  const [values, setValues] = React.useState(initValues);
   const hasOption = !!options.find(
-    (o) => o.value.toString() === value.toString(),
+    (o) => o.value.toString() === values.value.toString(),
   );
+  const handleChangeSelect = (event: ChangeEvent<HTMLSelectElement>) => {
+    setValues((v) => {
+      return {
+        ...v,
+        value: event.target.value as string,
+        error: "",
+      };
+    });
+  };
+
+  React.useEffect(() => {
+    if (triggerFormContentChanged) {
+      triggerFormContentChanged(name, values.value);
+    }
+  }, [values.value]);
+
+  const thisReadOnly = readOnly || values.readOnly;
   return (
     <>
       <label
@@ -38,9 +57,9 @@ export const FormSelect: React.FC<FormInputProps> = ({
           <select
             id={name}
             name={name}
-            value={value}
-            onChange={onChangeSelect}
-            className={readOnly ? "grayed-out-select" : ""}
+            value={values.value}
+            onChange={handleChangeSelect}
+            className={thisReadOnly ? "grayed-out-select" : ""}
             style={{ width: "100%" }}
           >
             {options.map((opt, index) => {
@@ -48,9 +67,9 @@ export const FormSelect: React.FC<FormInputProps> = ({
                 <option
                   disabled={
                     opt.disabled ||
-                    (readOnly &&
+                    (thisReadOnly &&
                       !(
-                        opt.value.toString() === value.toString() ||
+                        opt.value.toString() === values.value.toString() ||
                         (!hasOption && index === 0)
                       ))
                   }

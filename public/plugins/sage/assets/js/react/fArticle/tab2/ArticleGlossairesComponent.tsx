@@ -1,5 +1,5 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { ChangeEvent } from "react";
+import React, { useImperativeHandle } from "react";
 import { getTranslations } from "../../../functions/translations";
 import { MetadataInterface } from "../../../interface/WordpressInterface";
 import {
@@ -7,13 +7,6 @@ import {
   FormInterface,
   TableLineItemInterface,
 } from "../../../interface/InputInterface";
-import {
-  DefaultFormState,
-  getDefaultValue,
-  getFlatFields,
-  handleChangeInputGeneric,
-  handleChangeSelectGeneric,
-} from "../../../functions/form";
 import { getListObjectSageMetadata } from "../../../functions/getMetadata";
 import { FormContentComponent } from "../../component/form/FormContentComponent";
 import {
@@ -35,18 +28,6 @@ const fGlossaires: FGlossaireInterface[] = JSON.parse(
 
 export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
   const prefix = "fArtglosses";
-  const handleChange =
-    (prop: keyof DefaultFormState) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      handleChangeInputGeneric(event, prop, setValues);
-    };
-
-  const handleChangeSelect =
-    (prop: keyof DefaultFormState) =>
-    (event: ChangeEvent<HTMLSelectElement>) => {
-      handleChangeSelectGeneric(event, prop, setValues);
-    };
-
   const [fArtglosses, setFArtglosses] = React.useState<FArtglosseInterface[]>(
     getListObjectSageMetadata(prefix, articleMeta, "glNo"),
   );
@@ -135,6 +116,9 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                         DomField: FormInput,
                         type: "hidden",
                         hideLabel: true,
+                        initValues: {
+                          value: fGlossaire.glNo,
+                        },
                       },
                     },
                     {
@@ -159,29 +143,24 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
         ],
       },
     ];
-    const flatFields = getFlatFields(formContent);
     return {
       content: formContent,
-      flatFields: flatFields,
-      fieldNames: flatFields.map((f) => f.name),
     };
   };
 
   const [form, setForm] = React.useState<FormInterface>(getForm());
 
-  const [values, setValues] = React.useState(getDefaultValue(form));
+  useImperativeHandle(ref, () => ({
+    getForm() {
+      return form;
+    },
+  }));
 
   React.useEffect(() => {
     setForm(getForm());
   }, [fArtglosses]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <FormContentComponent
-      content={form.content}
-      values={values}
-      handleChange={handleChange}
-      transPrefix="fArticles"
-      handleChangeSelect={handleChangeSelect}
-    />
+    <FormContentComponent content={form.content} transPrefix="fArticles" />
   );
 });

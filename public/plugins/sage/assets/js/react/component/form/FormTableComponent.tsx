@@ -19,22 +19,14 @@ let translations: any = getTranslations();
 
 type State = {
   table: TableInterface;
-  values: any;
   transPrefix: string | undefined;
-  handleChange: (
-    prop: keyof any,
-  ) => (event: React.ChangeEvent<HTMLInputElement>) => void | undefined;
-  handleChangeSelect: (
-    prop: keyof any,
-  ) => (event: React.ChangeEvent<HTMLSelectElement>) => void | undefined;
+  handleCloseParent?: Function;
 };
 
 export const FormTableComponent: React.FC<State> = ({
   table,
   transPrefix,
-  values,
-  handleChange,
-  handleChangeSelect,
+  handleCloseParent,
 }) => {
   const padding = 15;
 
@@ -51,7 +43,9 @@ export const FormTableComponent: React.FC<State> = ({
 
   const thisOnSelectAdd = (item: TableLineItemInterface) => {
     table.addItem(item.item);
-    handleClose();
+    if (handleCloseParent) {
+      handleCloseParent();
+    }
   };
 
   return (
@@ -67,10 +61,8 @@ export const FormTableComponent: React.FC<State> = ({
           <DialogContent>
             <FormTableComponent
               table={table.add.table}
-              values={values}
               transPrefix={transPrefix}
-              handleChange={handleChange}
-              handleChangeSelect={handleChangeSelect}
+              handleCloseParent={handleClose}
             />
           </DialogContent>
         </Dialog>
@@ -130,7 +122,11 @@ export const FormTableComponent: React.FC<State> = ({
                       arrow
                       placement="left"
                     >
-                      <IconButton>
+                      <IconButton
+                        onClick={() => {
+                          console.log("todo");
+                        }}
+                      >
                         <RemoveIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -139,7 +135,7 @@ export const FormTableComponent: React.FC<State> = ({
                 {table.addItem && (
                   <td>
                     <Tooltip
-                      title={translations.sentences.addItem}
+                      title={translations.sentences.addThisItem}
                       arrow
                       placement="left"
                     >
@@ -161,10 +157,7 @@ export const FormTableComponent: React.FC<State> = ({
                         <FormFieldComponent
                           key={indexCell}
                           field={cell.field}
-                          values={values}
                           transPrefix={transPrefix}
-                          handleChange={handleChange}
-                          handleChangeSelect={handleChangeSelect}
                         />
                       )}
                     </td>

@@ -8,12 +8,12 @@ let translations: any = getTranslations();
 export type AcPrixVenInputState = {
   defaultCtNum: string;
   ctNum: number | string;
-  setSelectedCtNumParent: Function;
+  onAfPrincipalChangedParent: Function;
 };
 
 export const AfPrincipalInput = React.forwardRef(
   (
-    { defaultCtNum, ctNum, setSelectedCtNumParent }: AcPrixVenInputState,
+    { defaultCtNum, ctNum, onAfPrincipalChangedParent }: AcPrixVenInputState,
     ref,
   ) => {
     const [selectedCtNum, setSelectedCtNum] =
@@ -21,8 +21,8 @@ export const AfPrincipalInput = React.forwardRef(
     const name = `_sage_fArtfournisses[${ctNum}].afPrincipal`;
 
     useImperativeHandle(ref, () => ({
-      onParentFormChange(parentForm: any): void {
-        setSelectedCtNum(parentForm);
+      onAfPrincipalChanged(newCtNum: string) {
+        setSelectedCtNum(newCtNum);
       },
     }));
 
@@ -41,7 +41,7 @@ export const AfPrincipalInput = React.forwardRef(
             checked={selectedCtNum === ctNum}
             onChange={(e) => {
               if (e.target.checked) {
-                setSelectedCtNumParent(ctNum);
+                onAfPrincipalChangedParent(name, ctNum);
               }
             }}
           />

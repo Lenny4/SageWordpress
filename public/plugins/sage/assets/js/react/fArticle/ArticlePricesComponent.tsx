@@ -29,75 +29,84 @@ const prices: FArticlePriceInterface[] = JSON.parse(
 const htTtcs = ["Ht", "Ttc"];
 export const ArticlePricesComponent = () => {
   return (
-    <Accordion defaultExpanded={false}>
-      <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
-        <Typography component="span">{translations.words.seePrices}</Typography>
-      </AccordionSummary>
-      <AccordionDetails>
-        <div style={{ overflow: "auto" }}>
-          <table className="table-border table-padding">
-            <thead>
-              <tr>
-                <td
-                  rowSpan={3}
-                  colSpan={2}
-                  style={{ borderTop: "none", borderLeft: "none" }}
-                ></td>
-                <td colSpan={pCatComptas.length * 2} className="text-center">
-                  {translations.words.accountingCategory}
-                </td>
-              </tr>
-              <tr>
-                {pCatComptas.map((pCatCompta, index) => (
-                  <td colSpan={2} key={index} className="text-center">
-                    {pCatCompta.label}
-                  </td>
-                ))}
-              </tr>
-              <tr>
-                {pCatComptas.map((pCatCompta, index) => {
-                  return htTtcs.map((htTtc, index2) => (
-                    <td key={index + "_" + index2} className="text-center">
-                      {translations.words[htTtc.toLowerCase()]}
+    <>
+      {prices.length > 0 && (
+        <Accordion defaultExpanded={false}>
+          <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
+            <Typography component="span">
+              {translations.words.seePrices}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <div style={{ overflow: "auto" }}>
+              <table className="table-border table-padding">
+                <thead>
+                  <tr>
+                    <td
+                      rowSpan={3}
+                      colSpan={2}
+                      style={{ borderTop: "none", borderLeft: "none" }}
+                    ></td>
+                    <td
+                      colSpan={pCatComptas.length * 2}
+                      className="text-center"
+                    >
+                      {translations.words.accountingCategory}
                     </td>
-                  ));
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {pCattarifs.map((pCattarif, index) => (
-                <tr key={index}>
-                  {index === 0 && (
-                    <td rowSpan={pCattarifs.length}>
-                      {translations.words.fareCategory}
-                    </td>
-                  )}
-                  <td>{pCattarif.ctIntitule}</td>
-                  {pCatComptas.map((pCatCompta, index2) => {
-                    return htTtcs.map((htTtc, index3) => {
-                      const price = prices.find(
-                        (p) =>
-                          p.nCatCompta.cbIndice === pCatCompta.cbIndice &&
-                          p.nCatTarif.cbIndice === pCattarif.cbIndice,
-                      );
-                      return (
-                        <td key={index + "_" + index2 + "_" + index3}>
-                          <PriceComponent
-                            price={
-                              // @ts-ignore
-                              price["price" + htTtc]
-                            }
-                          />
+                  </tr>
+                  <tr>
+                    {pCatComptas.map((pCatCompta, index) => (
+                      <td colSpan={2} key={index} className="text-center">
+                        {pCatCompta.label}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    {pCatComptas.map((pCatCompta, index) => {
+                      return htTtcs.map((htTtc, index2) => (
+                        <td key={index + "_" + index2} className="text-center">
+                          {translations.words[htTtc.toLowerCase()]}
                         </td>
-                      );
-                    });
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </AccordionDetails>
-    </Accordion>
+                      ));
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {pCattarifs.map((pCattarif, index) => (
+                    <tr key={index}>
+                      {index === 0 && (
+                        <td rowSpan={pCattarifs.length}>
+                          {translations.words.fareCategory}
+                        </td>
+                      )}
+                      <td>{pCattarif.ctIntitule}</td>
+                      {pCatComptas.map((pCatCompta, index2) => {
+                        return htTtcs.map((htTtc, index3) => {
+                          const price = prices.find(
+                            (p) =>
+                              p.nCatCompta.cbIndice === pCatCompta.cbIndice &&
+                              p.nCatTarif.cbIndice === pCattarif.cbIndice,
+                          );
+                          return (
+                            <td key={index + "_" + index2 + "_" + index3}>
+                              <PriceComponent
+                                price={
+                                  // @ts-ignore
+                                  price["price" + htTtc]
+                                }
+                              />
+                            </td>
+                          );
+                        });
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </AccordionDetails>
+        </Accordion>
+      )}
+    </>
   );
 };

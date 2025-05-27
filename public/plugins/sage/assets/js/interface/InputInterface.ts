@@ -1,9 +1,8 @@
-import React, { FC } from "react";
+import { FC } from "react";
+import { TabInterface } from "./TabInterface";
 
 export interface FormInterface {
   content: FormContentInterface[];
-  flatFields: FieldInterface[];
-  fieldNames: string[];
 }
 
 export interface TableLineItemInterface {
@@ -12,7 +11,7 @@ export interface TableLineItemInterface {
 }
 
 export interface TableLineInterface {
-  Dom?: React.ReactNode;
+  Dom?: any;
   field?: FieldInterface;
 }
 
@@ -34,10 +33,11 @@ export interface TableAddInterface {
 export interface FormContentInterface {
   Container?: any;
   props?: any;
-  Dom?: React.ReactNode;
+  Dom?: any;
   fields?: FieldInterface[];
   children?: FormContentInterface[];
   table?: TableInterface;
+  tabs?: TabInterface[];
 }
 
 export interface ErrorMessageInterface {
@@ -62,32 +62,24 @@ export interface FieldValidatorInterface<F extends (arg: any) => any> {
 export interface FieldInterface<
   F extends (arg: any) => any = (arg: any) => any,
 > {
+  label?: string;
   name: string;
-  DomField: FC<FormInputProps>;
+  DomField: FC<FieldInterface>;
   readOnly?: boolean;
   cannotBeChangeOnWebsite?: boolean;
   tooltip?: string;
   hideLabel?: boolean;
+  triggerFormContentChanged?: TriggerFormContentChanged;
   options?: FormInputOptions[];
   type?: string;
   validator?: FieldValidatorInterface<F>;
   errorMessage?: string;
+  initValues: InputInterface;
 }
 
-export type FormInputProps = {
-  label: string;
-  name: string;
-  value: string;
-  readOnly?: boolean;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onChangeSelect?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  hideLabel?: boolean;
-  options?: FormInputOptions[];
-  type?: string;
-  errorMessage?: string;
-  cannotBeChangeOnWebsite?: boolean;
-  tooltip?: string;
-};
+export interface TriggerFormContentChanged {
+  (name: string, newValue: string): void;
+}
 
 export type FormInputOptions = {
   label: string;
