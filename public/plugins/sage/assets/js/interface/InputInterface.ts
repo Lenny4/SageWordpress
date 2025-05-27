@@ -1,5 +1,6 @@
 import { FC } from "react";
 import { TabInterface } from "./TabInterface";
+import { GridProps } from "@mui/material/Grid/Grid";
 
 export interface FormInterface {
   content: FormContentInterface[];
@@ -36,7 +37,7 @@ export interface FormTabInterface {
 
 export interface FormContentInterface {
   Container?: any;
-  props?: any;
+  props?: GridProps;
   Dom?: any;
   fields?: FieldInterface[];
   children?: FormContentInterface[];
