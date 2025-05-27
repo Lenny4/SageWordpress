@@ -30,6 +30,11 @@ export interface TableAddInterface {
   table: TableInterface;
 }
 
+export interface FormTabInterface {
+  orientation?: "horizontal" | "vertical";
+  tabs?: TabInterface[];
+}
+
 export interface FormContentInterface {
   Container?: any;
   props?: any;
@@ -37,7 +42,7 @@ export interface FormContentInterface {
   fields?: FieldInterface[];
   children?: FormContentInterface[];
   table?: TableInterface;
-  tabs?: TabInterface[];
+  tabs?: FormTabInterface;
 }
 
 export interface ErrorMessageInterface {

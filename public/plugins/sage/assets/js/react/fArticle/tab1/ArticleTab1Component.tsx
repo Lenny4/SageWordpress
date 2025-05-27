@@ -297,23 +297,25 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
             props: {
               size: { xs: 12 },
             },
-            tabs: [
-              {
-                label: translations.words.nCatTarif,
-                Component: ArticleCatTarifComponent,
-              },
-              {
-                label: translations.words.suppliers,
-                Component: ArticleFournisseursComponent,
-              },
-            ].map(({ label, Component }) => {
-              const ref = React.createRef();
-              return {
-                label,
-                dom: <Component ref={ref} />,
-                ref,
-              };
-            }),
+            tabs: {
+              tabs: [
+                {
+                  label: translations.words.nCatTarif,
+                  Component: ArticleCatTarifComponent,
+                },
+                {
+                  label: translations.words.suppliers,
+                  Component: ArticleFournisseursComponent,
+                },
+              ].map(({ label, Component }) => {
+                const ref = React.createRef();
+                return {
+                  label,
+                  dom: <Component ref={ref} />,
+                  ref,
+                };
+              }),
+            },
           },
         ],
       },

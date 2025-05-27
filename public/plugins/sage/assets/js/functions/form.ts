@@ -100,7 +100,7 @@ export const getDomsToSetParentFormData = (
     for (const content of contents) {
       for (const child of content.children) {
         if (child?.tabs) {
-          for (const tab of child.tabs) {
+          for (const tab of child.tabs.tabs) {
             if (tab?.ref?.current?.getForm) {
               const form: FormInterface = tab?.ref?.current?.getForm();
               extract(form.content);

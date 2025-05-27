@@ -48,7 +48,12 @@ export const FormContentComponent: React.FC<State> = ({
                   transPrefix={transPrefix}
                 />
               )}
-              {tabs && <TabsComponent tabs={tabs} />}
+              {tabs && (
+                <TabsComponent
+                  tabs={tabs.tabs}
+                  orientation={tabs.orientation}
+                />
+              )}
             </Container>
           );
         },
