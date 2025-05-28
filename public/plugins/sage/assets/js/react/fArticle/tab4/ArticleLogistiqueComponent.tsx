@@ -7,12 +7,20 @@ import {
   FormInterface,
 } from "../../../interface/InputInterface";
 import { FormContentComponent } from "../../component/form/FormContentComponent";
+import { DividerText } from "../../component/DividerText";
+import { FormCheckbox } from "../../component/form/FormCheckbox";
+import { getSageMetadata } from "../../../functions/getMetadata";
+import {FormSelect} from "../../component/form/FormSelect";
+import {transformOptionsObject} from "../../../functions/form";
+import {FormInput} from "../../component/form/FormInput";
 
 let translations: any = getTranslations();
 
 const articleMeta: MetadataInterface[] = JSON.parse(
   $("[data-sage-product]").attr("data-sage-product") ?? "null",
 );
+const arRef = getSageMetadata("arRef", articleMeta);
+const isNew = !arRef;
 
 export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
   const getForm = (): FormInterface => {
@@ -28,6 +36,54 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
             props: {
               size: { xs: 12 },
             },
+            Dom: (
+              <DividerText
+                textAlign="left"
+                text={<h2>{translations.words.features}</h2>}
+              />
+            ),
+          },
+          {
+            fields: [
+              {
+                name: "arUnitePoids",
+                DomField: FormSelect,
+                readOnly: !isNew, // todo test can select when creation
+                options: transformOptionsObject(
+                  translations.fArticles.arUnitePoids.values,
+                ),
+                initValues: {
+                  value: getSageMetadata("arUnitePoids", articleMeta) ?? "",
+                },
+              },
+              {
+                name: "arPoidsNet",
+                DomField: FormInput,
+                type: "number",
+                initValues: {
+                  value: getSageMetadata("arPoidsNet", articleMeta) ?? "",
+                },
+              }
+            ],
+          },
+          {
+            fields: [
+              {
+                name: "arCodeBarre",
+                DomField: FormInput,
+                initValues: {
+                  value: getSageMetadata("arCodeBarre", articleMeta) ?? "",
+                },
+              },
+              {
+                name: "arPoidsBrut",
+                DomField: FormInput,
+                type: "number",
+                initValues: {
+                  value: getSageMetadata("arPoidsBrut", articleMeta) ?? "",
+                },
+              }
+            ],
           },
         ],
       },

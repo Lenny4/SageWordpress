@@ -835,6 +835,10 @@ final class SageGraphQl
                 'arHorsStat',
                 'arNotImp',
                 'arFactForfait',
+                'arUnitePoids', // enum UnitePoidsType 0 = tonne, 1 = quintal, 2 = kilogramme, 3 = gramme, 4 =  milligrame
+                'arPoidsNet', // poids brut
+                'arPoidsBrut', // volume
+                'arCodeBarre',
             ]),
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
                 'arPrixAch',
