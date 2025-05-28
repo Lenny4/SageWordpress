@@ -2,13 +2,14 @@ import * as React from "react";
 import { useImperativeHandle } from "react";
 import { Tooltip } from "@mui/material";
 import { getTranslations } from "../../../../../functions/translations";
+import {TriggerFormContentChanged} from "../../../../../interface/InputInterface";
 
 let translations: any = getTranslations();
 
 export type AsPrincipalInputState = {
   defaultDeNo: string;
   deNo: number | string;
-  onAsPrincipalChangedParent: (name: string, newValue: string | number) => void;
+  onAsPrincipalChangedParent: TriggerFormContentChanged;
 };
 
 export const AsPrincipalInput = React.forwardRef(
@@ -40,7 +41,7 @@ export const AsPrincipalInput = React.forwardRef(
             checked={selectedDeNo.toString() === deNo.toString()}
             onChange={(e) => {
               if (e.target.checked) {
-                onAsPrincipalChangedParent(name, deNo);
+                onAsPrincipalChangedParent(name, deNo.toString());
               }
             }}
           />

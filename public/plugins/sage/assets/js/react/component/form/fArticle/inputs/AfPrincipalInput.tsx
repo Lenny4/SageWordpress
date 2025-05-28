@@ -2,13 +2,14 @@ import * as React from "react";
 import { useImperativeHandle } from "react";
 import { Tooltip } from "@mui/material";
 import { getTranslations } from "../../../../../functions/translations";
+import {TriggerFormContentChanged} from "../../../../../interface/InputInterface";
 
 let translations: any = getTranslations();
 
 export type AfPrincipalState = {
   defaultCtNum: string;
-  ctNum: number | string;
-  onAfPrincipalChangedParent: (name: string, newValue: string | number) => void;
+  ctNum: string;
+  onAfPrincipalChangedParent: TriggerFormContentChanged;
 };
 
 export const AfPrincipalInput = React.forwardRef(
