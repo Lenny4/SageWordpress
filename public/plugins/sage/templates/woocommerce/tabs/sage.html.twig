@@ -9,8 +9,8 @@
           {% for key, value in metaChanges[action] %}
             <li>
               <code>{{ key }}</code>:
-              {% if action == 'modified ' %}
-                {{ 'changé en' | trans }}
+              {% if action == 'modified' %}
+                {{ 'changé en ' | trans }}
               {% elseif action == 'added' %}
                 {{ 'ajouté avec la valeur ' | trans }}
               {% elseif action == 'removed' %}

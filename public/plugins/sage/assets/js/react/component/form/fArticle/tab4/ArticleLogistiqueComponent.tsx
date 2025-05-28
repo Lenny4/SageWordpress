@@ -1,18 +1,17 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { useImperativeHandle } from "react";
-import { getTranslations } from "../../../functions/translations";
-import { MetadataInterface } from "../../../interface/WordpressInterface";
+import { getTranslations } from "../../../../../functions/translations";
+import { MetadataInterface } from "../../../../../interface/WordpressInterface";
+import { getSageMetadata } from "../../../../../functions/getMetadata";
 import {
   FormContentInterface,
   FormInterface,
-} from "../../../interface/InputInterface";
-import { FormContentComponent } from "../../component/form/FormContentComponent";
-import { DividerText } from "../../component/DividerText";
-import { FormCheckbox } from "../../component/form/FormCheckbox";
-import { getSageMetadata } from "../../../functions/getMetadata";
-import {FormSelect} from "../../component/form/FormSelect";
-import {transformOptionsObject} from "../../../functions/form";
-import {FormInput} from "../../component/form/FormInput";
+} from "../../../../../interface/InputInterface";
+import { DividerText } from "../../../DividerText";
+import { FormSelect } from "../../FormSelect";
+import { transformOptionsObject } from "../../../../../functions/form";
+import { FormInput } from "../../FormInput";
+import { FormContentComponent } from "../../FormContentComponent";
 
 let translations: any = getTranslations();
 
@@ -63,7 +62,7 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                 initValues: {
                   value: getSageMetadata("arPoidsNet", articleMeta) ?? "",
                 },
-              }
+              },
             ],
           },
           {
@@ -82,7 +81,7 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                 initValues: {
                   value: getSageMetadata("arPoidsBrut", articleMeta) ?? "",
                 },
-              }
+              },
             ],
           },
         ],

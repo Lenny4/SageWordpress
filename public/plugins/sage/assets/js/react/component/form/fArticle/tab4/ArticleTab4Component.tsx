@@ -1,15 +1,15 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { useImperativeHandle } from "react";
-import {
-  FormContentInterface,
-  FormInterface,
-} from "../../../interface/InputInterface";
-import { FormContentComponent } from "../../component/form/FormContentComponent";
 import Grid from "@mui/material/Grid";
-import { getTranslations } from "../../../functions/translations";
 import { ArticleOptionTraitementComponent } from "./ArticleOptionTraitementComponent";
 import { ArticleLogistiqueComponent } from "./ArticleLogistiqueComponent";
 import { ArticleDepotTraitementComponent } from "./ArticleDepotTraitementComponent";
+import { getTranslations } from "../../../../../functions/translations";
+import {
+  FormContentInterface,
+  FormInterface,
+} from "../../../../../interface/InputInterface";
+import { FormContentComponent } from "../../FormContentComponent";
 
 let translations: any = getTranslations();
 

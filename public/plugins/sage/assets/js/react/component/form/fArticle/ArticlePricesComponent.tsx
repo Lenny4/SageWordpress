@@ -5,10 +5,10 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import { getTranslations } from "../../functions/translations";
-import { MetadataInterface } from "../../interface/WordpressInterface";
-import { FArticlePriceInterface } from "../../interface/FArticleInterface";
-import { PriceComponent } from "../component/PriceComponent";
+import { getTranslations } from "../../../../functions/translations";
+import { MetadataInterface } from "../../../../interface/WordpressInterface";
+import { FArticlePriceInterface } from "../../../../interface/FArticleInterface";
+import { PriceComponent } from "../../PriceComponent";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(

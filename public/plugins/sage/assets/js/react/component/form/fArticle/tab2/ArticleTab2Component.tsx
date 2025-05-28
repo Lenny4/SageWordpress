@@ -1,19 +1,19 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { useImperativeHandle } from "react";
-import { getTranslations } from "../../../functions/translations";
+import Grid from "@mui/material/Grid";
+import { ArticleCataloguesComponent } from "./ArticleCataloguesComponent";
+import { ArticleGlossairesComponent } from "./ArticleGlossairesComponent";
+import { getTranslations } from "../../../../../functions/translations";
+import { MetadataInterface } from "../../../../../interface/WordpressInterface";
 import {
   FormContentInterface,
   FormInterface,
-} from "../../../interface/InputInterface";
-import { getSageMetadata } from "../../../functions/getMetadata";
-import { FormInput } from "../../component/form/FormInput";
-import { FormContentComponent } from "../../component/form/FormContentComponent";
-import { DividerText } from "../../component/DividerText";
-import Grid from "@mui/material/Grid";
-import { MetadataInterface } from "../../../interface/WordpressInterface";
-import { ArticleCataloguesComponent } from "./ArticleCataloguesComponent";
-import { FormSelect } from "../../component/form/FormSelect";
-import { ArticleGlossairesComponent } from "./ArticleGlossairesComponent";
+} from "../../../../../interface/InputInterface";
+import { DividerText } from "../../../DividerText";
+import { FormInput } from "../../FormInput";
+import { getSageMetadata } from "../../../../../functions/getMetadata";
+import { FormSelect } from "../../FormSelect";
+import { FormContentComponent } from "../../FormContentComponent";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(

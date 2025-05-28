@@ -1,19 +1,19 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { useImperativeHandle } from "react";
+import { getTranslations } from "../../../../../functions/translations";
+import { MetadataInterface } from "../../../../../interface/WordpressInterface";
+import { FArtfournisseInterface } from "../../../../../interface/FArticleInterface";
+import { getListObjectSageMetadata } from "../../../../../functions/getMetadata";
 import {
   FormContentInterface,
   FormInterface,
   TableLineItemInterface,
   TriggerFormContentChanged,
-} from "../../../interface/InputInterface";
-import { FormContentComponent } from "../../component/form/FormContentComponent";
-import { getListObjectSageMetadata } from "../../../functions/getMetadata";
-import { getTranslations } from "../../../functions/translations";
-import { FormInput } from "../../component/form/FormInput";
-import { FArtfournisseInterface } from "../../../interface/FArticleInterface";
-import { MetadataInterface } from "../../../interface/WordpressInterface";
-import { AfPrincipalInput } from "../../component/form/fArticle/AfPrincipalInput";
-import { getDomsToSetParentFormData } from "../../../functions/form";
+} from "../../../../../interface/InputInterface";
+import { getDomsToSetParentFormData } from "../../../../../functions/form";
+import { AfPrincipalInput } from "../inputs/AfPrincipalInput";
+import { FormInput } from "../../FormInput";
+import { FormContentComponent } from "../../FormContentComponent";
 
 let translations: any = getTranslations();
 

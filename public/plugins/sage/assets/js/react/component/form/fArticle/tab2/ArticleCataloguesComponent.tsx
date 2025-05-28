@@ -1,11 +1,11 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { ChangeEvent } from "react";
-import { InputInterface } from "../../../interface/InputInterface";
-import { getTranslations } from "../../../functions/translations";
-import { MetadataInterface } from "../../../interface/WordpressInterface";
-import { getSageMetadata } from "../../../functions/getMetadata";
+import { getTranslations } from "../../../../../functions/translations";
+import { MetadataInterface } from "../../../../../interface/WordpressInterface";
+import { FCatalogueInterface } from "../../../../../interface/FArticleInterface";
+import { InputInterface } from "../../../../../interface/InputInterface";
+import { getSageMetadata } from "../../../../../functions/getMetadata";
 import Grid from "@mui/material/Grid";
-import { FCatalogueInterface } from "../../../interface/FArticleInterface";
 
 let translations: any = getTranslations();
 

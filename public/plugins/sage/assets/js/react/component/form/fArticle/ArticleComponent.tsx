@@ -1,13 +1,13 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import { createRoot } from "react-dom/client";
 import React from "react";
-import { getTranslations } from "../../functions/translations";
 import Box from "@mui/material/Box";
 import { ArticleTab1Component } from "./tab1/ArticleTab1Component";
-import { TabInterface } from "../../interface/TabInterface";
-import { TabsComponent } from "../component/tab/TabsComponent";
 import { ArticleTab2Component } from "./tab2/ArticleTab2Component";
 import { ArticleTab4Component } from "./tab4/ArticleTab4Component";
+import { getTranslations } from "../../../../functions/translations";
+import { TabInterface } from "../../../../interface/TabInterface";
+import { TabsComponent } from "../../tab/TabsComponent";
 
 const containerSelector = "#sage_product_data";
 let translations: any = getTranslations();

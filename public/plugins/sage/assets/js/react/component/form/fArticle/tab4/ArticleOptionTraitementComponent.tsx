@@ -1,15 +1,15 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { useImperativeHandle } from "react";
-import { getTranslations } from "../../../functions/translations";
-import { MetadataInterface } from "../../../interface/WordpressInterface";
+import { getTranslations } from "../../../../../functions/translations";
+import { MetadataInterface } from "../../../../../interface/WordpressInterface";
 import {
   FormContentInterface,
   FormInterface,
-} from "../../../interface/InputInterface";
-import { FormContentComponent } from "../../component/form/FormContentComponent";
-import { getSageMetadata } from "../../../functions/getMetadata";
-import { FormCheckbox } from "../../component/form/FormCheckbox";
-import { DividerText } from "../../component/DividerText";
+} from "../../../../../interface/InputInterface";
+import { DividerText } from "../../../DividerText";
+import { FormCheckbox } from "../../FormCheckbox";
+import { getSageMetadata } from "../../../../../functions/getMetadata";
+import { FormContentComponent } from "../../FormContentComponent";
 
 let translations: any = getTranslations();
 

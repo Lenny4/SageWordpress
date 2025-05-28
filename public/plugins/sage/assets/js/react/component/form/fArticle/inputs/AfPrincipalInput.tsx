@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useImperativeHandle } from "react";
 import { Tooltip } from "@mui/material";
-import { getTranslations } from "../../../../functions/translations";
+import { getTranslations } from "../../../../../functions/translations";
 
 let translations: any = getTranslations();
 

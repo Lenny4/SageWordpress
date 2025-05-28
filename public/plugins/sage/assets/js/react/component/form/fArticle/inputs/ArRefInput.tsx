@@ -2,12 +2,12 @@ import * as React from "react";
 import { useImperativeHandle } from "react";
 import { IconButton, Tooltip } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
-import { getTranslations } from "../../../../functions/translations";
-import { InputInterface } from "../../../../interface/InputInterface";
+import { getTranslations } from "../../../../../functions/translations";
+import { InputInterface } from "../../../../../interface/InputInterface";
 import {
   handleChangeInputGeneric,
   stringValidator,
-} from "../../../../functions/form";
+} from "../../../../../functions/form";
 
 const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
 const wpnonce = $("[data-sage-nonce]").attr("data-sage-nonce");

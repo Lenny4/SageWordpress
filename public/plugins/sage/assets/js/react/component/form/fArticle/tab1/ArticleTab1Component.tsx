@@ -1,27 +1,27 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { useImperativeHandle, useRef } from "react";
-import { getTranslations } from "../../../functions/translations";
+import { getSageMetadata } from "../../../../../functions/getMetadata";
+import { getTranslations } from "../../../../../functions/translations";
+import { MetadataInterface } from "../../../../../interface/WordpressInterface";
 import {
   FormContentInterface,
   FormInterface,
   TriggerFormContentChanged,
-} from "../../../interface/InputInterface";
-import { getSageMetadata } from "../../../functions/getMetadata";
-import { FormInput } from "../../component/form/FormInput";
+} from "../../../../../interface/InputInterface";
 import {
   getDomsToSetParentFormData,
   stringValidator,
   transformOptionsObject,
-} from "../../../functions/form";
-import { FormContentComponent } from "../../component/form/FormContentComponent";
-import { DividerText } from "../../component/DividerText";
-import { FormSelect } from "../../component/form/FormSelect";
-import Grid from "@mui/material/Grid";
+} from "../../../../../functions/form";
+import { DividerText } from "../../../DividerText";
+import { ArRefInput } from "../inputs/ArRefInput";
+import { FormSelect } from "../../FormSelect";
+import { FormInput } from "../../FormInput";
+import { ArPrixVenInput } from "../inputs/ArPrixVenInput";
 import { ArticleCatTarifComponent } from "./ArticleCatTarifComponent";
 import { ArticleFournisseursComponent } from "./ArticleFournisseursComponent";
-import { ArRefInput } from "../../component/form/fArticle/ArRefInput";
-import { MetadataInterface } from "../../../interface/WordpressInterface";
-import { ArPrixVenInput } from "../../component/form/fArticle/ArPrixVenInput";
+import Grid from "@mui/material/Grid";
+import { FormContentComponent } from "../../FormContentComponent";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(

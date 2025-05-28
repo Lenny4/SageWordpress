@@ -1,23 +1,23 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { useImperativeHandle } from "react";
+import { ArticlePricesComponent } from "../ArticlePricesComponent";
+import { getTranslations } from "../../../../../functions/translations";
+import { MetadataInterface } from "../../../../../interface/WordpressInterface";
+import { FArticleClientInterface } from "../../../../../interface/FArticleInterface";
+import { getListObjectSageMetadata } from "../../../../../functions/getMetadata";
 import {
   FormContentInterface,
   FormInterface,
   TableLineItemInterface,
   TriggerFormContentChanged,
-} from "../../../interface/InputInterface";
-import { FormContentComponent } from "../../component/form/FormContentComponent";
-import { getListObjectSageMetadata } from "../../../functions/getMetadata";
-import { getTranslations } from "../../../functions/translations";
-import { FormInput } from "../../component/form/FormInput";
-import { FArticleClientInterface } from "../../../interface/FArticleInterface";
-import { AcPrixVenInput } from "../../component/form/fArticle/AcPrixVenInput";
-import { ArticlePricesComponent } from "../ArticlePricesComponent";
-import { MetadataInterface } from "../../../interface/WordpressInterface";
+} from "../../../../../interface/InputInterface";
 import {
   getDomsToSetParentFormData,
   getKeyFromName,
-} from "../../../functions/form";
+} from "../../../../../functions/form";
+import { AcPrixVenInput } from "../inputs/AcPrixVenInput";
+import { FormInput } from "../../FormInput";
+import { FormContentComponent } from "../../FormContentComponent";
 
 let translations: any = getTranslations();
 

@@ -1,20 +1,20 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import React, { useImperativeHandle } from "react";
-import { getTranslations } from "../../../functions/translations";
-import { MetadataInterface } from "../../../interface/WordpressInterface";
+import { Tooltip } from "@mui/material";
+import { getTranslations } from "../../../../../functions/translations";
+import { MetadataInterface } from "../../../../../interface/WordpressInterface";
+import {
+  FArtglosseInterface,
+  FGlossaireInterface,
+} from "../../../../../interface/FArticleInterface";
+import { getListObjectSageMetadata } from "../../../../../functions/getMetadata";
 import {
   FormContentInterface,
   FormInterface,
   TableLineItemInterface,
-} from "../../../interface/InputInterface";
-import { getListObjectSageMetadata } from "../../../functions/getMetadata";
-import { FormContentComponent } from "../../component/form/FormContentComponent";
-import {
-  FArtglosseInterface,
-  FGlossaireInterface,
-} from "../../../interface/FArticleInterface";
-import { FormInput } from "../../component/form/FormInput";
-import { Tooltip } from "@mui/material";
+} from "../../../../../interface/InputInterface";
+import { FormInput } from "../../FormInput";
+import { FormContentComponent } from "../../FormContentComponent";
 
 let translations: any = getTranslations();
 

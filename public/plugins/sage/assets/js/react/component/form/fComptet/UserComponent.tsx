@@ -1,9 +1,9 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
 import { createRoot } from "react-dom/client";
 import React, { ChangeEvent } from "react";
-import { getTranslations } from "../functions/translations";
-import { InputInterface } from "../interface/InputInterface";
-import { stringValidator } from "../functions/form";
+import { getTranslations } from "../../../../functions/translations";
+import { InputInterface } from "../../../../interface/InputInterface";
+import { stringValidator } from "../../../../functions/form";
 
 const containerSelector = "#sage_user";
 const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");

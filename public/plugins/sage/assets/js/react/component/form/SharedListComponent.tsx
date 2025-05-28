@@ -25,10 +25,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { getTranslations } from "../functions/translations";
 import { IconButton, InputAdornment, TextField, Tooltip } from "@mui/material";
 import Box from "@mui/material/Box";
 import ClearIcon from "@mui/icons-material/Clear";
+import { getTranslations } from "../../../functions/translations";
 
 let translations: any = getTranslations();
 
