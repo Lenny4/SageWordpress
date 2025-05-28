@@ -5,24 +5,23 @@ import { getTranslations } from "../../../../../functions/translations";
 
 let translations: any = getTranslations();
 
-export type AfPrincipalState = {
-  defaultCtNum: string;
-  ctNum: number | string;
-  onAfPrincipalChangedParent: (name: string, newValue: string | number) => void;
+export type AsPrincipalInputState = {
+  defaultDeNo: string;
+  deNo: number | string;
+  onAsPrincipalChangedParent: (name: string, newValue: string | number) => void;
 };
 
-export const AfPrincipalInput = React.forwardRef(
+export const AsPrincipalInput = React.forwardRef(
   (
-    { defaultCtNum, ctNum, onAfPrincipalChangedParent }: AfPrincipalState,
+    { defaultDeNo, deNo, onAsPrincipalChangedParent }: AsPrincipalInputState,
     ref,
   ) => {
-    const [selectedCtNum, setSelectedCtNum] =
-      React.useState<string>(defaultCtNum);
-    const name = `_sage_fArtfournisses[${ctNum}].afPrincipal`;
+    const [selectedDeNo, setSelectedDeNo] = React.useState<string>(defaultDeNo);
+    const name = `_sage_fArtstocks[${deNo}].asPrincipal`;
 
     useImperativeHandle(ref, () => ({
-      onAfPrincipalChanged(newCtNum: string) {
-        setSelectedCtNum(newCtNum);
+      onAsPrincipalChanged(newDeNo: string) {
+        setSelectedDeNo(newDeNo);
       },
     }));
 
@@ -38,10 +37,10 @@ export const AfPrincipalInput = React.forwardRef(
             id={name}
             name={name}
             type="checkbox"
-            checked={selectedCtNum === ctNum}
+            checked={selectedDeNo.toString() === deNo.toString()}
             onChange={(e) => {
               if (e.target.checked) {
-                onAfPrincipalChangedParent(name, ctNum);
+                onAsPrincipalChangedParent(name, deNo);
               }
             }}
           />

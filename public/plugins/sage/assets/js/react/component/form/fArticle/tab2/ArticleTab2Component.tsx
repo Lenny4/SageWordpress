@@ -75,7 +75,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                 name: "arLangue1",
                 DomField: FormInput,
                 initValues: {
-                  value: getSageMetadata("arLangue1", articleMeta) ?? "",
+                  value: getSageMetadata("arLangue1", articleMeta),
                 },
               },
             ],
@@ -89,7 +89,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                 name: "arLangue2",
                 DomField: FormInput,
                 initValues: {
-                  value: getSageMetadata("arLangue2", articleMeta) ?? "",
+                  value: getSageMetadata("arLangue2", articleMeta),
                 },
               },
             ],
@@ -100,14 +100,14 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                 name: "arCodeFiscal",
                 DomField: FormInput,
                 initValues: {
-                  value: getSageMetadata("arCodeFiscal", articleMeta) ?? "",
+                  value: getSageMetadata("arCodeFiscal", articleMeta),
                 },
               },
               {
                 name: "arEdiCode",
                 DomField: FormInput,
                 initValues: {
-                  value: getSageMetadata("arEdiCode", articleMeta) ?? "",
+                  value: getSageMetadata("arEdiCode", articleMeta),
                 },
               },
             ],
@@ -130,14 +130,14 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                   }),
                 ],
                 initValues: {
-                  value: getSageMetadata("arPays", articleMeta) ?? "",
+                  value: getSageMetadata("arPays", articleMeta),
                 },
               },
               {
                 name: "arRaccourci",
                 DomField: FormInput,
                 initValues: {
-                  value: getSageMetadata("arRaccourci", articleMeta) ?? "",
+                  value: getSageMetadata("arRaccourci", articleMeta),
                 },
               },
             ],

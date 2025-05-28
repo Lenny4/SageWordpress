@@ -45,7 +45,7 @@ export const ArticleOptionTraitementComponent = React.forwardRef(
                   name: name,
                   DomField: FormCheckbox,
                   initValues: {
-                    value: getSageMetadata(name, articleMeta) ?? "",
+                    value: getSageMetadata(name, articleMeta),
                   },
                 };
               }),
@@ -57,7 +57,7 @@ export const ArticleOptionTraitementComponent = React.forwardRef(
                     name: name,
                     DomField: FormCheckbox,
                     initValues: {
-                      value: getSageMetadata(name, articleMeta) ?? "",
+                      value: getSageMetadata(name, articleMeta),
                     },
                   };
                 },
@@ -81,7 +81,7 @@ export const ArticleOptionTraitementComponent = React.forwardRef(
                     name: name,
                     DomField: FormCheckbox,
                     initValues: {
-                      value: getSageMetadata(name, articleMeta) ?? "",
+                      value: getSageMetadata(name, articleMeta),
                     },
                   };
                 },

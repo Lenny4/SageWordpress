@@ -26,19 +26,14 @@ const articleMeta: MetadataInterface[] = JSON.parse(
 
 export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
   const prefix = "fArtfournisses";
-  const [selectedCtNum, setSelectedCtNum] = React.useState<string>(() => {
-    const fArtfournisses: FArtfournisseInterface[] = getListObjectSageMetadata(
-      prefix,
-      articleMeta,
-      "ctNum",
-    );
+  const [fArtfournisses] = React.useState<FArtfournisseInterface[]>(
+    getListObjectSageMetadata(prefix, articleMeta, "ctNum"),
+  );
+  const [defaultCtNum] = React.useState<string>(() => {
     return (
       fArtfournisses.find((x) => x.afPrincipal.toString() === "1")?.ctNum ?? ""
     );
   });
-  const [fArtfournisses] = React.useState<FArtfournisseInterface[]>(
-    getListObjectSageMetadata(prefix, articleMeta, "ctNum"),
-  );
 
   const onAfPrincipalChanged: TriggerFormContentChanged = (name, newValue) => {
     const doms = getDomsToSetParentFormData(form.content);
@@ -80,7 +75,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       {
                         Dom: (
                           <AfPrincipalInput
-                            defaultCtNum={selectedCtNum}
+                            defaultCtNum={defaultCtNum}
                             ctNum={fArtclient.ctNum}
                             onAfPrincipalChangedParent={onAfPrincipalChanged}
                             ref={React.createRef()}
@@ -100,6 +95,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                                 fArtclient.ctNum +
                                 "].afRefFourniss",
                               articleMeta,
+                              fArtclient.afRefFourniss,
                             ),
                           },
                         },
@@ -113,6 +109,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                             value: getSageMetadata(
                               prefix + "[" + fArtclient.ctNum + "].afPrixAch",
                               articleMeta,
+                              fArtclient.afPrixAch,
                             ),
                           },
                         },

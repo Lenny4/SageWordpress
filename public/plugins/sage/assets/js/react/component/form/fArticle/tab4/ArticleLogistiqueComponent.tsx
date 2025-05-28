@@ -52,7 +52,7 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                   translations.fArticles.arUnitePoids.values,
                 ),
                 initValues: {
-                  value: getSageMetadata("arUnitePoids", articleMeta) ?? "",
+                  value: getSageMetadata("arUnitePoids", articleMeta),
                 },
               },
               {
@@ -60,7 +60,7 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                 DomField: FormInput,
                 type: "number",
                 initValues: {
-                  value: getSageMetadata("arPoidsNet", articleMeta) ?? "",
+                  value: getSageMetadata("arPoidsNet", articleMeta),
                 },
               },
             ],
@@ -71,7 +71,7 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                 name: "arCodeBarre",
                 DomField: FormInput,
                 initValues: {
-                  value: getSageMetadata("arCodeBarre", articleMeta) ?? "",
+                  value: getSageMetadata("arCodeBarre", articleMeta),
                 },
               },
               {
@@ -79,7 +79,7 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                 DomField: FormInput,
                 type: "number",
                 initValues: {
-                  value: getSageMetadata("arPoidsBrut", articleMeta) ?? "",
+                  value: getSageMetadata("arPoidsBrut", articleMeta),
                 },
               },
             ],

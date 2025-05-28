@@ -28,6 +28,9 @@ export const ArticleTab4Component = React.forwardRef((props, ref) => {
               size: { xs: 12 },
             },
             tabs: {
+              tabProps: {
+                defaultValue: 2,
+              },
               tabs: [
                 {
                   label: translations.words.treatmentOptions,

@@ -627,6 +627,8 @@ final class SageTranslationUtils
                 'billing' => __("Facturation", 'sage'),
                 'impression' => __("Impression", 'sage'),
                 'features' => __("Caractéristiques", 'sage'),
+                'asQteMini' => __("Quantité min", 'sage'),
+                'asQteMaxi' => __("Quantité max", 'sage'),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", 'sage'),

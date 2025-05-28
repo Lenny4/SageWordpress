@@ -29,7 +29,7 @@ const articleMeta: MetadataInterface[] = JSON.parse(
 );
 const arRef = getSageMetadata("arRef", articleMeta);
 const canEditArSuiviStock =
-  (getSageMetadata("canEditArSuiviStock", articleMeta) ?? 1).toString() !== "0";
+  getSageMetadata("canEditArSuiviStock", articleMeta, 1).toString() !== "0";
 const isNew = !arRef;
 const fFamilles: any[] = JSON.parse(
   $("[data-sage-ffamilles]").attr("data-sage-ffamilles") ?? "[]",
@@ -41,7 +41,7 @@ const pUnites: any[] = JSON.parse(
 export const ArticleTab1Component = React.forwardRef((props, ref) => {
   const arRefRef = useRef<any>(null);
   const [arType, setArType] = React.useState<string>(
-    (getSageMetadata("arType", articleMeta) ?? "0").toString(),
+    getSageMetadata("arType", articleMeta, "0").toString(),
   );
 
   const onArCoefChanged: TriggerFormContentChanged = (name, newValue) => {
@@ -108,7 +108,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   };
                 }),
                 initValues: {
-                  value: getSageMetadata("arType", articleMeta) ?? "",
+                  value: getSageMetadata("arType", articleMeta),
                 },
               },
             ],
@@ -128,7 +128,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   },
                 },
                 initValues: {
-                  value: getSageMetadata("arDesign", articleMeta) ?? "",
+                  value: getSageMetadata("arDesign", articleMeta),
                 },
               },
             ],
@@ -145,7 +145,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   };
                 }),
                 initValues: {
-                  value: getSageMetadata("faCodeFamille", articleMeta) ?? "",
+                  value: getSageMetadata("faCodeFamille", articleMeta),
                 },
               },
               {
@@ -156,7 +156,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   translations.fArticles.arSuiviStock.values,
                 ),
                 initValues: {
-                  value: getSageMetadata("arSuiviStock", articleMeta) ?? "",
+                  value: getSageMetadata("arSuiviStock", articleMeta),
                 },
               },
             ],
@@ -172,7 +172,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   translations.fArticles.arNomencl.values,
                 ),
                 initValues: {
-                  value: getSageMetadata("arNomencl", articleMeta) ?? "",
+                  value: getSageMetadata("arNomencl", articleMeta),
                 },
               },
               {
@@ -184,7 +184,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   translations.fArticles.arCondition.values,
                 ),
                 initValues: {
-                  value: getSageMetadata("arCondition", articleMeta) ?? "",
+                  value: getSageMetadata("arCondition", articleMeta),
                 },
               },
             ],
@@ -208,7 +208,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 type: "number",
                 triggerFormContentChanged: onArPrixAchChanged,
                 initValues: {
-                  value: getSageMetadata("arPrixAch", articleMeta) ?? "",
+                  value: getSageMetadata("arPrixAch", articleMeta),
                 },
               },
               {
@@ -217,7 +217,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 triggerFormContentChanged: onArCoefChanged,
                 type: "number",
                 initValues: {
-                  value: getSageMetadata("arCoef", articleMeta) ?? "",
+                  value: getSageMetadata("arCoef", articleMeta),
                 },
               },
             ],
@@ -236,8 +236,10 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                     },
                     Dom: (
                       <ArPrixVenInput
-                        defaultValue={(
-                          getSageMetadata("arPrixVen", articleMeta) ?? "0"
+                        defaultValue={getSageMetadata(
+                          "arPrixVen",
+                          articleMeta,
+                          "0",
                         ).toString()}
                         ref={React.createRef()}
                       />
@@ -256,8 +258,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                           translations.fArticles.arPrixTtc.values,
                         ),
                         initValues: {
-                          value:
-                            getSageMetadata("arPrixTtc", articleMeta) ?? "",
+                          value: getSageMetadata("arPrixTtc", articleMeta),
                         },
                       },
                     ],
@@ -273,7 +274,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 DomField: FormInput,
                 type: "number",
                 initValues: {
-                  value: getSageMetadata("arPunet", articleMeta) ?? "",
+                  value: getSageMetadata("arPunet", articleMeta),
                 },
               },
               {
@@ -281,7 +282,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 DomField: FormInput,
                 type: "number",
                 initValues: {
-                  value: getSageMetadata("arCoutStd", articleMeta) ?? "",
+                  value: getSageMetadata("arCoutStd", articleMeta),
                 },
               },
               {
@@ -296,7 +297,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   };
                 }),
                 initValues: {
-                  value: getSageMetadata("arUniteVen", articleMeta) ?? "",
+                  value: getSageMetadata("arUniteVen", articleMeta),
                 },
               },
             ],

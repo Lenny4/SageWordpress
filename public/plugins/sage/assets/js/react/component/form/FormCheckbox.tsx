@@ -44,7 +44,7 @@ export const FormCheckbox: React.FC<FieldInterface> = ({
     <>
       <div
         style={{
-          display: hideLabel ? "none" : "flex",
+          display: "flex",
           alignItems: "center",
           gap: "0.5rem",
           marginBottom: "0.5rem",
@@ -58,7 +58,12 @@ export const FormCheckbox: React.FC<FieldInterface> = ({
           readOnly={readOnly || values.readOnly}
           onChange={handleChange}
         />
-        <label htmlFor={name}>
+        <label
+          htmlFor={name}
+          style={{
+            display: hideLabel ? "none" : "auto",
+          }}
+        >
           <Tooltip title={name.replace("_sage_", "")} arrow placement="top">
             <span>{label}</span>
           </Tooltip>

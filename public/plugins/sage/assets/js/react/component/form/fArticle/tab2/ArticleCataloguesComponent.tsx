@@ -26,9 +26,7 @@ export const ArticleCataloguesComponent = React.forwardRef((props, ref) => {
   const getDefaultValue = (): FormState => {
     const result: FormState = {};
     for (let i = 0; i < nbNiveau; i++) {
-      let value = (
-        getSageMetadata(`clNo${i + 1}`, articleMeta) ?? ""
-      ).toString();
+      let value = getSageMetadata(`clNo${i + 1}`, articleMeta).toString();
       if (value === "0") {
         value = "";
       }

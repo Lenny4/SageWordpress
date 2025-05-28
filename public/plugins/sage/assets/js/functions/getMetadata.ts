@@ -7,7 +7,7 @@ interface MetadataInterface {
 export const getSageMetadata = (
   key: string,
   object: MetadataInterface[] | null,
-  asArray: boolean = false,
+  defaultValue: any = "",
 ) => {
   if (object == null) {
     return null;
@@ -15,17 +15,13 @@ export const getSageMetadata = (
   let value = object.find((o) => o.key === "_sage_" + key);
   if (value) {
     try {
-      const result = JSON.parse(value.value);
-      if (asArray) {
-        return Object.keys(result).map((key) => result[key]);
-      }
-      return result;
+      return JSON.parse(value.value) ?? defaultValue;
     } catch (e) {
       // nothing
     }
-    return value.value;
+    return value.value ?? defaultValue;
   }
-  return null;
+  return defaultValue ?? null;
 };
 
 export const getListObjectSageMetadata = (

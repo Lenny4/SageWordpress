@@ -89,6 +89,7 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
                           value: getSageMetadata(
                             prefix + "[" + fArtclient.acCategorie + "].acCoef",
                             articleMeta,
+                            fArtclient.acCoef,
                           ),
                         },
                       },
@@ -116,6 +117,7 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
                               fArtclient.acCategorie +
                               "].acRemise",
                             articleMeta,
+                            fArtclient.acRemise,
                           ),
                         },
                       },

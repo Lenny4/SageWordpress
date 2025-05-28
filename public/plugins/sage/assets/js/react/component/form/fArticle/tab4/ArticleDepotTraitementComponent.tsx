@@ -14,10 +14,12 @@ import {
   FormContentInterface,
   FormInterface,
   TableLineItemInterface,
+  TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
 import { FormInput } from "../../FormInput";
 import { FormContentComponent } from "../../FormContentComponent";
-import { FormCheckbox } from "../../FormCheckbox";
+import { getDomsToSetParentFormData } from "../../../../../functions/form";
+import { AsPrincipalInput } from "../inputs/AsPrincipalInput";
 
 let translations: any = getTranslations();
 
@@ -35,6 +37,24 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
     const [fArtstocks, setFArtstocks] = React.useState<FArtstockInterface[]>(
       getListObjectSageMetadata(prefix, articleMeta, "deNo"),
     );
+    const [defaultDeNo] = React.useState<string>(() => {
+      return (
+        fArtstocks
+          .find((x) => x.asPrincipal.toString() === "1")
+          ?.deNo?.toString() ?? ""
+      );
+    });
+    const onAsPrincipalChanged: TriggerFormContentChanged = (
+      name,
+      newValue,
+    ) => {
+      const doms = getDomsToSetParentFormData(form.content);
+      for (const dom of doms) {
+        if (dom.ref.current?.onAsPrincipalChanged) {
+          dom.ref.current.onAsPrincipalChanged(newValue);
+        }
+      }
+    };
 
     const getForm = (): FormInterface => {
       const formContent: FormContentInterface[] = [
@@ -54,8 +74,8 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                   "",
                   translations.words.intitule,
                   translations.words.main,
-                  "",
-                  "",
+                  translations.words.asQteMini,
+                  translations.words.asQteMaxi,
                 ],
                 removeItem: (fDepot: FDepotInterface) => {
                   setFArtstocks((v) => {
@@ -129,18 +149,24 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                         Dom: <span>{fDepot.deIntitule}</span>,
                       },
                       {
-                        field: {
-                          name: prefix + "[" + fDepot.deNo + "].asPrincipal",
-                          hideLabel: true,
-                          DomField: FormCheckbox,
-                          initValues: {
-                            value:
-                              getSageMetadata(
-                                prefix + "[" + fDepot.deNo + "].asPrincipal",
-                                articleMeta,
-                              ) ?? "",
-                          },
-                        },
+                        // field: {
+                        //   name: prefix + "[" + fDepot.deNo + "].asPrincipal",
+                        //   DomField: FormCheckbox,
+                        //   initValues: {
+                        //     value: getSageMetadata(
+                        //       prefix + "[" + fDepot.deNo + "].asPrincipal",
+                        //       articleMeta,
+                        //     ),
+                        //   },
+                        // },
+                        Dom: (
+                          <AsPrincipalInput
+                            defaultDeNo={defaultDeNo}
+                            deNo={fDepot.deNo}
+                            onAsPrincipalChangedParent={onAsPrincipalChanged}
+                            ref={React.createRef()}
+                          />
+                        ),
                       },
                       ...["asQteMini", "asQteMaxi"].map((f) => {
                         return {
@@ -150,11 +176,12 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                             type: "number",
                             hideLabel: true,
                             initValues: {
-                              value:
-                                getSageMetadata(
-                                  prefix + "[" + fDepot.deNo + "]." + f,
-                                  articleMeta,
-                                ) ?? "",
+                              value: getSageMetadata(
+                                prefix + "[" + fDepot.deNo + "]." + f,
+                                articleMeta,
+                                // @ts-ignore
+                                fArtstock[f],
+                              ),
                             },
                           },
                         };
