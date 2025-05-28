@@ -55,12 +55,7 @@ export const FormTableComponent: React.FC<State> = ({
   return (
     <>
       {table.add && (
-        <Dialog
-          onClose={handleClose}
-          open={open}
-          fullWidth={true}
-          maxWidth="lg"
-        >
+        <Dialog onClose={handleClose} open={open} maxWidth="lg">
           <DialogTitle>{translations.sentences.addItem}</DialogTitle>
           <DialogContent>
             <FormTableComponent
@@ -169,26 +164,21 @@ export const FormTableComponent: React.FC<State> = ({
                 })}
               </tr>
             ))}
-          {table.add && (
-            <tr>
-              <td
-                colSpan={table.headers.length + (table.removeItem ? 1 : 0)}
-                style={{ textAlign: "center" }}
-              >
-                <Tooltip
-                  title={translations.sentences.addItem}
-                  arrow
-                  placement="bottom"
-                >
-                  <IconButton>
-                    <AddIcon fontSize="small" onClick={handleOpen} />
-                  </IconButton>
-                </Tooltip>
-              </td>
-            </tr>
-          )}
         </tbody>
       </table>
+      {table.add && (
+        <div style={{ textAlign: "center" }}>
+          <Tooltip
+            title={translations.sentences.addItem}
+            arrow
+            placement="bottom"
+          >
+            <IconButton>
+              <AddIcon fontSize="small" onClick={handleOpen} />
+            </IconButton>
+          </Tooltip>
+        </div>
+      )}
     </>
   );
 };

@@ -41,6 +41,7 @@ final class SageGraphQl
     private ?array $fCatalogues = null;
     private ?array $fGlossaires = null;
     private ?array $cbSysLibres = null;
+    private ?array $fDepots = null;
 
     private function __construct(public ?Sage $sage)
     {
@@ -334,7 +335,7 @@ final class SageGraphQl
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                 'ctType',
             ]),
-            'fLivraisons' => $this->_getFLivraisonSelectionSet(),
+            'fLivraisons' => new ArgumentSelectionSetDto($this->_getFLivraisonSelectionSet(), 'liNo'),
         ];
     }
 
@@ -694,17 +695,21 @@ final class SageGraphQl
             return $sageGraphQl->runQuery($query, $getError);
         };
         if (is_null($cacheName)) {
-            return $function();
-        }
-        if ($getFromSage) {
-            $this->sage->cache->delete($cacheName);
-        }
-        $results = $this->sage->cache->get($cacheName, $function);
-        if (empty($results) || is_string($results)) { // if $results is string it means it's an error
-            $this->sage->cache->delete($cacheName);
+            $results = $function();
+        } else {
+            if ($getFromSage) {
+                $this->sage->cache->delete($cacheName);
+            }
             $results = $this->sage->cache->get($cacheName, $function);
+            if (empty($results) || is_string($results)) { // if $results is string it means it's an error
+                $this->sage->cache->delete($cacheName);
+                $results = $this->sage->cache->get($cacheName, $function);
+            }
         }
 
+        if (isset($results->data->{$entityName}->items)) {
+            $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets);
+        }
         return $results;
     }
 
@@ -734,6 +739,26 @@ final class SageGraphQl
         }
 
         return [null, $defaultSortValue];
+    }
+
+    private function addKeysToCollection(array $items, array $selectionSets): void
+    {
+        foreach ($items as $item) {
+            foreach ($selectionSets as $prop => $selectionSet) {
+                if ($selectionSet instanceof ArgumentSelectionSetDto) {
+                    $this->_addKeysToCollection($item, $prop, $selectionSet->getKey());
+                }
+            }
+        }
+    }
+
+    private function _addKeysToCollection(stdClass $object, string $prop, string $key): void
+    {
+        $collection = [];
+        foreach ($object->{$prop} as $value) {
+            $collection[$value->{$key}] = $value;
+        }
+        $object->{$prop} = $collection;
     }
 
     public function getPExpeditions(
@@ -856,16 +881,12 @@ final class SageGraphQl
                 'arPays',
                 'arRaccourci',
             ]),
-            'fArtclients' => new ArgumentSelectionSetDto(
-                [
-                    ...$this->_getFArtclientsSelectionSet(),
-                ],
-                [
-                    'where' => new RawObject('{ ctNum: { eq: null } }'),
-                ],
-            ),
-            'fArtfournisses' => $this->_getFArtfournisseSelectionSet(),
-            'fArtglosses' => $this->_getFArtglossesSelectionSet(),
+            'fArtclients' => new ArgumentSelectionSetDto($this->_getFArtclientsSelectionSet(), 'acCategorie', [
+                'where' => new RawObject('{ ctNum: { eq: null } }'),
+            ]),
+            'fArtfournisses' => new ArgumentSelectionSetDto($this->_getFArtfournisseSelectionSet(), 'ctNum'),
+            'fArtglosses' => new ArgumentSelectionSetDto($this->_getFArtglossesSelectionSet(), 'glNo'),
+            'fArtstocks' => new ArgumentSelectionSetDto($this->_getFArtstocksSelectionSet(), 'deNo'),
             'prices' => [
                 ...$this->_getPriceSelectionSet(),
                 'nCatTarif' => [
@@ -917,6 +938,18 @@ final class SageGraphQl
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                 'glNo',
+            ]),
+        ];
+    }
+
+    public function _getFArtstocksSelectionSet()
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'deNo',
+                'asQteMini',
+                'asQteMaxi',
+                'asPrincipal',
             ]),
         ];
     }
@@ -1036,6 +1069,52 @@ final class SageGraphQl
         ];
     }
 
+    public function getFDepots(
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false,
+        bool  $ignorePingApi = false
+    ): array|null|string
+    {
+        if (!is_null($this->fDepots) && $getFromSage !== true) {
+            return $this->fDepots;
+        }
+
+        $entityName = SageEntityMenu::FDEPOT_ENTITY_NAME;
+        $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
+        $queryParams = [
+            "filter_field" => [],
+            "filter_type" => [],
+            "filter_value" => [],
+            "sort" => '{"deNo": "asc"}',
+            "paged" => "1",
+            "per_page" => "50"
+        ];
+        $selectionSets = $this->_getFDepotSelectionSet();
+        $this->fDepots = $this->getEntitiesAndSaveInOption(
+            $cacheName,
+            $getFromSage,
+            $entityName,
+            $queryParams,
+            $selectionSets,
+            $getError,
+            $ignorePingApi,
+        );
+        return $this->fDepots;
+    }
+
+    private function _getFDepotSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'deIntitule',
+            ]),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'deNo',
+            ]),
+        ];
+    }
+
     public function getFFamilles(
         bool  $useCache = true,
         ?bool $getFromSage = null,
@@ -1118,20 +1197,7 @@ final class SageGraphQl
         if (is_null($fArticle) || $fArticle->data->fArticles->totalCount !== 1) {
             return null;
         }
-        $fArticle = $fArticle->data->fArticles->items[0];
-        $this->addKeysToCollection($fArticle, 'fArtclients', 'acCategorie');
-        $this->addKeysToCollection($fArticle, 'fArtfournisses', 'ctNum');
-        $this->addKeysToCollection($fArticle, 'fArtglosses', 'glNo');
-        return $fArticle;
-    }
-
-    private function addKeysToCollection(stdClass $object, string $prop, string $key): void
-    {
-        $collection = [];
-        foreach ($object->{$prop} as $value) {
-            $collection[$value->{$key}] = $value;
-        }
-        $object->{$prop} = $collection;
+        return $fArticle->data->fArticles->items[0];
     }
 
     public function getAvailableArRef(
@@ -1277,7 +1343,7 @@ WHERE meta_key = %s
         bool $getExpedition = false,
         bool $getUser = false,
         bool $getLivraison = false,
-        bool $getLotSerie = false,
+        bool $getLotSerie = false, // todo
     ): array
     {
         $result = [
@@ -1297,7 +1363,7 @@ WHERE meta_key = %s
             $result['fraisExpedition'] = $this->_getFraisExpeditionSelectionSet();
         }
         if ($getFDoclignes) {
-            $result['fDoclignes'] = $this->_getFDocligneSelectionSet(getLotSerie: $getLotSerie);
+            $result['fDoclignes'] = new ArgumentSelectionSetDto($this->_getFDocligneSelectionSet(), 'dlNo');
         }
         if ($getUser) {
             $result['doTiersNavigation'] = $this->_getFComptetSelectionSet();

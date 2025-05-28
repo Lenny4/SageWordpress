@@ -37,6 +37,7 @@ final class SageEntityMenu
     public const FCATALOGUE_ENTITY_NAME = 'fCatalogues';
     public const FGLOSSAIRE_ENTITY_NAME = 'fGlossaires';
     public const CBSYSLIBRE_ENTITY_NAME = 'cbSysLibres';
+    public const FDEPOT_ENTITY_NAME = 'fDepots';
     private ?array $_metadata = null;
 
     /**

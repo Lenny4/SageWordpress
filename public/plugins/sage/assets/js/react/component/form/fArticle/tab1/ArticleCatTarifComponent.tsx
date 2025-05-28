@@ -4,7 +4,10 @@ import { ArticlePricesComponent } from "../ArticlePricesComponent";
 import { getTranslations } from "../../../../../functions/translations";
 import { MetadataInterface } from "../../../../../interface/WordpressInterface";
 import { FArticleClientInterface } from "../../../../../interface/FArticleInterface";
-import { getListObjectSageMetadata } from "../../../../../functions/getMetadata";
+import {
+  getListObjectSageMetadata,
+  getSageMetadata,
+} from "../../../../../functions/getMetadata";
 import {
   FormContentInterface,
   FormInterface,
@@ -82,7 +85,12 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
                         type: "number",
                         hideLabel: true,
                         triggerFormContentChanged: onAcCoefChanged,
-                        initValues: { value: fArtclient.acCoef },
+                        initValues: {
+                          value: getSageMetadata(
+                            prefix + "[" + fArtclient.acCategorie + "].acCoef",
+                            articleMeta,
+                          ),
+                        },
                       },
                     },
                     {
@@ -101,7 +109,15 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
                         DomField: FormInput,
                         type: "number",
                         hideLabel: true,
-                        initValues: { value: fArtclient.acRemise },
+                        initValues: {
+                          value: getSageMetadata(
+                            prefix +
+                              "[" +
+                              fArtclient.acCategorie +
+                              "].acRemise",
+                            articleMeta,
+                          ),
+                        },
                       },
                     },
                   ],

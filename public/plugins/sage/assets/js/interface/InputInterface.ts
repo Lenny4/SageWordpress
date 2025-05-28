@@ -1,6 +1,7 @@
 import { FC } from "react";
 import { TabInterface } from "./TabInterface";
 import { GridProps } from "@mui/material/Grid/Grid";
+import { TabsProps } from "@mui/material/Tabs/Tabs";
 
 export interface FormInterface {
   content: FormContentInterface[];
@@ -31,7 +32,7 @@ export interface TableAddInterface {
 }
 
 export interface FormTabInterface {
-  orientation?: "horizontal" | "vertical";
+  tabProps?: TabsProps;
   tabs?: TabInterface[];
 }
 

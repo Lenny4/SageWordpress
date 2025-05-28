@@ -25,6 +25,18 @@ export interface FArtglosseInterface {
   glNo: number;
 }
 
+export interface FArtstockInterface {
+  deNo: number;
+  asQteMini: number;
+  asQteMaxi: number;
+  asPrincipal: number;
+}
+
+export interface FDepotInterface {
+  deNo: number;
+  deIntitule: string;
+}
+
 export interface FArtfournisseInterface {
   ctNum: string;
   afRefFourniss: string;

@@ -2,11 +2,13 @@
 
 namespace App;
 
+use App\class\Dto\ArgumentSelectionSetDto;
 use App\class\SageEntityMenu;
 use App\class\SageEntityMetadata;
 use App\class\SageShippingMethod__index__;
 use App\enum\Sage\GlossaireDomaineTypeEnum;
 use App\lib\SageRequest;
+use App\Utils\PathUtils;
 use App\Utils\SageTranslationUtils;
 use App\Utils\TaxeUtils;
 use Automattic\WooCommerce\Utilities\OrderUtil;
@@ -153,14 +155,14 @@ final class SageSettings
                         return $sageSettings->setDefaultFilter($data, $_GET);
                     },
                 ],
-                metadata: static function () use ($sageGraphQl, $sageSettings): array {
+                metadata: static function (?stdClass $obj = null) use ($sageGraphQl, $sageSettings): array {
                     $result = [
                         new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {
                             return (new DateTime())->format('Y-m-d H:i:s');
                         }, showInOptions: true),
                         new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
                     ];
-                    return $sageSettings->addSelectionSetAsMetadata($sageGraphQl->_getFComptetSelectionSet(), $result);
+                    return $sageSettings->addSelectionSetAsMetadata($sageGraphQl->_getFComptetSelectionSet(), $result, $obj);
                 },
                 metaKeyIdentifier: Sage::META_KEY_CT_NUM,
                 metaTable: $wpdb->usermeta,
@@ -244,11 +246,11 @@ final class SageSettings
                         return $sageSettings->setDefaultFilter($data, $_GET);
                     },
                 ],
-                metadata: static function () use ($sageGraphQl, $sageSettings): array {
+                metadata: static function (?stdClass $obj = null) use ($sageGraphQl, $sageSettings): array {
                     $result = [
                         new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
                     ];
-                    return $sageSettings->addSelectionSetAsMetadata($sageGraphQl->_getFDocenteteSelectionSet(), $result);
+                    return $sageSettings->addSelectionSetAsMetadata($sageGraphQl->_getFDocenteteSelectionSet(), $result, $obj);
                 },
                 metaKeyIdentifier: Sage::META_KEY_IDENTIFIER,
                 metaTable: $wpdb->prefix . 'wc_orders_meta',
@@ -320,37 +322,7 @@ final class SageSettings
                             return $fArticle->canEditArSuiviStock;
                         }),
                     ];
-                    $result = $sageSettings->addSelectionSetAsMetadata($sageGraphQl->_getFArticleSelectionSet(), $result);
-                    $pCattarifs = $sageGraphQl->getPCattarifs();
-                    foreach ($pCattarifs as $pCattarif) {
-                        foreach (["acCoef", "acPrixVen", "acRemise"] as $field) {
-                            $result[] = new SageEntityMetadata(field: '_fArtclients[' . $pCattarif->cbIndice . '].' . $field,
-                                value: static function (StdClass $fArticle) use ($pCattarif, $field) {
-                                    return $fArticle->fArtclients[$pCattarif->cbIndice]->{$field};
-                                });
-                        }
-                    }
-                    if (!is_null($obj)) {
-                        foreach ($obj->fArtfournisses as $fArtfournisse) {
-                            $fields = $sageSettings->getFirstLevelSelectionSet($sageGraphQl->_getFArtfournisseSelectionSet());
-                            foreach ($fields as $field) {
-                                $result[] = new SageEntityMetadata(field: '_fArtfournisses[' . $fArtfournisse->ctNumNavigation->ctNum . '].' . $field,
-                                    value: static function (StdClass $fArticle) use ($fArtfournisse, $field) {
-                                        return $fArticle->fArtfournisses[$fArtfournisse->ctNumNavigation->ctNum]->{$field};
-                                    });
-                            }
-                        }
-                        foreach ($obj->fArtglosses as $fArtglosse) {
-                            $fields = $sageSettings->getFirstLevelSelectionSet($sageGraphQl->_getFArtglossesSelectionSet());
-                            foreach ($fields as $field) {
-                                $result[] = new SageEntityMetadata(field: '_fArtglosses[' . $fArtglosse->glNo . '].' . $field,
-                                    value: static function (StdClass $fArticle) use ($fArtglosse, $field) {
-                                        return $fArticle->fArtglosses[$fArtglosse->glNo]->{$field};
-                                    });
-                            }
-                        }
-                    }
-                    return $result;
+                    return $sageSettings->addSelectionSetAsMetadata($sageGraphQl->_getFArticleSelectionSet(), $result, $obj);
                 },
                 metaKeyIdentifier: Sage::META_KEY_AR_REF,
                 metaTable: $wpdb->postmeta,
@@ -1009,6 +981,7 @@ final class SageSettings
                 'pCatComptas' => $sageSettings->sage->sageGraphQl->getPCatComptas(),
                 'fFamilles' => $sageSettings->sage->sageGraphQl->getFFamilles(),
                 'pUnites' => $sageSettings->sage->sageGraphQl->getPUnites(),
+                'fDepots' => $sageSettings->sage->sageGraphQl->getFDepots(),
                 'fPays' => $sageSettings->sage->sageGraphQl->getFPays(),
                 'fGlossaires' => array_values(array_filter($sageSettings->sage->sageGraphQl->getFGlossaires(), static function (stdClass $fGlossaire) {
                     return $fGlossaire->glDomaine === GlossaireDomaineTypeEnum::GlossaireDomaineTypeArticle->value;
@@ -1200,25 +1173,25 @@ WHERE meta_key = %s
                                 </div>";
     }
 
-    private function addSelectionSetAsMetadata(array $selectionSets, array $sageEntityMetadatas): array
+    private function addSelectionSetAsMetadata(array $selectionSets, array &$sageEntityMetadatas, ?stdClass $obj, string $prefix = ''): array
     {
-        foreach ($selectionSets as $selectionSet) {
+        foreach ($selectionSets as $subEntity => $selectionSet) {
             if (is_array($selectionSet) && array_key_exists('name', $selectionSet)) {
-                $sageEntityMetadatas[] = new SageEntityMetadata(field: '_' . $selectionSet['name'], value: static function (StdClass $fArticle) use ($selectionSet) {
-                    return $fArticle->{$selectionSet['name']};
+                $sageEntityMetadatas[] = new SageEntityMetadata(field: '_' . $prefix . $selectionSet['name'], value: static function (StdClass $entity) use ($selectionSet, $prefix) {
+                    return PathUtils::getByPath($entity, $prefix)->{$selectionSet['name']};
                 });
+            } else if (!is_null($obj) && $selectionSet instanceof ArgumentSelectionSetDto) {
+                foreach ($obj->{$subEntity} as $subObject) {
+                    $this->addSelectionSetAsMetadata(
+                        $selectionSet->getSelectionSet(),
+                        $sageEntityMetadatas,
+                        $subObject,
+                        $subEntity . '[' . $subObject->{$selectionSet->getKey()} . '].'
+                    );
+                }
             }
         }
         return $sageEntityMetadatas;
-    }
-
-    public function getFirstLevelSelectionSet(array $selectionSets): array
-    {
-        return array_values(array_map(static function (array $selectionSet) {
-            return $selectionSet['name'];
-        }, array_filter($selectionSets, static function (array $selectionSet) {
-            return array_key_exists('name', $selectionSet);
-        })));
     }
 
     private function getFieldsForEntity(SageEntityMenu $sageEntityMenu): array

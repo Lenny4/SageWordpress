@@ -3,7 +3,10 @@ import React, { useImperativeHandle } from "react";
 import { getTranslations } from "../../../../../functions/translations";
 import { MetadataInterface } from "../../../../../interface/WordpressInterface";
 import { FArtfournisseInterface } from "../../../../../interface/FArticleInterface";
-import { getListObjectSageMetadata } from "../../../../../functions/getMetadata";
+import {
+  getListObjectSageMetadata,
+  getSageMetadata,
+} from "../../../../../functions/getMetadata";
 import {
   FormContentInterface,
   FormInterface,
@@ -90,7 +93,15 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                             prefix + "[" + fArtclient.ctNum + "].afRefFourniss",
                           DomField: FormInput,
                           hideLabel: true,
-                          initValues: { value: fArtclient.afRefFourniss },
+                          initValues: {
+                            value: getSageMetadata(
+                              prefix +
+                                "[" +
+                                fArtclient.ctNum +
+                                "].afRefFourniss",
+                              articleMeta,
+                            ),
+                          },
                         },
                       },
                       {
@@ -98,7 +109,12 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                           name: prefix + "[" + fArtclient.ctNum + "].afPrixAch",
                           DomField: FormInput,
                           hideLabel: true,
-                          initValues: { value: fArtclient.afPrixAch },
+                          initValues: {
+                            value: getSageMetadata(
+                              prefix + "[" + fArtclient.ctNum + "].afPrixAch",
+                              articleMeta,
+                            ),
+                          },
                         },
                       },
                     ],

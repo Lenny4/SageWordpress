@@ -5,8 +5,9 @@ namespace App\class\Dto;
 final class ArgumentSelectionSetDto
 {
     public function __construct(
-        private array $selectionSet,
-        private array $arguments,
+        private array  $selectionSet,
+        private string $key,
+        private array  $arguments = [],
     )
     {
     }
@@ -30,6 +31,17 @@ final class ArgumentSelectionSetDto
     public function setSelectionSet(array $selectionSet): self
     {
         $this->selectionSet = $selectionSet;
+        return $this;
+    }
+
+    public function getKey(): string
+    {
+        return $this->key;
+    }
+
+    public function setKey(string $key): self
+    {
+        $this->key = $key;
         return $this;
     }
 }

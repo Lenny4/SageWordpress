@@ -3,19 +3,17 @@ import Box from "@mui/material/Box";
 import { Tab, Tabs } from "@mui/material";
 import { CustomTabPanel } from "./CustomTabPanel";
 import { TabInterface } from "../../../interface/TabInterface";
+import { TabsProps } from "@mui/material/Tabs/Tabs";
 
 type State = {
   tabs: TabInterface[];
-  defaultActiveTab?: number;
-  orientation?: "horizontal" | "vertical";
+  tabProps?: TabsProps;
 };
 
-export const TabsComponent = ({
-  tabs,
-  defaultActiveTab,
-  orientation,
-}: State) => {
-  const [tabValue, setValue] = React.useState(defaultActiveTab ?? 0);
+export const TabsComponent = ({ tabs, tabProps }: State) => {
+  const [tabValue, setValue] = React.useState(
+    Number(tabProps?.defaultValue ?? 0),
+  );
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -25,13 +23,12 @@ export const TabsComponent = ({
     <>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
+          {...tabProps}
           value={tabValue}
           onChange={handleChange}
           variant="scrollable"
           scrollButtons="auto"
           aria-label="scrollable auto tabs"
-          // https://mui.com/material-ui/react-tabs/#vertical-tabs
-          orientation={orientation}
         >
           {tabs.map((tab, index) => (
             <Tab label={tab.label} key={index} />

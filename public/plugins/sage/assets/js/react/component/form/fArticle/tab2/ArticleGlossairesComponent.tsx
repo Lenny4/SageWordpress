@@ -47,7 +47,6 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
             },
             table: {
               headers: ["", translations.words.intitule, ""],
-              fullWidth: true,
               removeItem: (fGlossaire: FGlossaireInterface) => {
                 setFArtglosses((v) => {
                   return v.filter(
