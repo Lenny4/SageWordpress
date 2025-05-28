@@ -97,7 +97,14 @@ export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
                     {
                       Dom: (
                         <AcPrixVenInput
-                          defaultValue={fArtclient.acPrixVen}
+                          defaultValue={getSageMetadata(
+                            prefix +
+                              "[" +
+                              fArtclient.acCategorie +
+                              "].acPrixVen",
+                            articleMeta,
+                            fArtclient.acPrixVen,
+                          )}
                           acCategorie={fArtclient.acCategorie}
                           ref={React.createRef()}
                         />

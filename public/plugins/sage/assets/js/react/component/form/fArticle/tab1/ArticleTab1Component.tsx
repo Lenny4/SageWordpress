@@ -9,7 +9,6 @@ import {
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
 import {
-  getDomsToSetParentFormData,
   stringValidator,
   transformOptionsObject,
 } from "../../../../../functions/form";
@@ -40,33 +39,29 @@ const pUnites: any[] = JSON.parse(
 
 export const ArticleTab1Component = React.forwardRef((props, ref) => {
   const arRefRef = useRef<any>(null);
+
+  const [arCoef, setArCoef] = React.useState<string>(
+    getSageMetadata("arCoef", articleMeta, "0").toString(),
+  );
+  const onArCoefChanged: TriggerFormContentChanged = (name, newValue) => {
+    setArCoef(newValue);
+  };
+
+  const [arPrixAch, setArPrixAch] = React.useState<string>(
+    getSageMetadata("arPrixAch", articleMeta, "0").toString(),
+  );
+  const onArPrixAchChanged: TriggerFormContentChanged = (name, newValue) => {
+    setArPrixAch(newValue);
+  };
+
   const [arType, setArType] = React.useState<string>(
     getSageMetadata("arType", articleMeta, "0").toString(),
   );
-
-  const onArCoefChanged: TriggerFormContentChanged = (name, newValue) => {
-    const doms = getDomsToSetParentFormData(form.content);
-    for (const dom of doms) {
-      if (dom.ref.current?.onArCoefChanged) {
-        dom.ref.current.onArCoefChanged(newValue);
-      }
-    }
-  };
-
-  const onArPrixAchChanged: TriggerFormContentChanged = (name, newValue) => {
-    const doms = getDomsToSetParentFormData(form.content);
-    for (const dom of doms) {
-      if (dom.ref.current?.onArPrixAchChanged) {
-        dom.ref.current.onArPrixAchChanged(newValue);
-      }
-    }
-  };
-
   const onArTypeChanged: TriggerFormContentChanged = (name, newValue) => {
     setArType(newValue);
   };
 
-  const [form] = React.useState<FormInterface>(() => {
+  const getForm = (): FormInterface => {
     const formContent: FormContentInterface[] = [
       {
         props: {
@@ -108,7 +103,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   };
                 }),
                 initValues: {
-                  value: getSageMetadata("arType", articleMeta),
+                  value: arType,
                 },
               },
             ],
@@ -208,7 +203,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 type: "number",
                 triggerFormContentChanged: onArPrixAchChanged,
                 initValues: {
-                  value: getSageMetadata("arPrixAch", articleMeta),
+                  value: arPrixAch,
                 },
               },
               {
@@ -217,7 +212,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 triggerFormContentChanged: onArCoefChanged,
                 type: "number",
                 initValues: {
-                  value: getSageMetadata("arCoef", articleMeta),
+                  value: arCoef,
                 },
               },
             ],
@@ -241,6 +236,8 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                           articleMeta,
                           "0",
                         ).toString()}
+                        arCoef={arCoef}
+                        arPrixAch={arPrixAch}
                         ref={React.createRef()}
                       />
                     ),
@@ -332,7 +329,8 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
     return {
       content: formContent,
     };
-  });
+  };
+  const [form, setForm] = React.useState<FormInterface>(getForm());
 
   const handleIsValid = () => {
     console.log("handleIsValid");
@@ -349,6 +347,10 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
       return form;
     },
   }));
+
+  React.useEffect(() => {
+    setForm(getForm());
+  }, [arCoef, arPrixAch, arType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Grid container>

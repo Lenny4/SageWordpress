@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useImperativeHandle } from "react";
 import { IconButton, Tooltip } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import { getTranslations } from "../../../../../functions/translations";
@@ -10,6 +9,8 @@ let translations: any = getTranslations();
 
 export type ArPrixVenInputState = {
   defaultValue: number;
+  arCoef: number | string;
+  arPrixAch: number | string;
 };
 
 type FormState = {
@@ -18,21 +19,12 @@ type FormState = {
   valueLock: InputInterface;
 };
 
-interface ParentFormData {
-  arCoef: number;
-  arPrixAch: number;
-}
-
 export const ArPrixVenInput = React.forwardRef(
-  ({ defaultValue }: ArPrixVenInputState, ref) => {
-    const [parentFormData, setParentFormData] = React.useState<ParentFormData>({
-      arCoef: 0,
-      arPrixAch: 0,
-    });
+  ({ defaultValue, arCoef, arPrixAch }: ArPrixVenInputState, ref) => {
+    arCoef = Number(arCoef);
+    arPrixAch = Number(arPrixAch);
     const getExpectedArPrixVen = () => {
-      return Number(
-        (parentFormData.arPrixAch * parentFormData.arCoef).toFixed(2),
-      );
+      return Number((arCoef * arPrixAch).toFixed(2));
     };
     const [expectedArPrixVen, setExpectedArPrixVen] = React.useState(
       getExpectedArPrixVen(),
@@ -96,32 +88,13 @@ export const ArPrixVenInput = React.forwardRef(
       setExpectedArPrixVen(newValue);
     };
 
-    useImperativeHandle(ref, () => ({
-      onArCoefChanged(data: number) {
-        setParentFormData((x) => {
-          return {
-            ...x,
-            arCoef: data,
-          };
-        });
-      },
-      onArPrixAchChanged(data: number) {
-        setParentFormData((x) => {
-          return {
-            ...x,
-            arPrixAch: data,
-          };
-        });
-      },
-    }));
-
     React.useEffect(() => {
       handleRealArPrixVen();
     }, [expectedArPrixVen, values.arPrixVen.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     React.useEffect(() => {
       resetArPrixVen();
-    }, [parentFormData]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [arCoef, arPrixAch]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
       <>

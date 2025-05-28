@@ -60,14 +60,7 @@ export const ArticleComponent = () => {
 
   return (
     <Box sx={{ width: "100%" }}>
-      {isSageProductType && (
-        <TabsComponent
-          tabs={tabs}
-          tabProps={{
-            defaultValue: 2,
-          }}
-        />
-      )}
+      {isSageProductType && <TabsComponent tabs={tabs} />}
     </Box>
   );
 };
