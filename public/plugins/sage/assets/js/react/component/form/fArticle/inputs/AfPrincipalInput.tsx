@@ -1,31 +1,22 @@
 import * as React from "react";
-import { useImperativeHandle } from "react";
 import { Tooltip } from "@mui/material";
 import { getTranslations } from "../../../../../functions/translations";
-import {TriggerFormContentChanged} from "../../../../../interface/InputInterface";
+import { TriggerFormContentChanged } from "../../../../../interface/InputInterface";
 
 let translations: any = getTranslations();
 
 export type AfPrincipalState = {
-  defaultCtNum: string;
+  selectedCtNum: string;
   ctNum: string;
   onAfPrincipalChangedParent: TriggerFormContentChanged;
 };
 
 export const AfPrincipalInput = React.forwardRef(
   (
-    { defaultCtNum, ctNum, onAfPrincipalChangedParent }: AfPrincipalState,
+    { selectedCtNum, ctNum, onAfPrincipalChangedParent }: AfPrincipalState,
     ref,
   ) => {
-    const [selectedCtNum, setSelectedCtNum] =
-      React.useState<string>(defaultCtNum);
     const name = `_sage_fArtfournisses[${ctNum}].afPrincipal`;
-
-    useImperativeHandle(ref, () => ({
-      onAfPrincipalChanged(newCtNum: string) {
-        setSelectedCtNum(newCtNum);
-      },
-    }));
 
     return (
       <>

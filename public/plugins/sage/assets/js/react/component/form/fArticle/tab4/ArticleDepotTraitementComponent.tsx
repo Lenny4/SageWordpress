@@ -18,7 +18,6 @@ import {
 } from "../../../../../interface/InputInterface";
 import { FormInput } from "../../FormInput";
 import { FormContentComponent } from "../../FormContentComponent";
-import { getDomsToSetParentFormData } from "../../../../../functions/form";
 import { AsPrincipalInput } from "../inputs/AsPrincipalInput";
 
 let translations: any = getTranslations();
@@ -37,7 +36,7 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
     const [fArtstocks, setFArtstocks] = React.useState<FArtstockInterface[]>(
       getListObjectSageMetadata(prefix, articleMeta, "deNo"),
     );
-    const [defaultDeNo] = React.useState<string>(() => {
+    const [selectedDeNo, setDefaultDeNo] = React.useState<string>(() => {
       return (
         fArtstocks
           .find((x) => x.asPrincipal.toString() === "1")
@@ -48,12 +47,7 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
       name,
       newValue,
     ) => {
-      const doms = getDomsToSetParentFormData(form.content);
-      for (const dom of doms) {
-        if (dom.ref.current?.onAsPrincipalChanged) {
-          dom.ref.current.onAsPrincipalChanged(newValue);
-        }
-      }
+      setDefaultDeNo(newValue);
     };
 
     const getForm = (): FormInterface => {
@@ -161,7 +155,7 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                         // },
                         Dom: (
                           <AsPrincipalInput
-                            defaultDeNo={defaultDeNo}
+                            selectedDeNo={selectedDeNo}
                             deNo={fDepot.deNo}
                             onAsPrincipalChangedParent={onAsPrincipalChanged}
                             ref={React.createRef()}
@@ -209,7 +203,7 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
 
     React.useEffect(() => {
       setForm(getForm());
-    }, [fArtstocks]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [fArtstocks, selectedDeNo]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
       <FormContentComponent content={form.content} transPrefix="fArticles" />

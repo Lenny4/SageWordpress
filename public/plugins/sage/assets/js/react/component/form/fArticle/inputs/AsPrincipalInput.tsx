@@ -1,30 +1,22 @@
 import * as React from "react";
-import { useImperativeHandle } from "react";
 import { Tooltip } from "@mui/material";
 import { getTranslations } from "../../../../../functions/translations";
-import {TriggerFormContentChanged} from "../../../../../interface/InputInterface";
+import { TriggerFormContentChanged } from "../../../../../interface/InputInterface";
 
 let translations: any = getTranslations();
 
 export type AsPrincipalInputState = {
-  defaultDeNo: string;
+  selectedDeNo: string;
   deNo: number | string;
   onAsPrincipalChangedParent: TriggerFormContentChanged;
 };
 
 export const AsPrincipalInput = React.forwardRef(
   (
-    { defaultDeNo, deNo, onAsPrincipalChangedParent }: AsPrincipalInputState,
+    { selectedDeNo, deNo, onAsPrincipalChangedParent }: AsPrincipalInputState,
     ref,
   ) => {
-    const [selectedDeNo, setSelectedDeNo] = React.useState<string>(defaultDeNo);
     const name = `_sage_fArtstocks[${deNo}].asPrincipal`;
-
-    useImperativeHandle(ref, () => ({
-      onAsPrincipalChanged(newDeNo: string) {
-        setSelectedDeNo(newDeNo);
-      },
-    }));
 
     return (
       <>

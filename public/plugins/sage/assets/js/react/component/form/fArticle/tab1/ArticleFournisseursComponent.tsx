@@ -13,7 +13,6 @@ import {
   TableLineItemInterface,
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
-import { getDomsToSetParentFormData } from "../../../../../functions/form";
 import { AfPrincipalInput } from "../inputs/AfPrincipalInput";
 import { FormInput } from "../../FormInput";
 import { FormContentComponent } from "../../FormContentComponent";
@@ -29,22 +28,16 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
   const [fArtfournisses] = React.useState<FArtfournisseInterface[]>(
     getListObjectSageMetadata(prefix, articleMeta, "ctNum"),
   );
-  const [defaultCtNum] = React.useState<string>(() => {
+  const [selectedCtNum, setSelectedCtNum] = React.useState<string>(() => {
     return (
       fArtfournisses.find((x) => x.afPrincipal.toString() === "1")?.ctNum ?? ""
     );
   });
-
   const onAfPrincipalChanged: TriggerFormContentChanged = (name, newValue) => {
-    const doms = getDomsToSetParentFormData(form.content);
-    for (const dom of doms) {
-      if (dom.ref.current?.onAfPrincipalChanged) {
-        dom.ref.current.onAfPrincipalChanged(newValue);
-      }
-    }
+    setSelectedCtNum(newValue);
   };
 
-  const [form] = React.useState<FormInterface>(() => {
+  const getForm = (): FormInterface => {
     const formContent: FormContentInterface[] = [
       {
         props: {
@@ -75,7 +68,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       {
                         Dom: (
                           <AfPrincipalInput
-                            defaultCtNum={defaultCtNum}
+                            selectedCtNum={selectedCtNum}
                             ctNum={fArtclient.ctNum}
                             onAfPrincipalChangedParent={onAfPrincipalChanged}
                             ref={React.createRef()}
@@ -126,13 +119,18 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
     return {
       content: formContent,
     };
-  });
+  };
+  const [form, setForm] = React.useState<FormInterface>(getForm());
 
   useImperativeHandle(ref, () => ({
     getForm() {
       return form;
     },
   }));
+
+  React.useEffect(() => {
+    setForm(getForm());
+  }, [selectedCtNum]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <FormContentComponent content={form.content} transPrefix="fArticles" />
