@@ -308,16 +308,17 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 {
                   label: translations.words.nCatTarif,
                   Component: ArticleCatTarifComponent,
+                  props: { arPrixAch: arPrixAch },
                 },
                 {
                   label: translations.words.suppliers,
                   Component: ArticleFournisseursComponent,
                 },
-              ].map(({ label, Component }) => {
+              ].map(({ label, Component, props }) => {
                 const ref = React.createRef();
                 return {
                   label,
-                  dom: <Component ref={ref} />,
+                  dom: <Component ref={ref} {...props} />,
                   ref,
                 };
               }),

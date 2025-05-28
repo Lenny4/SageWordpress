@@ -14,15 +14,16 @@ import {
   TableLineItemInterface,
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
-import {
-  getDomsToSetParentFormData,
-  getKeyFromName,
-} from "../../../../../functions/form";
 import { AcPrixVenInput } from "../inputs/AcPrixVenInput";
 import { FormInput } from "../../FormInput";
 import { FormContentComponent } from "../../FormContentComponent";
+import { getKeyFromName } from "../../../../../functions/form";
 
 let translations: any = getTranslations();
+
+type State = {
+  arPrixAch: number | string;
+};
 
 const articleMeta: MetadataInterface[] = JSON.parse(
   $("[data-sage-product]").attr("data-sage-product") ?? "null",
@@ -32,129 +33,151 @@ const pCattarifs: any[] = JSON.parse(
   $("[data-sage-pcattarifs]").attr("data-sage-pcattarifs") ?? "[]",
 );
 
-export const ArticleCatTarifComponent = React.forwardRef((props, ref) => {
-  const prefix = "fArtclients";
-  const [fArtclients] = React.useState<FArticleClientInterface[]>(
-    getListObjectSageMetadata(prefix, articleMeta, "acCategorie"),
-  );
+export const ArticleCatTarifComponent = React.forwardRef(
+  ({ arPrixAch }: State, ref) => {
+    const prefix = "fArtclients";
+    const [fArtclients] = React.useState<FArticleClientInterface[]>(
+      getListObjectSageMetadata(prefix, articleMeta, "acCategorie"),
+    );
 
-  const onAcCoefChanged: TriggerFormContentChanged = (name, newValue) => {
-    const doms = getDomsToSetParentFormData(form.content);
-    for (const dom of doms) {
-      if (dom.ref.current?.onAcCoefChanged) {
-        dom.ref.current?.onAcCoefChanged(
-          Number(newValue),
-          getKeyFromName(name),
-        );
+    const [acCoefs, setACCoefs] = React.useState<any>(() => {
+      const result: any = {};
+      for (const fArtclient of fArtclients) {
+        result[fArtclient.acCategorie] = fArtclient.acCoef;
       }
-    }
-  };
-
-  const [form] = React.useState<FormInterface>(() => {
-    const formContent: FormContentInterface[] = [
-      {
-        props: {
-          container: true,
-          spacing: 1,
-          sx: { p: 1 },
-        },
-        children: [
-          {
-            props: {
-              size: { xs: 12 },
-            },
-            table: {
-              headers: [
-                translations.words.category,
-                translations.words.coefficient,
-                translations.words.sellPrice,
-                translations.words.discount,
-              ],
-              items: fArtclients.map((fArtclient): TableLineItemInterface => {
-                return {
-                  item: fArtclient,
-                  lines: [
-                    {
-                      Dom: <>{pCattarifs[fArtclient.acCategorie].ctIntitule}</>,
-                    },
-                    {
-                      field: {
-                        name:
-                          prefix + "[" + fArtclient.acCategorie + "].acCoef",
-                        DomField: FormInput,
-                        type: "number",
-                        hideLabel: true,
-                        triggerFormContentChanged: onAcCoefChanged,
-                        initValues: {
-                          value: getSageMetadata(
-                            prefix + "[" + fArtclient.acCategorie + "].acCoef",
-                            articleMeta,
-                            fArtclient.acCoef,
-                          ),
-                        },
-                      },
-                    },
-                    {
-                      Dom: (
-                        <AcPrixVenInput
-                          defaultValue={getSageMetadata(
-                            prefix +
-                              "[" +
-                              fArtclient.acCategorie +
-                              "].acPrixVen",
-                            articleMeta,
-                            fArtclient.acPrixVen,
-                          )}
-                          acCategorie={fArtclient.acCategorie}
-                          ref={React.createRef()}
-                        />
-                      ),
-                    },
-                    {
-                      field: {
-                        name:
-                          prefix + "[" + fArtclient.acCategorie + "].acRemise",
-                        DomField: FormInput,
-                        type: "number",
-                        hideLabel: true,
-                        initValues: {
-                          value: getSageMetadata(
-                            prefix +
-                              "[" +
-                              fArtclient.acCategorie +
-                              "].acRemise",
-                            articleMeta,
-                            fArtclient.acRemise,
-                          ),
-                        },
-                      },
-                    },
-                  ],
-                };
-              }),
-            },
-          },
-          {
-            props: {
-              size: { xs: 12 },
-            },
-            Dom: <ArticlePricesComponent />,
-          },
-        ],
-      },
-    ];
-    return {
-      content: formContent,
+      return result;
+    });
+    const onAcCoefChanged: TriggerFormContentChanged = (name, newValue) => {
+      const acCategorie = getKeyFromName(name);
+      setACCoefs((x: any) => {
+        return {
+          ...x,
+          [acCategorie]: newValue,
+        };
+      });
     };
-  });
 
-  useImperativeHandle(ref, () => ({
-    getForm() {
-      return form;
-    },
-  }));
+    const getForm = (): FormInterface => {
+      const formContent: FormContentInterface[] = [
+        {
+          props: {
+            container: true,
+            spacing: 1,
+            sx: { p: 1 },
+          },
+          children: [
+            {
+              props: {
+                size: { xs: 12 },
+              },
+              table: {
+                headers: [
+                  translations.words.category,
+                  translations.words.coefficient,
+                  translations.words.sellPrice,
+                  translations.words.discount,
+                ],
+                items: fArtclients.map((fArtclient): TableLineItemInterface => {
+                  return {
+                    item: fArtclient,
+                    lines: [
+                      {
+                        Dom: (
+                          <>{pCattarifs[fArtclient.acCategorie].ctIntitule}</>
+                        ),
+                      },
+                      {
+                        field: {
+                          name:
+                            prefix + "[" + fArtclient.acCategorie + "].acCoef",
+                          DomField: FormInput,
+                          type: "number",
+                          hideLabel: true,
+                          triggerFormContentChanged: onAcCoefChanged,
+                          initValues: {
+                            value: getSageMetadata(
+                              prefix +
+                                "[" +
+                                fArtclient.acCategorie +
+                                "].acCoef",
+                              articleMeta,
+                              fArtclient.acCoef,
+                            ),
+                          },
+                        },
+                      },
+                      {
+                        Dom: (
+                          <AcPrixVenInput
+                            defaultValue={getSageMetadata(
+                              prefix +
+                                "[" +
+                                fArtclient.acCategorie +
+                                "].acPrixVen",
+                              articleMeta,
+                              fArtclient.acPrixVen,
+                            )}
+                            arPrixAch={arPrixAch}
+                            acCoef={acCoefs[fArtclient.acCategorie]}
+                            acCategorie={fArtclient.acCategorie}
+                            ref={React.createRef()}
+                          />
+                        ),
+                      },
+                      {
+                        field: {
+                          name:
+                            prefix +
+                            "[" +
+                            fArtclient.acCategorie +
+                            "].acRemise",
+                          DomField: FormInput,
+                          type: "number",
+                          hideLabel: true,
+                          initValues: {
+                            value: getSageMetadata(
+                              prefix +
+                                "[" +
+                                fArtclient.acCategorie +
+                                "].acRemise",
+                              articleMeta,
+                              fArtclient.acRemise,
+                            ),
+                          },
+                        },
+                      },
+                    ],
+                  };
+                }),
+              },
+            },
+            {
+              props: {
+                size: { xs: 12 },
+              },
+              Dom: <ArticlePricesComponent />,
+            },
+          ],
+        },
+      ];
+      return {
+        content: formContent,
+      };
+    };
+    const [form, setForm] = React.useState<FormInterface>(getForm());
 
-  return (
-    <FormContentComponent content={form.content} transPrefix="fArticles" />
-  );
-});
+    useImperativeHandle(ref, () => ({
+      getForm() {
+        return form;
+      },
+    }));
+
+    React.useEffect(() => {
+      setForm(getForm());
+    }, [acCoefs, arPrixAch]);
+
+    return (
+      <FormContentComponent content={form.content} transPrefix="fArticles" />
+    );
+  },
+);

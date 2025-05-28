@@ -1,8 +1,6 @@
 import {
   ErrorMessageInterface,
-  FormContentInterface,
   FormInputOptions,
-  FormInterface,
   InputInterface,
 } from "../interface/InputInterface";
 import React, { Dispatch, SetStateAction } from "react";
@@ -89,44 +87,6 @@ export const handleChangeInputGeneric = (
     });
     return result;
   });
-};
-
-export const getDomsToSetParentFormData = (
-  contents: FormContentInterface[],
-) => {
-  // todo améliorer pour que ce soit récursive et chercher autre part que dans table et tabs
-  const doms: any[] = [];
-  const extract = (contents: FormContentInterface[]) => {
-    for (const content of contents) {
-      for (const child of content.children) {
-        if (child?.tabs) {
-          for (const tab of child.tabs.tabs) {
-            if (tab?.ref?.current?.getForm) {
-              const form: FormInterface = tab?.ref?.current?.getForm();
-              extract(form.content);
-            }
-          }
-        }
-        if (child?.table) {
-          for (const item of child?.table.items) {
-            for (const line of item.lines) {
-              if (line?.Dom?.ref) {
-                doms.push(line?.Dom);
-              }
-            }
-          }
-        }
-        if (child?.Dom?.ref) {
-          doms.push(child?.Dom);
-        }
-        if (child?.children) {
-          extract(child.children);
-        }
-      }
-    }
-  };
-  extract(contents);
-  return doms;
 };
 
 export const getKeyFromName = (name: string) => {

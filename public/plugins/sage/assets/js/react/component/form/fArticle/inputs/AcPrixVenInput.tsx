@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useImperativeHandle } from "react";
 import { IconButton, Tooltip } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import { getTranslations } from "../../../../../functions/translations";
@@ -11,6 +10,8 @@ let translations: any = getTranslations();
 export type AcPrixVenInputState = {
   defaultValue: number;
   acCategorie: number | string;
+  acCoef: number | string;
+  arPrixAch: number | string;
 };
 
 type FormState = {
@@ -19,21 +20,15 @@ type FormState = {
   valueLock: InputInterface;
 };
 
-interface ParentFormData {
-  acCoef: number;
-  arPrixAch: number;
-}
-
 export const AcPrixVenInput = React.forwardRef(
-  ({ defaultValue, acCategorie }: AcPrixVenInputState, ref) => {
-    const [parentFormData, setParentFormData] = React.useState<ParentFormData>({
-      acCoef: 0,
-      arPrixAch: 0,
-    });
+  (
+    { defaultValue, acCategorie, acCoef, arPrixAch }: AcPrixVenInputState,
+    ref,
+  ) => {
+    acCoef = Number(acCoef);
+    arPrixAch = Number(arPrixAch);
     const getExpectedAcPrixVen = () => {
-      return Number(
-        (parentFormData.arPrixAch * parentFormData.acCoef).toFixed(2),
-      );
+      return Number((acCoef * arPrixAch).toFixed(2));
     };
     const [expectedAcPrixVen, setExpectedAcPrixVen] = React.useState(
       getExpectedAcPrixVen(),
@@ -97,34 +92,13 @@ export const AcPrixVenInput = React.forwardRef(
       setExpectedAcPrixVen(newValue);
     };
 
-    useImperativeHandle(ref, () => ({
-      onAcCoefChanged(data: number, thisAcCategorie: number | string) {
-        if (acCategorie.toString() === thisAcCategorie.toString()) {
-          setParentFormData((x) => {
-            return {
-              ...x,
-              acCoef: data,
-            };
-          });
-        }
-      },
-      onArPrixAchChanged(data: number) {
-        setParentFormData((x) => {
-          return {
-            ...x,
-            arPrixAch: data,
-          };
-        });
-      },
-    }));
-
     React.useEffect(() => {
       handleRealAcPrixVen();
     }, [expectedAcPrixVen, values.acPrixVen.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     React.useEffect(() => {
       resetAcPrixVen();
-    }, [parentFormData]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [acCoef, arPrixAch]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
       <>
