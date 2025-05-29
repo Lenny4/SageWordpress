@@ -22,6 +22,7 @@ import {
   handleFormIsValid,
 } from "../../../../../functions/form";
 import { FormInput } from "../../fields/FormInput";
+import { numberValidator } from "../../../../../functions/validator";
 
 let translations: any = getTranslations();
 
@@ -179,6 +180,12 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                                 // @ts-ignore
                                 fArtstock[f],
                               ),
+                              validator: {
+                                functionName: numberValidator,
+                                params: {
+                                  positive: true,
+                                },
+                              },
                             },
                           },
                         };

@@ -14,6 +14,7 @@ import { FormContentComponent } from "../../FormContentComponent";
 import { FormSelect } from "../../fields/FormSelect";
 import { FormInput } from "../../fields/FormInput";
 import { PPreferenceInterface } from "../../../../../interface/PPreferenceInterface";
+import { numberValidator } from "../../../../../functions/validator";
 
 let translations: any = getTranslations();
 
@@ -70,6 +71,12 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                 type: "number",
                 initValues: {
                   value: getSageMetadata("arPoidsNet", articleMeta),
+                  validator: {
+                    functionName: numberValidator,
+                    params: {
+                      positive: true,
+                    },
+                  },
                 },
               },
             ],
@@ -89,6 +96,12 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                 type: "number",
                 initValues: {
                   value: getSageMetadata("arPoidsBrut", articleMeta),
+                  validator: {
+                    functionName: numberValidator,
+                    params: {
+                      positive: true,
+                    },
+                  },
                 },
               },
             ],

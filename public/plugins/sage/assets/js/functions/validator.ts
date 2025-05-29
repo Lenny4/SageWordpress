@@ -48,7 +48,7 @@ export const numberValidator = async ({
   if (isNaN(numericValue)) {
     return "Ce champ n'est pas un nombre valide.";
   }
-  if (!canBeFloat && !Number.isInteger(numericValue)) {
+  if (canBeFloat === false && !Number.isInteger(numericValue)) {
     return "Les décimales ne sont pas autorisées.";
   }
   if (positive && numericValue < 0) {

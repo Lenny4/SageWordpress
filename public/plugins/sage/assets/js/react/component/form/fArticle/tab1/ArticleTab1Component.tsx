@@ -21,10 +21,7 @@ import Grid from "@mui/material/Grid";
 import { FormContentComponent } from "../../FormContentComponent";
 import { FormInput } from "../../fields/FormInput";
 import { FormSelect } from "../../fields/FormSelect";
-import {
-  numberValidator,
-  stringValidator,
-} from "../../../../../functions/validator";
+import { stringValidator } from "../../../../../functions/validator";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
@@ -208,12 +205,6 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 triggerFormContentChanged: onArPrixAchChanged,
                 initValues: {
                   value: arPrixAch,
-                  validator: {
-                    functionName: numberValidator,
-                    params: {
-                      positive: true,
-                    },
-                  },
                 },
               },
               {
