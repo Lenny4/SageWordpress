@@ -2,24 +2,31 @@
 
 export const stringValidator = async ({
   value,
-  maxLength = null,
-  canBeEmpty = false,
-  canHaveSpace = true,
+  maxLength,
+  canBeEmpty,
+  canHaveSpace,
+  isReference,
 }: {
   value: string | null;
-  maxLength: number | null;
+  maxLength?: number;
   canBeEmpty?: boolean;
   canHaveSpace?: boolean;
+  isReference?: boolean;
 }): Promise<string> => {
   value = (value ?? "").replace(/\s\s+/g, " ").trim();
-  if (!canBeEmpty && value.length === 0) {
-    return "Ce champ ne peut pas être vide";
+  const isEmpty = value.length === 0;
+  if (canBeEmpty === false && isEmpty) {
+    return "Ce champ ne peut pas être vide.";
   }
-  if (maxLength !== null && value.length > maxLength) {
-    return `Ce champ ne peut pas dépasser ${maxLength} caractères`;
+  if (isEmpty) return ""; // allowed to be empty
+  if (maxLength !== undefined && value.length > maxLength) {
+    return `Ce champ ne peut pas dépasser ${maxLength} caractères.`;
   }
-  if (!canHaveSpace && value.includes(" ")) {
-    return "Ce champ ne peut pas avoir d'espace";
+  if (canHaveSpace !== true && value.includes(" ")) {
+    return "Ce champ ne peut pas avoir d'espace.";
+  }
+  if (isReference && !/^[a-zA-Z0-9$%+.\/_-]+$/.test(value)) {
+    return "Seuls les lettres, les chiffres et ces caractères $%+./_- sont acceptés.";
   }
   return "";
 };
