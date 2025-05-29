@@ -1,10 +1,10 @@
-import { FC } from "react";
+import { HTMLInputTypeAttribute } from "react";
 import { TabInterface } from "./TabInterface";
 import { GridProps } from "@mui/material/Grid/Grid";
 import { TabsProps } from "@mui/material/Tabs/Tabs";
 
 export interface FormInterface {
-  content: FormContentInterface[];
+  content: FormContentInterface;
 }
 
 export interface TableLineItemInterface {
@@ -33,7 +33,7 @@ export interface TableAddInterface {
 
 export interface FormTabInterface {
   tabProps?: TabsProps;
-  tabs?: TabInterface[];
+  tabs: TabInterface[];
 }
 
 export interface FormContentInterface {
@@ -70,17 +70,17 @@ export interface FieldInterface<
 > {
   label?: string;
   name: string;
-  DomField: FC<FieldInterface>;
+  DomField: any;
   readOnly?: boolean;
   cannotBeChangeOnWebsite?: boolean;
   tooltip?: string;
   hideLabel?: boolean;
   triggerFormContentChanged?: TriggerFormContentChanged;
   options?: FormInputOptions[];
-  type?: string;
-  validator?: FieldValidatorInterface<F>;
+  type?: HTMLInputTypeAttribute | undefined;
   errorMessage?: string;
   initValues: InputInterface;
+  ref?: any;
 }
 
 export interface TriggerFormContentChanged {

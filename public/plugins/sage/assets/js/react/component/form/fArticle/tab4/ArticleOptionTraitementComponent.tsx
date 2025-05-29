@@ -2,14 +2,15 @@
 import React, { useImperativeHandle } from "react";
 import { getTranslations } from "../../../../../functions/translations";
 import { MetadataInterface } from "../../../../../interface/WordpressInterface";
-import {
-  FormContentInterface,
-  FormInterface,
-} from "../../../../../interface/InputInterface";
+import { FormInterface } from "../../../../../interface/InputInterface";
 import { DividerText } from "../../../DividerText";
-import { FormCheckbox } from "../../FormCheckbox";
 import { getSageMetadata } from "../../../../../functions/getMetadata";
 import { FormContentComponent } from "../../FormContentComponent";
+import {
+  createFormContent,
+  handleFormIsValid,
+} from "../../../../../functions/form";
+import { FormCheckbox } from "../../fields/FormCheckbox";
 
 let translations: any = getTranslations();
 
@@ -20,8 +21,8 @@ const articleMeta: MetadataInterface[] = JSON.parse(
 export const ArticleOptionTraitementComponent = React.forwardRef(
   (props, ref) => {
     const getForm = (): FormInterface => {
-      const formContent: FormContentInterface[] = [
-        {
+      return {
+        content: createFormContent({
           props: {
             container: true,
             spacing: 1,
@@ -88,18 +89,15 @@ export const ArticleOptionTraitementComponent = React.forwardRef(
               ),
             },
           ],
-        },
-      ];
-      return {
-        content: formContent,
+        }),
       };
     };
 
-    const [form, setForm] = React.useState<FormInterface>(getForm());
+    const [form] = React.useState<FormInterface>(getForm());
 
     useImperativeHandle(ref, () => ({
-      getForm() {
-        return form;
+      async isValid(): Promise<boolean> {
+        return await handleFormIsValid(form.content);
       },
     }));
 

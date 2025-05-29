@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useImperativeHandle } from "react";
 import { Tooltip } from "@mui/material";
 import { getTranslations } from "../../../../../functions/translations";
 import { TriggerFormContentChanged } from "../../../../../interface/InputInterface";
@@ -17,6 +18,13 @@ export const AsPrincipalInput = React.forwardRef(
     ref,
   ) => {
     const name = `_sage_fArtstocks[${deNo}].asPrincipal`;
+
+    useImperativeHandle(ref, () => ({
+      async isValid(): Promise<boolean> {
+        // todo
+        return false;
+      },
+    }));
 
     return (
       <>

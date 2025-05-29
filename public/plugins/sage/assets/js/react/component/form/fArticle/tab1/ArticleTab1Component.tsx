@@ -4,23 +4,24 @@ import { getSageMetadata } from "../../../../../functions/getMetadata";
 import { getTranslations } from "../../../../../functions/translations";
 import { MetadataInterface } from "../../../../../interface/WordpressInterface";
 import {
-  FormContentInterface,
   FormInterface,
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
 import {
+  createFormContent,
+  handleFormIsValid,
   stringValidator,
   transformOptionsObject,
 } from "../../../../../functions/form";
 import { DividerText } from "../../../DividerText";
 import { ArRefInput } from "../inputs/ArRefInput";
-import { FormSelect } from "../../FormSelect";
-import { FormInput } from "../../FormInput";
 import { ArPrixVenInput } from "../inputs/ArPrixVenInput";
 import { ArticleCatTarifComponent } from "./ArticleCatTarifComponent";
 import { ArticleFournisseursComponent } from "./ArticleFournisseursComponent";
 import Grid from "@mui/material/Grid";
 import { FormContentComponent } from "../../FormContentComponent";
+import { FormInput } from "../../fields/FormInput";
+import { FormSelect } from "../../fields/FormSelect";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
@@ -62,8 +63,8 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
   };
 
   const getForm = (): FormInterface => {
-    const formContent: FormContentInterface[] = [
-      {
+    return {
+      content: createFormContent({
         props: {
           container: true,
           spacing: 1,
@@ -116,14 +117,14 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
               {
                 name: "arDesign",
                 DomField: FormInput,
-                validator: {
-                  functionName: stringValidator,
-                  params: {
-                    maxLength: 69,
-                  },
-                },
                 initValues: {
                   value: getSageMetadata("arDesign", articleMeta),
+                  validator: {
+                    functionName: stringValidator,
+                    params: {
+                      maxLength: 69,
+                    },
+                  },
                 },
               },
             ],
@@ -325,27 +326,14 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
             },
           },
         ],
-      },
-    ];
-    return {
-      content: formContent,
+      }),
     };
   };
   const [form, setForm] = React.useState<FormInterface>(getForm());
 
-  const handleIsValid = () => {
-    console.log("handleIsValid");
-    // let isValid = isValidGeneric(values, setValues);
-    // isValid = isValid && arRefRef.current.isValid();
-    return false;
-  };
-
   useImperativeHandle(ref, () => ({
-    isValid(): boolean {
-      return handleIsValid();
-    },
-    getForm() {
-      return form;
+    async isValid(): Promise<boolean> {
+      return await handleFormIsValid(form.content);
     },
   }));
 

@@ -3,7 +3,6 @@ import {
   TableInterface,
   TableLineItemInterface,
 } from "../../../interface/InputInterface";
-import { FormFieldComponent } from "./FormFieldComponent";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +13,7 @@ import {
 import { getTranslations } from "../../../functions/translations";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
+import { FormFieldComponent } from "./fields/FormFieldComponent";
 
 let translations: any = getTranslations();
 

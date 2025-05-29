@@ -3,15 +3,16 @@ import React, { useImperativeHandle } from "react";
 import { getTranslations } from "../../../../../functions/translations";
 import { MetadataInterface } from "../../../../../interface/WordpressInterface";
 import { getSageMetadata } from "../../../../../functions/getMetadata";
-import {
-  FormContentInterface,
-  FormInterface,
-} from "../../../../../interface/InputInterface";
+import { FormInterface } from "../../../../../interface/InputInterface";
 import { DividerText } from "../../../DividerText";
-import { FormSelect } from "../../FormSelect";
-import { transformOptionsObject } from "../../../../../functions/form";
-import { FormInput } from "../../FormInput";
+import {
+  createFormContent,
+  handleFormIsValid,
+  transformOptionsObject,
+} from "../../../../../functions/form";
 import { FormContentComponent } from "../../FormContentComponent";
+import { FormSelect } from "../../fields/FormSelect";
+import { FormInput } from "../../fields/FormInput";
 
 let translations: any = getTranslations();
 
@@ -23,8 +24,8 @@ const isNew = !arRef;
 
 export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
   const getForm = (): FormInterface => {
-    const formContent: FormContentInterface[] = [
-      {
+    return {
+      content: createFormContent({
         props: {
           container: true,
           spacing: 1,
@@ -85,18 +86,15 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
             ],
           },
         ],
-      },
-    ];
-    return {
-      content: formContent,
+      }),
     };
   };
 
-  const [form, setForm] = React.useState<FormInterface>(getForm());
+  const [form] = React.useState<FormInterface>(getForm());
 
   useImperativeHandle(ref, () => ({
-    getForm() {
-      return form;
+    async isValid(): Promise<boolean> {
+      return await handleFormIsValid(form.content);
     },
   }));
 

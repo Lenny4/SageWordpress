@@ -1,0 +1,112 @@
+import * as React from "react";
+import { useImperativeHandle } from "react";
+import { Tooltip } from "@mui/material";
+import { FieldInterface } from "../../../../interface/InputInterface";
+import {
+  handleChangeSelectGeneric,
+  isValidGeneric,
+} from "../../../../functions/form";
+import {
+  CannotBeChangeOnWebsiteComponent,
+  FieldTooltipComponent,
+} from "./FormFieldComponent";
+
+export const FormSelect = React.forwardRef(
+  (
+    {
+      label,
+      name,
+      readOnly,
+      hideLabel,
+      options = [],
+      errorMessage,
+      cannotBeChangeOnWebsite,
+      tooltip,
+      initValues,
+      triggerFormContentChanged,
+    }: FieldInterface,
+    ref,
+  ) => {
+    const nameField = "_sage_" + name;
+    const [values, setValues] = React.useState({
+      [name]: initValues,
+    });
+
+    const handleChangeSelect = (
+      event: React.ChangeEvent<HTMLSelectElement>,
+    ) => {
+      handleChangeSelectGeneric(event, name, setValues);
+    };
+    const hasOption = !!options.find(
+      (o) => o.value.toString() === values[name].value.toString(),
+    );
+
+    useImperativeHandle(ref, () => ({
+      async isValid(): Promise<boolean> {
+        return await isValidGeneric(values, setValues);
+      },
+    }));
+
+    React.useEffect(() => {
+      if (triggerFormContentChanged) {
+        triggerFormContentChanged(name, values[name].value);
+      }
+    }, [values[name].value]);
+
+    const thisReadOnly = readOnly || values[name].readOnly;
+    return (
+      <>
+        <label
+          htmlFor={nameField}
+          style={{
+            display: hideLabel ? "none" : "block",
+          }}
+        >
+          <Tooltip title={name} arrow placement="top">
+            <span>{label}</span>
+          </Tooltip>
+        </label>
+        <div style={{ display: "flex" }}>
+          <div style={{ flex: 1 }}>
+            <select
+              id={nameField}
+              name={nameField}
+              value={values[name].value}
+              onChange={handleChangeSelect}
+              className={thisReadOnly ? "grayed-out-select" : ""}
+              style={{ width: "100%" }}
+            >
+              {options.map((opt, index) => {
+                return (
+                  <option
+                    disabled={
+                      opt.disabled ||
+                      (thisReadOnly &&
+                        !(
+                          opt.value.toString() ===
+                            values[name].value.toString() ||
+                          (!hasOption && index === 0)
+                        ))
+                    }
+                    key={opt.value}
+                    value={opt.value}
+                  >
+                    {opt.label}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+          <CannotBeChangeOnWebsiteComponent
+            cannotBeChangeOnWebsite={cannotBeChangeOnWebsite}
+          />
+          <FieldTooltipComponent tooltip={tooltip} />
+        </div>
+        {errorMessage && <div className="sage_error_field">{errorMessage}</div>}
+        {values[name].error && (
+          <div className="sage_error_field">{values[name].error}</div>
+        )}
+      </>
+    );
+  },
+);

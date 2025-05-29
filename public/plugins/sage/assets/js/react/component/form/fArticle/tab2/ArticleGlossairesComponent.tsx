@@ -9,12 +9,15 @@ import {
 } from "../../../../../interface/FArticleInterface";
 import { getListObjectSageMetadata } from "../../../../../functions/getMetadata";
 import {
-  FormContentInterface,
   FormInterface,
   TableLineItemInterface,
 } from "../../../../../interface/InputInterface";
-import { FormInput } from "../../FormInput";
 import { FormContentComponent } from "../../FormContentComponent";
+import {
+  createFormContent,
+  handleFormIsValid,
+} from "../../../../../functions/form";
+import { FormInput } from "../../fields/FormInput";
 
 let translations: any = getTranslations();
 
@@ -33,8 +36,8 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
   );
 
   const getForm = (): FormInterface => {
-    const formContent: FormContentInterface[] = [
-      {
+    return {
+      content: createFormContent({
         props: {
           container: true,
           spacing: 1,
@@ -146,18 +149,15 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
             },
           },
         ],
-      },
-    ];
-    return {
-      content: formContent,
+      }),
     };
   };
 
   const [form, setForm] = React.useState<FormInterface>(getForm());
 
   useImperativeHandle(ref, () => ({
-    getForm() {
-      return form;
+    async isValid(): Promise<boolean> {
+      return await handleFormIsValid(form.content);
     },
   }));
 

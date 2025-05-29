@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useImperativeHandle } from "react";
 import { IconButton, Tooltip } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import { getTranslations } from "../../../../../functions/translations";
@@ -91,6 +92,13 @@ export const AcPrixVenInput = React.forwardRef(
       });
       setExpectedAcPrixVen(newValue);
     };
+
+    useImperativeHandle(ref, () => ({
+      async isValid(): Promise<boolean> {
+        // todo
+        return false;
+      },
+    }));
 
     React.useEffect(() => {
       handleRealAcPrixVen();

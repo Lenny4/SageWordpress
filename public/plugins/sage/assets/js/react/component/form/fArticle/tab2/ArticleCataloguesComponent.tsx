@@ -1,5 +1,5 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, useImperativeHandle } from "react";
 import { getTranslations } from "../../../../../functions/translations";
 import { MetadataInterface } from "../../../../../interface/WordpressInterface";
 import { FCatalogueInterface } from "../../../../../interface/FArticleInterface";
@@ -62,6 +62,13 @@ export const ArticleCataloguesComponent = React.forwardRef((props, ref) => {
         return result;
       });
     };
+
+  useImperativeHandle(ref, () => ({
+    async isValid(): Promise<boolean> {
+      // todo
+      return false;
+    },
+  }));
 
   React.useEffect(() => {}, []);
 

@@ -1,8 +1,8 @@
 import * as React from "react";
-import { FieldInterface } from "../../../interface/InputInterface";
-import { getTranslations } from "../../../functions/translations";
 import { IconButton, Tooltip } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
+import { getTranslations } from "../../../../functions/translations";
+import { FieldInterface } from "../../../../interface/InputInterface";
 
 let translations: any = getTranslations();
 
@@ -68,5 +68,6 @@ export const FormFieldComponent: React.FC<State> = ({ field, transPrefix }) => {
       label = translations.words[name] ?? name;
     }
   }
+
   return <DomField {...field} label={label} />;
 };

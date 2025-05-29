@@ -48,7 +48,7 @@ export const ArRefInput = React.forwardRef(
         return;
       }
       setAvailableArRef("");
-      const errorArRef = stringValidator({
+      const errorArRef = await stringValidator({
         value: values.arRef.value,
         maxLength: 17,
         canBeEmpty: true,
@@ -87,8 +87,9 @@ export const ArRefInput = React.forwardRef(
     };
 
     useImperativeHandle(ref, () => ({
-      isValid(): boolean {
-        return availableArRef !== "";
+      async isValid(): Promise<boolean> {
+        // todo
+        return false;
       },
     }));
 

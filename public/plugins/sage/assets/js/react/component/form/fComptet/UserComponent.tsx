@@ -262,14 +262,14 @@ const UserComponent = () => {
       values.creationType.value === "new") &&
       validCtNum);
 
-  const validateForm = (): boolean => {
+  const validateForm = async (): Promise<boolean> => {
     let result = notValidCtNumExists || notValidCtNumAlreadyLink;
     let ctNumError = "";
     if (
       values.creationType.value === "link" ||
       (values.creationType.value === "new" && !values.autoGenerateCtNum.value)
     ) {
-      ctNumError = stringValidator({
+      ctNumError = await stringValidator({
         value: values.ctNum.value,
         maxLength: 19,
         canBeEmpty: false,
@@ -321,9 +321,10 @@ const UserComponent = () => {
       "submit",
       'form[name="createuser"], form[id="your-profile"]',
       (e) => {
-        if (!validateForm()) {
-          e.preventDefault();
-        }
+        // if (!validateForm()) {
+        // todo doesn't work anymore as validateForm is async
+        e.preventDefault();
+        // }
       },
     );
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

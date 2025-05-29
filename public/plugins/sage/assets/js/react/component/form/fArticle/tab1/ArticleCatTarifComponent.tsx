@@ -9,15 +9,18 @@ import {
   getSageMetadata,
 } from "../../../../../functions/getMetadata";
 import {
-  FormContentInterface,
   FormInterface,
   TableLineItemInterface,
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
 import { AcPrixVenInput } from "../inputs/AcPrixVenInput";
-import { FormInput } from "../../FormInput";
 import { FormContentComponent } from "../../FormContentComponent";
-import { getKeyFromName } from "../../../../../functions/form";
+import {
+  createFormContent,
+  getKeyFromName,
+  handleFormIsValid,
+} from "../../../../../functions/form";
+import { FormInput } from "../../fields/FormInput";
 
 let translations: any = getTranslations();
 
@@ -58,8 +61,8 @@ export const ArticleCatTarifComponent = React.forwardRef(
     };
 
     const getForm = (): FormInterface => {
-      const formContent: FormContentInterface[] = [
-        {
+      return {
+        content: createFormContent({
           props: {
             container: true,
             spacing: 1,
@@ -151,24 +154,15 @@ export const ArticleCatTarifComponent = React.forwardRef(
                 }),
               },
             },
-            {
-              props: {
-                size: { xs: 12 },
-              },
-              Dom: <ArticlePricesComponent />,
-            },
           ],
-        },
-      ];
-      return {
-        content: formContent,
+        }),
       };
     };
     const [form, setForm] = React.useState<FormInterface>(getForm());
 
     useImperativeHandle(ref, () => ({
-      getForm() {
-        return form;
+      async isValid(): Promise<boolean> {
+        return await handleFormIsValid(form.content);
       },
     }));
 
@@ -177,7 +171,10 @@ export const ArticleCatTarifComponent = React.forwardRef(
     }, [acCoefs, arPrixAch]);
 
     return (
-      <FormContentComponent content={form.content} transPrefix="fArticles" />
+      <>
+        <FormContentComponent content={form.content} transPrefix="fArticles" />
+        <ArticlePricesComponent />
+      </>
     );
   },
 );

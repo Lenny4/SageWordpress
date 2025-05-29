@@ -8,14 +8,17 @@ import {
   getSageMetadata,
 } from "../../../../../functions/getMetadata";
 import {
-  FormContentInterface,
   FormInterface,
   TableLineItemInterface,
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
 import { AfPrincipalInput } from "../inputs/AfPrincipalInput";
-import { FormInput } from "../../FormInput";
 import { FormContentComponent } from "../../FormContentComponent";
+import {
+  createFormContent,
+  handleFormIsValid,
+} from "../../../../../functions/form";
+import { FormInput } from "../../fields/FormInput";
 
 let translations: any = getTranslations();
 
@@ -38,8 +41,8 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
   };
 
   const getForm = (): FormInterface => {
-    const formContent: FormContentInterface[] = [
-      {
+    return {
+      content: createFormContent({
         props: {
           container: true,
           spacing: 1,
@@ -97,6 +100,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                         field: {
                           name: prefix + "[" + fArtclient.ctNum + "].afPrixAch",
                           DomField: FormInput,
+                          type: "number",
                           hideLabel: true,
                           initValues: {
                             value: getSageMetadata(
@@ -114,17 +118,14 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
             },
           },
         ],
-      },
-    ];
-    return {
-      content: formContent,
+      }),
     };
   };
   const [form, setForm] = React.useState<FormInterface>(getForm());
 
   useImperativeHandle(ref, () => ({
-    getForm() {
-      return form;
+    async isValid(): Promise<boolean> {
+      return await handleFormIsValid(form.content);
     },
   }));
 

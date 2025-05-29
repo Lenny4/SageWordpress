@@ -5,15 +5,16 @@ import { ArticleCataloguesComponent } from "./ArticleCataloguesComponent";
 import { ArticleGlossairesComponent } from "./ArticleGlossairesComponent";
 import { getTranslations } from "../../../../../functions/translations";
 import { MetadataInterface } from "../../../../../interface/WordpressInterface";
-import {
-  FormContentInterface,
-  FormInterface,
-} from "../../../../../interface/InputInterface";
+import { FormInterface } from "../../../../../interface/InputInterface";
 import { DividerText } from "../../../DividerText";
-import { FormInput } from "../../FormInput";
 import { getSageMetadata } from "../../../../../functions/getMetadata";
-import { FormSelect } from "../../FormSelect";
 import { FormContentComponent } from "../../FormContentComponent";
+import {
+  createFormContent,
+  handleFormIsValid,
+} from "../../../../../functions/form";
+import { FormInput } from "../../fields/FormInput";
+import { FormSelect } from "../../fields/FormSelect";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
@@ -26,8 +27,8 @@ const fPays: any[] = JSON.parse(
 
 export const ArticleTab2Component = React.forwardRef((props, ref) => {
   const [form] = React.useState<FormInterface>(() => {
-    const formContent: FormContentInterface[] = [
-      {
+    return {
+      content: createFormContent({
         props: {
           container: true,
           spacing: 1,
@@ -160,24 +161,13 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
             Dom: <ArticleGlossairesComponent />,
           },
         ],
-      },
-    ];
-    return {
-      content: formContent,
+      }),
     };
   });
 
-  const handleIsValid = () => {
-    console.log("handleIsValid");
-    return false;
-  };
-
   useImperativeHandle(ref, () => ({
-    isValid(): boolean {
-      return handleIsValid();
-    },
-    getForm() {
-      return form;
+    async isValid(): Promise<boolean> {
+      return await handleFormIsValid(form.content);
     },
   }));
 
