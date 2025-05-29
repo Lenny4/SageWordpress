@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import React, { ChangeEvent } from "react";
 import { getTranslations } from "../../../../functions/translations";
 import { InputInterface } from "../../../../interface/InputInterface";
-import { stringValidator } from "../../../../functions/form";
+import { stringValidator } from "../../../../functions/validator";
 
 const containerSelector = "#sage_user";
 const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");

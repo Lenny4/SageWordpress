@@ -9,30 +9,6 @@ import {
 import React, { Dispatch, SetStateAction } from "react";
 import { TabInterface } from "../interface/TabInterface";
 
-export const stringValidator = async ({
-  value,
-  maxLength = null,
-  canBeEmpty = false,
-  canHaveSpace = true,
-}: {
-  value: string | null;
-  maxLength: null | number;
-  canBeEmpty: boolean;
-  canHaveSpace: boolean;
-}): Promise<string> => {
-  value = (value?.replace(/\s\s+/g, " ") ?? "").trim() ?? "";
-  if (!canBeEmpty && value.length === 0) {
-    return "Ce champ ne peut pas être vide";
-  }
-  if (value.length > maxLength) {
-    return "Ce champ ne peut pas dépasser " + maxLength + " caractères";
-  }
-  if (!canHaveSpace && value.includes(" ")) {
-    return "Ce champ ne peut pas avoir d'espace";
-  }
-  return "";
-};
-
 export function transformOptionsObject(
   obj: Record<string | number, string>,
 ): FormInputOptions[] {
