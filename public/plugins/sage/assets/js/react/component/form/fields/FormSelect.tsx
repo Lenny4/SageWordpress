@@ -29,7 +29,10 @@ export const FormSelect = React.forwardRef(
   ) => {
     const nameField = "_sage_" + name;
     const [values, setValues] = React.useState({
-      [name]: initValues,
+      [name]: {
+        ...initValues,
+        value: initValues.value.toString(),
+      },
     });
 
     const handleChangeSelect = (

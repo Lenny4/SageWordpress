@@ -983,6 +983,7 @@ final class SageSettings
                 'pUnites' => $sageSettings->sage->sageGraphQl->getPUnites(),
                 'fDepots' => $sageSettings->sage->sageGraphQl->getFDepots(),
                 'fPays' => $sageSettings->sage->sageGraphQl->getFPays(),
+                'pPreference' => $sageSettings->sage->sageGraphQl->getPPreference(),
                 'fGlossaires' => array_values(array_filter($sageSettings->sage->sageGraphQl->getFGlossaires(), static function (stdClass $fGlossaire) {
                     return $fGlossaire->glDomaine === GlossaireDomaineTypeEnum::GlossaireDomaineTypeArticle->value;
                 })),

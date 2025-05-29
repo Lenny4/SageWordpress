@@ -369,8 +369,9 @@ final class SageTranslationUtils
                         '4' => __("Milligrame", 'sage'),
                     ],
                 ],
-                "arPoidsNet" => __("Poids brut", 'sage'),
-                "arPoidsBrut" => __("Volume", 'sage'),
+                // todo dans P_PARAMETRECIAL on a les traductions
+                "arPoidsNet" => __("Poids net", 'sage'), // P_LibellePoidsNet
+                "arPoidsBrut" => __("Poids brut", 'sage'), // P_LibellePoidsBrut
                 "arUniteVen" => __("Unité de vente", 'sage'),
                 "arPrixAch" => __("Prix d'achat", 'sage'),
                 "arCoef" => __("Coefficient", 'sage'),

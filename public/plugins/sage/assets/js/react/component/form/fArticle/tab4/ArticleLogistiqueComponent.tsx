@@ -13,11 +13,15 @@ import {
 import { FormContentComponent } from "../../FormContentComponent";
 import { FormSelect } from "../../fields/FormSelect";
 import { FormInput } from "../../fields/FormInput";
+import { PPreferenceInterface } from "../../../../../interface/PPreferenceInterface";
 
 let translations: any = getTranslations();
 
 const articleMeta: MetadataInterface[] = JSON.parse(
   $("[data-sage-product]").attr("data-sage-product") ?? "null",
+);
+const pPreference: PPreferenceInterface = JSON.parse(
+  $("[data-sage-ppreference]").attr("data-sage-ppreference") ?? "null",
 );
 const arRef = getSageMetadata("arRef", articleMeta);
 const isNew = !arRef;
@@ -48,12 +52,16 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
               {
                 name: "arUnitePoids",
                 DomField: FormSelect,
-                readOnly: !isNew, // todo test can select when creation
+                readOnly: !isNew, // todo which configuration make it disabled ?
                 options: transformOptionsObject(
                   translations.fArticles.arUnitePoids.values,
                 ),
                 initValues: {
-                  value: getSageMetadata("arUnitePoids", articleMeta),
+                  value: getSageMetadata(
+                    "arUnitePoids",
+                    articleMeta,
+                    pPreference.prUnitePoids,
+                  ),
                 },
               },
               {

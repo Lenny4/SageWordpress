@@ -38,6 +38,7 @@ final class SageGraphQl
     private ?array $fPays = null;
     private ?array $fTaxes = null;
     private ?stdClass $pDossier = null;
+    private ?stdClass $pPreference = null;
     private ?array $fCatalogues = null;
     private ?array $fGlossaires = null;
     private ?array $cbSysLibres = null;
@@ -523,6 +524,7 @@ final class SageGraphQl
         bool    $getError,
         bool    $ignorePingApi,
         bool    $allPages = false,
+        ?string $arrayKey = null,
     ): array|null|string
     {
         $entities = null;
@@ -552,6 +554,7 @@ final class SageGraphQl
                         $getError,
                         $ignorePingApi,
                         $getFromSage,
+                        $arrayKey,
                     );
 
                     if (is_null($result) || is_string($result)) {
@@ -559,15 +562,19 @@ final class SageGraphQl
                         break;
                     }
 
+                    $newItems = $result->data->{$entityName}->items;
                     if (is_null($entities)) {
                         $entities = $result;
                     } else {
                         $entities->data->{$entityName}->items = [
                             ...$entities->data->{$entityName}->items,
-                            ...$result->data->{$entityName}->items,
+                            ...$newItems,
                         ];
                     }
-                } while (count($result->data->{$entityName}->items) > 0);
+                    if (empty($newItems)) {
+                        break; // just in case
+                    }
+                } while (count($result->data->{$entityName}->items) < $result->data->{$entityName}->totalCount);
             } else {
                 $entities = $this->searchEntities(
                     $entityName,
@@ -577,6 +584,7 @@ final class SageGraphQl
                     $getError,
                     $ignorePingApi,
                     $getFromSage,
+                    $arrayKey
                 );
             }
             if (is_null($entities) || is_string($entities)) {
@@ -605,6 +613,7 @@ final class SageGraphQl
         bool    $getError = false,
         bool    $ignorePingApi = false,
         bool    $getFromSage = true,
+        ?string $arrayKey = null,
     ): StdClass|null|string
     {
         if (!is_null($cacheName)) {
@@ -708,7 +717,7 @@ final class SageGraphQl
         }
 
         if (isset($results->data->{$entityName}->items)) {
-            $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets);
+            $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets, $arrayKey);
         }
         return $results;
     }
@@ -741,15 +750,22 @@ final class SageGraphQl
         return [null, $defaultSortValue];
     }
 
-    private function addKeysToCollection(array $items, array $selectionSets): void
+    private function addKeysToCollection(array &$items, array $selectionSets, ?string $arrayKey = null): void
     {
+        $result = [];
         foreach ($items as $item) {
             foreach ($selectionSets as $prop => $selectionSet) {
                 if ($selectionSet instanceof ArgumentSelectionSetDto) {
                     $this->_addKeysToCollection($item, $prop, $selectionSet->getKey());
                 }
             }
+            if (!empty($arrayKey)) {
+                $result[$item->{$arrayKey}] = $item;
+            } else {
+                $result[] = $item;
+            }
         }
+        $items = $result;
     }
 
     private function _addKeysToCollection(stdClass $object, string $prop, string $key): void
@@ -861,8 +877,8 @@ final class SageGraphQl
                 'arNotImp',
                 'arFactForfait',
                 'arUnitePoids', // enum UnitePoidsType 0 = tonne, 1 = quintal, 2 = kilogramme, 3 = gramme, 4 =  milligrame
-                'arPoidsNet', // poids brut
-                'arPoidsBrut', // volume
+                'arPoidsNet',
+                'arPoidsBrut',
                 'arCodeBarre',
             ]),
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
@@ -1534,23 +1550,16 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             "per_page" => "100"
         ];
         $selectionSets = $this->_getPCattarifSelectionSet();
-        $pCattarifs = $this->getEntitiesAndSaveInOption(
+        $this->pCattarifs = $this->getEntitiesAndSaveInOption(
             $cacheName,
             $getFromSage,
             $entityName,
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi
+            $ignorePingApi,
+            arrayKey: 'cbIndice',
         );
-        $this->pCattarifs = [];
-        if (is_array($pCattarifs)) {
-            foreach ($pCattarifs as $pCattarif) {
-                $this->pCattarifs[$pCattarif->cbIndice] = $pCattarif;
-            }
-        } else {
-            $this->pCattarifs = $pCattarifs;
-        }
         return $this->pCattarifs;
     }
 
@@ -1927,5 +1936,47 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             return $result->data->updateFArticleFromWebsite;
         }
         return $result;
+    }
+
+    public function getPPreference(
+        bool  $useCache = true,
+        ?bool $getFromSage = null,
+        bool  $getError = false,
+        bool  $ignorePingApi = false
+    ): stdClass|null|string
+    {
+        if (!is_null($this->pPreference) && $getFromSage !== true) {
+            return $this->pPreference;
+        }
+        $entityName = SageEntityMenu::PPREFERENCE_ENTITY_NAME;
+        $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
+        $queryParams = [
+            "paged" => "1",
+            "per_page" => "1"
+        ];
+        $selectionSets = $this->_getPPreferenceSelectionSet();
+        $pPreference = $this->getEntitiesAndSaveInOption(
+            $cacheName,
+            $getFromSage,
+            $entityName,
+            $queryParams,
+            $selectionSets,
+            $getError,
+            $ignorePingApi,
+        );
+        if (is_array($pPreference) && count($pPreference) === 1) {
+            $pPreference = $pPreference[0];
+        }
+        $this->pPreference = $pPreference;
+        return $this->pPreference;
+    }
+
+    private function _getPPreferenceSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'prUnitePoids',
+            ]),
+        ];
     }
 }
