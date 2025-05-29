@@ -41,7 +41,6 @@ export const FormInput = React.forwardRef(
 
     useImperativeHandle(ref, () => ({
       async isValid(): Promise<boolean> {
-        console.log(values);
         return await isValidGeneric(values, setValues);
       },
     }));

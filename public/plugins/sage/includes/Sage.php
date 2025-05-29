@@ -44,7 +44,7 @@ if (!defined('ABSPATH')) {
  */
 final class Sage
 {
-    public final const TOKEN = 'sage';
+    public final const TOKEN = 'sage'; // todo changer pour éviter les problèmes judiciaires, du coup également changer le nom du dossier
 
     public final const CACHE_LIFETIME = 3600;
     public final const META_KEY_AR_REF = '_' . self::TOKEN . '_arRef';

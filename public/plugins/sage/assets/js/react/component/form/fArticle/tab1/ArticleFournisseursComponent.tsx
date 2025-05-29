@@ -19,6 +19,7 @@ import {
   handleFormIsValid,
 } from "../../../../../functions/form";
 import { FormInput } from "../../fields/FormInput";
+import {numberValidator, stringValidator} from "../../../../../functions/validator";
 
 let translations: any = getTranslations();
 
@@ -93,6 +94,13 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                               articleMeta,
                               fArtclient.afRefFourniss,
                             ),
+                            validator: {
+                              functionName: stringValidator,
+                              params: {
+                                maxLength: 19,
+                                isReference: true,
+                              },
+                            },
                           },
                         },
                       },
@@ -108,6 +116,9 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                               articleMeta,
                               fArtclient.afPrixAch,
                             ),
+                            validator: {
+                              functionName: numberValidator,
+                            }
                           },
                         },
                       },

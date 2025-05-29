@@ -27,7 +27,7 @@ export async function isValidGeneric(
   for (const fieldName in values) {
     if (values[fieldName].validator) {
       const errorMessage = await values[fieldName].validator.functionName({
-        ...values[fieldName].validator.params,
+        ...(values[fieldName].validator.params ?? {}),
         value: values[fieldName].value,
       });
       const thisHasError = errorMessage !== "";

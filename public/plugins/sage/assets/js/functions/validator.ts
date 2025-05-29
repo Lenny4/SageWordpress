@@ -22,7 +22,7 @@ export const stringValidator = async ({
   if (maxLength !== undefined && value.length > maxLength) {
     return `Ce champ ne peut pas dépasser ${maxLength} caractères.`;
   }
-  if (canHaveSpace !== true && value.includes(" ")) {
+  if (canHaveSpace === false && value.includes(" ")) {
     return "Ce champ ne peut pas avoir d'espace.";
   }
   if (isReference && !/^[a-zA-Z0-9$%+.\/_-]+$/.test(value)) {

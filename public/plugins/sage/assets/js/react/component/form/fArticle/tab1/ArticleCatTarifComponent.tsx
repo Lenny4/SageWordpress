@@ -21,6 +21,7 @@ import {
   handleFormIsValid,
 } from "../../../../../functions/form";
 import { FormInput } from "../../fields/FormInput";
+import {numberValidator} from "../../../../../functions/validator";
 
 let translations: any = getTranslations();
 
@@ -106,6 +107,9 @@ export const ArticleCatTarifComponent = React.forwardRef(
                               articleMeta,
                               fArtclient.acCoef,
                             ),
+                            validator: {
+                              functionName: numberValidator,
+                            }
                           },
                         },
                       },
@@ -146,6 +150,9 @@ export const ArticleCatTarifComponent = React.forwardRef(
                               articleMeta,
                               fArtclient.acRemise,
                             ),
+                            validator: {
+                              functionName: numberValidator,
+                            }
                           },
                         },
                       },

@@ -5,6 +5,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import { getTranslations } from "../../../../../functions/translations";
 import { InputInterface } from "../../../../../interface/InputInterface";
 import { handleChangeInputGeneric } from "../../../../../functions/form";
+import {numberValidator} from "../../../../../functions/validator";
 
 let translations: any = getTranslations();
 
@@ -91,8 +92,7 @@ export const ArPrixVenInput = React.forwardRef(
 
     useImperativeHandle(ref, () => ({
       async isValid(): Promise<boolean> {
-        // todo
-        return false;
+        return await numberValidator(values.arPrixVen.value) === "";
       },
     }));
 
