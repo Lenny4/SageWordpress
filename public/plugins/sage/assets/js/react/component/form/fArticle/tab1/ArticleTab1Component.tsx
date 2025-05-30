@@ -21,21 +21,25 @@ import Grid from "@mui/material/Grid";
 import { FormContentComponent } from "../../FormContentComponent";
 import { FormInput } from "../../fields/FormInput";
 import { FormSelect } from "../../fields/FormSelect";
-import {numberValidator, stringValidator} from "../../../../../functions/validator";
+import {
+  numberValidator,
+  stringValidator,
+} from "../../../../../functions/validator";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
-  $("[data-sage-product]").attr("data-sage-product") ?? "null",
+  $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 const arRef = getSageMetadata("arRef", articleMeta);
 const canEditArSuiviStock =
   getSageMetadata("canEditArSuiviStock", articleMeta, 1).toString() !== "0";
 const isNew = !arRef;
 const fFamilles: any[] = JSON.parse(
-  $("[data-sage-ffamilles]").attr("data-sage-ffamilles") ?? "[]",
+  $(`[data-${TOKEN}-ffamilles]`).attr(`data-${TOKEN}-ffamilles`) ?? "[]",
 );
 const pUnites: any[] = JSON.parse(
-  $("[data-sage-punites]").attr("data-sage-punites") ?? "[]",
+  $(`[data-${TOKEN}-punites]`).attr(`data-${TOKEN}-punites`) ?? "[]",
 );
 
 export const ArticleTab1Component = React.forwardRef((props, ref) => {
@@ -207,7 +211,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   value: arPrixAch,
                   validator: {
                     functionName: numberValidator,
-                  }
+                  },
                 },
               },
               {
@@ -219,7 +223,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   value: arCoef,
                   validator: {
                     functionName: numberValidator,
-                  }
+                  },
                 },
               },
             ],
@@ -281,7 +285,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   value: getSageMetadata("arPunet", articleMeta),
                   validator: {
                     functionName: numberValidator,
-                  }
+                  },
                 },
               },
               {
@@ -292,7 +296,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   value: getSageMetadata("arCoutStd", articleMeta),
                   validator: {
                     functionName: numberValidator,
-                  }
+                  },
                 },
               },
               {

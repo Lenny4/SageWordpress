@@ -6,15 +6,16 @@ import { FCatalogueInterface } from "../../../../../interface/FArticleInterface"
 import { InputInterface } from "../../../../../interface/InputInterface";
 import { getSageMetadata } from "../../../../../functions/getMetadata";
 import Grid from "@mui/material/Grid";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
 const articleMeta: MetadataInterface[] = JSON.parse(
-  $("[data-sage-product]").attr("data-sage-product") ?? "null",
+  $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 
 const fCatalogues: FCatalogueInterface[] = JSON.parse(
-  $("[data-sage-fcatalogues]").attr("data-sage-fcatalogues") ?? "[]",
+  $(`[data-${TOKEN}-fcatalogues]`).attr(`data-${TOKEN}-fcatalogues`) ?? "[]",
 );
 
 interface FormState {
@@ -80,8 +81,8 @@ export const ArticleCataloguesComponent = React.forwardRef((props, ref) => {
         return (
           <Grid size={{ xs: 12, md: 3 }} key={niveau}>
             <select
-              id={"_sage_clNo" + niveau}
-              name={"_sage_clNo" + niveau}
+              id={`_${TOKEN}_clNo` + niveau}
+              name={`_${TOKEN}_clNo` + niveau}
               value={values[`clNo${niveau}`].value}
               onChange={handleChangeSelect(`clNo${niveau}`)}
               style={{ width: "100%" }}

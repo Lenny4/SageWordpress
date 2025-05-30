@@ -10,22 +10,23 @@ import { getTranslations } from "../functions/translations";
 import { LinearProgress } from "@mui/material";
 import { LinearProgressWithLabel } from "./component/LinearProgressWithLabel";
 import { getDiff } from "json-difference";
+import { TOKEN } from "../token";
 
-const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
-const wpnonce = $("[data-sage-nonce]").attr("data-sage-nonce");
+const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
+const wpnonce = $(`[data-${TOKEN}-nonce]`).attr(`data-${TOKEN}-nonce`);
 
 const humanizeDuration = require("humanize-duration");
 
-const stringApiHostUrl = $("[data-sage-api-host-url]").attr(
-  "data-sage-api-host-url",
+const stringApiHostUrl = $(`[data-${TOKEN}-api-host-url]`).attr(
+  `data-${TOKEN}-api-host-url`,
 );
-const stringAuthorization = $("[data-sage-authorization]").attr(
-  "data-sage-authorization",
+const stringAuthorization = $(`[data-${TOKEN}-authorization]`).attr(
+  `data-${TOKEN}-authorization`,
 );
-const language = $("[data-sage-language]").attr("data-sage-language");
+const language = $(`[data-${TOKEN}-language]`).attr(`data-${TOKEN}-language`);
 
-const containerSelector = "#sage_appstate";
-const joinApiContainerSelector = "#sage_join_api";
+const containerSelector = `#${TOKEN}_appstate`;
+const joinApiContainerSelector = `#${TOKEN}_join_api`;
 
 let translations: any = getTranslations();
 
@@ -288,7 +289,7 @@ const AppStateComponent = () => {
     const response = await fetch(
       siteUrl +
         "/index.php?rest_route=" +
-        encodeURI("/sage/v1/add-website-sage-api") +
+        encodeURI(`/${TOKEN}/v1/add-website-sage-api`) +
         "&_wpnonce=" +
         wpnonce,
     );

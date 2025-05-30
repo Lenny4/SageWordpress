@@ -4,27 +4,30 @@ import React, { ChangeEvent } from "react";
 import { getTranslations } from "../../../../functions/translations";
 import { InputInterface } from "../../../../interface/InputInterface";
 import { stringValidator } from "../../../../functions/validator";
-import { TOKEN } from "../../../../admin";
+import { TOKEN } from "../../../../token";
 
 const containerSelector = `#${TOKEN}_user`;
-const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
-const wpnonce = $("[data-sage-nonce]").attr("data-sage-nonce");
+const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
+const wpnonce = $(`[data-${TOKEN}-nonce]`).attr(`data-${TOKEN}-nonce`);
 const autoCreateSageFcomptet =
-  $("[data-sage-auto-create-sage-fcomptet]").attr(
-    "data-sage-auto-create-sage-fcomptet",
+  $(`[data-${TOKEN}-auto-create-${TOKEN}-fcomptet]`).attr(
+    `data-${TOKEN}-auto-create-${TOKEN}-fcomptet`,
   ) === "on";
 let translations: any = getTranslations();
 let currentCtNumSearch = "";
-const user = JSON.parse($("[data-sage-user]").attr("data-sage-user") ?? "null");
+const user = JSON.parse(
+  $(`[data-${TOKEN}-user]`).attr(`data-${TOKEN}-user`) ?? "null",
+);
 const userMetaWordpress = JSON.parse(
-  $("[data-sage-user-meta-wordpress]").attr("data-sage-user-meta-wordpress") ??
-    "null",
+  $(`[data-${TOKEN}-user-meta-wordpress]`).attr(
+    `data-${TOKEN}-user-meta-wordpress`,
+  ) ?? "null",
 );
 const pCattarifs: any[] = JSON.parse(
-  $("[data-sage-pcattarifs]").attr("data-sage-pcattarifs") ?? "[]",
+  $(`[data-${TOKEN}-pcattarifs]`).attr(`data-${TOKEN}-pcattarifs`) ?? "[]",
 );
 const pCatComptas: any[] = JSON.parse(
-  $("[data-sage-pcatcomptas]").attr("data-sage-pcatcomptas") ?? "[]",
+  $(`[data-${TOKEN}-pcatcomptas]`).attr(`data-${TOKEN}-pcatcomptas`) ?? "[]",
 ).Ven;
 
 interface FormState {
@@ -47,7 +50,7 @@ interface State {
 // todo replace by assets/js/functions/getMetadata.ts
 const getMetadataValue = (prop: string, ignoreCase: boolean = true): string => {
   let v = "";
-  prop = "_sage_" + prop;
+  prop = `_${TOKEN}_` + prop;
   if (userMetaWordpress?.[prop] && userMetaWordpress?.[prop].length > 0) {
     v = userMetaWordpress?.[prop][0];
   }
@@ -114,15 +117,15 @@ const UserComptaComponent: React.FC<State> = ({
   return (
     <tr>
       <th>
-        <label htmlFor={"_sage_" + prop}>
+        <label htmlFor={`_${TOKEN}_` + prop}>
           {prop === "nCatCompta" && <>Catégorie comptable</>}
           {prop === "nCatTarif" && <>Catégorie tarifaire</>}
         </label>
       </th>
       <td>
         <select
-          name={"_sage_" + prop}
-          id={"_sage_" + prop}
+          name={`_${TOKEN}_` + prop}
+          id={`_${TOKEN}_` + prop}
           value={values.nCompta.value}
           onChange={handleChangeSelect("nCompta")}
         >
@@ -222,7 +225,7 @@ const UserComponent = () => {
     const response = await fetch(
       siteUrl +
         "/index.php?rest_route=" +
-        encodeURI("/sage/v1/user/" + ctNum) +
+        encodeURI(`/${TOKEN}/v1/user/` + ctNum) +
         "&_wpnonce=" +
         wpnonce,
     );
@@ -342,15 +345,17 @@ const UserComponent = () => {
           <>
             <tr>
               <th>
-                <label htmlFor="_sage_creationType">Type d'utilisateur</label>
+                <label htmlFor={`_${TOKEN}_creationType`}>
+                  Type d'utilisateur
+                </label>
               </th>
               <td>
-                <label htmlFor="_sage_creationType_none">
+                <label htmlFor={`_${TOKEN}_creationType_none`}>
                   <input
                     type="radio"
-                    name="_sage_creationType"
+                    name={`_${TOKEN}_creationType`}
                     value="none"
-                    id="_sage_creationType_none"
+                    id={`_${TOKEN}_creationType_none`}
                     checked={values.creationType.value === "none"}
                     onChange={handleChangeRadio("creationType")}
                   />
@@ -358,12 +363,12 @@ const UserComponent = () => {
                 </label>
                 <br />
                 <br />
-                <label htmlFor="_sage_creationType_new">
+                <label htmlFor={`_${TOKEN}_creationType_new`}>
                   <input
                     type="radio"
-                    name="_sage_creationType"
+                    name={`_${TOKEN}_creationType`}
                     value="new"
-                    id="_sage_creationType_new"
+                    id={`_${TOKEN}_creationType_new`}
                     checked={values.creationType.value === "new"}
                     onChange={handleChangeRadio("creationType")}
                   />
@@ -371,12 +376,12 @@ const UserComponent = () => {
                 </label>
                 <br />
                 <br />
-                <label htmlFor="_sage_creationType_link">
+                <label htmlFor={`_${TOKEN}_creationType_link`}>
                   <input
                     type="radio"
-                    name="_sage_creationType"
+                    name={`_${TOKEN}_creationType`}
                     value="link"
-                    id="_sage_creationType_link"
+                    id={`_${TOKEN}_creationType_link`}
                     checked={values.creationType.value === "link"}
                     onChange={handleChangeRadio("creationType")}
                   />
@@ -387,20 +392,20 @@ const UserComponent = () => {
             {values.creationType.value === "new" && (
               <tr>
                 <th>
-                  <label htmlFor="_sage_auto_generate_ctnum">
+                  <label htmlFor={`_${TOKEN}_auto_generate_ctnum`}>
                     Générer le code client
                   </label>
                 </th>
                 <td>
                   <input
                     type="checkbox"
-                    name="_sage_auto_generate_ctnum"
-                    id="_sage_auto_generate_ctnum"
+                    name={`_${TOKEN}_auto_generate_ctnum`}
+                    id={`_${TOKEN}_auto_generate_ctnum`}
                     value="1"
                     checked={values.autoGenerateCtNum.value}
                     onChange={handleChangeCheckbox("autoGenerateCtNum")}
                   />
-                  <label htmlFor="_sage_auto_generate_ctnum">
+                  <label htmlFor={`_${TOKEN}_auto_generate_ctnum`}>
                     Laisser l'API Sage générer le code client automatiquement.
                   </label>
                 </td>
@@ -411,7 +416,7 @@ const UserComponent = () => {
         {showCtNumField && (
           <tr>
             <th>
-              <label htmlFor="_sage_ctNum">
+              <label htmlFor={`_${TOKEN}_ctNum`}>
                 {translations.fComptets.ctNum}
               </label>
             </th>
@@ -419,8 +424,8 @@ const UserComponent = () => {
               <div style={{ position: "relative" }}>
                 <input
                   type="text"
-                  name="_sage_ctNum"
-                  id="_sage_ctNum"
+                  name={`_${TOKEN}_ctNum`}
+                  id={`_${TOKEN}_ctNum`}
                   readOnly={userHasCtNum}
                   style={{
                     ...(!userHasCtNum &&

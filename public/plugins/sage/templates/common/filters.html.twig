@@ -1,7 +1,7 @@
 {# https://jetpartsfwi.com/wordpress/wp-admin/edit.php?post_type=product #}
 {#  https://developer.wordpress.org/apis/security/nonces/#adding-a-nonce-to-a-form #}
 {#  {{ 'filter-fDocentetes'|wp_nonce_field|raw }} #}
-<form method="get" id="filter-sage">
+<form method="get" id="filter-{{ TOKEN }}">
   <input type="hidden" name="page" value="{{ queryParams['page'] }}">
   {% if queryParams['sort'] is defined %}
     <input type="hidden" name="sort" value="{{ queryParams['sort']|raw|json_decode|json_encode }}">

@@ -56,9 +56,9 @@ final class SageGraphQl
         $hostUrl = get_option(Sage::TOKEN . '_api_host_url');
         $message = null;
         if (!is_string($hostUrl) || ($hostUrl === '' || $hostUrl === '0')) {
-            $message = __("Veuillez renseigner l'host du serveur Sage.", 'sage');
+            $message = __("Veuillez renseigner l'host du serveur Sage.", Sage::TOKEN);
         } else if (filter_var($hostUrl, FILTER_VALIDATE_URL) === false) {
-            $message = __("L'host du serveur Sage n'est pas une url valide.", 'sage');
+            $message = __("L'host du serveur Sage n'est pas une url valide.", Sage::TOKEN);
         }
         if (!is_null($message)) {
             add_action('admin_notices', static function () use ($message): void {
@@ -104,10 +104,10 @@ final class SageGraphQl
             add_action('admin_notices', static function () use ($errorMsg): void {
                 ?>
                 <div id="<?= Sage::TOKEN ?>_join_api" class="error"><p>
-                        <?= __("L'API Sage n'est pas joignable. Avez vous lancé le serveur ?", 'sage') ?>
+                        <?= __("L'API Sage n'est pas joignable. Avez vous lancé le serveur ?", Sage::TOKEN) ?>
                         <?php
                         if (!is_null($errorMsg)) {
-                            echo "<br>" . __('Error', 'sage') . ": " . $errorMsg;
+                            echo "<br>" . __('Error', Sage::TOKEN) . ": " . $errorMsg;
                         }
                         ?>
                     </p></div>
@@ -138,7 +138,7 @@ final class SageGraphQl
             add_action('admin_notices', static function (): void {
                 ?>
                 <div class="error"><p>
-                    <?= __("Wordpress host url doit commencer par 'http://' ou 'https://'", 'sage') ?>
+                    <?= __("Wordpress host url doit commencer par 'http://' ou 'https://'", Sage::TOKEN) ?>
                 </p>
                 </div><?php
             });
@@ -149,7 +149,7 @@ final class SageGraphQl
             add_action('admin_notices', static function (): void {
                 ?>
                 <div class="error"><p>
-                    <?= __("Api host url doit commencer par 'http://' ou 'https://'", 'sage') ?>
+                    <?= __("Api host url doit commencer par 'http://' ou 'https://'", Sage::TOKEN) ?>
                 </p>
                 </div><?php
             });
@@ -181,19 +181,19 @@ final class SageGraphQl
                 'dbPassword' => get_option(Sage::TOKEN . '_wordpress_db_password'),
                 'tablePrefix' => $wpdb->prefix,
                 'dbName' => get_option(Sage::TOKEN . '_wordpress_db_name'),
-                'autoCreateSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet'),
-                'autoImportSageFcomptet' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_sage_fcomptet')?->format('Y-m-d H:i:s'),
+                'autoCreateSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_create_' . Sage::TOKEN . '_fcomptet'),
+                'autoImportSageFcomptet' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_' . Sage::TOKEN . '_fcomptet')?->format('Y-m-d H:i:s'),
                 'autoCreateWebsiteAccount' => (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_account'),
                 'autoImportWebsiteAccount' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_account')?->format('Y-m-d H:i:s'),
-                'autoCreateSageFdocentete' => (bool)get_option(Sage::TOKEN . '_auto_create_sage_fdocentete'),
+                'autoCreateSageFdocentete' => (bool)get_option(Sage::TOKEN . '_auto_create_' . Sage::TOKEN . '_fdocentete'),
                 'autoImportWebsiteOrderDate' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_order_date')?->format('Y-m-d H:i:s'),
                 'autoImportWebsiteOrderDoType' => get_option(Sage::TOKEN . '_auto_import_wordpress_order_dotype', null),
                 'autoCreateWebsiteOrder' => get_option(Sage::TOKEN . '_auto_create_wordpress_order', null),
                 'autoCreateWebsiteArticle' => (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_article'),
                 'autoImportWebsiteArticle' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article')?->format('Y-m-d H:i:s'),
                 'pluginVersion' => get_plugin_data($this->sage->file)['Version'],
-                'autoUpdateSageFComptetWhenEditAccount' => (bool)get_option(Sage::TOKEN . '_auto_update_sage_fcomptet_when_edit_account'),
-                'autoUpdateAccountWhenEditSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_update_account_when_edit_sage_fcomptet'),
+                'autoUpdateSageFComptetWhenEditAccount' => (bool)get_option(Sage::TOKEN . '_auto_update_' . Sage::TOKEN . '_fcomptet_when_edit_account'),
+                'autoUpdateAccountWhenEditSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_update_account_when_edit_' . Sage::TOKEN . '_fcomptet'),
             ]
         ];
         return $this->runQuery($mutation, $getError, $variables);
@@ -865,7 +865,6 @@ final class SageGraphQl
                 'clNo2',
                 'clNo3',
                 'clNo4',
-                'arPublie',
                 'arSommeil',
                 'arEscompte',
                 'arVteDebit',
@@ -1772,7 +1771,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "paged" => "1",
-            "per_page" => "1000",
+            "per_page" => "100",
         ];
         $selectionSets = $this->_getFTaxeSelectionSet();
         $this->fTaxes = $this->getEntitiesAndSaveInOption(
@@ -1782,7 +1781,8 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi
+            $ignorePingApi,
+            allPages: true,
         );
         return $this->fTaxes;
     }

@@ -11,11 +11,12 @@ import {
   handleFormIsValid,
 } from "../../../../../functions/form";
 import { FormCheckbox } from "../../fields/FormCheckbox";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
 const articleMeta: MetadataInterface[] = JSON.parse(
-  $("[data-sage-product]").attr("data-sage-product") ?? "null",
+  $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 
 export const ArticleOptionTraitementComponent = React.forwardRef(

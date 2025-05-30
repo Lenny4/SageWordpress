@@ -2,6 +2,8 @@
 
 namespace App\lib;
 
+use App\Sage;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -73,15 +75,15 @@ final class SagePostType
             'name' => $this->plural,
             'singular_name' => $this->single,
             'name_admin_bar' => $this->single,
-            'add_new' => _x('Add New', $this->post_type, 'sage'),
-            'add_new_item' => sprintf(__('Add New %s', 'sage'), $this->single),
-            'edit_item' => sprintf(__('Edit %s', 'sage'), $this->single),
-            'new_item' => sprintf(__('New %s', 'sage'), $this->single),
-            'all_items' => sprintf(__('All %s', 'sage'), $this->plural),
-            'view_item' => sprintf(__('View %s', 'sage'), $this->single),
-            'search_items' => sprintf(__('Search %s', 'sage'), $this->plural),
-            'not_found' => sprintf(__('No %s Found', 'sage'), $this->plural),
-            'not_found_in_trash' => sprintf(__('No %s Found In Trash', 'sage'), $this->plural),
+            'add_new' => _x('Add New', $this->post_type, Sage::TOKEN),
+            'add_new_item' => sprintf(__('Add New %s', Sage::TOKEN), $this->single),
+            'edit_item' => sprintf(__('Edit %s', Sage::TOKEN), $this->single),
+            'new_item' => sprintf(__('New %s', Sage::TOKEN), $this->single),
+            'all_items' => sprintf(__('All %s', Sage::TOKEN), $this->plural),
+            'view_item' => sprintf(__('View %s', Sage::TOKEN), $this->single),
+            'search_items' => sprintf(__('Search %s', Sage::TOKEN), $this->plural),
+            'not_found' => sprintf(__('No %s Found', Sage::TOKEN), $this->plural),
+            'not_found_in_trash' => sprintf(__('No %s Found In Trash', Sage::TOKEN), $this->plural),
             'parent_item_colon' => sprintf(__('Parent %s'), $this->single),
             'menu_name' => $this->plural,
         ];
@@ -125,16 +127,16 @@ final class SagePostType
         global $post, $post_ID;
         $messages[$this->post_type] = [
             0 => '',
-            1 => sprintf(__('%1$s updated. %2$sView %3$s%4$s.', 'sage'), $this->single, '<a href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
-            2 => __('Custom field updated.', 'sage'),
-            3 => __('Custom field deleted.', 'sage'),
-            4 => sprintf(__('%1$s updated.', 'sage'), $this->single),
-            5 => isset($_GET['revision']) ? sprintf(__('%1$s restored to revision from %2$s.', 'sage'), $this->single, wp_post_revision_title((int)$_GET['revision'], false)) : false,
-            6 => sprintf(__('%1$s published. %2$sView %3$s%4s.', 'sage'), $this->single, '<a href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
-            7 => sprintf(__('%1$s saved.', 'sage'), $this->single),
-            8 => sprintf(__('%1$s submitted. %2$sPreview post%3$s%4$s.', 'sage'), $this->single, '<a target="_blank" href="' . esc_url(add_query_arg('preview', 'true', get_permalink($post_ID))) . '">', $this->single, '</a>'),
-            9 => sprintf(__('%1$s scheduled for: %2$s. %3$sPreview %4$s%5$s.', 'sage'), $this->single, '<strong>' . date_i18n(__('M j, Y @ G:i', 'sage'), strtotime((string)$post->post_date)) . '</strong>', '<a target="_blank" href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
-            10 => sprintf(__('%1$s draft updated. %2$sPreview %3$s%4$s.', 'sage'), $this->single, '<a target="_blank" href="' . esc_url(add_query_arg('preview', 'true', get_permalink($post_ID))) . '">', $this->single, '</a>')
+            1 => sprintf(__('%1$s updated. %2$sView %3$s%4$s.', Sage::TOKEN), $this->single, '<a href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
+            2 => __('Custom field updated.', Sage::TOKEN),
+            3 => __('Custom field deleted.', Sage::TOKEN),
+            4 => sprintf(__('%1$s updated.', Sage::TOKEN), $this->single),
+            5 => isset($_GET['revision']) ? sprintf(__('%1$s restored to revision from %2$s.', Sage::TOKEN), $this->single, wp_post_revision_title((int)$_GET['revision'], false)) : false,
+            6 => sprintf(__('%1$s published. %2$sView %3$s%4s.', Sage::TOKEN), $this->single, '<a href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
+            7 => sprintf(__('%1$s saved.', Sage::TOKEN), $this->single),
+            8 => sprintf(__('%1$s submitted. %2$sPreview post%3$s%4$s.', Sage::TOKEN), $this->single, '<a target="_blank" href="' . esc_url(add_query_arg('preview', 'true', get_permalink($post_ID))) . '">', $this->single, '</a>'),
+            9 => sprintf(__('%1$s scheduled for: %2$s. %3$sPreview %4$s%5$s.', Sage::TOKEN), $this->single, '<strong>' . date_i18n(__('M j, Y @ G:i', Sage::TOKEN), strtotime((string)$post->post_date)) . '</strong>', '<a target="_blank" href="' . esc_url(get_permalink($post_ID)) . '">', $this->single, '</a>'),
+            10 => sprintf(__('%1$s draft updated. %2$sPreview %3$s%4$s.', Sage::TOKEN), $this->single, '<a target="_blank" href="' . esc_url(add_query_arg('preview', 'true', get_permalink($post_ID))) . '">', $this->single, '</a>')
         ];
 
         return $messages;
@@ -151,11 +153,11 @@ final class SagePostType
     {
 
         $bulk_messages[$this->post_type] = [
-            'updated' => sprintf(_n('%1$s %2$s updated.', '%1$s %3$s updated.', $bulk_counts['updated'], 'sage'), $bulk_counts['updated'], $this->single, $this->plural),
-            'locked' => sprintf(_n('%1$s %2$s not updated, somebody is editing it.', '%1$s %3$s not updated, somebody is editing them.', $bulk_counts['locked'], 'sage'), $bulk_counts['locked'], $this->single, $this->plural),
-            'deleted' => sprintf(_n('%1$s %2$s permanently deleted.', '%1$s %3$s permanently deleted.', $bulk_counts['deleted'], 'sage'), $bulk_counts['deleted'], $this->single, $this->plural),
-            'trashed' => sprintf(_n('%1$s %2$s moved to the Trash.', '%1$s %3$s moved to the Trash.', $bulk_counts['trashed'], 'sage'), $bulk_counts['trashed'], $this->single, $this->plural),
-            'untrashed' => sprintf(_n('%1$s %2$s restored from the Trash.', '%1$s %3$s restored from the Trash.', $bulk_counts['untrashed'], 'sage'), $bulk_counts['untrashed'], $this->single, $this->plural)
+            'updated' => sprintf(_n('%1$s %2$s updated.', '%1$s %3$s updated.', $bulk_counts['updated'], Sage::TOKEN), $bulk_counts['updated'], $this->single, $this->plural),
+            'locked' => sprintf(_n('%1$s %2$s not updated, somebody is editing it.', '%1$s %3$s not updated, somebody is editing them.', $bulk_counts['locked'], Sage::TOKEN), $bulk_counts['locked'], $this->single, $this->plural),
+            'deleted' => sprintf(_n('%1$s %2$s permanently deleted.', '%1$s %3$s permanently deleted.', $bulk_counts['deleted'], Sage::TOKEN), $bulk_counts['deleted'], $this->single, $this->plural),
+            'trashed' => sprintf(_n('%1$s %2$s moved to the Trash.', '%1$s %3$s moved to the Trash.', $bulk_counts['trashed'], Sage::TOKEN), $bulk_counts['trashed'], $this->single, $this->plural),
+            'untrashed' => sprintf(_n('%1$s %2$s restored from the Trash.', '%1$s %3$s restored from the Trash.', $bulk_counts['untrashed'], Sage::TOKEN), $bulk_counts['untrashed'], $this->single, $this->plural)
         ];
 
         return $bulk_messages;

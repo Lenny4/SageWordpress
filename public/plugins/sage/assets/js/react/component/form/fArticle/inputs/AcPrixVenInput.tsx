@@ -5,6 +5,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import { getTranslations } from "../../../../../functions/translations";
 import { InputInterface } from "../../../../../interface/InputInterface";
 import { handleChangeInputGeneric } from "../../../../../functions/form";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
@@ -110,7 +111,7 @@ export const AcPrixVenInput = React.forwardRef(
 
     return (
       <>
-        <label htmlFor={"_sage_acPrixVen"}>
+        <label htmlFor={`_${TOKEN}_acPrixVen`}>
           <Tooltip title={"acPrixVen"} arrow placement="top">
             <span>{translations["fArticles"]["acPrixVen"]}</span>
           </Tooltip>
@@ -118,8 +119,8 @@ export const AcPrixVenInput = React.forwardRef(
         <div style={{ display: "flex", alignItems: "flex-start" }}>
           <div style={{ position: "relative", flex: 1 }}>
             <input
-              id={"_sage_fArtclients[" + acCategorie + "].acPrixVen"}
-              name={"_sage_fArtclients[" + acCategorie + "].acPrixVen"}
+              id={`_${TOKEN}_fArtclients[` + acCategorie + "].acPrixVen"}
+              name={`_${TOKEN}_fArtclients[` + acCategorie + "].acPrixVen"}
               type={"hidden"}
               value={values.realAcPrixVen.value}
             />
@@ -135,7 +136,9 @@ export const AcPrixVenInput = React.forwardRef(
               }}
             />
             {values.acPrixVen.error && (
-              <div className="sage_error_field">{values.acPrixVen.error}</div>
+              <div className={`${TOKEN}_error_field`}>
+                {values.acPrixVen.error}
+              </div>
             )}
           </div>
           {Number(values.acPrixVen.value) !== expectedAcPrixVen &&

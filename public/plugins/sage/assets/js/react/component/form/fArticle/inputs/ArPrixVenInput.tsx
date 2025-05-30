@@ -5,7 +5,8 @@ import InfoIcon from "@mui/icons-material/Info";
 import { getTranslations } from "../../../../../functions/translations";
 import { InputInterface } from "../../../../../interface/InputInterface";
 import { handleChangeInputGeneric } from "../../../../../functions/form";
-import {numberValidator} from "../../../../../functions/validator";
+import { numberValidator } from "../../../../../functions/validator";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
@@ -92,7 +93,7 @@ export const ArPrixVenInput = React.forwardRef(
 
     useImperativeHandle(ref, () => ({
       async isValid(): Promise<boolean> {
-        return await numberValidator(values.arPrixVen.value) === "";
+        return (await numberValidator(values.arPrixVen.value)) === "";
       },
     }));
 
@@ -106,7 +107,7 @@ export const ArPrixVenInput = React.forwardRef(
 
     return (
       <>
-        <label htmlFor={"_sage_arPrixVen"}>
+        <label htmlFor={`_${TOKEN}_arPrixVen`}>
           <Tooltip title={"arPrixVen"} arrow placement="top">
             <span>{translations["fArticles"]["arPrixVen"]}</span>
           </Tooltip>
@@ -114,8 +115,8 @@ export const ArPrixVenInput = React.forwardRef(
         <div style={{ display: "flex", alignItems: "flex-start" }}>
           <div style={{ position: "relative", flex: 1 }}>
             <input
-              id={"_sage_arPrixVen"}
-              name={"_sage_arPrixVen"}
+              id={`_${TOKEN}_arPrixVen`}
+              name={`_${TOKEN}_arPrixVen`}
               type={"hidden"}
               value={values.realArPrixVen.value}
             />
@@ -131,7 +132,9 @@ export const ArPrixVenInput = React.forwardRef(
               }}
             />
             {values.arPrixVen.error && (
-              <div className="sage_error_field">{values.arPrixVen.error}</div>
+              <div className={`${TOKEN}_error_field`}>
+                {values.arPrixVen.error}
+              </div>
             )}
           </div>
           {Number(values.arPrixVen.value) !== expectedArPrixVen &&

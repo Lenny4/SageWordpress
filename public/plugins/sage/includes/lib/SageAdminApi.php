@@ -282,8 +282,8 @@ final class SageAdminApi
                 }
 
                 $html .= '<img id="' . $option_name . '_preview" class="image_preview" src="' . $image_thumb . '" /><br/>' . "\n";
-                $html .= '<input id="' . $option_name . '_button" type="button" data-uploader_title="' . __('Upload an image', 'sage') . '" data-uploader_button_text="' . __('Use image', 'sage') . '" class="image_upload_button button" value="' . __('Upload new image', 'sage') . '" />' . "\n";
-                $html .= '<input id="' . $option_name . '_delete" type="button" class="image_delete_button button" value="' . __('Remove image', 'sage') . '" />' . "\n";
+                $html .= '<input id="' . $option_name . '_button" type="button" data-uploader_title="' . __('Upload an image', Sage::TOKEN) . '" data-uploader_button_text="' . __('Use image', Sage::TOKEN) . '" class="image_upload_button button" value="' . __('Upload new image', Sage::TOKEN) . '" />' . "\n";
+                $html .= '<input id="' . $option_name . '_delete" type="button" class="image_delete_button button" value="' . __('Remove image', Sage::TOKEN) . '" />' . "\n";
                 $html .= '<input id="' . $option_name . '" class="image_data_field" type="hidden" name="' . $option_name . '" value="' . $data . '"/><br/>' . "\n";
                 break;
 

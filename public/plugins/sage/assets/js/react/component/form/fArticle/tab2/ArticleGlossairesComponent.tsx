@@ -18,15 +18,16 @@ import {
   handleFormIsValid,
 } from "../../../../../functions/form";
 import { FormInput } from "../../fields/FormInput";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
 const articleMeta: MetadataInterface[] = JSON.parse(
-  $("[data-sage-product]").attr("data-sage-product") ?? "null",
+  $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 
 const fGlossaires: FGlossaireInterface[] = JSON.parse(
-  $("[data-sage-fglossaires]").attr("data-sage-fglossaires") ?? "[]",
+  $(`[data-${TOKEN}-fglossaires]`).attr(`data-${TOKEN}-fglossaires`) ?? "[]",
 );
 
 export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {

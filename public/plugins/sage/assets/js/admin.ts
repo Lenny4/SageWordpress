@@ -6,17 +6,18 @@ import "./react/component/form/fComptet/UserComponent";
 import "./react/component/form/fArticle/ArticleComponent.tsx";
 import "./react/component/form/SharedListComponent.tsx";
 import { getTranslations } from "./functions/translations";
-import { basePlacements } from "@popperjs/core/lib/enums"; // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
+import { basePlacements } from "@popperjs/core/lib/enums";
+import { TOKEN } from "./token"; // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 
 // todo intégrer: https://github.com/woocommerce/woocommerce/pull/55508
 // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 $(() => {
   let allFilterContainer = $("#filters_container");
-  const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
+  const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
   let translations: any = getTranslations();
-  // region remove sage_message in query
+  // region remove ${TOKEN}_message in query
   let url = new URL(location.href);
-  url.searchParams.delete("sage_message");
+  url.searchParams.delete(`${TOKEN}_message`);
   window.history.replaceState(null, "", url);
   // endregion
 
@@ -137,7 +138,7 @@ $(() => {
   }
 
   function validateForm() {
-    $("#filter-sage").find(".error-message").remove();
+    $(`#filter-${TOKEN}`).find(".error-message").remove();
     $(".filter-container").each(function (index, filterContainer) {
       let chooseFieldSelect = $(filterContainer).find(
         'select[name^="filter_field["]',
@@ -167,7 +168,7 @@ $(() => {
         );
       }
     });
-    return $("#filter-sage").find(".error-message").length === 0;
+    return $(`#filter-${TOKEN}`).find(".error-message").length === 0;
   }
 
   function removeFilter(e: JQuery.ClickEvent) {
@@ -297,7 +298,7 @@ $(() => {
   }
 
   function getOrderIdWpnonce() {
-    const blockDom = $("[id^='woocommerce-order-sage']");
+    const blockDom = $(`[id^='woocommerce-order-${TOKEN}']`);
     const dataDom = $(blockDom).find("[data-order-data]");
     const orderId = $(dataDom).attr("data-order-id");
     const wpnonce = $(dataDom).attr("data-nonce");
@@ -344,7 +345,7 @@ $(() => {
   }
 
   async function synchronizeWordpressOrderWithSage(sync: boolean) {
-    const blockDom = $("[id^='woocommerce-order-sage']");
+    const blockDom = $(`[id^='woocommerce-order-${TOKEN}']`);
     // @ts-ignore
     $(blockDom).block({
       message: null,
@@ -357,14 +358,14 @@ $(() => {
     let url =
       siteUrl +
       "/index.php?rest_route=" +
-      encodeURI("/sage/v1/orders/" + orderId + "/sync") +
+      encodeURI(`/${TOKEN}/v1/orders/` + orderId + "/sync") +
       "&_wpnonce=" +
       wpnonce;
     if (!sync) {
       url =
         siteUrl +
         "/index.php?rest_route=" +
-        encodeURI("/sage/v1/orders/" + orderId + "/desynchronize") +
+        encodeURI(`/${TOKEN}/v1/orders/` + orderId + "/desynchronize") +
         "&_wpnonce=" +
         wpnonce;
     }
@@ -407,7 +408,7 @@ $(() => {
     const response = await fetch(
       siteUrl +
         "/index.php?rest_route=" +
-        encodeURI("/sage/v1/orders/" + orderId + "/meta-box-order") +
+        encodeURI(`/${TOKEN}/v1/orders/` + orderId + "/meta-box-order") +
         "&_wpnonce=" +
         wpnonce,
     );
@@ -439,7 +440,7 @@ $(() => {
     $(optionElement).prop("selected", false);
   });
 
-  $(document).on("submit", "#form_settings_sage", function (e) {
+  $(document).on("submit", `#form_settings_${TOKEN}`, function (e) {
     $(e.target)
       .find("[data-2-select-target][name] option")
       .prop("selected", true);
@@ -447,7 +448,7 @@ $(() => {
   // endregion
 
   // region remove notice dismissible
-  $(document).on("click", ".sage-notice-dismiss", function (e) {
+  $(document).on("click", `.${TOKEN}-notice-dismiss`, function (e) {
     $(e.target).closest("div.notice").remove();
   });
   // endregion
@@ -477,11 +478,11 @@ $(() => {
     removeFilter(e);
   });
 
-  $(document).on("input", "#filter-sage *", function (e) {
+  $(document).on("input", `#filter-${TOKEN} *`, function (e) {
     $($(e.target).parent()).find(".error-message").remove();
   });
 
-  $(document).on("submit", "#filter-sage", function (e) {
+  $(document).on("submit", `#filter-${TOKEN}`, function (e) {
     if (!validateForm()) {
       e.preventDefault();
     }
@@ -492,16 +493,18 @@ $(() => {
 
   // region search fdocentete
   let searchFDocentete = "";
-  $('[name="sage-fdocentete-dopiece"]').prop("disabled", false);
-  $(document).on("input", '[name="sage-fdocentete-dopiece"]', function (e) {
+  $(`[name="${TOKEN}-fdocentete-dopiece"]`).prop("disabled", false);
+  $(document).on("input", `[name="${TOKEN}-fdocentete-dopiece"]`, function (e) {
     const inputDoPiece = e.target;
     const domContainer = $(inputDoPiece).parent();
     const domResultContainer = $(domContainer)
       .parent()
-      .find('[id="sage-fdocentete-dopiece-result"]');
-    const inputDoType = $(domContainer).find('[name="sage-fdocentete-dotype"]');
+      .find(`[id="${TOKEN}-fdocentete-dopiece-result"]`);
+    const inputDoType = $(domContainer).find(
+      `[name="${TOKEN}-fdocentete-dotype"]`,
+    );
     const inputWpnonce = $(domContainer).find(
-      '[name="sage-fdocentete-wpnonce"]',
+      `[name="${TOKEN}-fdocentete-wpnonce"]`,
     );
     const successIcon = $(domContainer).find(".dashicons-yes");
     const errorIcon = $(domContainer).find(".dashicons-no");
@@ -528,7 +531,7 @@ $(() => {
         siteUrl +
           "/index.php?rest_route=" +
           encodeURI(
-            "/sage/v1/fdocentetes/" + encodeURIComponent(currentSearch),
+            `/${TOKEN}/v1/fdocentetes/` + encodeURIComponent(currentSearch),
           ) +
           "&_wpnonce=" +
           $(inputWpnonce).val(),
@@ -601,7 +604,7 @@ $(() => {
                 }
               }
               const cardDoType = $(
-                '<div class="card cursor-pointer" data-select-sage-fdocentete-dotype="' +
+                `<div class="card cursor-pointer" data-select-${TOKEN}-fdocentete-dotype="` +
                   fDocentete.doType +
                   '" style="max-width: none">' +
                   label +
@@ -627,22 +630,30 @@ $(() => {
       }
     }, 500);
   });
-  $(document).on("click", "[data-select-sage-fdocentete-dotype]", function (e) {
-    const divDoType = e.target;
-    const domContainer = $(divDoType).closest(".notice").parent();
-    const inputDoType = $(domContainer).find('[name="sage-fdocentete-dotype"]');
-    const successIcon = $(domContainer).find(".dashicons-yes");
-    const errorIcon = $(domContainer).find(".dashicons-no");
-    const validateButton = $(domContainer).find("[data-order-fdocentete]");
+  $(document).on(
+    "click",
+    `[data-select-${TOKEN}-fdocentete-dotype]`,
+    function (e) {
+      const divDoType = e.target;
+      const domContainer = $(divDoType).closest(".notice").parent();
+      const inputDoType = $(domContainer).find(
+        `[name="${TOKEN}-fdocentete-dotype"]`,
+      );
+      const successIcon = $(domContainer).find(".dashicons-yes");
+      const errorIcon = $(domContainer).find(".dashicons-no");
+      const validateButton = $(domContainer).find("[data-order-fdocentete]");
 
-    $(domContainer).find("div.notice").remove();
-    $(inputDoType).val($(divDoType).attr("data-select-sage-fdocentete-dotype"));
-    $(successIcon).removeClass("hidden");
-    $(errorIcon).addClass("hidden");
-    $(validateButton).prop("disabled", false);
-  });
+      $(domContainer).find("div.notice").remove();
+      $(inputDoType).val(
+        $(divDoType).attr(`data-select-${TOKEN}-fdocentete-dotype`),
+      );
+      $(successIcon).removeClass("hidden");
+      $(errorIcon).addClass("hidden");
+      $(validateButton).prop("disabled", false);
+    },
+  );
   $(document).on("click", "[data-order-fdocentete]", async function (e) {
-    const blockDom = $("[id^='woocommerce-order-sage']");
+    const blockDom = $(`[id^='woocommerce-order-${TOKEN}']`);
     // @ts-ignore
     $(blockDom).block({
       message: null,
@@ -655,14 +666,18 @@ $(() => {
     const response = await fetch(
       siteUrl +
         "/index.php?rest_route=" +
-        encodeURI("/sage/v1/orders/" + orderId + "/fdocentete") +
+        encodeURI(`/${TOKEN}/v1/orders/` + orderId + "/fdocentete") +
         "&_wpnonce=" +
         wpnonce,
       {
         method: "POST",
         body: JSON.stringify({
-          ["sage-fdocentete-dopiece"]: $("#sage-fdocentete-dopiece").val(),
-          ["sage-fdocentete-dotype"]: $("#sage-fdocentete-dotype").val(),
+          [`${TOKEN}-fdocentete-dopiece`]: $(
+            `#${TOKEN}-fdocentete-dopiece`,
+          ).val(),
+          [`${TOKEN}-fdocentete-dotype`]: $(
+            `#${TOKEN}-fdocentete-dotype`,
+          ).val(),
         }),
       },
     );
@@ -703,7 +718,7 @@ $(() => {
     const response = await fetch(
       siteUrl +
         "/index.php?rest_route=" +
-        encodeURI("/sage/v1/farticle/" + arRef + "/import") +
+        encodeURI(`/${TOKEN}/v1/farticle/` + arRef + "/import") +
         "&_wpnonce=" +
         wpnonce +
         "&orderId=" +
@@ -733,13 +748,15 @@ $(() => {
   // endregion
 
   // region link sageEntityMenu
-  $(document.body).on("click", 'a[href*="page=sage_"]', function (e) {
+  $(document.body).on("click", `a[href*="page=${TOKEN}_"]`, function (e) {
     const defaultFilters = JSON.parse(
-      $("[data-sage-default-filters]").attr("data-sage-default-filters"),
+      $(`[data-${TOKEN}-default-filters]`).attr(
+        `data-${TOKEN}-default-filters`,
+      ),
     );
     const url = URL.parse(
       $(e.target).attr("href"),
-      $("[data-sage-admin-url]").attr("data-sage-admin-url"),
+      $(`[data-${TOKEN}-admin-url]`).attr(`data-${TOKEN}-admin-url`),
     );
     let page = null;
     url.searchParams.forEach((value, key) => {

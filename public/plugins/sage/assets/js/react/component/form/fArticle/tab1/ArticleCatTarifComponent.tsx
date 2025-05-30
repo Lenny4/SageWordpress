@@ -21,7 +21,8 @@ import {
   handleFormIsValid,
 } from "../../../../../functions/form";
 import { FormInput } from "../../fields/FormInput";
-import {numberValidator} from "../../../../../functions/validator";
+import { numberValidator } from "../../../../../functions/validator";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
@@ -30,11 +31,11 @@ type State = {
 };
 
 const articleMeta: MetadataInterface[] = JSON.parse(
-  $("[data-sage-product]").attr("data-sage-product") ?? "null",
+  $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 
 const pCattarifs: any[] = JSON.parse(
-  $("[data-sage-pcattarifs]").attr("data-sage-pcattarifs") ?? "[]",
+  $(`[data-${TOKEN}-pcattarifs]`).attr(`data-${TOKEN}-pcattarifs`) ?? "[]",
 );
 
 export const ArticleCatTarifComponent = React.forwardRef(
@@ -109,7 +110,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
                             ),
                             validator: {
                               functionName: numberValidator,
-                            }
+                            },
                           },
                         },
                       },
@@ -152,7 +153,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
                             ),
                             validator: {
                               functionName: numberValidator,
-                            }
+                            },
                           },
                         },
                       },

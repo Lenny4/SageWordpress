@@ -1,11 +1,12 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-  <div data-sage-user="{{ user|json_encode }}"></div>
-  <div data-sage-user-meta-wordpress="{{ userMetaWordpress|json_encode }}"></div>
-  <div data-sage-pcattarifs="{{ pCattarifs|json_encode }}"></div>
-  <div data-sage-pcatcomptas="{{ pCatComptas|json_encode }}"></div>
-  <div data-sage-auto-create-sage-fcomptet="{{ get_option('sage_auto_create_sage_fcomptet') }}"></div>
-  <div id="sage_user">
+  <div data-{{ TOKEN }}-user="{{ user|json_encode }}"></div>
+  <div data-{{ TOKEN }}-user-meta-wordpress="{{ userMetaWordpress|json_encode }}"></div>
+  <div data-{{ TOKEN }}-pcattarifs="{{ pCattarifs|json_encode }}"></div>
+  <div data-{{ TOKEN }}-pcatcomptas="{{ pCatComptas|json_encode }}"></div>
+  <div
+    data-{{ TOKEN }}-auto-create-{{ TOKEN }}-fcomptet="{{ get_option(TOKEN~'_auto_create_{{ TOKEN }}_fcomptet') }}"></div>
+  <div id="{{ TOKEN }}_user">
     <h2>Sage</h2>
     <div class="skeleton skeleton-box"></div>
   </div>

@@ -72,9 +72,9 @@ final class SageSettings
         global $wpdb;
         $this->sageEntityMenus = [
             new SageEntityMenu(
-                title: __("Clients", 'sage'),
+                title: __("Clients", Sage::TOKEN),
                 // todo afficher les clients Sage qui partagent le même email et expliqués qu'il ne seront pas dupliqués sur le site
-                description: __("Gestion des clients.", 'sage'),
+                description: __("Gestion des clients.", Sage::TOKEN),
                 entityName: SageEntityMenu::FCOMPTET_ENTITY_NAME,
                 typeModel: SageEntityMenu::FCOMPTET_TYPE_MODEL,
                 defaultSortField: SageEntityMenu::FCOMPTET_DEFAULT_SORT,
@@ -94,59 +94,59 @@ final class SageSettings
                 transDomain: SageTranslationUtils::TRANS_FCOMPTETS,
                 options: [
                     [
-                        'id' => 'auto_create_sage_fcomptet',
-                        'label' => __('Créer automatiquement le client Sage', 'sage'),
-                        'description' => __("Créer automatiquement un compte client dans Sage lorsqu'un compte Wordpress est crée.", 'sage'),
+                        'id' => 'auto_create_' . Sage::TOKEN . '_fcomptet',
+                        'label' => __('Créer automatiquement le client Sage', Sage::TOKEN),
+                        'description' => __("Créer automatiquement un compte client dans Sage lorsqu'un compte Wordpress est crée.", Sage::TOKEN),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
                     [
-                        'id' => 'auto_import_sage_fcomptet',
-                        'label' => __('Importer automatiquement les anciens clients Woocommerce', 'sage'),
-                        'description' => __("Importe les comptes Woocommerce dans Sage à compter de la date renseignée (date de création du compte dans Woocommerce). Laissez vide pour ne pas importer.", 'sage'),
+                        'id' => 'auto_import_' . Sage::TOKEN . '_fcomptet',
+                        'label' => __('Importer automatiquement les anciens clients Woocommerce', Sage::TOKEN),
+                        'description' => __("Importe les comptes Woocommerce dans Sage à compter de la date renseignée (date de création du compte dans Woocommerce). Laissez vide pour ne pas importer.", Sage::TOKEN),
                         'type' => 'date',
                         'default' => '',
-                        'placeholder' => __('', 'sage')
+                        'placeholder' => __('', Sage::TOKEN)
                     ],
                     [
                         'id' => 'auto_create_wordpress_account',
-                        'label' => __('Créer automatiquement le compte Wordpress', 'sage'),
-                        'description' => __("Créer automatiquement un compte dans Wordpress lorsqu'un utilisateur Sage est crée.", 'sage'),
+                        'label' => __('Créer automatiquement le compte Wordpress', Sage::TOKEN),
+                        'description' => __("Créer automatiquement un compte dans Wordpress lorsqu'un utilisateur Sage est crée.", Sage::TOKEN),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
                     [
                         'id' => 'auto_import_wordpress_account',
-                        'label' => __('Importer automatiquement les anciens clients Sage', 'sage'),
-                        'description' => __("Importe les comptes Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage). Laissez vide pour ne pas importer.", 'sage'),
+                        'label' => __('Importer automatiquement les anciens clients Sage', Sage::TOKEN),
+                        'description' => __("Importe les comptes Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage). Laissez vide pour ne pas importer.", Sage::TOKEN),
                         'type' => 'date',
                         'default' => '',
-                        'placeholder' => __('', 'sage')
+                        'placeholder' => __('', Sage::TOKEN)
                     ],
                     [
-                        'id' => 'mail_auto_create_sage_fcomptet',
-                        'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', 'sage'),
-                        'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", 'sage'),
+                        'id' => 'mail_auto_create_' . Sage::TOKEN . '_fcomptet',
+                        'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', Sage::TOKEN),
+                        'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", Sage::TOKEN),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
                     [
-                        'id' => 'auto_update_sage_fcomptet_when_edit_account',
-                        'label' => __("Mettre à jour automatiquement un compte Sage lorsqu'un compte Wordpress est modifié", 'sage'),
-                        'description' => __("Lorsque qu’un utilisateur WordPress met à jour ses informations, ou lorsqu’un administrateur modifie les informations d’un compte WordPress, celles-ci sont également mises à jour dans Sage si un compte y est lié.", 'sage'),
+                        'id' => 'auto_update_' . Sage::TOKEN . '_fcomptet_when_edit_account',
+                        'label' => __("Mettre à jour automatiquement un compte Sage lorsqu'un compte Wordpress est modifié", Sage::TOKEN),
+                        'description' => __("Lorsque qu’un utilisateur WordPress met à jour ses informations, ou lorsqu’un administrateur modifie les informations d’un compte WordPress, celles-ci sont également mises à jour dans Sage si un compte y est lié.", Sage::TOKEN),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
                     [
-                        'id' => 'auto_update_account_when_edit_sage_fcomptet',
-                        'label' => __("Mettre à jour automatiquement un compte Wordpress lorsqu'un compte Sage est modifié", 'sage'),
-                        'description' => __("Lorsque les informations d’un compte Sage sont modifiées, elles sont également mises à jour dans WordPress si un compte y est lié.", 'sage'),
+                        'id' => 'auto_update_account_when_edit_' . Sage::TOKEN . '_fcomptet',
+                        'label' => __("Mettre à jour automatiquement un compte Wordpress lorsqu'un compte Sage est modifié", Sage::TOKEN),
+                        'description' => __("Lorsque les informations d’un compte Sage sont modifiées, elles sont également mises à jour dans WordPress si un compte y est lié.", Sage::TOKEN),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
                 ],
                 actions: [
-                    'import_from_sage' => static function (array $data) use ($sageSettings): string {
+                    'import_from_' . Sage::TOKEN => static function (array $data) use ($sageSettings): string {
                         $ctNum = $data['ctNum'];
                         [$userId, $message] = $sageSettings->sage->updateUserOrFComptet($ctNum);
                         return $message;
@@ -169,8 +169,8 @@ final class SageSettings
                 metaColumnIdentifier: 'user_id',
             ),
             new SageEntityMenu(
-                title: __("Documents", 'sage'),
-                description: __("Gestion Commerciale / Menu Traitement / Documents des ventes, des achats, des stocks et internes / Fenêtre Document", 'sage'),
+                title: __("Documents", Sage::TOKEN),
+                description: __("Gestion Commerciale / Menu Traitement / Documents des ventes, des achats, des stocks et internes / Fenêtre Document", Sage::TOKEN),
                 entityName: SageEntityMenu::FDOCENTETE_ENTITY_NAME,
                 typeModel: SageEntityMenu::FDOCENTETE_TYPE_MODEL,
                 defaultSortField: SageEntityMenu::FDOCENTETE_DEFAULT_SORT,
@@ -190,55 +190,55 @@ final class SageSettings
                 transDomain: SageTranslationUtils::TRANS_FDOCENTETES,
                 options: [
                     [
-                        'id' => 'auto_create_sage_fdocentete',
-                        'label' => __('Créer automatiquement le document de vente Sage', 'sage'),
-                        'description' => __("Créer automatiquement un document de vente dans Sage lorsqu'une commande Woocommerce est crée.", 'sage'),
+                        'id' => 'auto_create_' . Sage::TOKEN . '_fdocentete',
+                        'label' => __('Créer automatiquement le document de vente Sage', Sage::TOKEN),
+                        'description' => __("Créer automatiquement un document de vente dans Sage lorsqu'une commande Woocommerce est crée.", Sage::TOKEN),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
                     [
                         'id' => 'auto_create_wordpress_order',
-                        'label' => __('Créer automatiquement la commande Woocommerce', 'sage'),
-                        'description' => __("Créer automatiquement une commande dans Woocommerce lorsqu'un document de vente Sage est crée pour les types de documents sélectionnés.", 'sage'),
+                        'label' => __('Créer automatiquement la commande Woocommerce', Sage::TOKEN),
+                        'description' => __("Créer automatiquement une commande dans Woocommerce lorsqu'un document de vente Sage est crée pour les types de documents sélectionnés.", Sage::TOKEN),
                         'type' => '2_select_multi',
                         'options' => [
-                            '0' => __("Devis", 'sage'),
-                            '1' => __("Bon de commande", 'sage'),
-                            '2' => __("Préparation de livraison", 'sage'),
-                            '3' => __("Bon de livraison", 'sage'),
-                            '6' => __("Facture", 'sage'),
-                            '7' => __("Facture comptabilisée", 'sage'),
+                            '0' => __("Devis", Sage::TOKEN),
+                            '1' => __("Bon de commande", Sage::TOKEN),
+                            '2' => __("Préparation de livraison", Sage::TOKEN),
+                            '3' => __("Bon de livraison", Sage::TOKEN),
+                            '6' => __("Facture", Sage::TOKEN),
+                            '7' => __("Facture comptabilisée", Sage::TOKEN),
                         ],
                         'default' => [],
                         'sort' => false,
                     ],
                     [
                         'id' => 'auto_import_wordpress_order_date',
-                        'label' => __('Importer automatiquement les anciens documents de vente Sage', 'sage'),
-                        'description' => __("Importe les documents de vente Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage). Laissez vide pour ne pas importer.", 'sage'),
+                        'label' => __('Importer automatiquement les anciens documents de vente Sage', Sage::TOKEN),
+                        'description' => __("Importe les documents de vente Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage). Laissez vide pour ne pas importer.", Sage::TOKEN),
                         'type' => 'date',
                         'default' => '',
-                        'placeholder' => __('', 'sage')
+                        'placeholder' => __('', Sage::TOKEN)
                     ],
                     [
                         'id' => 'auto_import_wordpress_order_dotype',
                         'label' => '',
-                        'description' => __("Importe les documents de vente Sage dans Woocommerce qui ont les status sélectionnés. Laissez vide pour ne pas importer.", 'sage'),
+                        'description' => __("Importe les documents de vente Sage dans Woocommerce qui ont les status sélectionnés. Laissez vide pour ne pas importer.", Sage::TOKEN),
                         'type' => '2_select_multi',
                         'options' => [
-                            '0' => __("Devis", 'sage'),
-                            '1' => __("Bon de commande", 'sage'),
-                            '2' => __("Préparation de livraison", 'sage'),
-                            '3' => __("Bon de livraison", 'sage'),
-                            '6' => __("Facture", 'sage'),
-                            '7' => __("Facture comptabilisée", 'sage'),
+                            '0' => __("Devis", Sage::TOKEN),
+                            '1' => __("Bon de commande", Sage::TOKEN),
+                            '2' => __("Préparation de livraison", Sage::TOKEN),
+                            '3' => __("Bon de livraison", Sage::TOKEN),
+                            '6' => __("Facture", Sage::TOKEN),
+                            '7' => __("Facture comptabilisée", Sage::TOKEN),
                         ],
                         'default' => [],
                         'sort' => false,
                     ],
                 ],
                 actions: [
-                    'import_from_sage' => static function (array $data) use ($sageWoocommerce): string {
+                    'import_from_' . Sage::TOKEN => static function (array $data) use ($sageWoocommerce): string {
                         [$orderId, $message] = $sageWoocommerce->importOrderFromSage($data['doPiece'], $data['doType']);
                         return $message;
                     },
@@ -260,8 +260,8 @@ final class SageSettings
                 },
             ),
             new SageEntityMenu(
-                title: __("Articles", 'sage'),
-                description: __("Gestion des articles", 'sage'),
+                title: __("Articles", Sage::TOKEN),
+                description: __("Gestion des articles", Sage::TOKEN),
                 entityName: SageEntityMenu::FARTICLE_ENTITY_NAME,
                 typeModel: SageEntityMenu::FARTICLE_TYPE_MODEL,
                 defaultSortField: SageEntityMenu::FARTICLE_DEFAULT_SORT,
@@ -269,6 +269,7 @@ final class SageSettings
                     'arRef',
                     'arDesign',
                     'arType',
+                    'arPublie',
                     self::META_DATA_PREFIX . '_last_update',
                     self::META_DATA_PREFIX . '_postId',
                 ],
@@ -276,29 +277,30 @@ final class SageSettings
                     'arRef',
                     'arType', // to show import in sage button or not
                     'arNomencl', // to show import in sage button or not
+                    'arPublie', // to show import in sage button or not
                 ],
                 filterType: SageEntityMenu::FARTICLE_FILTER_TYPE,
                 transDomain: SageTranslationUtils::TRANS_FARTICLES,
                 options: [
                     [
                         'id' => 'auto_create_wordpress_article',
-                        'label' => __('Créer automatiquement le produit Woocommerce', 'sage'),
-                        'description' => __("Créer automatiquement le produit dans Woocommerce lorsqu'un article Sage est crée.", 'sage'),
+                        'label' => __('Créer automatiquement le produit Woocommerce', Sage::TOKEN),
+                        'description' => __("Créer automatiquement le produit dans Woocommerce lorsqu'un article Sage est crée.", Sage::TOKEN),
                         'type' => 'checkbox',
                         'default' => 'off'
                     ],
                     [
                         'id' => 'auto_import_wordpress_article',
-                        'label' => __('Importer automatiquement les anciens produits Sage', 'sage'),
-                        'description' => __("Importe les produits Sage dans Woocommerce à compter de la date renseignée (date de création de l'article dans Sage). Laissez vide pour ne pas importer.", 'sage'),
+                        'label' => __('Importer automatiquement les anciens produits Sage', Sage::TOKEN),
+                        'description' => __("Importe les produits Sage dans Woocommerce à compter de la date renseignée (date de création de l'article dans Sage). Laissez vide pour ne pas importer.", Sage::TOKEN),
                         'type' => 'date',
                         'default' => '',
-                        'placeholder' => __('', 'sage')
+                        'placeholder' => __('', Sage::TOKEN)
                     ],
                     // todo ajouter une option pour considérer les catalogues comme des catégories
                 ],
                 actions: [
-                    'import_from_sage' => function (array $data) use ($sageWoocommerce): string {
+                    'import_from_' . Sage::TOKEN => function (array $data) use ($sageWoocommerce): string {
                         [$response, $responseError, $message, $postId] = $sageWoocommerce->importFArticleFromSage($data['arRef']);
                         return $message;
                     },
@@ -336,139 +338,139 @@ final class SageSettings
             global $wpdb;
             $settings = [
                 'api' => [
-                    'title' => __('Api', 'sage'),
-                    'description' => __('These are fairly standard form input fields.', 'sage'),
+                    'title' => __('Api', Sage::TOKEN),
+                    'description' => __('These are fairly standard form input fields.', Sage::TOKEN),
                     'fields' => [
                         [
                             'id' => 'api_key',
-                            'label' => __('Api key', 'sage'),
-                            'description' => __('Can be found here.', 'sage'),
+                            'label' => __('Api key', Sage::TOKEN),
+                            'description' => __('Can be found here.', Sage::TOKEN),
                             'type' => 'text',
                             'default' => '',
-                            'placeholder' => __('XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX', 'sage')
+                            'placeholder' => __('XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX', Sage::TOKEN)
                         ],
                         [
                             'id' => 'api_host_url',
-                            'label' => __('Api host url', 'sage'),
-                            'description' => __('Can be found here.', 'sage'),
+                            'label' => __('Api host url', Sage::TOKEN),
+                            'description' => __('Can be found here.', Sage::TOKEN),
                             'type' => 'text',
                             'default' => '',
-                            'placeholder' => __('https://192.168.0.1', 'sage')
+                            'placeholder' => __('https://192.168.0.1', Sage::TOKEN)
                         ],
                         [
                             'id' => 'activate_https_verification_api',
-                            'label' => __('Activer Https Api', 'sage'),
-                            'description' => __("Décochez cette case si vous avez l'erreur: cURL error 60: SSL certificate problem: self-signed certificate.", 'sage'),
+                            'label' => __('Activer Https Api', Sage::TOKEN),
+                            'description' => __("Décochez cette case si vous avez l'erreur: cURL error 60: SSL certificate problem: self-signed certificate.", Sage::TOKEN),
                             'type' => 'checkbox',
                             'default' => 'on'
                         ],
                         [
                             'id' => 'wordpress_host_url',
-                            'label' => __('Wordpress host url', 'sage'),
-                            'description' => __('Renseigner l\'url à laquelle l\'API Sage peut contacter l\'API de Wordpress. Modifier C:\Windows\System32\drivers\etc\hosts si nécessaire sur le serveur de l\'API Sage.', 'sage'),
+                            'label' => __('Wordpress host url', Sage::TOKEN),
+                            'description' => __('Renseigner l\'url à laquelle l\'API Sage peut contacter l\'API de Wordpress. Modifier C:\Windows\System32\drivers\etc\hosts si nécessaire sur le serveur de l\'API Sage.', Sage::TOKEN),
                             'type' => 'text',
                             'default' => $defaultWordpressUrl,
-                            'placeholder' => __($defaultWordpressUrl, 'sage')
+                            'placeholder' => __($defaultWordpressUrl, Sage::TOKEN)
                         ],
                         [
                             'id' => 'activate_https_verification_wordpress',
-                            'label' => __('Activer Https Wordpress', 'sage'),
-                            'description' => __("Décochez cette case si vous avez l'erreur: <br>The SSL connection could not be established, see inner exception.", 'sage'),
+                            'label' => __('Activer Https Wordpress', Sage::TOKEN),
+                            'description' => __("Décochez cette case si vous avez l'erreur: <br>The SSL connection could not be established, see inner exception.", Sage::TOKEN),
                             'type' => 'checkbox',
                             'default' => 'on'
                         ],
                         [
                             'id' => 'wordpress_db_host',
-                            'label' => __('Wordpress db host', 'sage'),
-                            'description' => __('Renseigner l\'IP à laquelle l\'API Sage peut contacter la base de données de wordpress.', 'sage'),
+                            'label' => __('Wordpress db host', Sage::TOKEN),
+                            'description' => __('Renseigner l\'IP à laquelle l\'API Sage peut contacter la base de données de wordpress.', Sage::TOKEN),
                             'type' => 'text',
                             'default' => $wpdb->dbhost,
-                            'placeholder' => __($wpdb->dbhost, 'sage')
+                            'placeholder' => __($wpdb->dbhost, Sage::TOKEN)
                         ],
                         [
                             'id' => 'wordpress_db_name',
-                            'label' => __('Wordpress database name', 'sage'),
-                            'description' => __('Renseigner le nom de la base de données de wordpress.', 'sage'),
+                            'label' => __('Wordpress database name', Sage::TOKEN),
+                            'description' => __('Renseigner le nom de la base de données de wordpress.', Sage::TOKEN),
                             'type' => 'text',
                             'default' => $wpdb->dbname,
-                            'placeholder' => __($wpdb->dbname, 'sage')
+                            'placeholder' => __($wpdb->dbname, Sage::TOKEN)
                         ],
                         [
                             'id' => 'wordpress_db_username',
-                            'label' => __('Wordpress database username', 'sage'),
-                            'description' => __('Renseigner le nom de l\'utilisateur de la base de données de wordpress.', 'sage'),
+                            'label' => __('Wordpress database username', Sage::TOKEN),
+                            'description' => __('Renseigner le nom de l\'utilisateur de la base de données de wordpress.', Sage::TOKEN),
                             'type' => 'text',
                             'default' => $wpdb->dbuser,
-                            'placeholder' => __($wpdb->dbuser, 'sage')
+                            'placeholder' => __($wpdb->dbuser, Sage::TOKEN)
                         ],
                         [
                             'id' => 'wordpress_db_password',
-                            'label' => __('Wordpress database password', 'sage'),
-                            'description' => __('Renseigner le mot de passe de la base de données de wordpress.', 'sage'),
+                            'label' => __('Wordpress database password', Sage::TOKEN),
+                            'description' => __('Renseigner le mot de passe de la base de données de wordpress.', Sage::TOKEN),
                             'type' => 'text',
                             'default' => $wpdb->dbpassword,
-                            'placeholder' => __($wpdb->dbpassword, 'sage')
+                            'placeholder' => __($wpdb->dbpassword, Sage::TOKEN)
                         ],
                         /** region available options types
                          * [
                          * 'id' => 'text_field',
-                         * 'label' => __('Some Text', 'sage'),
-                         * 'description' => __('This is a standard text field.', 'sage'),
+                         * 'label' => __('Some Text', Sage::TOKEN),
+                         * 'description' => __('This is a standard text field.', Sage::TOKEN),
                          * 'type' => 'text',
                          * 'default' => '',
-                         * 'placeholder' => __('Placeholder text', 'sage')
+                         * 'placeholder' => __('Placeholder text', Sage::TOKEN)
                          * ],
                          * [
                          * 'id' => 'password_field',
-                         * 'label' => __('A Password', 'sage'),
-                         * 'description' => __('This is a standard password field.', 'sage'),
+                         * 'label' => __('A Password', Sage::TOKEN),
+                         * 'description' => __('This is a standard password field.', Sage::TOKEN),
                          * 'type' => 'password',
                          * 'default' => '',
-                         * 'placeholder' => __('Placeholder text', 'sage')
+                         * 'placeholder' => __('Placeholder text', Sage::TOKEN)
                          * ],
                          * [
                          * 'id' => 'secret_text_field',
-                         * 'label' => __('Some Secret Text', 'sage'),
-                         * 'description' => __('This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved.', 'sage'),
+                         * 'label' => __('Some Secret Text', Sage::TOKEN),
+                         * 'description' => __('This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved.', Sage::TOKEN),
                          * 'type' => 'text_secret',
                          * 'default' => '',
-                         * 'placeholder' => __('Placeholder text', 'sage')
+                         * 'placeholder' => __('Placeholder text', Sage::TOKEN)
                          * ],
                          * [
                          * 'id' => 'text_block',
-                         * 'label' => __('A Text Block', 'sage'),
-                         * 'description' => __('This is a standard text area.', 'sage'),
+                         * 'label' => __('A Text Block', Sage::TOKEN),
+                         * 'description' => __('This is a standard text area.', Sage::TOKEN),
                          * 'type' => 'textarea',
                          * 'default' => '',
-                         * 'placeholder' => __('Placeholder text for this textarea', 'sage')
+                         * 'placeholder' => __('Placeholder text for this textarea', Sage::TOKEN)
                          * ],
                          * [
                          * 'id' => 'single_checkbox',
-                         * 'label' => __('An Option', 'sage'),
-                         * 'description' => __("A standard checkbox - if you save this option as checked then it will store the option as 'on', otherwise it will be an empty string.", 'sage'),
+                         * 'label' => __('An Option', Sage::TOKEN),
+                         * 'description' => __("A standard checkbox - if you save this option as checked then it will store the option as 'on', otherwise it will be an empty string.", Sage::TOKEN),
                          * 'type' => 'checkbox',
                          * 'default' => ''
                          * ],
                          * [
                          * 'id' => 'select_box',
-                         * 'label' => __('A Select Box', 'sage'),
-                         * 'description' => __('A standard select box.', 'sage'),
+                         * 'label' => __('A Select Box', Sage::TOKEN),
+                         * 'description' => __('A standard select box.', Sage::TOKEN),
                          * 'type' => 'select',
                          * 'options' => ['drupal' => 'Drupal', 'joomla' => 'Joomla', 'wordpress' => 'WordPress'],
                          * 'default' => 'wordpress'
                          * ],
                          * [
                          * 'id' => 'radio_buttons',
-                         * 'label' => __('Some Options', 'sage'),
-                         * 'description' => __('A standard set of radio buttons.', 'sage'),
+                         * 'label' => __('Some Options', Sage::TOKEN),
+                         * 'description' => __('A standard set of radio buttons.', Sage::TOKEN),
                          * 'type' => 'radio',
                          * 'options' => ['superman' => 'Superman', 'batman' => 'Batman', 'ironman' => 'Iron Man'],
                          * 'default' => 'batman'
                          * ],
                          * [
                          * 'id' => 'multiple_checkboxes',
-                         * 'label' => __('Some Items', 'sage'),
-                         * 'description' => __('You can select multiple items and they will be stored as an array.', 'sage'),
+                         * 'label' => __('Some Items', Sage::TOKEN),
+                         * 'description' => __('You can select multiple items and they will be stored as an array.', Sage::TOKEN),
                          * 'type' => 'checkbox_multi',
                          * 'options' =>
                          * ['square' => 'Square', 'circle' => 'Circle', 'rectangle' => 'Rectangle', 'triangle' => 'Triangle'],
@@ -476,31 +478,31 @@ final class SageSettings
                          * ],
                          * [
                          * 'id' => 'number_field',
-                         * 'label' => __('A Number', 'sage'),
-                         * 'description' => __('This is a standard number field - if this field contains anything other than numbers then the form will not be submitted.', 'sage'),
+                         * 'label' => __('A Number', Sage::TOKEN),
+                         * 'description' => __('This is a standard number field - if this field contains anything other than numbers then the form will not be submitted.', Sage::TOKEN),
                          * 'type' => 'number',
                          * 'default' => '',
-                         * 'placeholder' => __('42', 'sage')
+                         * 'placeholder' => __('42', Sage::TOKEN)
                          * ],
                          * [
                          * 'id' => 'colour_picker',
-                         * 'label' => __('Pick a colour', 'sage'),
-                         * 'description' => __("This uses WordPress' built-in colour picker - the option is stored as the colour's hex code.", 'sage'),
+                         * 'label' => __('Pick a colour', Sage::TOKEN),
+                         * 'description' => __("This uses WordPress' built-in colour picker - the option is stored as the colour's hex code.", Sage::TOKEN),
                          * 'type' => 'color',
                          * 'default' => '#21759B'
                          * ],
                          * [
                          * 'id' => 'an_image',
-                         * 'label' => __('An Image', 'sage'),
-                         * 'description' => __('This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons.', 'sage'),
+                         * 'label' => __('An Image', Sage::TOKEN),
+                         * 'description' => __('This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons.', Sage::TOKEN),
                          * 'type' => 'image',
                          * 'default' => '',
                          * 'placeholder' => ''
                          * ],
                          * [
                          * 'id' => 'multi_select_box',
-                         * 'label' => __('A Multi-Select Box', 'sage'),
-                         * 'description' => __('A standard multi-select box - the saved data is stored as an array.', 'sage'),
+                         * 'label' => __('A Multi-Select Box', Sage::TOKEN),
+                         * 'description' => __('A standard multi-select box - the saved data is stored as an array.', Sage::TOKEN),
                          * 'type' => 'select_multi',
                          * 'options' => ['linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows'],
                          * 'default' => ['linux']
@@ -515,24 +517,24 @@ final class SageSettings
                 $options = [
                     [
                         'id' => $sageEntityMenu->getEntityName() . '_show_fields',
-                        'label' => __('Champs à montrer', 'sage'),
-                        'description' => __('Veuillez sélectionner les champs à afficher sur le tableau.', 'sage'),
+                        'label' => __('Champs à montrer', Sage::TOKEN),
+                        'description' => __('Veuillez sélectionner les champs à afficher sur le tableau.', Sage::TOKEN),
                         'type' => '2_select_multi',
                         'options' => $fieldOptions,
                         'default' => $defaultFields,
                     ],
                     [
                         'id' => $sageEntityMenu->getEntityName() . '_perPage',
-                        'label' => __('Nombre d\'élément par défaut par page', 'sage'),
-                        'description' => __('Veuillez sélectionner le nombre de lignes à afficher sur le tableau.', 'sage'),
+                        'label' => __('Nombre d\'élément par défaut par page', Sage::TOKEN),
+                        'description' => __('Veuillez sélectionner le nombre de lignes à afficher sur le tableau.', Sage::TOKEN),
                         'type' => 'select',
                         'options' => array_combine(self::$paginationRange, self::$paginationRange),
                         'default' => (string)self::$defaultPagination
                     ],
                     [
                         'id' => $sageEntityMenu->getEntityName() . '_filter_fields',
-                        'label' => __('Champs pouvant être filtrés', 'sage'),
-                        'description' => __('Veuillez sélectionner les champs pouvant servir à filter vos résultats.', 'sage'),
+                        'label' => __('Champs pouvant être filtrés', Sage::TOKEN),
+                        'description' => __('Veuillez sélectionner les champs pouvant servir à filter vos résultats.', Sage::TOKEN),
                         'type' => '2_select_multi',
                         'options' => $fieldOptions,
                         'default' => $defaultFields,
@@ -541,7 +543,7 @@ final class SageSettings
                 ];
                 $sageEntityMenu->setOptions($options);
                 $settings[$sageEntityMenu->getEntityName()] = [
-                    'title' => __($sageEntityMenu->getTitle(), 'sage'),
+                    'title' => __($sageEntityMenu->getTitle(), Sage::TOKEN),
                     'description' => $sageEntityMenu->getDescription(),
                     'fields' => $options,
                 ];
@@ -612,8 +614,8 @@ final class SageSettings
                     [
                         'location' => 'menu',
                         // Possible settings: options, menu, submenu.
-                        'page_title' => __('Sage', 'sage'),
-                        'menu_title' => __('Sage', 'sage'),
+                        'page_title' => __('Sage', Sage::TOKEN),
+                        'menu_title' => __('Sage', Sage::TOKEN),
                         'capability' => self::$capability,
                         'menu_slug' => Sage::TOKEN . '_settings',
                         'function' => null,
@@ -624,8 +626,8 @@ final class SageSettings
                         'location' => 'submenu',
                         // Possible settings: options, menu, submenu.
                         'parent_slug' => Sage::TOKEN . '_settings',
-                        'page_title' => __('Settings', 'sage'),
-                        'menu_title' => __('Settings', 'sage'),
+                        'page_title' => __('Settings', Sage::TOKEN),
+                        'menu_title' => __('Settings', Sage::TOKEN),
                         'capability' => self::$capability,
                         'menu_slug' => Sage::TOKEN . '_settings',
                         'function' => function (): void {
@@ -633,7 +635,7 @@ final class SageSettings
                             // Build page HTML.
                             $html = $this->sage->twig->render('base.html.twig');
                             $html .= '<div class="wrap" id="' . Sage::TOKEN . '_settings">' . "\n";
-                            $html .= '<h2>' . __('Sage', 'sage') . '</h2>' . "\n";
+                            $html .= '<h2>' . __('Sage', Sage::TOKEN) . '</h2>' . "\n";
 
                             $tab = '';
                             if (isset($_GET['tab']) && $_GET['tab']) {
@@ -673,7 +675,7 @@ final class SageSettings
                                 $html .= '</h2>' . "\n";
                             }
 
-                            $html .= '<form method="post" id="form_settings_sage" action="options.php" enctype="multipart/form-data">';
+                            $html .= '<form method="post" id="form_settings_' . Sage::TOKEN . '" action="options.php" enctype="multipart/form-data">';
 
                             // Get settings fields.
                             ob_start();
@@ -683,7 +685,7 @@ final class SageSettings
 
                             $html .= '<p class="submit">' . "\n";
                             $html .= '<input type="hidden" name="tab" value="' . esc_attr($tab) . '" />' . "\n";
-                            $html .= '<input name="Submit" type="submit" class="button-primary" value="' . esc_attr(__('Save Settings', 'sage')) . '" />' . "\n";
+                            $html .= '<input name="Submit" type="submit" class="button-primary" value="' . esc_attr(__('Save Settings', Sage::TOKEN)) . '" />' . "\n";
                             $html .= '</p>' . "\n";
                             $html .= '</form>' . "\n";
                             $html .= '</div>' . "\n";
@@ -696,8 +698,8 @@ final class SageSettings
                         'location' => 'submenu',
                         // Possible settings: options, menu, submenu.
                         'parent_slug' => Sage::TOKEN . '_settings',
-                        'page_title' => __($sageEntityMenu->getTitle(), 'sage'),
-                        'menu_title' => __($sageEntityMenu->getTitle(), 'sage'),
+                        'page_title' => __($sageEntityMenu->getTitle(), Sage::TOKEN),
+                        'menu_title' => __($sageEntityMenu->getTitle(), Sage::TOKEN),
                         'capability' => self::$capability,
                         'menu_slug' => Sage::TOKEN . '_' . $sageEntityMenu->getEntityName(),
                         'function' => static function () use ($sageSettings, $sageEntityMenu): void {
@@ -797,8 +799,8 @@ final class SageSettings
                         'location' => 'submenu',
                         // Possible settings: options, menu, submenu.
                         'parent_slug' => Sage::TOKEN . '_settings',
-                        'page_title' => __('À propos', 'sage'),
-                        'menu_title' => __('À propos', 'sage'),
+                        'page_title' => __('À propos', Sage::TOKEN),
+                        'menu_title' => __('À propos', Sage::TOKEN),
                         'capability' => self::$capability,
                         'menu_slug' => Sage::TOKEN . '_about',
                         'function' => static function (): void {
@@ -810,8 +812,8 @@ final class SageSettings
                         'location' => 'submenu',
                         // Possible settings: options, menu, submenu.
                         'parent_slug' => Sage::TOKEN . '_settings',
-                        'page_title' => __('Logs', 'sage'),
-                        'menu_title' => __('Logs', 'sage'),
+                        'page_title' => __('Logs', Sage::TOKEN),
+                        'menu_title' => __('Logs', Sage::TOKEN),
                         'capability' => self::$capability,
                         'menu_slug' => Sage::TOKEN . '_log',
                         'function' => static function (): void {
@@ -873,7 +875,7 @@ final class SageSettings
         add_filter(
             'plugin_action_links_' . plugin_basename($this->sage->file),
             static function (array $links): array {
-                $links[] = '<a href="options-general.php?page=' . Sage::TOKEN . '_settings">' . __('Settings', 'sage') . '</a>';
+                $links[] = '<a href="options-general.php?page=' . Sage::TOKEN . '_settings">' . __('Settings', Sage::TOKEN) . '</a>';
                 return $links;
             }
         );
@@ -885,9 +887,9 @@ final class SageSettings
         add_filter('product_type_selector', static function (array $types): array {
             $arRef = Sage::getArRef(get_the_ID());
             if (!empty($arRef)) {
-                return [Sage::TOKEN => __('Sage', 'sage')];
+                return [Sage::TOKEN => __('Sage', Sage::TOKEN)];
             }
-            return array_merge([Sage::TOKEN => __('Sage', 'sage')], $types);
+            return array_merge([Sage::TOKEN => __('Sage', Sage::TOKEN)], $types);
         });
 
         add_action('add_meta_boxes', static function (string $screen, mixed $obj) use ($sageSettings): void { // remove [Product type | virtual | downloadable] add product arRef
@@ -912,7 +914,7 @@ final class SageSettings
             }
 
             $tabs[Sage::TOKEN] = [
-                'label' => __('Sage', 'sage'),
+                'label' => __('Sage', Sage::TOKEN),
                 'target' => self::TARGET_PANEL,
                 'class' => ['show_if_' . Sage::TOKEN],
                 'priority' => 0,
@@ -1006,7 +1008,7 @@ final class SageSettings
                 ?>
                 <div class="notice notice-info">
                     <p>
-                        <?= __("Veuillez ne pas modifier les taxes Sage manuellement ici, elles sont automatiquement mises à jour en fonction des taxes dans Sage ('Stucture' -> 'Comptabilité' -> 'Taux de taxes').", 'sage') ?>
+                        <?= __("Veuillez ne pas modifier les taxes Sage manuellement ici, elles sont automatiquement mises à jour en fonction des taxes dans Sage ('Stucture' -> 'Comptabilité' -> 'Taux de taxes').", Sage::TOKEN) ?>
                     </p>
                 </div>
                 <?php
@@ -1037,12 +1039,12 @@ final class SageSettings
                         [
                             $i,
                             $pExpedition->slug,
-                            '[' . __('Sage', 'sage') . '] ' . $pExpedition->eIntitule,
-                            '<span style="font-weight: bold">[' . __('Sage', 'sage') . ']</span> ' . $pExpedition->eIntitule,
+                            '[' . __('Sage', Sage::TOKEN) . '] ' . $pExpedition->eIntitule,
+                            '<span style="font-weight: bold">[' . __('Sage', Sage::TOKEN) . ']</span> ' . $pExpedition->eIntitule,
                         ],
                         $skeletonShippingMethod[0]
                     );
-                    eval($thisSkeletonShippingMethod);
+                    eval(str_replace('@TOKEN@', Sage::TOKEN, $thisSkeletonShippingMethod));
                 }
             }
             foreach ($pExpeditions as $i => $pExpedition) {
@@ -1063,12 +1065,12 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                 echo '
 <div class="notice notice-warning"><p>
     <span style="display: block; margin: 0.5em 0.5em 0 0; clear: both;">
-        ' . __('Certain Mode(s) d’expédition qui ne proviennent pas de Sage sont activés. Cliquez sur "Désactiver" pour désactiver les modes d\'expéditions qui ne proviennent pas de Sage', 'sage') . '
+        ' . __('Certain Mode(s) d’expédition qui ne proviennent pas de Sage sont activés. Cliquez sur "Désactiver" pour désactiver les modes d\'expéditions qui ne proviennent pas de Sage', Sage::TOKEN) . '
     </span>
     <strong>
     <span style="display: block; margin: 0.5em 0.5em 0 0; clear: both;">
         <a href="' . get_site_url() . '/index.php?rest_route=' . urlencode('/' . Sage::TOKEN . '/v1/deactivate-shipping-zones') . '&_wpnonce=' . wp_create_nonce('wp_rest') . '">
-        ' . __('Désactiver', 'sage') . '
+        ' . __('Désactiver', Sage::TOKEN) . '
         </a>
     </span>
     </strong>
@@ -1139,7 +1141,7 @@ WHERE meta_key = %s
             bool            $creating
         ): void {
             if ($creating) {
-                $sendMail = (bool)get_option(Sage::TOKEN . '_auto_send_mail_import_sage_fcomptet');
+                $sendMail = (bool)get_option(Sage::TOKEN . '_auto_send_mail_import_' . Sage::TOKEN . '_fcomptet');
                 if ($sendMail) {
                     // Accepts only 'user', 'admin' , 'both' or default '' as $notify.
                     wp_send_new_user_notifications($user->ID, 'user');
@@ -1149,7 +1151,7 @@ WHERE meta_key = %s
         // endregion
         // region user show Sage id: https://wordpress.stackexchange.com/a/160423/201039
         add_filter('manage_users_columns', static function (array $columns): array {
-            $columns['sage'] = __("Sage", 'sage');
+            $columns[Sage::TOKEN] = __("Sage", Sage::TOKEN);
             return $columns;
         });
         add_filter('manage_users_custom_column', static function (string $val, string $columnName, int $userId) use ($sageSettings): string {
@@ -1170,7 +1172,7 @@ WHERE meta_key = %s
         }
         update_option(Sage::TOKEN . '_default_filter_' . $entityName, $result);
         return "<div class='notice notice-success is-dismissible'>
-                        " . __('Le filtre par défaut a été mis à jour.', 'sage') . "
+                        " . __('Le filtre par défaut a été mis à jour.', Sage::TOKEN) . "
                                 </div>";
     }
 
@@ -1311,7 +1313,7 @@ WHERE meta_key = %s
         add_action('admin_notices', static function (): void {
             ?>
             <div class="notice notice-success is-dismissible"><p><?=
-                    __('Connexion réussie à l\'API. Les paramètres ont été mis à jour.', 'sage')
+                    __('Connexion réussie à l\'API. Les paramètres ont été mis à jour.', Sage::TOKEN)
                     ?></p></div>
             <?php
         });
@@ -1328,7 +1330,7 @@ WHERE meta_key = %s
             if ($showMessage && $taxeChanges !== []) {
                 ?>
                 <div class="notice notice-success is-dismissible">
-                    <p><strong><?= __("Les taxes Sage ont été mises à jour.", 'sage') ?></strong></p>
+                    <p><strong><?= __("Les taxes Sage ont été mises à jour.", Sage::TOKEN) ?></strong></p>
                 </div>
                 <?php
             }
@@ -1342,7 +1344,7 @@ WHERE meta_key = %s
             return $taxe->slug === Sage::TOKEN;
         }));
         if ($taxe === false) {
-            WC_Tax::create_tax_class(__('Sage', 'sage'), Sage::TOKEN);
+            WC_Tax::create_tax_class(__('Sage', Sage::TOKEN), Sage::TOKEN);
             $taxes = WC_Tax::get_tax_rate_classes();
             $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
                 return $taxe->slug === Sage::TOKEN;
@@ -1467,8 +1469,8 @@ WHERE meta_key = %s
             $content = str_replace($content, $labelArRef . $content, $dom);
             if ($hasArRef || str_contains($wpPost->post_status, 'draft')) {
                 $content = str_replace(
-                    ["selected='selected'", "option value=\"sage\""],
-                    ['', "option value=\"sage\" selected='selected'"],
+                    ["selected='selected'", "option value=" . Sage::TOKEN],
+                    ['', "option value=" . Sage::TOKEN . " selected='selected'"],
                     $content
                 );
             }
@@ -1508,7 +1510,7 @@ WHERE meta_key = %s
             $a = $dom->find('.woocommerce-order-data__heading')[0];
             $title = $a->innerHtml();
             return str_replace($title, $title . '['
-                . $translations["fDocentetes"]["doType"]["values"][__("Documents des ventes", 'sage')][$fDocenteteIdentifier["doType"]]
+                . $translations["fDocentetes"]["doType"]["values"][__("Documents des ventes", Sage::TOKEN)][$fDocenteteIdentifier["doType"]]
                 . ': n° '
                 . $fDocenteteIdentifier["doPiece"]
                 . ']', $dom);
@@ -1579,7 +1581,7 @@ WHERE meta_key = %s
         $sageSettings = $this;
         $screen_id = $this->get_order_screen_id();
         $add_column = function (array $columns) {
-            $columns['sage'] = __('Sage', 'sage');
+            $columns[Sage::TOKEN] = __('Sage', Sage::TOKEN);
             return $columns;
         };
         // HPOS and non-HPOS use different hooks.
@@ -1587,7 +1589,7 @@ WHERE meta_key = %s
         add_filter("manage_edit-{$screen_id}_columns", $add_column, 11);
         $trans = SageTranslationUtils::getTranslations();
         $display_column = function (string $column_name, WC_Order $order) use ($sageSettings, $trans) {
-            if ('sage' !== $column_name) {
+            if (Sage::TOKEN !== $column_name) {
                 return;
             }
             $identifier = $sageSettings->sage->sageWoocommerce->getFDocenteteIdentifierFromOrder($order);

@@ -15,14 +15,15 @@ import {
 } from "../../../../../functions/form";
 import { FormInput } from "../../fields/FormInput";
 import { FormSelect } from "../../fields/FormSelect";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
-  $("[data-sage-product]").attr("data-sage-product") ?? "null",
+  $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 
 const fPays: any[] = JSON.parse(
-  $("[data-sage-fpays]").attr("data-sage-fpays") ?? "[]",
+  $(`[data-${TOKEN}-fpays]`).attr(`data-${TOKEN}-fpays`) ?? "[]",
 );
 
 export const ArticleTab2Component = React.forwardRef((props, ref) => {

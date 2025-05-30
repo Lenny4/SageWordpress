@@ -9,21 +9,25 @@ import { getTranslations } from "../../../../functions/translations";
 import { MetadataInterface } from "../../../../interface/WordpressInterface";
 import { FArticlePriceInterface } from "../../../../interface/FArticleInterface";
 import { PriceComponent } from "../../PriceComponent";
+import { TOKEN } from "../../../../token";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
-  $("[data-sage-product]").attr("data-sage-product") ?? "null",
+  $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 const pCattarifs: any[] = Object.values(
-  JSON.parse($("[data-sage-pcattarifs]").attr("data-sage-pcattarifs") ?? "[]"),
+  JSON.parse(
+    $(`[data-${TOKEN}-pcattarifs]`).attr(`data-${TOKEN}-pcattarifs`) ?? "[]",
+  ),
 );
 const pCatComptas: any[] = Object.values(
   JSON.parse(
-    $("[data-sage-pcatcomptas]").attr("data-sage-pcatcomptas") ?? '{"Ven": []}',
+    $(`[data-${TOKEN}-pcatcomptas]`).attr(`data-${TOKEN}-pcatcomptas`) ??
+      '{"Ven": []}',
   ).Ven,
 );
 const prices: FArticlePriceInterface[] = JSON.parse(
-  articleMeta?.find((item) => item.key === "_sage_prices")?.value ?? "[]",
+  articleMeta?.find((item) => item.key === `_${TOKEN}_prices`)?.value ?? "[]",
 );
 
 const htTtcs = ["Ht", "Ttc"];

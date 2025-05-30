@@ -12,14 +12,15 @@
   <div data-order-data data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}"></div>
   {% if hasFDocentete == false %}
     <div class="text-center">
-      <label for="sage-fdocentete-dopiece">
+      <label for="{{ TOKEN }}-fdocentete-dopiece">
         {{ 'Veuillez renseigner le N°pièce du document de vente Sage'|trans }}
       </label>
       <div style="position: relative">
-        <input name="sage-fdocentete-dopiece" style="padding-right: 20px" id="sage-fdocentete-dopiece" type="text"
+        <input name="{{ TOKEN }}-fdocentete-dopiece" style="padding-right: 20px" id="{{ TOKEN }}-fdocentete-dopiece"
+               type="text"
                size="20" value="" disabled>
-        <input name="sage-fdocentete-dotype" id="sage-fdocentete-dotype" type="hidden">
-        <input name="sage-fdocentete-wpnonce" id="sage-fdocentete-wpnonce" type="hidden"
+        <input name="{{ TOKEN }}-fdocentete-dotype" id="{{ TOKEN }}-fdocentete-dotype" type="hidden">
+        <input name="{{ TOKEN }}-fdocentete-wpnonce" id="{{ TOKEN }}-fdocentete-wpnonce" type="hidden"
                value="{{ 'wp_rest'|wp_create_nonce }}">
         <svg class="svg-spinner hidden" viewBox="0 0 50 50">
           <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
@@ -31,7 +32,7 @@
                   class="button button-primary">{{ 'Valider'|trans }}</button>
         {% endif %}
       </div>
-      <div id="sage-fdocentete-dopiece-result"></div>
+      <div id="{{ TOKEN }}-fdocentete-dopiece-result"></div>
     </div>
     <div class="text-divider mt-2 mb-2">{{ 'OU'|trans }}</div>
     <div class="text-center">

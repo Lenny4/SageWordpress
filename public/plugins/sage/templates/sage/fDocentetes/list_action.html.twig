@@ -1,13 +1,13 @@
 {% set errors = canImportOrderFromSage(item) %}
 {% if errors is empty %}
   <a href="{{ getUrlWithParam('action', {
-    'type': 'import_from_sage',
+    'type': 'import_from_'~TOKEN,
     'data': {
       'doPiece': item.doPiece,
       'doType': item.doType
     }
   }|json_encode()) }}" data-tippy-placement="left" data-tippy-content="<div>
-      {% if item._sage_postId != null %}
+      {% if item["_"~TOKEN~"_postId"] != null %}
         {{ 'Mettre à jour le document'|trans }}
       {% else %}
         {{ 'Importer le document'|trans }}
@@ -19,8 +19,8 @@
   {% include 'common/errors_tippy.html.twig' %}
 {% endif %}
 
-{% if item._sage_postId != null %}
-  <a href="{{ get_admin_url() }}admin.php?page=wc-orders&action=edit&id={{ item._sage_postId }}"
+{% if item["_"~TOKEN~"_postId"] != null %}
+  <a href="{{ get_admin_url() }}admin.php?page=wc-orders&action=edit&id={{ item["_"~TOKEN~"_postId"] }}"
      data-tippy-placement="left" data-tippy-content="<div>
       {{ 'Voir la commande Wordpress'|trans }}
     </div>">

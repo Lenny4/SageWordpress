@@ -10,6 +10,7 @@ import {
   CannotBeChangeOnWebsiteComponent,
   FieldTooltipComponent,
 } from "./FormFieldComponent";
+import { TOKEN } from "../../../../token";
 
 export const FormSelect = React.forwardRef(
   (
@@ -27,7 +28,7 @@ export const FormSelect = React.forwardRef(
     }: FieldInterface,
     ref,
   ) => {
-    const nameField = "_sage_" + name;
+    const nameField = `_${TOKEN}_` + name;
     const [values, setValues] = React.useState({
       [name]: {
         ...initValues,
@@ -105,9 +106,11 @@ export const FormSelect = React.forwardRef(
           />
           <FieldTooltipComponent tooltip={tooltip} />
         </div>
-        {errorMessage && <div className="sage_error_field">{errorMessage}</div>}
+        {errorMessage && (
+          <div className={`${TOKEN}_error_field`}>{errorMessage}</div>
+        )}
         {values[name].error && (
-          <div className="sage_error_field">{values[name].error}</div>
+          <div className={`${TOKEN}_error_field`}>{values[name].error}</div>
         )}
       </>
     );

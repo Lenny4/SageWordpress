@@ -6,9 +6,10 @@ import { getTranslations } from "../../../../../functions/translations";
 import { InputInterface } from "../../../../../interface/InputInterface";
 import { handleChangeInputGeneric } from "../../../../../functions/form";
 import { stringValidator } from "../../../../../functions/validator";
+import { TOKEN } from "../../../../../token";
 
-const siteUrl = $("[data-sage-site-url]").attr("data-sage-site-url");
-const wpnonce = $("[data-sage-nonce]").attr("data-sage-nonce");
+const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
+const wpnonce = $(`[data-${TOKEN}-nonce]`).attr(`data-${TOKEN}-nonce`);
 let translations: any = getTranslations();
 
 export type ArRefInputState = {
@@ -68,7 +69,9 @@ export const ArRefInput = React.forwardRef(
       const response = await fetch(
         siteUrl +
           "/index.php?rest_route=" +
-          encodeURI("/sage/v1/farticle/" + values.arRef.value + "/available") +
+          encodeURI(
+            `/${TOKEN}/v1/farticle/` + values.arRef.value + "/available",
+          ) +
           "&_wpnonce=" +
           wpnonce,
       );
@@ -101,7 +104,7 @@ export const ArRefInput = React.forwardRef(
 
     return (
       <>
-        <label htmlFor={"_sage_arRef"}>
+        <label htmlFor={`_${TOKEN}_arRef`}>
           <Tooltip title={"arRef"} arrow placement="top">
             <span>{translations["fArticles"]["arRef"]}</span>
           </Tooltip>
@@ -109,8 +112,8 @@ export const ArRefInput = React.forwardRef(
         <div style={{ display: "flex", alignItems: "flex-start" }}>
           <div style={{ position: "relative", flex: 1 }}>
             <input
-              id={"_sage_arRef"}
-              name={"_sage_arRef"}
+              id={`_${TOKEN}_arRef`}
+              name={`_${TOKEN}_arRef`}
               type={"hidden"}
               value={availableArRef}
             />
@@ -122,7 +125,7 @@ export const ArRefInput = React.forwardRef(
               style={{ width: "100%" }}
             />
             {values.arRef.error && (
-              <div className="sage_error_field">{values.arRef.error}</div>
+              <div className={`${TOKEN}_error_field`}>{values.arRef.error}</div>
             )}
             {isNew && (
               <>

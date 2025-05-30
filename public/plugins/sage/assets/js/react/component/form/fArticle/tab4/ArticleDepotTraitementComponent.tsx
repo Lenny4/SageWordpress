@@ -23,15 +23,16 @@ import {
 } from "../../../../../functions/form";
 import { FormInput } from "../../fields/FormInput";
 import { numberValidator } from "../../../../../functions/validator";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
 const articleMeta: MetadataInterface[] = JSON.parse(
-  $("[data-sage-product]").attr("data-sage-product") ?? "null",
+  $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 
 const fDepots: FDepotInterface[] = JSON.parse(
-  $("[data-sage-fdepots]").attr("data-sage-fdepots") ?? "[]",
+  $(`[data-${TOKEN}-fdepots]`).attr(`data-${TOKEN}-fdepots`) ?? "[]",
 );
 
 export const ArticleDepotTraitementComponent = React.forwardRef(

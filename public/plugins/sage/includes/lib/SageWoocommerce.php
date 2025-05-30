@@ -75,7 +75,7 @@ final class SageWoocommerce
             foreach ($metaDatas as $metaData) {
                 $data = $metaData->get_data();
                 if ($data["key"] === Sage::META_KEY_AR_REF) {
-                    echo __('Sage ref', 'sage') . ': ' . $data["value"];
+                    echo __('Sage ref', Sage::TOKEN) . ': ' . $data["value"];
                     break;
                 }
             }
@@ -84,12 +84,12 @@ final class SageWoocommerce
 
         // region add column to product list
         add_filter('manage_edit-product_columns', function (array $columns) { // https://stackoverflow.com/a/44702012/6824121
-            $columns['sage'] = __('Sage', 'sage'); // todo change css class
+            $columns[Sage::TOKEN] = __('Sage', Sage::TOKEN); // todo change css class
             return $columns;
         }, 10, 1);
 
         add_action('manage_product_posts_custom_column', function (string $column, int $postId) { // https://www.conicsolutions.net/tutorials/woocommerce-how-to-add-custom-columns-on-the-products-list-in-dashboard/
-            if ($column === 'sage') {
+            if ($column === Sage::TOKEN) {
                 $arRef = Sage::getArRef($postId);
                 if (!empty($arRef)) {
 //                    echo '<span class="dashicons dashicons-yes" style="color: green"></span>';
@@ -258,7 +258,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     {
         $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
         if (!empty($fDocenteteIdentifier)) {
-            $order->add_order_note(__('Le document de vente Sage a été désynchronisé de la commande.', 'sage') . ' [' . $fDocenteteIdentifier["doPiece"] . ']');
+            $order->add_order_note(__('Le document de vente Sage a été désynchronisé de la commande.', Sage::TOKEN) . ' [' . $fDocenteteIdentifier["doPiece"] . ']');
             $order->delete_meta_data(Sage::META_KEY_IDENTIFIER);
             $order->save();
         }
@@ -760,7 +760,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
     {
         $email = explode(';', $fComptet->ctEmail)[0];
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return [null, "<div class='notice notice-error is-dismissible'>" . __("L'adresse email n'est pas au bon format [email: '" . $email . "']", 'sage') . "</div>", null];
+            return [null, "<div class='notice notice-error is-dismissible'>" . __("L'adresse email n'est pas au bon format [email: '" . $email . "']", Sage::TOKEN) . "</div>", null];
         }
         $mailExistsUserId = email_exists($email);
         if ($mailExistsUserId !== false && $mailExistsUserId !== $userId) {
@@ -982,7 +982,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                         break;
                     default:
                         $message .= "<div class='notice notice-error is-dismissible'>
-                    <p>" . __('Aucune action défini pour', 'sage') . ": " . print_r($syncChange['changes'], true) . "</p>
+                    <p>" . __('Aucune action défini pour', Sage::TOKEN) . ": " . print_r($syncChange['changes'], true) . "</p>
                     </div>";
                 }
             }
@@ -1004,7 +1004,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $fArticle = $this->sage->sageGraphQl->getFArticle($arRef, ignorePingApi: $ignorePingApi);
         if (is_null($fArticle)) {
             return [null, null, "<div class='error'>
-                        " . __("L'article n'a pas pu être importé", 'sage') . "
+                        " . __("L'article n'a pas pu être importé", Sage::TOKEN) . "
                                 </div>"];
         }
         if (!$ignoreCanImport) {
@@ -1021,8 +1021,8 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             current(array_filter($this->sage->settings->sageEntityMenus,
                 static fn(SageEntityMenu $sageEntityMenu) => $sageEntityMenu->getMetaKeyIdentifier() === Sage::META_KEY_AR_REF
             )));
-        $dismissNotice = "<button type='button' class='notice-dismiss sage-notice-dismiss'><span class='screen-reader-text'>" . __('Dismiss this notice.') . "</span></button>";
-        $urlArticle = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "post.php?post=%id%&action=edit'>" . __("Voir l'article", 'sage') . "</a></span></strong>";
+        $dismissNotice = "<button type='button' class='notice-dismiss " . Sage::TOKEN . "-notice-dismiss'><span class='screen-reader-text'>" . __('Dismiss this notice.') . "</span></button>";
+        $urlArticle = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "post.php?post=%id%&action=edit'>" . __("Voir l'article", Sage::TOKEN) . "</a></span></strong>";
         if ($isCreation) {
             // cannot create an article without request
             // ========================================
@@ -1046,7 +1046,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 $urlArticle = str_replace('%id%', $body->id, $urlArticle);
                 $postId = $body->id;
                 $message = "<div class='notice notice-success is-dismissible'>
-                    <p>" . __('Article mis à jour: ' . $body->name, 'sage') . "</p>" . $urlArticle . "
+                    <p>" . __('Article mis à jour: ' . $body->name, Sage::TOKEN) . "</p>" . $urlArticle . "
                     $dismissNotice
                             </div>";
             } else if ($response["response"]["code"] === 201) {
@@ -1054,7 +1054,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 $urlArticle = str_replace('%id%', $body->id, $urlArticle);
                 $postId = $body->id;
                 $message = "<div class='notice notice-success is-dismissible'>
-                    <p>" . __('Article créé: ' . $body->name, 'sage') . "</p>" . $urlArticle . "
+                    <p>" . __('Article créé: ' . $body->name, Sage::TOKEN) . "</p>" . $urlArticle . "
                     $dismissNotice
                             </div>";
             } else {
@@ -1079,7 +1079,7 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $urlArticle = str_replace('%id%', $articlePostId, $urlArticle);
             $postId = $articlePostId;
             $message = "<div class='notice notice-success is-dismissible'>
-                    <p>" . __('Article mis à jour: ' . $article["name"], 'sage') . "</p>" . $urlArticle . "
+                    <p>" . __('Article mis à jour: ' . $article["name"], Sage::TOKEN) . "</p>" . $urlArticle . "
                     $dismissNotice
                             </div>";
         }
@@ -1094,13 +1094,13 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
             $fArticle->arType !== ArticleTypeEnum::ArticleTypeStandard->value &&
             $fArticle->arType !== ArticleTypeEnum::ArticleTypeGamme->value
         ) {
-            $result[] = __("Seuls les articles standard ou à gamme peuvent être importés.", 'sage');
+            $result[] = __("Seuls les articles standard ou à gamme peuvent être importés.", Sage::TOKEN);
         }
         if ($fArticle->arNomencl !== NomenclatureTypeEnum::NomenclatureTypeAucun->value) {
-            $result[] = __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", 'sage');
+            $result[] = __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", Sage::TOKEN);
         }
         if (!$fArticle->arPublie) {
-            $result[] = __("Seuls les articles publiés sur le site marchand peuvent être importés.", 'sage');
+            $result[] = __("Seuls les articles publiés sur le site marchand peuvent être importés.", Sage::TOKEN);
         }
         return $result;
     }
@@ -1247,7 +1247,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
                     return $this->formatTaxes($order, $taxes, $message, $errorMissingTax);
                 }
                 $message .= "<div class='notice notice-error is-dismissible'>
-                    <p>" . __('Il semblerait que la taxe ' . $taxe['code'] . ' soit manquante.', 'sage') . "</p>
+                    <p>" . __('Il semblerait que la taxe ' . $taxe['code'] . ' soit manquante.', Sage::TOKEN) . "</p>
                     </div>";
                 continue;
             }
@@ -1559,7 +1559,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         }
         if (is_null($fDocentete) || $fDocentete === false) {
             return [null, "<div class='error'>
-                        " . __("Le document de vente Sage n'a pas pu être importé", 'sage') . "
+                        " . __("Le document de vente Sage n'a pas pu être importé", Sage::TOKEN) . "
                                 </div>"];
         }
         $canImportFDocentete = $this->canImportOrderFromSage($fDocentete);
@@ -1574,7 +1574,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
                 $orderId = $shouldBeOrderId;
             } else if ($orderId !== $shouldBeOrderId) {
                 return [null, "<div class='error'>
-                        " . __("Ce document de vente Sage est déjà assigné à une commande Woocommerce", 'sage') . "
+                        " . __("Ce document de vente Sage est déjà assigné à une commande Woocommerce", Sage::TOKEN) . "
                                 </div>"];
             }
         }
@@ -1588,7 +1588,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
                                 <pre>" . $order->get_error_message() . "</pre>
                                 </div>"];
             }
-            $order->add_order_note(__('Le document Sage a été synchronisé avec la commande.', 'sage') . 'doPiece:[' . $fDocentete->doPiece . '] doType:[' . $fDocentete->doType . '].');
+            $order->add_order_note(__('Le document Sage a été synchronisé avec la commande.', Sage::TOKEN) . 'doPiece:[' . $fDocentete->doPiece . '] doType:[' . $fDocentete->doType . '].');
             $order->update_meta_data(Sage::META_KEY_IDENTIFIER, json_encode([
                 'doPiece' => $fDocentete->doPiece,
                 'doType' => $fDocentete->doType,
@@ -1614,14 +1614,14 @@ WHERE {$wpdb->posts}.post_type = 'product'
         );
         [$message, $order] = $this->applyTasksSynchronizeOrder($order, $this->getTasksSynchronizeOrder($order, $extendedFDocentetes));
 
-        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "admin.php?page=wc-orders&action=edit&id=" . $orderId . "'>" . __("Voir la commande", 'sage') . "</a></span></strong>";
+        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "admin.php?page=wc-orders&action=edit&id=" . $orderId . "'>" . __("Voir la commande", Sage::TOKEN) . "</a></span></strong>";
         if (!$newOrder) {
             return [$orderId, $message . "<div class='notice notice-success is-dismissible'>
-                        " . __('La commande a été mise à jour', 'sage') . $url . "
+                        " . __('La commande a été mise à jour', Sage::TOKEN) . $url . "
                                 </div>"];
         }
         return [$orderId, $message . "<div class='notice notice-success is-dismissible'>
-                        " . __('La commande a été créée', 'sage') . $url . "
+                        " . __('La commande a été créée', Sage::TOKEN) . $url . "
                                 </div>"];
     }
 
@@ -1630,7 +1630,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         // all fields here must be [IsProjected(false)]
         $result = [];
         if ($fDocentete->doDomaine !== DomaineTypeEnum::DomaineTypeVente->value) {
-            $result[] = __("Seuls les documents de ventes peuvent être importés.", 'sage');
+            $result[] = __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN);
         }
         return $result;
     }

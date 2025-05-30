@@ -1,6 +1,8 @@
+import { TOKEN } from "../token";
+
 export const getTranslations = (): any => {
-  let translationString = $("[data-sage-translation]").attr(
-    "data-sage-translation",
+  let translationString = $(`[data-${TOKEN}-translation]`).attr(
+    `data-${TOKEN}-translation`,
   );
   let translations: any = [];
   if (translationString) {

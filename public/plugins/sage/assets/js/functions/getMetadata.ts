@@ -1,3 +1,5 @@
+import { TOKEN } from "../token";
+
 interface MetadataInterface {
   id: number;
   key: string;
@@ -12,7 +14,7 @@ export const getSageMetadata = (
   if (object == null) {
     return null;
   }
-  let value = object.find((o) => o.key === "_sage_" + key);
+  let value = object.find((o) => o.key === `_${TOKEN}_` + key);
   if (value) {
     try {
       return JSON.parse(value.value) ?? defaultValue;
@@ -32,7 +34,7 @@ export const getListObjectSageMetadata = (
   if (object == null) {
     return null;
   }
-  prefix = "_sage_" + prefix;
+  prefix = `_${TOKEN}_` + prefix;
   const result: any = {};
   const regex = new RegExp(
     `^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\[(.+?)\\]\\.([^.]+)$`,

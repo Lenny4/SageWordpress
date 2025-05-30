@@ -44,7 +44,10 @@ if (!defined('ABSPATH')) {
  */
 final class Sage
 {
-    public final const TOKEN = 'sage'; // todo changer pour éviter les problèmes judiciaires, du coup également changer le nom du dossier
+    // assets/js/token.ts
+    // assets/css/admin.scss
+    // includes/Sage.php
+    public final const TOKEN = 'sage';
 
     public final const CACHE_LIFETIME = 3600;
     public final const META_KEY_AR_REF = '_' . self::TOKEN . '_arRef';
@@ -126,7 +129,7 @@ final class Sage
             // https://developer.wordpress.org/reference/hooks/upgrader_process_complete/#parameters
             if (
                 array_key_exists('plugins', $hook_extra) &&
-                in_array('sage/sage.php', $hook_extra['plugins'], true)
+                in_array(self::TOKEN . '/' . self::TOKEN . '.php', $hook_extra['plugins'], true) // todo replace TOKEN by folder and file name
             ) {
                 $this->install();
             }
@@ -184,14 +187,14 @@ final class Sage
                     if (!$isWooCommerceInstalled) {
                         ?>
                         <div class="error"><p>
-                                <?= __('Le plugin Sage a besoin que WooCommerce soit installé pour fonctionner.', 'sage') ?>
+                                <?= __('Le plugin Sage a besoin que WooCommerce soit installé pour fonctionner.', self::TOKEN) ?>
                             </p></div>
                         <?php
                     } else {
                         if (!is_plugin_active($pluginId)) {
                             ?>
                             <div class="error"><p>
-                                <?= __('Le plugin Sage a besoin que WooCommerce soit activé pour fonctionner.', 'sage') ?>
+                                <?= __('Le plugin Sage a besoin que WooCommerce soit activé pour fonctionner.', self::TOKEN) ?>
                             </p>
                             </div><?php
                         } else {
@@ -553,6 +556,9 @@ final class Sage
         $this->twig->addFunction(new TwigFunction('canImportOrderFromSage', static function (array $fDocentete) use ($sageWoocommerce): array {
             return $sageWoocommerce->canImportOrderFromSage(json_decode(json_encode($fDocentete), false));
         }));
+        $this->twig->addFunction(new TwigFunction('getToken', static function (): string {
+            return self::TOKEN;
+        }));
         // endregion
 
         // region link wordpress order to sage order
@@ -560,7 +566,7 @@ final class Sage
         add_action('add_meta_boxes_' . $screenId, static function (WC_Order $order) use ($screenId, $sageWoocommerce): void { // woocommerce/src/Internal/Admin/Orders/Edit.php: do_action( 'add_meta_boxes_' . $this->screen_id, $this->order );
             add_meta_box(
                 'woocommerce-order-' . self::TOKEN . '-main',
-                __('Sage', 'sage'),
+                __('Sage', self::TOKEN),
                 static function () use ($order, $sageWoocommerce) {
                     echo $sageWoocommerce->getMetaboxSage($order);
                 },
@@ -874,7 +880,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
         $this->cache->clear();
         // endregion
         // region delete twig cache
-        $dir = str_replace('sage.php', 'templates/cache', $this->file);
+        $dir = str_replace(self::TOKEN . '.php', 'templates/cache', $this->file);
         if (is_dir($dir)) {
             $filesystem = new Filesystem();
             $filesystem->remove([$dir]);
@@ -914,13 +920,13 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                 optionName: 'woocommerce_enable_guest_checkout',
                 optionValue: 'no',
                 trans: __('Allow customers to place orders without an account', 'woocommerce'),
-                description: __("Lorsque cette option est activée vos clients ne sont pas obligés de se connecter à leurs comptes pour passer commande et il est donc impossible de créer automatiquement la commande passé dans Woocommerce dans Sage.", 'sage'),
+                description: __("Lorsque cette option est activée vos clients ne sont pas obligés de se connecter à leurs comptes pour passer commande et il est donc impossible de créer automatiquement la commande passé dans Woocommerce dans Sage.", self::TOKEN),
             ),
             new SageExpectedOption(
                 optionName: 'woocommerce_calc_taxes',
                 optionValue: 'yes',
                 trans: __('Enable tax rates and calculations', 'woocommerce'),
-                description: __("Cette option doit être activé pour que le plugin Sage fonctionne correctement afin de récupérer les taxes directement renseignées dans Sage.", 'sage'),
+                description: __("Cette option doit être activé pour que le plugin Sage fonctionne correctement afin de récupérer les taxes directement renseignées dans Sage.", self::TOKEN),
             ),
         ];
         if (!is_null($pDossier?->nDeviseCompteNavigation?->dCodeIso)) {
@@ -928,7 +934,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                 optionName: 'woocommerce_currency',
                 optionValue: $pDossier->nDeviseCompteNavigation->dCodeIso,
                 trans: __('Currency', 'woocommerce'),
-                description: __("La devise dans Woocommerce n'est pas la même que dans Sage.", 'sage'),
+                description: __("La devise dans Woocommerce n'est pas la même que dans Sage.", self::TOKEN),
             );
         }
         /** @var SageExpectedOption[] $changes */
@@ -950,8 +956,8 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
             $optionNames = [];
             foreach ($changes as $sageExpectedOption) {
                 $optionValue = $sageExpectedOption->getOptionValue();
-                echo "<div>" . __('Le plugin Sage a besoin de modifier l\'option', 'sage') . " <code>" .
-                    $sageExpectedOption->getTrans() . "</code> " . __('pour lui donner la valeur', 'sage') . " <code>" .
+                echo "<div>" . __('Le plugin Sage a besoin de modifier l\'option', self::TOKEN) . " <code>" .
+                    $sageExpectedOption->getTrans() . "</code> " . __('pour lui donner la valeur', self::TOKEN) . " <code>" .
                     $optionValue . "</code>
 <div class='tooltip'>
         <span class='dashicons dashicons-info' style='padding-right: 22px'></span>
@@ -971,7 +977,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                 <?php wp_nonce_field('options-options'); ?>
                 <p class="submit">
                     <input name="Update" type="submit" class="button-primary"
-                           value="<?= __('Mettre à jour', 'sage') ?>">
+                           value="<?= __('Mettre à jour', self::TOKEN) ?>">
                 </p>
             </form>
             </div><?php
@@ -1000,7 +1006,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
     public function saveCustomerUserMetaFields(?int $userId): void
     {
         $nbUpdatedMeta = 0;
-        $inSage = (bool)get_option(self::TOKEN . '_auto_create_sage_fcomptet');
+        $inSage = (bool)get_option(self::TOKEN . '_auto_create_' . self::TOKEN . '_fcomptet');
         $ctNum = null;
         $newFComptet = false;
         foreach ($_POST as $key => $value) {
@@ -1050,7 +1056,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
     {
         if (is_null($ctNum) && !$newFComptet) {
             return [null, "<div class='error'>
-                    " . __("Vous devez spécifier le numéro de compte Sage", 'sage') . "
+                    " . __("Vous devez spécifier le numéro de compte Sage", self::TOKEN) . "
                             </div>"];
         }
         if (is_null($fComptet) && !is_null($ctNum)) {
@@ -1060,12 +1066,12 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
         if ($newFComptet) {
             if (!is_null($fComptet)) {
                 return [null, "<div class='error'>
-                    " . __("Vous essayez de créer compte Sage qui existe déjà (" . $ctNum . ")", 'sage') . "
+                    " . __("Vous essayez de créer compte Sage qui existe déjà (" . $ctNum . ")", self::TOKEN) . "
                             </div>"];
             }
             if (is_null($shouldBeUserId)) {
                 return [null, "<div class='error'>
-                    " . __("Vous devez spécifier l'id compte Wordpress", 'sage') . "
+                    " . __("Vous devez spécifier l'id compte Wordpress", self::TOKEN) . "
                             </div>"];
             }
             $fComptet = $this->sageGraphQl->createUpdateFComptet(
@@ -1084,7 +1090,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                 $word = 'crée';
             }
             return [null, "<div class='error'>
-                    " . __("Le compte Sage n'a pas pu être " . $word, 'sage') . "
+                    " . __("Le compte Sage n'a pas pu être " . $word, self::TOKEN) . "
                             </div>"];
         }
         $canImportFComptet = $this->canUpdateUserOrFComptet($fComptet);
@@ -1100,7 +1106,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                 $userId = $shouldBeUserId;
             } else if ($userId !== $shouldBeUserId) {
                 return [null, "<div class='error'>
-                        " . __("Ce numéro de compte Sage est déjà assigné à un utilisateur Wordpress", 'sage') . "
+                        " . __("Ce numéro de compte Sage est déjà assigné à un utilisateur Wordpress", self::TOKEN) . "
                                 </div>"];
             }
         }
@@ -1144,14 +1150,14 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
             // update_user_meta($userId, '_' . self::TOKEN . '_updateApi', null);
         }
 
-        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "user-edit.php?user_id=" . $userId . "'>" . __("Voir l'utilisateur", 'sage') . "</a></span></strong>";
+        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "user-edit.php?user_id=" . $userId . "'>" . __("Voir l'utilisateur", self::TOKEN) . "</a></span></strong>";
         if (!$newUser) {
             return [$userId, "<div class='notice notice-success is-dismissible'>
-                        " . __('L\'utilisateur a été modifié', 'sage') . $url . "
+                        " . __('L\'utilisateur a été modifié', self::TOKEN) . $url . "
                                 </div>"];
         }
         return [$userId, "<div class='notice notice-success is-dismissible'>
-                        " . __('L\'utilisateur a été créé', 'sage') . $url . "
+                        " . __('L\'utilisateur a été créé', self::TOKEN) . $url . "
                                 </div>"];
     }
 
@@ -1160,7 +1166,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
         // all fields here must be [IsProjected(false)]
         $result = [];
         if ($fComptet->ctType !== TiersTypeEnum::TiersTypeClient->value) {
-            $result[] = __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", 'sage');
+            $result[] = __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", self::TOKEN);
         }
         return $result;
     }
@@ -1226,7 +1232,7 @@ WHERE user_id = %s AND meta_key LIKE '_" . self::TOKEN . "_%'
                 true,
             );
         } else if ($isNewOrder) {
-            $optionName = self::TOKEN . '_auto_create_sage_fdocentete';
+            $optionName = self::TOKEN . '_auto_create_' . self::TOKEN . '_fdocentete';
             if (get_option($optionName)) {
                 $order->update_meta_data($optionName, true);
                 $order->save();

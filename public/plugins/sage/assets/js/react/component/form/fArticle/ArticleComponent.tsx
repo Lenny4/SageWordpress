@@ -13,8 +13,9 @@ import {
   onSubmitForm,
 } from "../../../../functions/form";
 import { FormContentComponent } from "../FormContentComponent";
+import { TOKEN } from "../../../../token";
 
-const containerSelector = "#sage_product_data";
+const containerSelector = `#${TOKEN}_product_data`;
 let translations: any = getTranslations();
 
 const formSelector = "form[name='post']";
@@ -67,7 +68,7 @@ export const ArticleComponent = React.forwardRef((props, ref) => {
   const [form] = React.useState<FormInterface>(getForm());
 
   const getIsSageProductType = () => {
-    return $(selectProductTypeSelector).val() === "sage";
+    return $(selectProductTypeSelector).val() === `${TOKEN}`;
   };
   const [isSageProductType, setIsSageProductType] = React.useState(
     getIsSageProductType(),

@@ -1,39 +1,39 @@
 {
-  "type": "project",
-  "name": "lenny4/sage",
-  "license": "GPL-2.0-or-later",
-  "description": "Use Sage with your Wordpress website.",
-  "keywords": [
-    "sage"
-  ],
-  "require": {
-    "php": ">=8.2",
-    "gmostafa/php-graphql-client": "^1.13",
-    "ext-curl": "*",
-    "twig/twig": "^3.7",
-    "symfony/cache": "^7.0",
-    "paquettg/php-html-parser": "^3.0.0",
-    "twig/intl-extra": "^3.10",
-    "symfony/filesystem": "^7.0",
-    "symfony/string": "^7.1",
-    "symfony/translation-contracts": "^3.5",
-    "swaggest/json-diff": "^3.12"
-  },
-  "autoload": {
-    "psr-4": {
-      "App\\": "includes/"
+    "type": "project",
+    "name": "lenny4/egas",
+    "license": "GPL-2.0-or-later",
+    "description": "Use Sage with your Wordpress website.",
+    "keywords": [
+        "sage"
+    ],
+    "require": {
+        "php": ">=8.2",
+        "gmostafa/php-graphql-client": "^1.13",
+        "ext-curl": "*",
+        "twig/twig": "^3.7",
+        "symfony/cache": "^7.0",
+        "paquettg/php-html-parser": "^3.0.0",
+        "twig/intl-extra": "^3.10",
+        "symfony/filesystem": "^7.0",
+        "symfony/string": "^7.1",
+        "symfony/translation-contracts": "^3.5",
+        "swaggest/json-diff": "^3.12"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "includes/"
+        }
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-latest",
+        "wp-coding-standards/wpcs": "^3.0.0",
+        "squizlabs/php_codesniffer": "^3.3.1",
+        "wp-cli/wp-cli-bundle": "*",
+        "rector/rector": "^1.0.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     }
-  },
-  "require-dev": {
-    "roave/security-advisories": "dev-latest",
-    "wp-coding-standards/wpcs": "^3.0.0",
-    "squizlabs/php_codesniffer": "^3.3.1",
-    "wp-cli/wp-cli-bundle": "*",
-    "rector/rector": "^1.0.0"
-  },
-  "config": {
-    "allow-plugins": {
-      "dealerdirect/phpcodesniffer-composer-installer": true
-    }
-  }
 }

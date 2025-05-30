@@ -19,12 +19,16 @@ import {
   handleFormIsValid,
 } from "../../../../../functions/form";
 import { FormInput } from "../../fields/FormInput";
-import {numberValidator, stringValidator} from "../../../../../functions/validator";
+import {
+  numberValidator,
+  stringValidator,
+} from "../../../../../functions/validator";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
 const articleMeta: MetadataInterface[] = JSON.parse(
-  $("[data-sage-product]").attr("data-sage-product") ?? "null",
+  $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 
 export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
@@ -118,7 +122,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                             ),
                             validator: {
                               functionName: numberValidator,
-                            }
+                            },
                           },
                         },
                       },

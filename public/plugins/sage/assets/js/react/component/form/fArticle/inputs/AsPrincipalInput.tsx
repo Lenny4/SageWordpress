@@ -3,6 +3,7 @@ import { useImperativeHandle } from "react";
 import { Tooltip } from "@mui/material";
 import { getTranslations } from "../../../../../functions/translations";
 import { TriggerFormContentChanged } from "../../../../../interface/InputInterface";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
@@ -17,7 +18,7 @@ export const AsPrincipalInput = React.forwardRef(
     { selectedDeNo, deNo, onAsPrincipalChangedParent }: AsPrincipalInputState,
     ref,
   ) => {
-    const name = `_sage_fArtstocks[${deNo}].asPrincipal`;
+    const name = `_${TOKEN}_fArtstocks[${deNo}].asPrincipal`;
 
     useImperativeHandle(ref, () => ({
       async isValid(): Promise<boolean> {

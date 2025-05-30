@@ -3,6 +3,7 @@ import { useImperativeHandle } from "react";
 import { Tooltip } from "@mui/material";
 import { getTranslations } from "../../../../../functions/translations";
 import { TriggerFormContentChanged } from "../../../../../interface/InputInterface";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
@@ -17,7 +18,7 @@ export const AfPrincipalInput = React.forwardRef(
     { selectedCtNum, ctNum, onAfPrincipalChangedParent }: AfPrincipalState,
     ref,
   ) => {
-    const name = `_sage_fArtfournisses[${ctNum}].afPrincipal`;
+    const name = `_${TOKEN}_fArtfournisses[${ctNum}].afPrincipal`;
 
     useImperativeHandle(ref, () => ({
       async isValid(): Promise<boolean> {

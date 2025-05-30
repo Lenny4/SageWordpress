@@ -1,5 +1,10 @@
 @import "../../node_modules/tippy.js/dist/tippy.css";
 
+// assets/js/token.ts
+// assets/css/admin.scss
+// includes/Sage.php
+$TOKEN: "sage";
+
 #all_filter_container select {
   float: none !important;
 }
@@ -109,7 +114,7 @@
   font-size: 1rem;
 }
 
-table.wp-list-table .column-sage {
+table.wp-list-table .column-#{$TOKEN} {
   width: 48px;
   text-align: left !important;
 }
@@ -322,7 +327,7 @@ table {
   background-color: #2196F3 !important;
 }
 
-#woocommerce-coupon-data ul.wc-tabs li.sage_options a::before, #woocommerce-product-data ul.wc-tabs li.sage_options a::before, .woocommerce ul.wc-tabs li.sage_options a::before {
+#woocommerce-coupon-data ul.wc-tabs li.#{$TOKEN}_options a::before, #woocommerce-product-data ul.wc-tabs li.#{$TOKEN}_options a::before, .woocommerce ul.wc-tabs li.#{$TOKEN}_options a::before {
   content: "\f124";
 }
 
@@ -330,7 +335,7 @@ table {
   background-color: #f5f5f5 !important;
 }
 
-.sage_error_field {
+.#{$TOKEN}_error_field {
   color: red;
   margin-top: 4px;
   font-size: 0.875em;

@@ -1,7 +1,8 @@
 import * as React from "react";
+import { TOKEN } from "../../token";
 
-const language = $("[data-sage-language]").attr("data-sage-language");
-const currency = $("[data-sage-currency]").attr("data-sage-currency");
+const language = $(`[data-${TOKEN}-language]`).attr(`data-${TOKEN}-language`);
+const currency = $(`[data-${TOKEN}-currency]`).attr(`data-${TOKEN}-currency`);
 
 export type State = {
   price: number;
