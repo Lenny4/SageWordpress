@@ -641,6 +641,9 @@ final class SageTranslationUtils
                 'searching' => __("Recherche en cours ...", Sage::TOKEN),
                 'items' => __("éléments", Sage::TOKEN),
                 'outOf' => __("de", Sage::TOKEN),
+                'seeItem' => __("Voir l'élément", Sage::TOKEN),
+                'itemAlreadyImported' => __("Mettre à jour cet élément", Sage::TOKEN),
+                'importItem' => __("Importer cet élément", Sage::TOKEN),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", Sage::TOKEN),

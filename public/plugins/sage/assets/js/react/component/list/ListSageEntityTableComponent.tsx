@@ -2,8 +2,12 @@ import React from "react";
 import { FilterShowFieldInterface } from "../../../interface/ListSageEntityInterface";
 import { getTranslations } from "../../../functions/translations";
 import { useSearchParams } from "react-router-dom";
+import { TOKEN } from "../../../token";
+import { Tooltip } from "@mui/material";
 
 let translations: any = getTranslations();
+const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
+const wpnonce = $(`[data-${TOKEN}-nonce]`).attr(`data-${TOKEN}-nonce`);
 
 interface ResultInterface {
   totalCount: number;
@@ -22,6 +26,11 @@ type State = {
 type State2 = {
   showFields: FilterShowFieldInterface[];
   hideFields: string[];
+};
+
+type State3 = {
+  row: any;
+  sageEntityName: string;
 };
 
 export const ListSageEntityTableHeaderComponent: React.FC<State2> = ({
@@ -150,6 +159,95 @@ export const ListSageEntityTableHeaderComponent: React.FC<State2> = ({
   );
 };
 
+export const ListSageEntityTableActionComponent: React.FC<State3> = ({
+  row,
+  sageEntityName,
+}) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [loading, setLoading] = React.useState<boolean>(false);
+  const canImport = row[`_${TOKEN}_can_import`].length === 0;
+  const alreadyImported = !!row[`_${TOKEN}_post_url`];
+  const messages: string[] = [...row[`_${TOKEN}_can_import`]];
+  if (canImport) {
+    if (alreadyImported) {
+      messages.push(translations.words.itemAlreadyImported);
+    } else {
+      messages.push(translations.words.importItem);
+    }
+  }
+  const importEntity = async () => {
+    if (!canImport || loading) {
+      return;
+    }
+    setLoading(true);
+    const response = await fetch(
+      siteUrl +
+        "/index.php?rest_route=" +
+        encodeURIComponent(
+          `/${TOKEN}/v1/import/${sageEntityName}/${row[`_${TOKEN}_identifier`]}`,
+        ) +
+        "&_wpnonce=" +
+        wpnonce,
+    );
+    if (response.status === 200) {
+      const data = await response.json();
+      setSearchParams((x) => {
+        const params = new URLSearchParams(x);
+        params.set("newId", data.id.toString());
+        return params;
+      });
+    } else {
+      // todo toastr
+    }
+    setLoading(false);
+  };
+
+  return (
+    <>
+      <Tooltip
+        title={
+          <>
+            {messages.map((message, index) => (
+              <p
+                style={{
+                  margin: 0,
+                }}
+                key={index}
+              >
+                {message}
+              </p>
+            ))}
+          </>
+        }
+        arrow
+        placement="left"
+      >
+        <span
+          className={`dashicons dashicons-download button${!canImport ? " text-error" : ""}${loading ? " text-disabled" : ""}`}
+          style={{
+            paddingRight: "22px",
+          }}
+          onClick={importEntity}
+          aria-disabled={loading}
+        ></span>
+      </Tooltip>
+
+      {alreadyImported && (
+        <Tooltip title={translations.words.seeItem} arrow placement="left">
+          <a href={row[`_${TOKEN}_post_url`]}>
+            <span
+              className="dashicons dashicons-visibility button"
+              style={{
+                paddingRight: "22px",
+              }}
+            ></span>
+          </a>
+        </Tooltip>
+      )}
+    </>
+  );
+};
+
 export const ListSageEntityTableComponent: React.FC<State> = ({
   showFields,
   hideFields,
@@ -224,7 +322,10 @@ export const ListSageEntityTableComponent: React.FC<State> = ({
                     textAlign: "right",
                   }}
                 >
-                  some actions
+                  <ListSageEntityTableActionComponent
+                    row={row}
+                    sageEntityName={sageEntityName}
+                  />
                 </td>
               </tr>
             );

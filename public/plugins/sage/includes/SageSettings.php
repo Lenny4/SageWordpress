@@ -157,6 +157,12 @@ final class SageSettings
                 metaKeyIdentifier: Sage::META_KEY_CT_NUM,
                 metaTable: $wpdb->usermeta,
                 metaColumnIdentifier: 'user_id',
+                canImport: static function (array $fComptet) use ($sage) {
+                    return $sage->canUpdateUserOrFComptet((object)$fComptet);
+                },
+                import: static function (string $identifier) use ($sageSettings) {
+                    $sageSettings->sage->updateUserOrFComptet($identifier);
+                },
             ),
             new SageEntityMenu(
                 title: __("Documents", Sage::TOKEN),
@@ -236,8 +242,14 @@ final class SageSettings
                 metaKeyIdentifier: Sage::META_KEY_IDENTIFIER,
                 metaTable: $wpdb->prefix . 'wc_orders_meta',
                 metaColumnIdentifier: 'order_id',
-                getIdentifier: static function (array $entity) {
-                    return json_encode(['doPiece' => $entity["doPiece"], 'doType' => $entity["doType"]], JSON_THROW_ON_ERROR);
+                canImport: static function (array $fDocentete) use ($sageWoocommerce) {
+                    return $sageWoocommerce->canImportOrderFromSage((object)$fDocentete);
+                },
+                import: static function (string $identifier) use ($sageWoocommerce) {
+                    [$message, $order] = $sageWoocommerce->importFDocenteteFromSage($doPiece, $doType, $headers);
+                },
+                getIdentifier: static function (array $fDocentete) {
+                    return json_encode(['doPiece' => $fDocentete["doPiece"], 'doType' => $fDocentete["doType"]], JSON_THROW_ON_ERROR);
                 },
             ),
             new SageEntityMenu(
@@ -301,6 +313,16 @@ final class SageSettings
                 metaKeyIdentifier: Sage::META_KEY_AR_REF,
                 metaTable: $wpdb->postmeta,
                 metaColumnIdentifier: 'post_id',
+                canImport: static function (array $fArticle) use ($sageWoocommerce) {
+                    return $sageWoocommerce->canImportFArticle((object)$fArticle);
+                },
+                import: static function (string $identifier) use ($sageWoocommerce) {
+                    [$response, $responseError, $message, $postId] = $sageWoocommerce->importFArticleFromSage(
+                        $identifier,
+                        ignorePingApi: true,
+                    );
+                    return $postId;
+                },
             ),
         ];
         // Initialise settings.
@@ -675,6 +697,7 @@ final class SageSettings
                         'capability' => self::$capability,
                         'menu_slug' => Sage::TOKEN . '_' . $sageEntityMenu->getEntityName(),
                         'function' => static function () use ($sageSettings, $sageEntityMenu): void {
+                            // todo add parameter to prevent search, as $data not used
                             [
                                 $data,
                                 $showFields,
@@ -1487,7 +1510,6 @@ WHERE meta_key = %s
         add_action("manage_{$screen_id}_custom_column", $display_column, 10, 2);
         add_action("manage_{$screen_id}_posts_custom_column", $display_column, 10, 2);
     }
-
 
     private function get_order_screen_id(): string
     {

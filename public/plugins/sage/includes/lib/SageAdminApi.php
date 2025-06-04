@@ -306,7 +306,7 @@ final class SageAdminApi
                 );
                 break;
             case '2_select_multi':
-                $html .= $this->sage->twig->render('common/2_select_multi.html.twig', [
+                $html .= $this->sage->twig->render('common/form/2_select_multi.html.twig', [
                     'data' => [
                         'optionName' => $option_name,
                         'field' => $field,

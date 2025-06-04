@@ -822,24 +822,7 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                     if (!empty($authorization = $request->get_header('authorization'))) {
                         $headers['authorization'] = $authorization;
                     }
-                    $order = new WC_Order();
-                    $order = $sageWoocommerce->linkOrderFDocentete($order, $doPiece, $doType, true, headers: $headers);
-                    $extendedFDocentetes = $sageWoocommerce->sage->sageGraphQl->getFDocentetes(
-                        $doPiece,
-                        [$doType],
-                        doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
-                        doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
-                        getError: true,
-                        ignorePingApi: true,
-                        getFDoclignes: true,
-                        getExpedition: true,
-                        addWordpressProductId: true,
-                        getUser: true,
-                        getLivraison: true,
-                        extended: true,
-                    );
-                    $tasksSynchronizeOrder = $sageWoocommerce->getTasksSynchronizeOrder($order, $extendedFDocentetes);
-                    [$message, $order] = $sageWoocommerce->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder, $headers);
+                    [$message, $order] = $sageWoocommerce->importFDocenteteFromSage($doPiece, $doType, $headers);
                     return new WP_REST_Response([
                         'id' => $order->get_id(),
                         'message' => $message,
@@ -866,6 +849,23 @@ WHERE method_id NOT LIKE '" . self::TOKEN . "%'
                     return new WP_REST_Response([
                         'fComptet' => $fComptet,
                         'user' => $user,
+                    ], Response::HTTP_OK);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
+            register_rest_route(self::TOKEN . '/v1', '/import/(?P<entityName>[A-Za-z0-9]+)/(?P<identifier>.+)', [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($settings) {
+                    $sageEntityMenuName = $request['entityName'];
+                    $identifier = $request['identifier'];
+                    $sageEntityMenu = current(array_filter($settings->sageEntityMenus, static function (SageEntityMenu $sageEntityMenu) use ($sageEntityMenuName) {
+                        return $sageEntityMenu->getEntityName() === $sageEntityMenuName;
+                    }));
+                    $postId = $sageEntityMenu->getImport()($identifier);
+                    return new WP_REST_Response([
+                        'id' => $postId,
                     ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {

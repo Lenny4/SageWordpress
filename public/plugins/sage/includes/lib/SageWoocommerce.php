@@ -235,7 +235,17 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                 return $field['name'] === SageSettings::META_DATA_PREFIX . '_postId';
             }) !== [];
         $mapping = array_flip($mapping);
-        foreach ($data["data"][$entityName]["items"] as &$item) {
+        $canImport = $sageEntityMenu->getCanImport();
+        $postUrl = $sageEntityMenu->getPostUrl();
+        if (is_null($postUrl)) {
+            $postUrl = static function (array $entity) {
+                if (!empty($entity["_" . Sage::TOKEN . "_postId"])) {
+                    return admin_url('post.php?post=' . $entity["_" . Sage::TOKEN . "_postId"]) . '&action=edit';
+                }
+                return null;
+            };
+        }
+        foreach ($data["data"][$entityName]["items"] as $i => &$item) {
             foreach ($fieldNames as $fieldName) {
                 if (isset($results[$item[$mandatoryField]][$fieldName])) {
                     $item[$fieldName] = $results[$item[$mandatoryField]][$fieldName];
@@ -250,6 +260,9 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     $item['_' . Sage::TOKEN . '_postId'] = $mapping[$key];
                 }
             }
+            $item['_' . Sage::TOKEN . '_can_import'] = $canImport($item);
+            $item['_' . Sage::TOKEN . '_post_url'] = $postUrl($item);
+            $item['_' . Sage::TOKEN . '_identifier'] = $ids[$i];
         }
         return $data;
     }
@@ -1084,6 +1097,28 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                             </div>";
         }
         return [$response, $responseError, $message, $postId];
+    }
+
+    public function importFDocenteteFromSage(string $doPiece, string $doType, array $headers = []): array
+    {
+        $order = new WC_Order();
+        $order = $this->linkOrderFDocentete($order, $doPiece, $doType, true, headers: $headers);
+        $extendedFDocentetes = $this->sage->sageGraphQl->getFDocentetes(
+            $doPiece,
+            [$doType],
+            doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
+            doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
+            getError: true,
+            ignorePingApi: true,
+            getFDoclignes: true,
+            getExpedition: true,
+            addWordpressProductId: true,
+            getUser: true,
+            getLivraison: true,
+            extended: true,
+        );
+        $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
+        return $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder, $headers);
     }
 
     public function canImportFArticle(stdClass $fArticle): array

@@ -97,6 +97,9 @@ final class SageEntityMenu
          * Column in the meta table to use to identify
          */
         private string   $metaColumnIdentifier,
+        private Closure  $canImport,
+        private Closure  $import,
+        private ?Closure $postUrl = null,
         /**
          * Can be use if the Sage entity has multiple column as id
          */
@@ -274,6 +277,39 @@ final class SageEntityMenu
     public function setMetadata(Closure $metadata): self
     {
         $this->metadata = $metadata;
+        return $this;
+    }
+
+    public function getCanImport(): Closure
+    {
+        return $this->canImport;
+    }
+
+    public function setCanImport(Closure $canImport): self
+    {
+        $this->canImport = $canImport;
+        return $this;
+    }
+
+    public function getPostUrl(): ?Closure
+    {
+        return $this->postUrl;
+    }
+
+    public function setPostUrl(?Closure $postUrl): self
+    {
+        $this->postUrl = $postUrl;
+        return $this;
+    }
+
+    public function getImport(): Closure
+    {
+        return $this->import;
+    }
+
+    public function setImport(Closure $import): self
+    {
+        $this->import = $import;
         return $this;
     }
 }

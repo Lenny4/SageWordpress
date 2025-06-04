@@ -620,7 +620,7 @@ final class SageGraphQl
                     if ($fieldType === "object") {
                         // https://stackoverflow.com/a/66316611/6824121
                         $where[] = preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($fieldValue, JSON_THROW_ON_ERROR));
-                    } else {
+                    } else if (!empty($fieldValue)) {
                         $where[] = '{ ' . $field . ': { ' . $fieldType . ': ' . $fieldValue . ' } }';
                     }
                 }
