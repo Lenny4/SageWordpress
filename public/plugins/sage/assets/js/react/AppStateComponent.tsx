@@ -289,7 +289,7 @@ const AppStateComponent = () => {
     const response = await fetch(
       siteUrl +
         "/index.php?rest_route=" +
-        encodeURI(`/${TOKEN}/v1/add-website-sage-api`) +
+        encodeURIComponent(`/${TOKEN}/v1/add-website-sage-api`) +
         "&_wpnonce=" +
         wpnonce,
     );

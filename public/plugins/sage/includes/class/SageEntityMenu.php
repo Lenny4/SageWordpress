@@ -82,10 +82,6 @@ final class SageEntityMenu
          */
         private array    $options,
         /**
-         * Callback which can be trigger by button in the list view templates/sage/fDocentetes/list_action.html.twig
-         */
-        private array    $actions,
-        /**
          * Callback which transform data of Sage entity to the metadata
          */
         private Closure  $metadata,
@@ -216,17 +212,6 @@ final class SageEntityMenu
     public function setDefaultSortField(string $defaultSortField): self
     {
         $this->defaultSortField = $defaultSortField;
-        return $this;
-    }
-
-    public function getActions(): array
-    {
-        return $this->actions;
-    }
-
-    public function setActions(array $actions): self
-    {
-        $this->actions = $actions;
         return $this;
     }
 

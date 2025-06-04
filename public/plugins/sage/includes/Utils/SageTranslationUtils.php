@@ -21,6 +21,7 @@ final class SageTranslationUtils
     {
         return [
             self::TRANS_FCOMPTETS => [
+                "label" => __("Comptes", Sage::TOKEN),
                 "ctNum" => __("Numéro de compte Sage", Sage::TOKEN),
                 "ctIntitule" => __("Intitulé du tiers", Sage::TOKEN),
                 "ctType" => __("Type de tiers", Sage::TOKEN),
@@ -170,6 +171,7 @@ final class SageTranslationUtils
                 SageSettings::META_DATA_PREFIX . '_postId' => __("Wordpress ID", Sage::TOKEN),
             ],
             self::TRANS_FDOCENTETES => [
+                "label" => __("Documents", Sage::TOKEN),
                 "doDomaine" => [
                     'label' => __("Domaine (cf. énumérateur DomaineType).", Sage::TOKEN),
                     'values' => [
@@ -353,6 +355,7 @@ final class SageTranslationUtils
                 "dlMontantTaxe3" => __("dlMontantTaxe3", Sage::TOKEN),
             ],
             self::TRANS_FARTICLES => [
+                "label" => __("Articles", Sage::TOKEN),
                 "arRef" => __("Référence", Sage::TOKEN),
                 "arDesign" => __("Désignation", Sage::TOKEN),
                 "faCodeFamille" => __("Famille", Sage::TOKEN),
@@ -630,6 +633,14 @@ final class SageTranslationUtils
                 'features' => __("Caractéristiques", Sage::TOKEN),
                 'asQteMini' => __("Quantité min", Sage::TOKEN),
                 'asQteMaxi' => __("Quantité max", Sage::TOKEN),
+                'addFilter' => __("Ajouter un filtre", Sage::TOKEN),
+                'selectOption' => __("Sélectionnez une option", Sage::TOKEN),
+                'or' => __("ou", Sage::TOKEN),
+                'and' => __("et", Sage::TOKEN),
+                'noResult' => __("Aucun résultat", Sage::TOKEN),
+                'searching' => __("Recherche en cours ...", Sage::TOKEN),
+                'items' => __("éléments", Sage::TOKEN),
+                'outOf' => __("de", Sage::TOKEN),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", Sage::TOKEN),

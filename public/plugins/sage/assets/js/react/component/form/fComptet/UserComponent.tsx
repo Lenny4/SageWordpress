@@ -225,7 +225,7 @@ const UserComponent = () => {
     const response = await fetch(
       siteUrl +
         "/index.php?rest_route=" +
-        encodeURI(`/${TOKEN}/v1/user/` + ctNum) +
+        encodeURIComponent(`/${TOKEN}/v1/user/` + ctNum) +
         "&_wpnonce=" +
         wpnonce,
     );

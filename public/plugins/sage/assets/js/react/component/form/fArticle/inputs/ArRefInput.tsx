@@ -69,7 +69,7 @@ export const ArRefInput = React.forwardRef(
       const response = await fetch(
         siteUrl +
           "/index.php?rest_route=" +
-          encodeURI(
+          encodeURIComponent(
             `/${TOKEN}/v1/farticle/` + values.arRef.value + "/available",
           ) +
           "&_wpnonce=" +

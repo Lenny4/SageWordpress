@@ -332,6 +332,7 @@ final class Sage
         }));
         $this->twig->addFilter(new TwigFilter('json_decode', static fn(string $string): mixed => json_decode(stripslashes($string), true, 512, JSON_THROW_ON_ERROR)));
         $this->twig->addFilter(new TwigFilter('gettype', static fn(mixed $value): string => gettype($value)));
+        // todo remove
         $this->twig->addFilter(new TwigFilter('removeFields', static fn(array $fields, array $hideFields): array => array_values(array_filter($fields, static fn(array $field): bool => !in_array($field["name"], $hideFields)))));
         $this->twig->addFunction(new TwigFunction('getSortData', static function (array $queryParams): array {
             [$sortField, $sortValue] = SageGraphQl::getSortField($queryParams);
@@ -590,6 +591,25 @@ final class Sage
 
         // region api endpoint
         add_action('rest_api_init', static function () use ($sageWoocommerce, $sageGraphQl, $settings) {
+            register_rest_route(self::TOKEN . '/v1', '/search/sage-entity-menu/(?P<sageEntityMenuName>[A-Za-z0-9]+)', [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($sageGraphQl, $settings) {
+                    $sageEntityMenuName = $request['sageEntityMenuName'];
+                    $sageEntityMenu = current(array_filter($settings->sageEntityMenus, static function (SageEntityMenu $sageEntityMenu) use ($sageEntityMenuName) {
+                        return $sageEntityMenu->getEntityName() === $sageEntityMenuName;
+                    }));
+                    [
+                        $data,
+                        $showFields,
+                        $filterFields,
+                        $hideFields,
+                    ] = $sageGraphQl->getSageEntityMenuWithQuery($sageEntityMenu);
+                    return new WP_REST_Response($data["data"][$sageEntityMenuName], Response::HTTP_OK);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
             register_rest_route(self::TOKEN . '/v1', '/farticle/(?P<arRef>([^&]*))/available', args: [ // https://stackoverflow.com/a/10126995/6824121
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageGraphQl) {

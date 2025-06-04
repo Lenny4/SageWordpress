@@ -145,16 +145,6 @@ final class SageSettings
                         'default' => 'off'
                     ],
                 ],
-                actions: [
-                    'import_from_' . Sage::TOKEN => static function (array $data) use ($sageSettings): string {
-                        $ctNum = $data['ctNum'];
-                        [$userId, $message] = $sageSettings->sage->updateUserOrFComptet($ctNum);
-                        return $message;
-                    },
-                    'set_default_filter' => static function (string $data) use ($sageSettings): string {
-                        return $sageSettings->setDefaultFilter($data, $_GET);
-                    },
-                ],
                 metadata: static function (?stdClass $obj = null) use ($sageGraphQl, $sageSettings): array {
                     $result = [
                         new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {
@@ -237,15 +227,6 @@ final class SageSettings
                         'sort' => false,
                     ],
                 ],
-                actions: [
-                    'import_from_' . Sage::TOKEN => static function (array $data) use ($sageWoocommerce): string {
-                        [$orderId, $message] = $sageWoocommerce->importOrderFromSage($data['doPiece'], $data['doType']);
-                        return $message;
-                    },
-                    'set_default_filter' => static function (string $data) use ($sageSettings): string {
-                        return $sageSettings->setDefaultFilter($data, $_GET);
-                    },
-                ],
                 metadata: static function (?stdClass $obj = null) use ($sageGraphQl, $sageSettings): array {
                     $result = [
                         new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
@@ -298,15 +279,6 @@ final class SageSettings
                         'placeholder' => __('', Sage::TOKEN)
                     ],
                     // todo ajouter une option pour considérer les catalogues comme des catégories
-                ],
-                actions: [
-                    'import_from_' . Sage::TOKEN => function (array $data) use ($sageWoocommerce): string {
-                        [$response, $responseError, $message, $postId] = $sageWoocommerce->importFArticleFromSage($data['arRef']);
-                        return $message;
-                    },
-                    'set_default_filter' => static function (string $data) use ($sageSettings): string {
-                        return $sageSettings->setDefaultFilter($data, $_GET);
-                    },
                 ],
                 metadata: static function (?stdClass $obj = null) use ($sageWoocommerce, $sageGraphQl, $sageSettings): array {
                     $result = [
@@ -703,93 +675,19 @@ final class SageSettings
                         'capability' => self::$capability,
                         'menu_slug' => Sage::TOKEN . '_' . $sageEntityMenu->getEntityName(),
                         'function' => static function () use ($sageSettings, $sageEntityMenu): void {
-                            $queryParams = $_GET;
-                            if (
-                                array_key_exists('action', $queryParams) &&
-                                current_user_can(self::$capability)
-                            ) {
-                                $action = json_decode(stripslashes((string)$queryParams['action']), true, 512, JSON_THROW_ON_ERROR);
-                                $message = $sageEntityMenu->getActions()[$action["type"]]($action["data"]);
-                                $redirect = remove_query_arg('action', wp_get_referer());
-                                foreach ($queryParams as $key => $value) {
-                                    if ($key === 'action') {
-                                        continue;
-                                    }
-                                    $redirect = add_query_arg($key, $value, $redirect);
-                                }
-                                $redirect = add_query_arg(Sage::TOKEN . '_message', urlencode($message), $redirect);
-                                wp_redirect($redirect);
-                                exit;
-                            }
-
-                            $entityName = $sageEntityMenu->getEntityName();
-                            $rawShowFields = get_option(Sage::TOKEN . '_' . $entityName . '_show_fields');
-                            $rawFilterFields = get_option(Sage::TOKEN . '_' . $entityName . '_filter_fields');
-                            if ($rawShowFields === false) {
-                                $rawShowFields = $sageEntityMenu->getDefaultFields();
-                            }
-                            if ($rawFilterFields === false) {
-                                $rawFilterFields = $sageEntityMenu->getDefaultFields();
-                            }
-
-                            $mandatoryFields = $sageEntityMenu->getMandatoryFields();
-                            $hideFields = [...array_diff($mandatoryFields, $rawShowFields)];
-                            $rawShowFields = array_unique([...$rawShowFields, ...$hideFields]);
-                            $showFields = [];
-                            $filterFields = [];
-                            $inputFields = $sageSettings->sage->sageGraphQl->getTypeFilter($sageEntityMenu->getFilterType()) ?? [];
-                            $transDomain = $sageEntityMenu->getTransDomain();
-                            $trans = SageTranslationUtils::getTranslations();
-                            foreach ([
-                                         [
-                                             'rawFields' => array_unique([...$rawShowFields, ...$mandatoryFields]),
-                                             'array' => &$showFields,
-                                         ],
-                                         [
-                                             'rawFields' => $rawFilterFields,
-                                             'array' => &$filterFields,
-                                         ]
-                                     ] as $fieldType) {
-                                foreach ($fieldType['rawFields'] as $rawField) {
-                                    $f = [
-                                        'name' => $rawField,
-                                        'type' => 'StringOperationFilterInput',
-                                        'transDomain' => $transDomain,
-                                        'values' => null,
-                                    ];
-                                    if (array_key_exists($rawField, $inputFields)) {
-                                        $f['name'] = $inputFields[$rawField]->name;
-                                        $f['type'] = $inputFields[$rawField]->type->name;
-                                    }
-                                    $v = $trans[$sageEntityMenu->getEntityName()][$rawField];
-                                    if (is_array($v) && array_key_exists('values', $v)) {
-                                        $f['values'] = $v['values'];
-                                    }
-                                    $fieldType['array'][] = $f;
-                                }
-                            }
-
-                            if (!isset($queryParams['per_page'])) {
-                                $queryParams['per_page'] = get_option(Sage::TOKEN . '_' . $sageEntityMenu->getEntityName() . '_perPage');
-                                if ($queryParams['per_page'] === false) {
-                                    $queryParams['per_page'] = (string)self::$defaultPagination;
-                                }
-                            }
-
-                            $data = json_decode(json_encode($sageSettings->sage->sageGraphQl
-                                ->searchEntities($sageEntityMenu->getEntityName(), $queryParams, $showFields)
-                                , JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
-                            $data = $sageSettings->sage->sageWoocommerce->populateMetaDatas($data, $showFields, $sageEntityMenu);
-                            $hideFields = array_map(static function (string $hideField) {
-                                return str_replace(SageSettings::PREFIX_META_DATA, '', $hideField);
-                            }, $hideFields);
-                            echo $sageSettings->sage->twig->render('sage/' . $sageEntityMenu->getEntityName() . '/index.html.twig', [
-                                'queryParams' => $queryParams,
-                                'data' => $data,
+                            [
+                                $data,
+                                $showFields,
+                                $filterFields,
+                                $hideFields,
+                                $queryParams,
+                            ] = $sageSettings->sage->sageGraphQl->getSageEntityMenuWithQuery($sageEntityMenu);
+                            echo $sageSettings->sage->twig->render('sage/list.html.twig', [
                                 'showFields' => $showFields,
                                 'filterFields' => $filterFields,
                                 'hideFields' => $hideFields,
-                                'sageEntityMenu' => $sageEntityMenu,
+                                'mandatoryFields' => $sageEntityMenu->getMandatoryFields(),
+                                'sageEntityName' => $sageEntityMenu->getEntityName(),
                             ]);
                         },
                         'position' => null,
@@ -1161,21 +1059,6 @@ WHERE meta_key = %s
         // endregion
     }
 
-    private function setDefaultFilter(string $entityName, array $queryParams): string
-    {
-        $result = [];
-        foreach ($queryParams as $key => $value) {
-            if (!str_starts_with($key, 'filter_')) {
-                continue;
-            }
-            $result[$key] = $value;
-        }
-        update_option(Sage::TOKEN . '_default_filter_' . $entityName, $result);
-        return "<div class='notice notice-success is-dismissible'>
-                        " . __('Le filtre par défaut a été mis à jour.', Sage::TOKEN) . "
-                                </div>";
-    }
-
     private function addSelectionSetAsMetadata(array $selectionSets, array &$sageEntityMetadatas, ?stdClass $obj, string $prefix = ''): array
     {
         foreach ($selectionSets as $subEntity => $selectionSet) {
@@ -1231,10 +1114,9 @@ WHERE meta_key = %s
         return $objectFields;
     }
 
-    // woocommerce/includes/admin/class-wc-admin-meta-boxes.php:134 add_meta_box( 'woocommerce-product-data
-
     public function addWebsiteSageApi(bool $force = false): bool|string
     {
+        // woocommerce/includes/admin/class-wc-admin-meta-boxes.php:134 add_meta_box( 'woocommerce-product-data
         $optionFormSubmitted =
             array_key_exists('settings-updated', $_GET) &&
             array_key_exists('page', $_GET) &&
@@ -1575,9 +1457,9 @@ WHERE meta_key = %s
         }
     }
 
-    // copy of get_order_screen_id in woocommerce/src/Internal/Orders/OrderAttributionController.php
     public function registerOrderSageColumn(): void
     {
+        // copy of get_order_screen_id in woocommerce/src/Internal/Orders/OrderAttributionController.php
         $sageSettings = $this;
         $screen_id = $this->get_order_screen_id();
         $add_column = function (array $columns) {
@@ -1606,10 +1488,10 @@ WHERE meta_key = %s
         add_action("manage_{$screen_id}_posts_custom_column", $display_column, 10, 2);
     }
 
-    // copy of register_order_origin_column in woocommerce/src/Internal/Orders/OrderAttributionController.php
 
     private function get_order_screen_id(): string
     {
+        // copy of register_order_origin_column in woocommerce/src/Internal/Orders/OrderAttributionController.php
         return OrderUtil::custom_orders_table_usage_is_enabled() ? wc_get_page_screen_id('shop-order') : 'shop_order';
     }
 

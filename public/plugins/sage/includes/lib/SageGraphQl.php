@@ -9,6 +9,7 @@ use App\Sage;
 use App\SageSettings;
 use App\Utils\FDocenteteUtils;
 use App\Utils\PCatComptaUtils;
+use App\Utils\SageTranslationUtils;
 use Exception;
 use GraphQL\Client;
 use GraphQL\Mutation;
@@ -414,54 +415,6 @@ final class SageGraphQl
                     ]
                 );
             return $sageGraphQl->runQuery($query)?->data?->__type?->fields;
-        };
-        $typeModel = $this->sage->cache->get($cacheName, $function);
-        if (empty($typeModel)) {
-            $this->sage->cache->delete($cacheName);
-            $typeModel = $this->sage->cache->get($cacheName, $function);
-        }
-
-        return $typeModel;
-    }
-
-    public function getTypeFilter(string $object): array|null
-    {
-        $cacheName = 'TypeFilter_' . $object;
-        if (!$this->pingApi) {
-            $result = $this->sage->cache->get($cacheName, static fn() => null);
-            if (is_null($result)) {
-                $this->sage->cache->delete($cacheName);
-            }
-            return $result;
-        }
-
-        $sageGraphQl = $this;
-        $function = static function () use ($object, $sageGraphQl) {
-            $query = (new Query('__type'))
-                ->setArguments(['name' => $object])
-                ->setSelectionSet(
-                    [
-                        'name',
-                        (new Query('inputFields'))
-                            ->setSelectionSet(
-                                [
-                                    'name',
-                                    (new Query('type'))
-                                        ->setSelectionSet(
-                                            [
-                                                'name',
-                                            ]
-                                        ),
-                                ],
-                            ),
-                    ]
-                );
-            $temps = $sageGraphQl->runQuery($query)?->data?->__type?->inputFields;
-            $r = [];
-            foreach ($temps as $temp) {
-                $r[$temp->name] = $temp;
-            }
-            return $r;
         };
         $typeModel = $this->sage->cache->get($cacheName, $function);
         if (empty($typeModel)) {
@@ -1978,5 +1931,125 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 'prUnitePoids',
             ]),
         ];
+    }
+
+    public function getSageEntityMenuWithQuery(SageEntityMenu $sageEntityMenu): array
+    {
+        $queryParams = $_GET;
+        $entityName = $sageEntityMenu->getEntityName();
+        $rawShowFields = get_option(Sage::TOKEN . '_' . $entityName . '_show_fields');
+        $rawFilterFields = get_option(Sage::TOKEN . '_' . $entityName . '_filter_fields');
+        if ($rawShowFields === false) {
+            $rawShowFields = $sageEntityMenu->getDefaultFields();
+        }
+        if ($rawFilterFields === false) {
+            $rawFilterFields = $sageEntityMenu->getDefaultFields();
+        }
+
+        $mandatoryFields = $sageEntityMenu->getMandatoryFields();
+        $hideFields = [...array_diff($mandatoryFields, $rawShowFields)];
+        $rawShowFields = array_unique([...$rawShowFields, ...$hideFields]);
+        $showFields = [];
+        $filterFields = [];
+        $inputFields = $this->getTypeFilter($sageEntityMenu->getFilterType()) ?? [];
+        $transDomain = $sageEntityMenu->getTransDomain();
+        $trans = SageTranslationUtils::getTranslations();
+        foreach ([
+                     [
+                         'rawFields' => array_unique([...$rawShowFields, ...$mandatoryFields]),
+                         'array' => &$showFields,
+                     ],
+                     [
+                         'rawFields' => $rawFilterFields,
+                         'array' => &$filterFields,
+                     ]
+                 ] as $fieldType) {
+            foreach ($fieldType['rawFields'] as $rawField) {
+                $f = [
+                    'name' => $rawField,
+                    'type' => 'StringOperationFilterInput',
+                    'transDomain' => $transDomain,
+                    'values' => null,
+                ];
+                if (array_key_exists($rawField, $inputFields)) {
+                    $f['name'] = $inputFields[$rawField]->name;
+                    $f['type'] = $inputFields[$rawField]->type->name;
+                }
+                $v = $trans[$entityName][$rawField];
+                if (is_array($v) && array_key_exists('values', $v)) {
+                    $f['values'] = $v['values'];
+                }
+                $fieldType['array'][] = $f;
+            }
+        }
+
+        if (!isset($queryParams['per_page'])) {
+            $queryParams['per_page'] = get_option(Sage::TOKEN . '_' . $entityName . '_perPage');
+            if ($queryParams['per_page'] === false) {
+                $queryParams['per_page'] = (string)SageSettings::$defaultPagination;
+            }
+        }
+
+        $data = json_decode(json_encode($this->searchEntities($entityName, $queryParams, $showFields, ignorePingApi: true)
+            , JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
+        $data = $this->sage->sageWoocommerce->populateMetaDatas($data, $showFields, $sageEntityMenu);
+        $hideFields = array_map(static function (string $hideField) {
+            return str_replace(SageSettings::PREFIX_META_DATA, '', $hideField);
+        }, $hideFields);
+        return [
+            $data,
+            $showFields,
+            $filterFields,
+            $hideFields,
+            $queryParams,
+        ];
+    }
+
+    public function getTypeFilter(string $object): array|null
+    {
+        $cacheName = 'TypeFilter_' . $object;
+        if (!$this->pingApi) {
+            $result = $this->sage->cache->get($cacheName, static fn() => null);
+            if (is_null($result)) {
+                $this->sage->cache->delete($cacheName);
+            }
+            return $result;
+        }
+
+        $sageGraphQl = $this;
+        $function = static function () use ($object, $sageGraphQl) {
+            $query = (new Query('__type'))
+                ->setArguments(['name' => $object])
+                ->setSelectionSet(
+                    [
+                        'name',
+                        (new Query('inputFields'))
+                            ->setSelectionSet(
+                                [
+                                    'name',
+                                    (new Query('type'))
+                                        ->setSelectionSet(
+                                            [
+                                                'name',
+                                            ]
+                                        ),
+                                ],
+                            ),
+                    ]
+                );
+            $temps = $sageGraphQl->runQuery($query)?->data?->__type?->inputFields;
+            $r = [];
+            foreach ($temps as $temp) {
+                $r[$temp->name] = $temp;
+            }
+            return $r;
+        };
+        $typeModel = $this->sage->cache->get($cacheName, $function);
+        if (empty($typeModel)) {
+            $this->sage->cache->delete($cacheName);
+            $typeModel = $this->sage->cache->get($cacheName, $function);
+        }
+
+        return $typeModel;
     }
 }
