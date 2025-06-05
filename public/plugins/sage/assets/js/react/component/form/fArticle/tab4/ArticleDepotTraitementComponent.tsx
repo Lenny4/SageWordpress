@@ -129,6 +129,7 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                       .map((fDepot): TableLineItemInterface => {
                         return {
                           item: fDepot,
+                          identifier: fDepot.deNo.toString(),
                           lines: [
                             {
                               Dom: <span>{fDepot.deIntitule}</span>,
@@ -144,6 +145,7 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                   );
                   return {
                     item: fDepot,
+                    identifier: fDepot.deNo.toString(),
                     lines: [
                       {
                         field: {

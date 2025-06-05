@@ -74,6 +74,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                 (fArtclient): TableLineItemInterface => {
                   return {
                     item: fArtclient,
+                    identifier: fArtclient.ctNum,
                     lines: [
                       {
                         Dom: <>{fArtclient.ctNum}</>,
@@ -207,6 +208,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       return data.items.map((fComptet: FComptetInterface) => {
                         return {
                           item: fComptet,
+                          identifier: fComptet.ctNum,
                           lines: [
                             {
                               Dom: (

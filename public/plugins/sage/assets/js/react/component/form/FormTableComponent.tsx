@@ -162,8 +162,8 @@ export const FormTableComponent: React.FC<State> = ({
                   }
                   return true;
                 })
-                .map((item, indexItem) => (
-                  <tr key={indexItem}>
+                .map((item) => (
+                  <tr key={item.identifier}>
                     {table.removeItem && (
                       <td>
                         <Tooltip

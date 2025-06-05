@@ -92,6 +92,7 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                     .map((fGlossaire): TableLineItemInterface => {
                       return {
                         item: fGlossaire,
+                        identifier: fGlossaire.glNo.toString(),
                         lines: [
                           {
                             Dom: <span>{fGlossaire.glIntitule}</span>,
@@ -118,6 +119,7 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                 );
                 return {
                   item: fGlossaire,
+                  identifier: fGlossaire.glNo.toString(),
                   lines: [
                     {
                       field: {

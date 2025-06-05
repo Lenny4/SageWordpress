@@ -9,6 +9,7 @@ export interface FormInterface {
 
 export interface TableLineItemInterface {
   item: any;
+  identifier: string;
   lines: TableLineInterface[];
 }
 

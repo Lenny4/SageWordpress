@@ -85,6 +85,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
                 items: fArtclients.map((fArtclient): TableLineItemInterface => {
                   return {
                     item: fArtclient,
+                    identifier: fArtclient.acCategorie.toString(),
                     lines: [
                       {
                         Dom: (
