@@ -14,7 +14,10 @@ import { FormContentComponent } from "../../FormContentComponent";
 import { FormSelect } from "../../fields/FormSelect";
 import { FormInput } from "../../fields/FormInput";
 import { PPreferenceInterface } from "../../../../../interface/PPreferenceInterface";
-import {numberValidator, stringValidator} from "../../../../../functions/validator";
+import {
+  numberValidator,
+  stringValidator,
+} from "../../../../../functions/validator";
 import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
@@ -76,6 +79,7 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                     functionName: numberValidator,
                     params: {
                       positive: true,
+                      canBeEmpty: true,
                     },
                   },
                 },
@@ -95,7 +99,7 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                       maxLength: 19,
                       isReference: true,
                     },
-                  }
+                  },
                 },
               },
               {
@@ -108,6 +112,7 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                     functionName: numberValidator,
                     params: {
                       positive: true,
+                      canBeEmpty: true,
                     },
                   },
                 },

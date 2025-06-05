@@ -211,6 +211,9 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   value: arPrixAch,
                   validator: {
                     functionName: numberValidator,
+                    params: {
+                      canBeEmpty: true,
+                    },
                   },
                 },
               },
@@ -223,6 +226,9 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   value: arCoef,
                   validator: {
                     functionName: numberValidator,
+                    params: {
+                      canBeEmpty: true,
+                    },
                   },
                 },
               },
@@ -285,6 +291,9 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   value: getSageMetadata("arPunet", articleMeta),
                   validator: {
                     functionName: numberValidator,
+                    params: {
+                      canBeEmpty: true,
+                    },
                   },
                 },
               },
@@ -296,6 +305,9 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   value: getSageMetadata("arCoutStd", articleMeta),
                   validator: {
                     functionName: numberValidator,
+                    params: {
+                      canBeEmpty: true,
+                    },
                   },
                 },
               },

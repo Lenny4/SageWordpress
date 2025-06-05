@@ -185,6 +185,7 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                                 functionName: numberValidator,
                                 params: {
                                   positive: true,
+                                  canBeEmpty: true,
                                 },
                               },
                             },

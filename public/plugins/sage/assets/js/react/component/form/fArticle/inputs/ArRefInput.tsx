@@ -47,6 +47,40 @@ export const ArRefInput = React.forwardRef(
         return;
       }
       setAvailableArRef("");
+      if (!(await _isValid())) {
+        return;
+      }
+      setLoading(true);
+      const response = await fetch(
+        siteUrl +
+          "/index.php?rest_route=" +
+          encodeURIComponent(
+            `/${TOKEN}/v1/farticle/` + values.arRef.value + "/available",
+          ) +
+          "&_wpnonce=" +
+          wpnonce,
+      );
+      setLoading(false);
+      if (response.ok) {
+        if (currentArRef !== values.arRef.value) {
+          return;
+        }
+        let data: any = await response.json();
+        setAvailableArRef(data.availableArRef);
+      } else {
+        setValues((v) => {
+          return {
+            ...v,
+            arRef: {
+              ...v.arRef,
+              error: translations.sentences.availableArRefError,
+            },
+          };
+        });
+      }
+    };
+
+    const _isValid = async () => {
       const errorArRef = await stringValidator({
         value: values.arRef.value,
         maxLength: 17,
@@ -65,32 +99,29 @@ export const ArRefInput = React.forwardRef(
         });
         return;
       }
-      setLoading(true);
-      const response = await fetch(
-        siteUrl +
-          "/index.php?rest_route=" +
-          encodeURIComponent(
-            `/${TOKEN}/v1/farticle/` + values.arRef.value + "/available",
-          ) +
-          "&_wpnonce=" +
-          wpnonce,
-      );
-      if (response.ok) {
-        if (currentArRef !== values.arRef.value) {
-          return;
-        }
-        let data: any = await response.json();
-        setAvailableArRef(data.availableArRef);
-      } else {
-        // todo toast r
+      return errorArRef === "";
+    };
+
+    const isValid = async () => {
+      let v = await _isValid();
+      if (v && availableArRef === "") {
+        v = false;
+        setValues((v) => {
+          return {
+            ...v,
+            arRef: {
+              ...v.arRef,
+              error: translations.sentences.availableArRefError,
+            },
+          };
+        });
       }
-      setLoading(false);
+      return v;
     };
 
     useImperativeHandle(ref, () => ({
       async isValid(): Promise<boolean> {
-        // todo
-        return false;
+        return await isValid();
       },
     }));
 

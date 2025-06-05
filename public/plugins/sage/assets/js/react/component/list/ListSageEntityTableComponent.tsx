@@ -189,6 +189,7 @@ export const ListSageEntityTableActionComponent: React.FC<State3> = ({
         "&_wpnonce=" +
         wpnonce,
     );
+    setLoading(false);
     if (response.status === 200) {
       const data = await response.json();
       setSearchParams((x) => {
@@ -199,7 +200,6 @@ export const ListSageEntityTableActionComponent: React.FC<State3> = ({
     } else {
       // todo toastr
     }
-    setLoading(false);
   };
 
   return (

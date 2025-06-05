@@ -110,6 +110,9 @@ export const ArticleCatTarifComponent = React.forwardRef(
                             ),
                             validator: {
                               functionName: numberValidator,
+                              params: {
+                                canBeEmpty: true,
+                              },
                             },
                           },
                         },
@@ -153,6 +156,9 @@ export const ArticleCatTarifComponent = React.forwardRef(
                             ),
                             validator: {
                               functionName: numberValidator,
+                              params: {
+                                canBeEmpty: true,
+                              },
                             },
                           },
                         },

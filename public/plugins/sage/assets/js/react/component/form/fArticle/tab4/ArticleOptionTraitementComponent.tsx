@@ -43,11 +43,15 @@ export const ArticleOptionTraitementComponent = React.forwardRef(
             },
             {
               fields: ["arEscompte", "arPublie", "arSommeil"].map((name) => {
+                let v = getSageMetadata(name, articleMeta);
+                if (v === "" && name === "arPublie") {
+                  v = "1";
+                }
                 return {
                   name: name,
                   DomField: FormCheckbox,
                   initValues: {
-                    value: getSageMetadata(name, articleMeta),
+                    value: v,
                   },
                 };
               }),

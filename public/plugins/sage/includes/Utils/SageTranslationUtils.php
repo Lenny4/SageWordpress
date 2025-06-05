@@ -655,6 +655,7 @@ final class SageTranslationUtils
                 'nbThreads' => __("Nombre de d'opérations simultanées (nb threads)", Sage::TOKEN),
                 'errorWebsocket' => __("Wordpress n'arrive pas à se connecter à l'API Sage", Sage::TOKEN),
                 'availableArRef' => __("Votre article sera créé avec cette référence. Vous pouvez la modifier à l’aide du champ prévu à cet effet.", Sage::TOKEN),
+                'availableArRefError' => __("Nous n'avons pas trouvé de référence disponible pour cet article.", Sage::TOKEN),
                 'acPrixVenInput' => __("Le prix de vente ne correspond pas au résultat du prix d'achat multiplié par le coefficient.", Sage::TOKEN),
                 'cannotBeChangeOnWebsite' => __("Ce champ ne peut pas être modifié depuis le site internet. Vous pouvez le modifier directement dans Sage.", Sage::TOKEN),
                 'arNomencl' => __("Le site internet sait uniquement gérer des article qui ont pour nomenclature \"Aucun\".", Sage::TOKEN),

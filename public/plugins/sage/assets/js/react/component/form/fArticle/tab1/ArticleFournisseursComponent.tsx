@@ -122,6 +122,9 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                             ),
                             validator: {
                               functionName: numberValidator,
+                              params: {
+                                canBeEmpty: true,
+                              },
                             },
                           },
                         },
