@@ -6,6 +6,7 @@ import { getTranslations } from "../../../../../functions/translations";
 import { InputInterface } from "../../../../../interface/InputInterface";
 import { handleChangeInputGeneric } from "../../../../../functions/form";
 import { TOKEN } from "../../../../../token";
+import { numberValidator } from "../../../../../functions/validator";
 
 let translations: any = getTranslations();
 
@@ -94,12 +95,31 @@ export const AcPrixVenInput = React.forwardRef(
       setExpectedAcPrixVen(newValue);
     };
 
+    const isValid = async () => {
+      const error = await numberValidator({
+        value: values.acPrixVen.value,
+      });
+      setValues((v) => {
+        return {
+          ...v,
+          acPrixVen: {
+            ...v.acPrixVen,
+            error: error,
+          },
+        };
+      });
+      return error === "";
+    };
+
     useImperativeHandle(ref, () => ({
       async isValid(): Promise<boolean> {
-        // todo
-        return false;
+        return await isValid();
       },
     }));
+
+    React.useEffect(() => {
+      isValid();
+    }, [values.acPrixVen.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     React.useEffect(() => {
       handleRealAcPrixVen();

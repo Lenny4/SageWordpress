@@ -231,9 +231,6 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
               {
                 props: {
                   container: true,
-                  sx: {
-                    alignItems: "flex-end",
-                  },
                 },
                 children: [
                   {
@@ -256,6 +253,9 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                   {
                     props: {
                       size: { xs: 12, md: 4 },
+                      sx: {
+                        paddingTop: "19px",
+                      },
                     },
                     fields: [
                       {

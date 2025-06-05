@@ -91,11 +91,31 @@ export const ArPrixVenInput = React.forwardRef(
       setExpectedArPrixVen(newValue);
     };
 
+    const isValid = async () => {
+      const error = await numberValidator({
+        value: values.arPrixVen.value,
+      });
+      setValues((v) => {
+        return {
+          ...v,
+          arPrixVen: {
+            ...v.arPrixVen,
+            error: error,
+          },
+        };
+      });
+      return error === "";
+    };
+
     useImperativeHandle(ref, () => ({
       async isValid(): Promise<boolean> {
-        return (await numberValidator(values.arPrixVen.value)) === "";
+        return await isValid();
       },
     }));
+
+    React.useEffect(() => {
+      isValid();
+    }, [values.arPrixVen.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     React.useEffect(() => {
       handleRealArPrixVen();

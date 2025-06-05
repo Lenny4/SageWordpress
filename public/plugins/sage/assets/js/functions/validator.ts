@@ -39,14 +39,14 @@ export const numberValidator = async ({
   maxValue,
   minValue,
 }: {
-  value: string | number | null;
+  value: string | number | null | undefined;
   canBeEmpty?: boolean;
   positive?: boolean;
   canBeFloat?: boolean;
   maxValue?: number;
   minValue?: number;
 }): Promise<string> => {
-  const isEmpty = value === "" || value === null;
+  const isEmpty = value === "" || value === null || value === undefined;
   if (canBeEmpty !== false && isEmpty) {
     return "Ce champ ne peut pas être vide";
   }
@@ -66,6 +66,15 @@ export const numberValidator = async ({
   }
   if (maxValue !== undefined && numericValue > maxValue) {
     return `La valeur doit être inférieure ou égale à ${maxValue}.`;
+  }
+  if (!Number.isFinite(numericValue)) {
+    return "La valeur est trop grande ou trop petite.";
+  }
+  if (
+    numericValue > Number.MAX_SAFE_INTEGER ||
+    numericValue < Number.MIN_SAFE_INTEGER
+  ) {
+    return `La valeur doit être comprise entre ${Number.MIN_SAFE_INTEGER} et ${Number.MAX_SAFE_INTEGER}.`;
   }
   return "";
 };

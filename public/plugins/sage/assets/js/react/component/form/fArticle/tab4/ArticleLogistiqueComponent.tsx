@@ -14,7 +14,7 @@ import { FormContentComponent } from "../../FormContentComponent";
 import { FormSelect } from "../../fields/FormSelect";
 import { FormInput } from "../../fields/FormInput";
 import { PPreferenceInterface } from "../../../../../interface/PPreferenceInterface";
-import { numberValidator } from "../../../../../functions/validator";
+import {numberValidator, stringValidator} from "../../../../../functions/validator";
 import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
@@ -89,6 +89,13 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
                 DomField: FormInput,
                 initValues: {
                   value: getSageMetadata("arCodeBarre", articleMeta),
+                  validator: {
+                    functionName: stringValidator,
+                    params: {
+                      maxLength: 19,
+                      isReference: true,
+                    },
+                  }
                 },
               },
               {

@@ -16,6 +16,7 @@ import {
 import { FormInput } from "../../fields/FormInput";
 import { FormSelect } from "../../fields/FormSelect";
 import { TOKEN } from "../../../../../token";
+import {stringValidator} from "../../../../../functions/validator";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
@@ -78,6 +79,13 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                 DomField: FormInput,
                 initValues: {
                   value: getSageMetadata("arLangue1", articleMeta),
+                  validator: {
+                    functionName: stringValidator,
+                    params: {
+                      maxLength: 69,
+                      isReference: true,
+                    },
+                  }
                 },
               },
             ],
@@ -92,6 +100,13 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                 DomField: FormInput,
                 initValues: {
                   value: getSageMetadata("arLangue2", articleMeta),
+                  validator: {
+                    functionName: stringValidator,
+                    params: {
+                      maxLength: 69,
+                      isReference: true,
+                    },
+                  }
                 },
               },
             ],
@@ -103,6 +118,13 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                 DomField: FormInput,
                 initValues: {
                   value: getSageMetadata("arCodeFiscal", articleMeta),
+                  validator: {
+                    functionName: stringValidator,
+                    params: {
+                      maxLength: 25,
+                      isReference: true,
+                    },
+                  }
                 },
               },
               {
@@ -110,6 +132,13 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                 DomField: FormInput,
                 initValues: {
                   value: getSageMetadata("arEdiCode", articleMeta),
+                  validator: {
+                    functionName: stringValidator,
+                    params: {
+                      maxLength: 45,
+                      isReference: true,
+                    },
+                  }
                 },
               },
             ],
@@ -140,6 +169,13 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                 DomField: FormInput,
                 initValues: {
                   value: getSageMetadata("arRaccourci", articleMeta),
+                  validator: {
+                    functionName: stringValidator,
+                    params: {
+                      maxLength: 7,
+                      isReference: true,
+                    },
+                  }
                 },
               },
             ],
