@@ -40,11 +40,12 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
   const [fArtfournisses, setFArtfournisses] = React.useState<
     FArtfournisseInterface[]
   >(getListObjectSageMetadata(prefix, articleMeta, "ctNum"));
-  const [selectedCtNum, setSelectedCtNum] = React.useState<string>(() => {
+  const getSelectedCtNum = (): string => {
     return (
       fArtfournisses.find((x) => x.afPrincipal.toString() === "1")?.ctNum ?? ""
     );
-  });
+  };
+  const [selectedCtNum, setSelectedCtNum] = React.useState<string>(getSelectedCtNum());
   const onAfPrincipalChanged: TriggerFormContentChanged = (name, newValue) => {
     setSelectedCtNum(newValue);
   };
@@ -241,6 +242,10 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
   React.useEffect(() => {
     setForm(getForm());
   }, [selectedCtNum, fArtfournisses]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  React.useEffect(() => {
+    setSelectedCtNum(getSelectedCtNum());
+  }, [fArtfournisses]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <FormContentComponent content={form.content} transPrefix="fArticles" />

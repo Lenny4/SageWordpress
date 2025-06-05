@@ -41,13 +41,14 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
     const [fArtstocks, setFArtstocks] = React.useState<FArtstockInterface[]>(
       getListObjectSageMetadata(prefix, articleMeta, "deNo"),
     );
-    const [selectedDeNo, setDefaultDeNo] = React.useState<string>(() => {
+    const getDefaultDeNo = (): string => {
       return (
         fArtstocks
           .find((x) => x.asPrincipal.toString() === "1")
           ?.deNo?.toString() ?? ""
       );
-    });
+    };
+    const [selectedDeNo, setDefaultDeNo] = React.useState<string>(getDefaultDeNo());
     const onAsPrincipalChanged: TriggerFormContentChanged = (
       name,
       newValue,
@@ -159,16 +160,6 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                         Dom: <span>{fDepot.deIntitule}</span>,
                       },
                       {
-                        // field: {
-                        //   name: prefix + "[" + fDepot.deNo + "].asPrincipal",
-                        //   DomField: FormCheckbox,
-                        //   initValues: {
-                        //     value: getSageMetadata(
-                        //       prefix + "[" + fDepot.deNo + "].asPrincipal",
-                        //       articleMeta,
-                        //     ),
-                        //   },
-                        // },
                         Dom: (
                           <AsPrincipalInput
                             selectedDeNo={selectedDeNo}
@@ -224,6 +215,10 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
     React.useEffect(() => {
       setForm(getForm());
     }, [fArtstocks, selectedDeNo]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    React.useEffect(() => {
+      setDefaultDeNo(getDefaultDeNo());
+    }, [fArtstocks]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
       <FormContentComponent content={form.content} transPrefix="fArticles" />
