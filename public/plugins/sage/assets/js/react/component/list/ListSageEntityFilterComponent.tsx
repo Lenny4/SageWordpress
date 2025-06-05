@@ -115,11 +115,12 @@ export const FilterSubInputComponent = React.forwardRef(
           result.type.value = newOptions[0].key;
         }
       }
+
       const newValues =
-        filterField.values?.map((x, i) => {
+        Object.keys(filterField.values ?? []).map((i) => {
           return {
             key: i.toString(),
-            label: "[" + i + "]: " + x,
+            label: "[" + i + "]: " + filterField.values[i],
           };
         }) ?? [];
       if (JSON.stringify(result.value.options) !== JSON.stringify(newValues)) {
@@ -149,9 +150,15 @@ export const FilterSubInputComponent = React.forwardRef(
 
     React.useEffect(() => {
       onFilterChange();
-      if (field === "value") {
-        applyFilters();
-      }
+      const timeoutTyping = setTimeout(
+        () => {
+          if (field === "value") {
+            applyFilters();
+          }
+        },
+        (filterSub?.options?.length ?? 0) > 0 ? 0 : 500,
+      );
+      return () => clearTimeout(timeoutTyping);
     }, [filter]);
 
     return (

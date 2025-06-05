@@ -291,6 +291,28 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $fDocenteteIdentifier;
     }
 
+    public function importFDocenteteFromSage(string $doPiece, string $doType, array $headers = []): array
+    {
+        $order = new WC_Order();
+        $order = $this->linkOrderFDocentete($order, $doPiece, $doType, true, headers: $headers);
+        $extendedFDocentetes = $this->sage->sageGraphQl->getFDocentetes(
+            $doPiece,
+            [(int)$doType],
+            doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
+            doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
+            getError: true,
+            ignorePingApi: true,
+            getFDoclignes: true,
+            getExpedition: true,
+            addWordpressProductId: true,
+            getUser: true,
+            getLivraison: true,
+            extended: true,
+        );
+        $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
+        return $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder, $headers);
+    }
+
     public function linkOrderFDocentete(WC_Order $order, string $doPiece, int $doType, bool $ignorePingApi, array $headers = []): WC_Order
     {
         $fDocentete = $this->sage->sageGraphQl->getFDocentetes(
@@ -546,9 +568,13 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         // region new
         $new = new stdClass();
         $new->method_id = FDocenteteUtils::slugifyPExpeditionEIntitule($fDocentete->doExpeditNavigation->eIntitule);
-        $new->name = current(array_filter($pExpeditions, static function (stdClass $pExpedition) use ($new) {
+        $pExpedition = current(array_filter($pExpeditions, static function (stdClass $pExpedition) use ($new) {
             return $pExpedition->slug === $new->method_id;
-        }))->eIntitule;
+        }));
+        $new->name = '';
+        if ($pExpedition !== false) {
+            $new->name = $pExpedition->eIntitule;
+        }
         $new->priceHt = RoundUtils::round($fDocentete->fraisExpedition->priceHt);
         $new->priceTtc = RoundUtils::round($fDocentete->fraisExpedition->priceTtc);
         $new->taxes = [];
@@ -932,7 +958,12 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                     case OrderUtils::ADD_PRODUCT_ACTION:
                     case OrderUtils::REPLACE_PRODUCT_ACTION:
                         if (is_null($syncChange["new"]->postId)) {
-                            [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage($syncChange["new"]->arRef, ignorePingApi: true, headers: $headers);
+                            [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage(
+                                $syncChange["new"]->arRef,
+                                ignorePingApi: true,
+                                headers: $headers,
+                                ignoreCanImport: true,
+                            );
                             $tasksSynchronizeOrder["syncChanges"][$i]["new"]->postId = $postId;
                             $message .= $message2;
                         }
@@ -1097,28 +1128,6 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
                             </div>";
         }
         return [$response, $responseError, $message, $postId];
-    }
-
-    public function importFDocenteteFromSage(string $doPiece, string $doType, array $headers = []): array
-    {
-        $order = new WC_Order();
-        $order = $this->linkOrderFDocentete($order, $doPiece, $doType, true, headers: $headers);
-        $extendedFDocentetes = $this->sage->sageGraphQl->getFDocentetes(
-            $doPiece,
-            [$doType],
-            doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
-            doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
-            getError: true,
-            ignorePingApi: true,
-            getFDoclignes: true,
-            getExpedition: true,
-            addWordpressProductId: true,
-            getUser: true,
-            getLivraison: true,
-            extended: true,
-        );
-        $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
-        return $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder, $headers);
     }
 
     public function canImportFArticle(stdClass $fArticle): array

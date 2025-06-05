@@ -66,10 +66,7 @@ export const ListSageEntityComponent: React.FC<State> = ({
   };
 
   React.useEffect(() => {
-    const timeoutTyping = setTimeout(() => {
-      search();
-    }, 500);
-    return () => clearTimeout(timeoutTyping);
+    search();
   }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

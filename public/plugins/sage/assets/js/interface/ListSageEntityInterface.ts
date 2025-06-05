@@ -11,5 +11,5 @@ export interface FilterShowFieldInterface {
   name: string;
   transDomain: string;
   type: keyof FilterTypeInterface;
-  values: string[] | null;
+  values: string[] | any | null;
 }

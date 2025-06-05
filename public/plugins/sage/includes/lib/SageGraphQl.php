@@ -354,6 +354,9 @@ final class SageGraphQl
     private function _getFLivraisonSelectionSet(): array
     {
         return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'liNo',
+            ]),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'liIntitule',
                 'liAdresse',
@@ -620,7 +623,7 @@ final class SageGraphQl
                     if ($fieldType === "object") {
                         // https://stackoverflow.com/a/66316611/6824121
                         $where[] = preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($fieldValue, JSON_THROW_ON_ERROR));
-                    } else if (!empty($fieldValue)) {
+                    } else if ($fieldValue !== '') {
                         $where[] = '{ ' . $field . ': { ' . $fieldType . ': ' . $fieldValue . ' } }';
                     }
                 }
@@ -764,7 +767,7 @@ final class SageGraphQl
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi
+            $ignorePingApi,
         );
         if (is_array($pExpeditions)) {
             foreach ($pExpeditions as $pExpedition) {
@@ -1367,6 +1370,7 @@ WHERE meta_key = %s
                 }, FDocenteteUtils::ALL_TAXES),
             ]),
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'dlNo',
                 'doType',
                 'dlQte',
                 ...array_map(static function (string $field) {

@@ -256,14 +256,6 @@ export const ListSageEntityTableComponent: React.FC<State> = ({
   result,
   searching,
 }) => {
-  const getIdentifier = (row: any) => {
-    let identifier = "";
-    for (const mandatoryField of mandatoryFields) {
-      identifier += row[mandatoryField];
-    }
-    return identifier;
-  };
-
   const realShowFields = showFields.filter(
     (field) => !hideFields.includes(field.name),
   );
@@ -279,12 +271,11 @@ export const ListSageEntityTableComponent: React.FC<State> = ({
         {result?.items &&
           result.items.length > 0 &&
           result?.items.map((row) => {
-            const identifier = getIdentifier(row);
-            const name = `row_${sageEntityName}_${identifier}`;
+            const name = `row_${sageEntityName}_${row[`_${TOKEN}_identifier`]}`;
             return (
               <tr
                 id={name}
-                key={identifier}
+                key={row[`_${TOKEN}_identifier`]}
                 style={{
                   ...(searching && {
                     backgroundColor: "rgba(0,0,0,0.3)",
@@ -294,14 +285,14 @@ export const ListSageEntityTableComponent: React.FC<State> = ({
                 <th scope="row" className="check-column">
                   <label className="label-covers-full-cell" htmlFor={name}>
                     <span className="screen-reader-text">
-                      Select {identifier}
+                      Select {row[`_${TOKEN}_identifier`]}
                     </span>
                   </label>
                   <input
                     type="checkbox"
                     name={`${sageEntityName}[]`}
                     id={name}
-                    value={identifier}
+                    value={row[`_${TOKEN}_identifier`]}
                   />
                 </th>
                 {realShowFields.map((field, index) => {

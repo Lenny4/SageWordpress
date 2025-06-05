@@ -161,7 +161,8 @@ final class SageSettings
                     return $sage->canUpdateUserOrFComptet((object)$fComptet);
                 },
                 import: static function (string $identifier) use ($sageSettings) {
-                    $sageSettings->sage->updateUserOrFComptet($identifier);
+                    [$userId, $message] = $sageSettings->sage->updateUserOrFComptet($identifier, ignorePingApi: true);
+                    return $userId;
                 },
             ),
             new SageEntityMenu(
@@ -175,6 +176,7 @@ final class SageSettings
                     'doPiece',
                     'doType',
                     'doDate',
+                    self::META_DATA_PREFIX . '_last_update',
                     self::META_DATA_PREFIX . '_postId',
                 ],
                 mandatoryFields: [
@@ -246,7 +248,9 @@ final class SageSettings
                     return $sageWoocommerce->canImportOrderFromSage((object)$fDocentete);
                 },
                 import: static function (string $identifier) use ($sageWoocommerce) {
-                    [$message, $order] = $sageWoocommerce->importFDocenteteFromSage($doPiece, $doType, $headers);
+                    $data = json_decode(stripslashes($identifier), false, 512, JSON_THROW_ON_ERROR);
+                    [$message, $order] = $sageWoocommerce->importFDocenteteFromSage($data->doPiece, $data->doType);
+                    return $order->get_id();
                 },
                 getIdentifier: static function (array $fDocentete) {
                     return json_encode(['doPiece' => $fDocentete["doPiece"], 'doType' => $fDocentete["doType"]], JSON_THROW_ON_ERROR);
@@ -530,8 +534,12 @@ final class SageSettings
                         'label' => __('Champs pouvant être filtrés', Sage::TOKEN),
                         'description' => __('Veuillez sélectionner les champs pouvant servir à filter vos résultats.', Sage::TOKEN),
                         'type' => '2_select_multi',
-                        'options' => $fieldOptions,
-                        'default' => $defaultFields,
+                        'options' => array_filter($fieldOptions, static function (string $key) {
+                            return !str_starts_with($key, SageSettings::PREFIX_META_DATA);
+                        }, ARRAY_FILTER_USE_KEY),
+                        'default' => array_filter($defaultFields, static function (string $v) {
+                            return !str_starts_with($v, SageSettings::PREFIX_META_DATA);
+                        }),
                     ],
                     ...$sageEntityMenu->getOptions(),
                 ];
@@ -1415,7 +1423,7 @@ WHERE meta_key = %s
             $a = $dom->find('.woocommerce-order-data__heading')[0];
             $title = $a->innerHtml();
             return str_replace($title, $title . '['
-                . $translations["fDocentetes"]["doType"]["values"][__("Documents des ventes", Sage::TOKEN)][$fDocenteteIdentifier["doType"]]
+                . $translations["fDocentetes"]["doType"]["values"][$fDocenteteIdentifier["doType"]]
                 . ': n° '
                 . $fDocenteteIdentifier["doPiece"]
                 . ']', $dom);
@@ -1502,7 +1510,7 @@ WHERE meta_key = %s
                 echo '<span class="dashicons dashicons-no" style="color: red"></span>';
                 return;
             }
-            echo $trans["fDocentetes"]["doType"]["values"]["Documents des ventes"][$identifier['doType']]
+            echo $trans["fDocentetes"]["doType"]["values"][$identifier['doType']]
                 . ': n° '
                 . $identifier["doPiece"];
         };
