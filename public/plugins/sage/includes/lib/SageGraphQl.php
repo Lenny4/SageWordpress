@@ -1937,12 +1937,13 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         ];
     }
 
-    public function getSageEntityMenuWithQuery(SageEntityMenu $sageEntityMenu): array
+    public function getSageEntityMenuWithQuery(SageEntityMenu $sageEntityMenu, bool $getData = true): array
     {
         $queryParams = $_GET;
         $entityName = $sageEntityMenu->getEntityName();
         $rawShowFields = get_option(Sage::TOKEN . '_' . $entityName . '_show_fields');
         $rawFilterFields = get_option(Sage::TOKEN . '_' . $entityName . '_filter_fields');
+        $perPage = get_option(Sage::TOKEN . '_' . $entityName . '_perPage');
         if ($rawShowFields === false) {
             $rawShowFields = $sageEntityMenu->getDefaultFields();
         }
@@ -1994,9 +1995,12 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             }
         }
 
-        $data = json_decode(json_encode($this->searchEntities($entityName, $queryParams, $showFields, ignorePingApi: true)
-            , JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
-        $data = $this->sage->sageWoocommerce->populateMetaDatas($data, $showFields, $sageEntityMenu);
+        $data = [];
+        if ($getData) {
+            $data = json_decode(json_encode($this->searchEntities($entityName, $queryParams, $showFields, ignorePingApi: true)
+                , JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
+            $data = $this->sage->sageWoocommerce->populateMetaDatas($data, $showFields, $sageEntityMenu);
+        }
         $hideFields = array_map(static function (string $hideField) {
             return str_replace(SageSettings::PREFIX_META_DATA, '', $hideField);
         }, $hideFields);
@@ -2005,6 +2009,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $showFields,
             $filterFields,
             $hideFields,
+            $perPage,
             $queryParams,
         ];
     }

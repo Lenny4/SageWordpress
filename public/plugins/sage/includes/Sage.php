@@ -603,6 +603,8 @@ final class Sage
                         $showFields,
                         $filterFields,
                         $hideFields,
+                        $perPage,
+                        $queryParams,
                     ] = $sageGraphQl->getSageEntityMenuWithQuery($sageEntityMenu);
                     return new WP_REST_Response($data["data"][$sageEntityMenuName], Response::HTTP_OK);
                 },

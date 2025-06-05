@@ -22,6 +22,7 @@ type State = {
   sageEntityName: string;
   mandatoryFields: string[];
   paginationRange: number[];
+  perPage: string | number | undefined | null;
 };
 
 export interface ResultTableInterface {
@@ -37,6 +38,7 @@ export const ListSageEntityComponent: React.FC<State> = ({
   sageEntityName,
   mandatoryFields,
   paginationRange,
+  perPage,
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [result, setResult] = React.useState<ResultTableInterface | undefined>(
@@ -81,6 +83,7 @@ export const ListSageEntityComponent: React.FC<State> = ({
         <ListSageEntityPagingComponent
           result={result}
           paginationRange={paginationRange}
+          defaultPerPage={Number(perPage)}
         />
         <br className="clear" />
       </div>
@@ -134,6 +137,9 @@ doms.forEach((dom) => {
             .querySelector("[data-mandatoryfields]")
             .getAttribute("data-mandatoryfields"),
         )}
+        perPage={dom
+          .querySelector("[data-perpage]")
+          .getAttribute("data-perpage")}
       />
     </BrowserRouter>,
   );

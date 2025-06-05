@@ -8,11 +8,13 @@ let translations: any = getTranslations();
 type State = {
   result: ResultTableInterface | undefined;
   paginationRange: number[];
+  defaultPerPage: number;
 };
 
 export const ListSageEntityPagingComponent: React.FC<State> = ({
   result,
   paginationRange,
+  defaultPerPage,
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const getCurrentPage = () => {
@@ -20,9 +22,15 @@ export const ListSageEntityPagingComponent: React.FC<State> = ({
   };
   const currentPage = getCurrentPage();
   const [page, setPage] = React.useState<string>(currentPage.toString());
-  const [perPage, setPerPage] = React.useState<string>(
-    Number(searchParams.get("per_page") ?? 20).toString(),
-  );
+  const [perPage, setPerPage] = React.useState<string>(() => {
+    let result = Number(
+      searchParams.get("per_page") ?? defaultPerPage,
+    ).toString();
+    if (!paginationRange.includes(Number(result))) {
+      result = paginationRange[0].toString();
+    }
+    return result;
+  });
 
   const totalCount = Number(result?.totalCount ?? 0);
   const maxPage = Math.ceil(totalCount / Number(perPage));
@@ -164,6 +172,7 @@ export const ListSageEntityPagingComponent: React.FC<State> = ({
       <select
         name="per_page"
         id="per_page"
+        value={perPage}
         onChange={(e) => {
           setPerPage(e.target.value);
         }}

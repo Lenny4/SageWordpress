@@ -705,17 +705,18 @@ final class SageSettings
                         'capability' => self::$capability,
                         'menu_slug' => Sage::TOKEN . '_' . $sageEntityMenu->getEntityName(),
                         'function' => static function () use ($sageSettings, $sageEntityMenu): void {
-                            // todo add parameter to prevent search, as $data not used
                             [
                                 $data,
                                 $showFields,
                                 $filterFields,
                                 $hideFields,
+                                $perPage,
                                 $queryParams,
-                            ] = $sageSettings->sage->sageGraphQl->getSageEntityMenuWithQuery($sageEntityMenu);
+                            ] = $sageSettings->sage->sageGraphQl->getSageEntityMenuWithQuery($sageEntityMenu, getData: false);
                             echo $sageSettings->sage->twig->render('sage/list.html.twig', [
                                 'showFields' => $showFields,
                                 'filterFields' => $filterFields,
+                                'perPage' => $perPage,
                                 'hideFields' => $hideFields,
                                 'mandatoryFields' => $sageEntityMenu->getMandatoryFields(),
                                 'sageEntityName' => $sageEntityMenu->getEntityName(),
