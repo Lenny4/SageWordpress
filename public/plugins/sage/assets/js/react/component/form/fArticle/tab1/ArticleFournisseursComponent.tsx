@@ -24,8 +24,12 @@ import {
   stringValidator,
 } from "../../../../../functions/validator";
 import { TOKEN } from "../../../../../token";
+import { FComptetInterface } from "../../../../../interface/FComptetInterface";
+import { ResultTableInterface } from "../../../list/ListSageEntityComponent";
 
 let translations: any = getTranslations();
+const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
+const wpnonce = $(`[data-${TOKEN}-nonce]`).attr(`data-${TOKEN}-nonce`);
 
 const articleMeta: MetadataInterface[] = JSON.parse(
   $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
@@ -33,9 +37,9 @@ const articleMeta: MetadataInterface[] = JSON.parse(
 
 export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
   const prefix = "fArtfournisses";
-  const [fArtfournisses] = React.useState<FArtfournisseInterface[]>(
-    getListObjectSageMetadata(prefix, articleMeta, "ctNum"),
-  );
+  const [fArtfournisses, setFArtfournisses] = React.useState<
+    FArtfournisseInterface[]
+  >(getListObjectSageMetadata(prefix, articleMeta, "ctNum"));
   const [selectedCtNum, setSelectedCtNum] = React.useState<string>(() => {
     return (
       fArtfournisses.find((x) => x.afPrincipal.toString() === "1")?.ctNum ?? ""
@@ -133,6 +137,93 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                   };
                 },
               ),
+              removeItem: (fComptet: FComptetInterface) => {
+                setFArtfournisses((v) => {
+                  const r = v.filter(
+                    (fArtfourniss) => fArtfourniss.ctNum !== fComptet.ctNum,
+                  );
+                  if (
+                    r.length > 0 &&
+                    !r.find((x) => x.afPrincipal.toString() === "1")
+                  ) {
+                    r[0].afPrincipal = 1;
+                  }
+                  return r;
+                });
+              },
+              add: {
+                table: {
+                  headers: [translations.words.supplier],
+                  search: (item: FComptetInterface, search: string) => {
+                    return (
+                      item.ctNum.toLowerCase().includes(search.toLowerCase()) ||
+                      item.ctIntitule
+                        .toLowerCase()
+                        .includes(search.toLowerCase()) ||
+                      item.ctContact
+                        .toLowerCase()
+                        .includes(search.toLowerCase())
+                    );
+                  },
+                  addItem: (fComptet: FComptetInterface) => {
+                    setFArtfournisses((v) => {
+                      let principal = 0;
+                      if (!v.find((x) => x.afPrincipal.toString() === "1")) {
+                        principal = 1;
+                      }
+                      return [
+                        ...v,
+                        {
+                          ctNum: fComptet.ctNum,
+                          afPrincipal: principal,
+                          afRefFourniss: "",
+                          afPrixAch: 0,
+                        },
+                      ];
+                    });
+                  },
+                  items: async (
+                    search: string = "",
+                  ): Promise<TableLineItemInterface[]> => {
+                    const params = new URLSearchParams({
+                      "filter_field[0]": "ctType",
+                      "filter_type[0]": "eq",
+                      "filter_value[0]": "1",
+
+                      "filter_field[1]": "ctNum",
+                      "filter_type[1]": "contains",
+                      "filter_value[1]": search,
+
+                      where_condition: "and",
+                      per_page: "100",
+                    });
+                    const response = await fetch(
+                      siteUrl +
+                        `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search/sage-entity-menu/fComptets`)}&${params}&_wpnonce=${wpnonce}`,
+                    );
+                    if (response.ok) {
+                      const data: ResultTableInterface = await response.json();
+                      return data.items.map((fComptet: FComptetInterface) => {
+                        return {
+                          item: fComptet,
+                          lines: [
+                            {
+                              Dom: (
+                                <>
+                                  {fComptet.ctNum} {fComptet.ctIntitule}
+                                </>
+                              ),
+                            },
+                          ],
+                        };
+                      });
+                    } else {
+                      // todo toast r
+                    }
+                    return [];
+                  },
+                },
+              },
             },
           },
         ],
@@ -149,7 +240,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
 
   React.useEffect(() => {
     setForm(getForm());
-  }, [selectedCtNum]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedCtNum, fArtfournisses]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <FormContentComponent content={form.content} transPrefix="fArticles" />

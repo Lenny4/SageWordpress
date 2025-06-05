@@ -164,6 +164,7 @@ final class SageSettings
                     [$userId, $message] = $sageSettings->sage->updateUserOrFComptet($identifier, ignorePingApi: true);
                     return $userId;
                 },
+                selectionSet: $sageGraphQl->_getFComptetSelectionSet(),
             ),
             new SageEntityMenu(
                 title: __("Documents", Sage::TOKEN),
@@ -252,6 +253,7 @@ final class SageSettings
                     [$message, $order] = $sageWoocommerce->importFDocenteteFromSage($data->doPiece, $data->doType);
                     return $order->get_id();
                 },
+                selectionSet: $sageGraphQl->_getFDocenteteSelectionSet(),
                 getIdentifier: static function (array $fDocentete) {
                     return json_encode(['doPiece' => $fDocentete["doPiece"], 'doType' => $fDocentete["doType"]], JSON_THROW_ON_ERROR);
                 },
@@ -327,6 +329,7 @@ final class SageSettings
                     );
                     return $postId;
                 },
+                selectionSet: $sageGraphQl->_getFArticleSelectionSet(),
             ),
         ];
         // Initialise settings.

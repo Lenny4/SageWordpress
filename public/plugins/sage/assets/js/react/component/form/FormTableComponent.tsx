@@ -4,6 +4,7 @@ import {
   TableLineItemInterface,
 } from "../../../interface/InputInterface";
 import {
+  CircularProgress,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -32,6 +33,14 @@ export const FormTableComponent: React.FC<State> = ({
 
   const [open, setOpen] = React.useState(false);
   const [searchText, setSearchText] = React.useState("");
+  const [searching, setSearching] = React.useState<boolean>(
+    typeof table.items === "function",
+  );
+  const getItems = () => {
+    return typeof table.items === "function" ? [] : table.items;
+  };
+  const [items, setItems] =
+    React.useState<TableLineItemInterface[]>(getItems());
 
   const handleOpen = () => {
     setOpen(true);
@@ -51,6 +60,34 @@ export const FormTableComponent: React.FC<State> = ({
   const thisOnSelectRemove = (item: TableLineItemInterface) => {
     table.removeItem(item.item);
   };
+
+  const searchItems = () => {
+    if (typeof table.items === "function") {
+      setSearching(true);
+      table
+        .items(searchText)
+        .then((r) => {
+          setItems(r);
+        })
+        .catch(() => {
+          setItems([]);
+        })
+        .finally(() => {
+          setSearching(false);
+        });
+    }
+  };
+
+  React.useEffect(() => {
+    const timeoutTyping = setTimeout(() => {
+      searchItems();
+    }, 500);
+    return () => clearTimeout(timeoutTyping);
+  }, [searchText]);
+
+  React.useEffect(() => {
+    setItems(getItems());
+  }, [table.items]);
 
   return (
     <>
@@ -105,67 +142,87 @@ export const FormTableComponent: React.FC<State> = ({
           </tr>
         </thead>
         <tbody>
-          {table.items
-            .filter((item) => {
-              if (table.search) {
-                return table.search(item.item, searchText);
-              }
-              return true;
-            })
-            .map((item, indexItem) => (
-              <tr key={indexItem}>
-                {table.removeItem && (
-                  <td>
-                    <Tooltip
-                      title={translations.sentences.deleteItem}
-                      arrow
-                      placement="left"
-                    >
-                      <IconButton
-                        onClick={() => {
-                          thisOnSelectRemove(item);
-                        }}
-                      >
-                        <RemoveIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </td>
-                )}
-                {table.addItem && (
-                  <td>
-                    <Tooltip
-                      title={translations.sentences.addThisItem}
-                      arrow
-                      placement="left"
-                    >
-                      <IconButton onClick={() => thisOnSelectAdd(item)}>
-                        <AddIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </td>
-                )}
-                {item.lines.map((cell, indexCell) => {
-                  const Dom = cell.Dom;
-                  return (
-                    <td
-                      key={indexCell}
-                      style={{ paddingLeft: indexCell === 0 ? 0 : padding }}
-                    >
-                      {Dom}
-                      {cell.field && (
-                        <FormFieldComponent
-                          key={indexCell}
-                          field={cell.field}
-                          transPrefix={transPrefix}
-                        />
-                      )}
-                    </td>
-                  );
-                })}
+          {searching ? (
+            <>
+              <tr>
+                <td
+                  colSpan={table.headers.length + (table.removeItem ? 1 : 0)}
+                  style={{ textAlign: "center" }}
+                >
+                  <CircularProgress />
+                </td>
               </tr>
-            ))}
+            </>
+          ) : (
+            <>
+              {items
+                .filter((item) => {
+                  if (table.search) {
+                    return table.search(item.item, searchText);
+                  }
+                  return true;
+                })
+                .map((item, indexItem) => (
+                  <tr key={indexItem}>
+                    {table.removeItem && (
+                      <td>
+                        <Tooltip
+                          title={translations.sentences.deleteItem}
+                          arrow
+                          placement="left"
+                        >
+                          <IconButton
+                            onClick={() => {
+                              thisOnSelectRemove(item);
+                            }}
+                          >
+                            <RemoveIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </td>
+                    )}
+                    {table.addItem && (
+                      <td>
+                        <Tooltip
+                          title={translations.sentences.addThisItem}
+                          arrow
+                          placement="left"
+                        >
+                          <IconButton onClick={() => thisOnSelectAdd(item)}>
+                            <AddIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </td>
+                    )}
+                    {item.lines.map((cell, indexCell) => {
+                      const Dom = cell.Dom;
+                      return (
+                        <td
+                          key={indexCell}
+                          style={{ paddingLeft: indexCell === 0 ? 0 : padding }}
+                        >
+                          {Dom}
+                          {cell.field && (
+                            <FormFieldComponent
+                              key={indexCell}
+                              field={cell.field}
+                              transPrefix={transPrefix}
+                            />
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+            </>
+          )}
         </tbody>
       </table>
+      {typeof table.items === "function" && !searching && (
+        <div style={{ textAlign: "center" }}>
+          {translations.sentences.modifySearchToFindMore}
+        </div>
+      )}
       {table.add && (
         <div style={{ textAlign: "center" }}>
           <Tooltip

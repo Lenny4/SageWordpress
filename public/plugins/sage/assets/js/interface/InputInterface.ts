@@ -19,7 +19,9 @@ export interface TableLineInterface {
 
 export interface TableInterface {
   headers: string[];
-  items: TableLineItemInterface[];
+  items:
+    | TableLineItemInterface[]
+    | ((search: string) => Promise<TableLineItemInterface[]>);
   fullWidth?: boolean;
   add?: TableAddInterface;
   removeItem?: Function;

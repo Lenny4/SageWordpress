@@ -24,7 +24,15 @@ final class SageTranslationUtils
                 "label" => __("Comptes", Sage::TOKEN),
                 "ctNum" => __("Numéro de compte Sage", Sage::TOKEN),
                 "ctIntitule" => __("Intitulé du tiers", Sage::TOKEN),
-                "ctType" => __("Type de tiers", Sage::TOKEN),
+                "ctType" => [
+                    'label' => __("Type de tiers", Sage::TOKEN),
+                    'values' => [
+                        '0' => __("Client", Sage::TOKEN),
+                        '1' => __("Fournisseur", Sage::TOKEN),
+                        '2' => __("Salarié", Sage::TOKEN),
+                        '3' => __("Autre", Sage::TOKEN),
+                    ],
+                ],
                 "cgNumPrinc" => __("cgNumPrinc", Sage::TOKEN),
                 "ctQualite" => __("Qualité", Sage::TOKEN),
                 "ctClassement" => __("Classement", Sage::TOKEN),
@@ -663,6 +671,7 @@ final class SageTranslationUtils
                 'deleteItem' => __("Supprimer cet élément.", Sage::TOKEN),
                 'addItem' => __("Ajouter un élément.", Sage::TOKEN),
                 'addThisItem' => __("Ajouter cet élément.", Sage::TOKEN),
+                'modifySearchToFindMore' => __("Veuillez modifier votre recherche pour trouver d'autres résultats ...", Sage::TOKEN),
             ],
             'enum' => [
                 'syncWebsiteState' => [

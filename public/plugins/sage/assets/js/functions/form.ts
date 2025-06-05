@@ -158,7 +158,7 @@ export const handleFormIsValid = async (
       result = (await _validateField(field)) && result;
     }
   }
-  if (formContent.table) {
+  if (formContent.table && typeof formContent.table.items !== "function") {
     for (const item of formContent.table.items) {
       for (const line of item.lines) {
         if (line.field) {
@@ -203,7 +203,10 @@ export const createFormContent = (formContent: FormContentInterface) => {
         field.ref ??= React.createRef();
       }
     }
-    if (formContent.table?.items) {
+    if (
+      formContent.table?.items &&
+      typeof formContent.table.items !== "function"
+    ) {
       for (const item of formContent.table.items) {
         for (const line of item.lines) {
           if (line.field) {

@@ -78,10 +78,17 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                 ],
                 removeItem: (fDepot: FDepotInterface) => {
                   setFArtstocks((v) => {
-                    return v.filter(
+                    const r = v.filter(
                       (fArtstock) =>
                         fArtstock.deNo.toString() !== fDepot.deNo.toString(),
                     );
+                    if (
+                      r.length > 0 &&
+                      !r.find((x) => x.asPrincipal.toString() === "1")
+                    ) {
+                      r[0].asPrincipal = 1;
+                    }
+                    return r;
                   });
                 },
                 add: {
@@ -89,11 +96,15 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                     headers: [translations.words.intitule],
                     addItem: (fDepot: FDepotInterface) => {
                       setFArtstocks((v) => {
+                        let principal = 0;
+                        if (!v.find((x) => x.asPrincipal.toString() === "1")) {
+                          principal = 1;
+                        }
                         return [
                           ...v,
                           {
                             deNo: fDepot.deNo,
-                            asPrincipal: 0,
+                            asPrincipal: principal,
                             asQteMaxi: 0,
                             asQteMini: 0,
                           },

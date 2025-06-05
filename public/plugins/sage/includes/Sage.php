@@ -606,7 +606,11 @@ final class Sage
                         $perPage,
                         $queryParams,
                     ] = $sageGraphQl->getSageEntityMenuWithQuery($sageEntityMenu);
-                    return new WP_REST_Response($data["data"][$sageEntityMenuName], Response::HTTP_OK);
+                    if (isset($data["data"][$sageEntityMenuName])) {
+                        return new WP_REST_Response($data["data"][$sageEntityMenuName], Response::HTTP_OK);
+                    }
+                    // todo return error message
+                    return new WP_REST_Response(null, Response::HTTP_INTERNAL_SERVER_ERROR);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can(SageSettings::$capability);

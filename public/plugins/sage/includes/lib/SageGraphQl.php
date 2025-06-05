@@ -1959,6 +1959,12 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $inputFields = $this->getTypeFilter($sageEntityMenu->getFilterType()) ?? [];
         $transDomain = $sageEntityMenu->getTransDomain();
         $trans = SageTranslationUtils::getTranslations();
+        $selectionSets = [];
+        foreach ($sageEntityMenu->getSelectionSet() as $selectionSet) {
+            if (is_array($selectionSet) && array_key_exists('name', $selectionSet)) {
+                $selectionSets[$selectionSet['name']] = $selectionSet['type'];
+            }
+        }
         foreach ([
                      [
                          'rawFields' => array_unique([...$rawShowFields, ...$mandatoryFields]),
@@ -1972,7 +1978,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             foreach ($fieldType['rawFields'] as $rawField) {
                 $f = [
                     'name' => $rawField,
-                    'type' => 'StringOperationFilterInput',
+                    'type' => $selectionSets[$rawField] ?? 'StringOperationFilterInput',
                     'transDomain' => $transDomain,
                     'values' => null,
                 ];

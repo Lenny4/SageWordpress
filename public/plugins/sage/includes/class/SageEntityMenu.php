@@ -99,6 +99,7 @@ final class SageEntityMenu
         private string   $metaColumnIdentifier,
         private Closure  $canImport,
         private Closure  $import,
+        private array    $selectionSet,
         private ?Closure $postUrl = null,
         /**
          * Can be use if the Sage entity has multiple column as id
@@ -310,6 +311,17 @@ final class SageEntityMenu
     public function setImport(Closure $import): self
     {
         $this->import = $import;
+        return $this;
+    }
+
+    public function getSelectionSet(): array
+    {
+        return $this->selectionSet;
+    }
+
+    public function setSelectionSet(array $selectionSet): self
+    {
+        $this->selectionSet = $selectionSet;
         return $this;
     }
 }
