@@ -2,9 +2,15 @@ import { HTMLInputTypeAttribute } from "react";
 import { TabInterface } from "./TabInterface";
 import { GridProps } from "@mui/material/Grid/Grid";
 import { TabsProps } from "@mui/material/Tabs/Tabs";
+import { ResultTableInterface } from "../react/component/list/ListSageEntityComponent";
 
 export interface FormInterface {
   content: FormContentInterface;
+}
+
+export interface ResponseTableLineItemInterface {
+  items: TableLineItemInterface[] | null;
+  response: ResultTableInterface | null;
 }
 
 export interface TableLineItemInterface {
@@ -22,8 +28,12 @@ export interface TableInterface {
   headers: string[];
   items:
     | TableLineItemInterface[]
-    | ((search: string) => Promise<TableLineItemInterface[]>);
+    | ((
+        search: string,
+        cacheResponse?: ResultTableInterface,
+      ) => Promise<ResponseTableLineItemInterface>);
   fullWidth?: boolean;
+  cacheItemName?: string;
   add?: TableAddInterface;
   removeItem?: Function;
   search?: Function;

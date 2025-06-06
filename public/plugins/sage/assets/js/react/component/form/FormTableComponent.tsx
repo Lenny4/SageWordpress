@@ -15,6 +15,7 @@ import { getTranslations } from "../../../functions/translations";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 import { FormFieldComponent } from "./fields/FormFieldComponent";
+import { ResultTableInterface } from "../list/ListSageEntityComponent";
 
 let translations: any = getTranslations();
 
@@ -63,11 +64,27 @@ export const FormTableComponent: React.FC<State> = ({
 
   const searchItems = () => {
     if (typeof table.items === "function") {
-      setSearching(true);
+      const useLocalItems = searchText === "" && table.cacheItemName;
+      const cacheItemName = `searchItems-${table.cacheItemName}`;
+      let cacheResponse: ResultTableInterface | undefined = undefined;
+      if (useLocalItems) {
+        try {
+          cacheResponse = JSON.parse(localStorage.getItem(cacheItemName));
+          table.items(searchText, cacheResponse).then((r) => {
+            setItems(r.items);
+          });
+        } catch (e) {
+          // nothing
+        }
+      }
+      setSearching(!cacheResponse);
       table
         .items(searchText)
         .then((r) => {
-          setItems(r);
+          if (useLocalItems) {
+            localStorage.setItem(cacheItemName, JSON.stringify(r.response));
+          }
+          setItems(r.items);
         })
         .catch(() => {
           setItems([]);
@@ -79,9 +96,12 @@ export const FormTableComponent: React.FC<State> = ({
   };
 
   React.useEffect(() => {
-    const timeoutTyping = setTimeout(() => {
-      searchItems();
-    }, 500);
+    const timeoutTyping = setTimeout(
+      () => {
+        searchItems();
+      },
+      searchText === "" ? 0 : 500,
+    );
     return () => clearTimeout(timeoutTyping);
   }, [searchText]);
 

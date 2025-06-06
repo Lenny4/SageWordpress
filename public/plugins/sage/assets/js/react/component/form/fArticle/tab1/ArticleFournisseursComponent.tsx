@@ -9,6 +9,7 @@ import {
 } from "../../../../../functions/getMetadata";
 import {
   FormInterface,
+  ResponseTableLineItemInterface,
   TableLineItemInterface,
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
@@ -45,7 +46,8 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
       fArtfournisses.find((x) => x.afPrincipal.toString() === "1")?.ctNum ?? ""
     );
   };
-  const [selectedCtNum, setSelectedCtNum] = React.useState<string>(getSelectedCtNum());
+  const [selectedCtNum, setSelectedCtNum] =
+    React.useState<string>(getSelectedCtNum());
   const onAfPrincipalChanged: TriggerFormContentChanged = (name, newValue) => {
     setSelectedCtNum(newValue);
   };
@@ -184,9 +186,38 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       ];
                     });
                   },
+                  cacheItemName: "fFournisseurs",
                   items: async (
                     search: string = "",
-                  ): Promise<TableLineItemInterface[]> => {
+                    cacheResponse: ResultTableInterface = undefined,
+                  ): Promise<ResponseTableLineItemInterface> => {
+                    const responseToData = (
+                      thisResponse: ResultTableInterface,
+                    ) => {
+                      return thisResponse.items.map(
+                        (fComptet: FComptetInterface) => {
+                          return {
+                            item: fComptet,
+                            identifier: fComptet.ctNum,
+                            lines: [
+                              {
+                                Dom: (
+                                  <>
+                                    {fComptet.ctNum} {fComptet.ctIntitule}
+                                  </>
+                                ),
+                              },
+                            ],
+                          };
+                        },
+                      );
+                    };
+                    if (cacheResponse) {
+                      return {
+                        items: responseToData(cacheResponse),
+                        response: cacheResponse,
+                      };
+                    }
                     const params = new URLSearchParams({
                       "filter_field[0]": "ctType",
                       "filter_type[0]": "eq",
@@ -205,25 +236,17 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                     );
                     if (response.ok) {
                       const data: ResultTableInterface = await response.json();
-                      return data.items.map((fComptet: FComptetInterface) => {
-                        return {
-                          item: fComptet,
-                          identifier: fComptet.ctNum,
-                          lines: [
-                            {
-                              Dom: (
-                                <>
-                                  {fComptet.ctNum} {fComptet.ctIntitule}
-                                </>
-                              ),
-                            },
-                          ],
-                        };
-                      });
+                      return {
+                        items: responseToData(data),
+                        response: data,
+                      };
                     } else {
                       // todo toast r
                     }
-                    return [];
+                    return {
+                      items: null,
+                      response: null,
+                    };
                   },
                 },
               },
