@@ -1043,9 +1043,17 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return [$message, $order];
     }
 
-    public function importFArticleFromSage(string $arRef, bool $ignorePingApi = false, array $headers = [], bool $ignoreCanImport = false): array
+    public function importFArticleFromSage(
+        string        $arRef,
+        bool          $ignorePingApi =
+        false, array  $headers = [],
+        bool          $ignoreCanImport = false,
+        stdClass|null $fArticle = null,
+    ): array
     {
-        $fArticle = $this->sage->sageGraphQl->getFArticle($arRef, ignorePingApi: $ignorePingApi);
+        if (is_null($fArticle)) {
+            $fArticle = $this->sage->sageGraphQl->getFArticle($arRef, ignorePingApi: $ignorePingApi);
+        }
         if (is_null($fArticle)) {
             return [null, null, "<div class='error'>
                         " . __("L'article n'a pas pu être importé", Sage::TOKEN) . "

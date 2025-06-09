@@ -869,8 +869,9 @@ final class SageSettings
             ];
             $responseError = null;
             $updateApi = $product->get_meta('_' . Sage::TOKEN . '_updateApi'); // returns "" if not exists in bdd
+            $fArticle = $sageSettings->sage->sageGraphQl->getFArticle($arRef);
             if (!empty($arRef) && empty($updateApi)) {
-                [$response, $responseError, $message, $postId] = $sageSettings->sage->sageWoocommerce->importFArticleFromSage($arRef, ignoreCanImport: true);
+                [$response, $responseError, $message, $postId] = $sageSettings->sage->sageWoocommerce->importFArticleFromSage($arRef, ignoreCanImport: true, fArticle: $fArticle);
                 if (is_null($responseError)) {
                     $product->read_meta_data(true);
                     $meta['new'] = $product->get_meta_data();
@@ -911,6 +912,7 @@ final class SageSettings
                 }
             }
             echo $sageSettings->sage->twig->render('woocommerce/tabs/sage.html.twig', [
+                'fArticle' => $fArticle,
                 'pCattarifs' => $sageSettings->sage->sageGraphQl->getPCattarifs(),
                 'fCatalogues' => $sageSettings->sage->sageGraphQl->getFCatalogues(),
                 'pCatComptas' => $sageSettings->sage->sageGraphQl->getPCatComptas(),
@@ -919,9 +921,6 @@ final class SageSettings
                 'fDepots' => $sageSettings->sage->sageGraphQl->getFDepots(),
                 'fPays' => $sageSettings->sage->sageGraphQl->getFPays(),
                 'pPreference' => $sageSettings->sage->sageGraphQl->getPPreference(),
-                'fGlossaires' => array_values(array_filter($sageSettings->sage->sageGraphQl->getFGlossaires(), static function (stdClass $fGlossaire) {
-                    return $fGlossaire->glDomaine === GlossaireDomaineTypeEnum::GlossaireDomaineTypeArticle->value;
-                })),
                 'panelId' => self::TARGET_PANEL,
                 'responseError' => $responseError,
                 'metaChanges' => $meta['changes'],

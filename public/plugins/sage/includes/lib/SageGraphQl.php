@@ -910,6 +910,7 @@ final class SageGraphQl
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                 'glNo',
             ]),
+            'glNoNavigation' => $this->_getFGlossaireSelectionSet()
         ];
     }
 

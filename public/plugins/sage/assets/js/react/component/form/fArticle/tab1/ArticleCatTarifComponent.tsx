@@ -54,7 +54,6 @@ export const ArticleCatTarifComponent = React.forwardRef(
           ) === undefined
         ) {
           result.push({
-            ctNum: pCattarif.ctNum,
             acCategorie: pCattarif.cbIndice,
             acCoef: 1,
             acPrixVen: 0,
@@ -62,6 +61,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
           });
         }
       }
+      result.sort((a, b) => a.acCategorie - b.acCategorie);
       return result;
     });
 

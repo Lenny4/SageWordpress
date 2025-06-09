@@ -195,7 +195,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       thisResponse: ResultTableInterface,
                     ) => {
                       return thisResponse.items.map(
-                        (fComptet: FComptetInterface) => {
+                        (fComptet: FComptetInterface): TableLineItemInterface => {
                           return {
                             item: fComptet,
                             identifier: fComptet.ctNum,

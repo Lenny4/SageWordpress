@@ -10,6 +10,7 @@ import {
 import { getListObjectSageMetadata } from "../../../../../functions/getMetadata";
 import {
   FormInterface,
+  ResponseTableLineItemInterface,
   TableLineItemInterface,
 } from "../../../../../interface/InputInterface";
 import { FormContentComponent } from "../../FormContentComponent";
@@ -19,21 +20,40 @@ import {
 } from "../../../../../functions/form";
 import { FormInput } from "../../fields/FormInput";
 import { TOKEN } from "../../../../../token";
+import { ResultTableInterface } from "../../../list/ListSageEntityComponent";
 
 let translations: any = getTranslations();
+const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
+const wpnonce = $(`[data-${TOKEN}-nonce]`).attr(`data-${TOKEN}-nonce`);
 
 const articleMeta: MetadataInterface[] = JSON.parse(
   $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 
-const fGlossaires: FGlossaireInterface[] = JSON.parse(
-  $(`[data-${TOKEN}-fglossaires]`).attr(`data-${TOKEN}-fglossaires`) ?? "[]",
+const fArticle: any = JSON.parse(
+  $(`[data-${TOKEN}-farticle]`).attr(`data-${TOKEN}-farticle`) ?? "{}",
 );
 
 export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
   const prefix = "fArtglosses";
   const [fArtglosses, setFArtglosses] = React.useState<FArtglosseInterface[]>(
-    getListObjectSageMetadata(prefix, articleMeta, "glNo"),
+    () => {
+      const result: FArtglosseInterface[] = getListObjectSageMetadata(
+        prefix,
+        articleMeta,
+        "glNo",
+      );
+      for (const fArtglosse of result) {
+        fArtglosse.glNoNavigation = {
+          glText: "",
+          glIntitule: "[ERR]",
+          glNo: fArtglosse.glNo,
+          glDomaine: 0,
+          ...(fArticle?.fArtglosses?.[fArtglosse.glNo]?.glNoNavigation ?? {}),
+        };
+      }
+      return result;
+    },
   );
 
   const getForm = (): FormInterface => {
@@ -68,6 +88,7 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                         ...v,
                         {
                           glNo: fGlossaire.glNo,
+                          glNoNavigation: fGlossaire,
                         },
                       ];
                     });
@@ -80,46 +101,77 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                       item.glText.toLowerCase().includes(search.toLowerCase())
                     );
                   },
-                  items: fGlossaires
-                    .filter(
-                      (fGlossaire) =>
-                        fArtglosses.find(
-                          (fArtglosse) =>
-                            fArtglosse.glNo.toString() ===
-                            fGlossaire.glNo.toString(),
-                        ) === undefined,
-                    )
-                    .map((fGlossaire): TableLineItemInterface => {
+                  localStorageItemName: "fGlossaires",
+                  items: async (
+                    search: string = "",
+                    cacheResponse: ResultTableInterface = undefined,
+                  ): Promise<ResponseTableLineItemInterface> => {
+                    const responseToData = (
+                      thisResponse: ResultTableInterface,
+                    ) => {
+                      return thisResponse.items.map(
+                        (
+                          fGlossaire: FGlossaireInterface,
+                        ): TableLineItemInterface => {
+                          return {
+                            item: fGlossaire,
+                            identifier: fGlossaire.glNo.toString(),
+                            lines: [
+                              {
+                                Dom: (
+                                  <>
+                                    {fGlossaire.glIntitule} {fGlossaire.glText}
+                                  </>
+                                ),
+                              },
+                            ],
+                          };
+                        },
+                      );
+                    };
+                    if (cacheResponse) {
                       return {
-                        item: fGlossaire,
-                        identifier: fGlossaire.glNo.toString(),
-                        lines: [
-                          {
-                            Dom: <span>{fGlossaire.glIntitule}</span>,
-                          },
-                          {
-                            Dom: (
-                              <Tooltip title={fGlossaire.glText} arrow>
-                                <span>
-                                  {fGlossaire.glText.length > 102
-                                    ? fGlossaire.glText.slice(0, 102) + "..."
-                                    : fGlossaire.glText}
-                                </span>
-                              </Tooltip>
-                            ),
-                          },
-                        ],
+                        items: responseToData(cacheResponse),
+                        response: cacheResponse,
                       };
-                    }),
+                    }
+                    const params = new URLSearchParams({
+                      "filter_field[0]": "glText",
+                      "filter_type[0]": "contains",
+                      "filter_value[0]": search,
+
+                      "filter_field[1]": "glIntitule",
+                      "filter_type[1]": "contains",
+                      "filter_value[1]": search,
+
+                      where_condition: "or",
+                      per_page: "100",
+                    });
+                    const response = await fetch(
+                      siteUrl +
+                        `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search-entities/fGlossaires`)}&${params}&_wpnonce=${wpnonce}`,
+                    );
+                    if (response.ok) {
+                      const data: ResultTableInterface = await response.json();
+                      return {
+                        items: responseToData(data),
+                        response: data,
+                      };
+                    } else {
+                      // todo toast r
+                    }
+                    return {
+                      items: null,
+                      response: null,
+                    };
+                  },
                 },
               },
               items: fArtglosses.map((fArtglosse): TableLineItemInterface => {
-                const fGlossaire = fGlossaires.find(
-                  (f) => f.glNo.toString() === fArtglosse.glNo.toString(),
-                );
+                const fGlossaire = fArtglosse.glNoNavigation;
                 return {
-                  item: fGlossaire,
-                  identifier: fGlossaire.glNo.toString(),
+                  item: fArtglosse,
+                  identifier: fArtglosse.glNo.toString(),
                   lines: [
                     {
                       field: {

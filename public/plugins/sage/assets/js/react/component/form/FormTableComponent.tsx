@@ -69,7 +69,9 @@ export const FormTableComponent: React.FC<State> = ({
       let cacheResponse: ResultTableInterface | undefined = undefined;
       if (useLocalItems) {
         try {
-          cacheResponse = JSON.parse(localStorage.getItem(localStorageItemName));
+          cacheResponse = JSON.parse(
+            localStorage.getItem(localStorageItemName),
+          );
           table.items(searchText, cacheResponse).then((r) => {
             setItems(r.items);
           });
@@ -82,7 +84,10 @@ export const FormTableComponent: React.FC<State> = ({
         .items(searchText)
         .then((r) => {
           if (useLocalItems) {
-            localStorage.setItem(localStorageItemName, JSON.stringify(r.response));
+            localStorage.setItem(
+              localStorageItemName,
+              JSON.stringify(r.response),
+            );
           }
           setItems(r.items);
         })
@@ -112,7 +117,12 @@ export const FormTableComponent: React.FC<State> = ({
   return (
     <>
       {table.add && (
-        <Dialog onClose={handleClose} open={open} maxWidth="lg">
+        <Dialog
+          onClose={handleClose}
+          open={open}
+          maxWidth="lg"
+          style={{ zIndex: 10_000 }}
+        >
           <DialogTitle>{translations.sentences.addItem}</DialogTitle>
           <DialogContent>
             <FormTableComponent

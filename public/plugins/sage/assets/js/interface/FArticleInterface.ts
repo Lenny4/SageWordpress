@@ -3,7 +3,7 @@ export interface FArticleClientInterface {
   acPrixVen: number;
   acCoef: number;
   acPrixTtc?: number;
-  ctNum: string;
+  ctNum?: string;
   acRemise: number;
 }
 
@@ -28,6 +28,7 @@ export interface FGlossaireInterface {
 
 export interface FArtglosseInterface {
   glNo: number;
+  glNoNavigation: FGlossaireInterface;
 }
 
 export interface FArtstockInterface {
