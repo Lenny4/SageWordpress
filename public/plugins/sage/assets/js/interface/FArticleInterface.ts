@@ -2,9 +2,14 @@ export interface FArticleClientInterface {
   acCategorie: number;
   acPrixVen: number;
   acCoef: number;
-  acPrixTtc: number;
+  acPrixTtc?: number;
   ctNum: string;
   acRemise: number;
+}
+
+export interface PCattarifInterface {
+  cbIndice: number;
+  ctIntitule: string;
 }
 
 export interface FCatalogueInterface {

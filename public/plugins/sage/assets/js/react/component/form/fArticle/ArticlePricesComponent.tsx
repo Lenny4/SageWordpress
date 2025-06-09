@@ -7,7 +7,10 @@ import Typography from "@mui/material/Typography";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { getTranslations } from "../../../../functions/translations";
 import { MetadataInterface } from "../../../../interface/WordpressInterface";
-import { FArticlePriceInterface } from "../../../../interface/FArticleInterface";
+import {
+  FArticlePriceInterface,
+  PCattarifInterface,
+} from "../../../../interface/FArticleInterface";
 import { PriceComponent } from "../../PriceComponent";
 import { TOKEN } from "../../../../token";
 
@@ -15,7 +18,7 @@ let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
   $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
-const pCattarifs: any[] = Object.values(
+const pCattarifs: PCattarifInterface[] = Object.values(
   JSON.parse(
     $(`[data-${TOKEN}-pcattarifs]`).attr(`data-${TOKEN}-pcattarifs`) ?? "[]",
   ),

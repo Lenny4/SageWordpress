@@ -186,7 +186,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       ];
                     });
                   },
-                  cacheItemName: "fFournisseurs",
+                  localStorageItemName: "fFournisseurs",
                   items: async (
                     search: string = "",
                     cacheResponse: ResultTableInterface = undefined,
@@ -232,7 +232,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                     });
                     const response = await fetch(
                       siteUrl +
-                        `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search/sage-entity-menu/fComptets`)}&${params}&_wpnonce=${wpnonce}`,
+                        `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search-entities/fComptets`)}&${params}&_wpnonce=${wpnonce}`,
                     );
                     if (response.ok) {
                       const data: ResultTableInterface = await response.json();

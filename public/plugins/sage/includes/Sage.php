@@ -591,6 +591,27 @@ final class Sage
 
         // region api endpoint
         add_action('rest_api_init', static function () use ($sageWoocommerce, $sageGraphQl, $settings) {
+            register_rest_route(self::TOKEN . '/v1', '/search-entities/(?P<entityName>[A-Za-z0-9]+)', [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) use ($sageGraphQl, $settings) {
+                    $entityName = $request['entityName'];
+                    $selectionSet = '_get' . ucfirst(substr($entityName, 0, -1)) . 'SelectionSet';
+                    $result = $sageGraphQl->searchEntities(
+                        $entityName,
+                        $_GET,
+                        $sageGraphQl->{$selectionSet}(),
+                        ignorePingApi: true,
+                    );
+                    if (isset($result->data->{$entityName})) {
+                        return new WP_REST_Response($result->data->{$entityName}, Response::HTTP_OK);
+                    }
+                    // todo return error message
+                    return new WP_REST_Response(null, Response::HTTP_INTERNAL_SERVER_ERROR);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can(SageSettings::$capability);
+                },
+            ]);
             register_rest_route(self::TOKEN . '/v1', '/search/sage-entity-menu/(?P<sageEntityMenuName>[A-Za-z0-9]+)', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) use ($sageGraphQl, $settings) {

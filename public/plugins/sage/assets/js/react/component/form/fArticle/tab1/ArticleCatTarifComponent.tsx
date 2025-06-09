@@ -41,9 +41,29 @@ const pCattarifs: any[] = JSON.parse(
 export const ArticleCatTarifComponent = React.forwardRef(
   ({ arPrixAch }: State, ref) => {
     const prefix = "fArtclients";
-    const [fArtclients] = React.useState<FArticleClientInterface[]>(
-      getListObjectSageMetadata(prefix, articleMeta, "acCategorie"),
-    );
+    const [fArtclients] = React.useState<FArticleClientInterface[]>(() => {
+      const result: FArticleClientInterface[] = getListObjectSageMetadata(
+        prefix,
+        articleMeta,
+        "acCategorie",
+      );
+      for (const pCattarif of Object.values(pCattarifs)) {
+        if (
+          result.find(
+            (x) => x.acCategorie.toString() === pCattarif.cbIndice.toString(),
+          ) === undefined
+        ) {
+          result.push({
+            ctNum: pCattarif.ctNum,
+            acCategorie: pCattarif.cbIndice,
+            acCoef: 1,
+            acPrixVen: 0,
+            acRemise: 0,
+          });
+        }
+      }
+      return result;
+    });
 
     const [acCoefs, setACCoefs] = React.useState<any>(() => {
       const result: any = {};

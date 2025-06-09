@@ -33,7 +33,7 @@ export interface TableInterface {
         cacheResponse?: ResultTableInterface,
       ) => Promise<ResponseTableLineItemInterface>);
   fullWidth?: boolean;
-  cacheItemName?: string;
+  localStorageItemName?: string;
   add?: TableAddInterface;
   removeItem?: Function;
   search?: Function;

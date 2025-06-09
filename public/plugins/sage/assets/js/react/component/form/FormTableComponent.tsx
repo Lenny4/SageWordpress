@@ -64,12 +64,12 @@ export const FormTableComponent: React.FC<State> = ({
 
   const searchItems = () => {
     if (typeof table.items === "function") {
-      const useLocalItems = searchText === "" && table.cacheItemName;
-      const cacheItemName = `searchItems-${table.cacheItemName}`;
+      const useLocalItems = searchText === "" && table.localStorageItemName;
+      const localStorageItemName = `searchItems-${table.localStorageItemName}`;
       let cacheResponse: ResultTableInterface | undefined = undefined;
       if (useLocalItems) {
         try {
-          cacheResponse = JSON.parse(localStorage.getItem(cacheItemName));
+          cacheResponse = JSON.parse(localStorage.getItem(localStorageItemName));
           table.items(searchText, cacheResponse).then((r) => {
             setItems(r.items);
           });
@@ -82,7 +82,7 @@ export const FormTableComponent: React.FC<State> = ({
         .items(searchText)
         .then((r) => {
           if (useLocalItems) {
-            localStorage.setItem(cacheItemName, JSON.stringify(r.response));
+            localStorage.setItem(localStorageItemName, JSON.stringify(r.response));
           }
           setItems(r.items);
         })

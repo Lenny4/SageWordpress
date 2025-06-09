@@ -351,7 +351,7 @@ final class SageGraphQl
         }, $fields);
     }
 
-    private function _getFLivraisonSelectionSet(): array
+    public function _getFLivraisonSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
@@ -461,7 +461,7 @@ final class SageGraphQl
         return $this->pDossier;
     }
 
-    private function _getPDossierSelectionSet(): array
+    public function _getPDossierSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['dRaisonSoc']),
@@ -779,7 +779,7 @@ final class SageGraphQl
         return $this->pExpeditions;
     }
 
-    private function _getPExpeditionSelectionSet(): array
+    public function _getPExpeditionSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
@@ -870,7 +870,7 @@ final class SageGraphQl
         ];
     }
 
-    private function _getFArtclientsSelectionSet(): array
+    public function _getFArtclientsSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
@@ -925,7 +925,7 @@ final class SageGraphQl
         ];
     }
 
-    private function _getPriceSelectionSet(): array
+    public function _getPriceSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
@@ -944,7 +944,7 @@ final class SageGraphQl
         ];
     }
 
-    private function _getFTaxeSelectionSet(): array
+    public function _getFTaxeSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
@@ -961,7 +961,7 @@ final class SageGraphQl
         ];
     }
 
-    private function _getNCatTarifSelectionSet(): array
+    public function _getNCatTarifSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
@@ -971,7 +971,7 @@ final class SageGraphQl
         ];
     }
 
-    private function _getNCatComptaSelectionSet(): array
+    public function _getNCatComptaSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
@@ -980,7 +980,7 @@ final class SageGraphQl
         ];
     }
 
-    private function _getFExpeditiongrilles(): array
+    public function _getFExpeditiongrilles(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
@@ -1030,7 +1030,7 @@ final class SageGraphQl
         return $this->pUnites;
     }
 
-    private function _getPUniteSelectionSet(): array
+    public function _getPUniteSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
@@ -1074,7 +1074,7 @@ final class SageGraphQl
         return $this->fDepots;
     }
 
-    private function _getFDepotSelectionSet(): array
+    public function _getFDepotSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
@@ -1131,7 +1131,7 @@ final class SageGraphQl
         return $this->fFamilles;
     }
 
-    private function _getFFamilleSelectionSet(): array
+    public function _getFFamilleSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
@@ -1345,14 +1345,14 @@ WHERE meta_key = %s
         return $result;
     }
 
-    private function _getFraisExpeditionSelectionSet(): array
+    public function _getFraisExpeditionSelectionSet(): array
     {
         return [
             ...$this->_getPriceSelectionSet(),
         ];
     }
 
-    private function _getFDocligneSelectionSet(
+    public function _getFDocligneSelectionSet(
         bool $getLotSerie = false,
     ): array
     {
@@ -1519,7 +1519,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $this->pCattarifs;
     }
 
-    private function _getPCattarifSelectionSet(): array
+    public function _getPCattarifSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
@@ -1565,7 +1565,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $this->fGlossaires;
     }
 
-    private function _getFGlossaireSelectionSet(): array
+    public function _getFGlossaireSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
@@ -1613,7 +1613,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $this->fCatalogues;
     }
 
-    private function _getFCatalogueSelectionSet(): array
+    public function _getFCatalogueSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
@@ -1661,7 +1661,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $this->cbSysLibres;
     }
 
-    private function _getCbSysLibreSelectionSet()
+    public function _getCbSysLibreSelectionSet()
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
@@ -1704,7 +1704,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $this->fPays;
     }
 
-    private function _getFPaySelectionSet(): array
+    public function _getFPaySelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
@@ -1794,7 +1794,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $this->pCatComptas;
     }
 
-    private function _getPCatComptaSelectionSet(): array
+    public function _getPCatComptaSelectionSet(): array
     {
         $result = [];
         foreach (PCatComptaUtils::ALL_TIERS_TYPE as $t) {
@@ -1928,7 +1928,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $this->pPreference;
     }
 
-    private function _getPPreferenceSelectionSet(): array
+    public function _getPPreferenceSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
