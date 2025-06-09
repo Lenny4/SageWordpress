@@ -21,6 +21,8 @@ import {
 import { FormInput } from "../../fields/FormInput";
 import { TOKEN } from "../../../../../token";
 import { ResultTableInterface } from "../../../list/ListSageEntityComponent";
+import { ConditionFilterInterface } from "../../../../../interface/FilterInterface";
+import { GlossaireDomaineTypeEnum } from "../../../../../enum/GlossaireDomaineTypeEnum";
 
 let translations: any = getTranslations();
 const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
@@ -48,7 +50,7 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
           glText: "",
           glIntitule: "[ERR]",
           glNo: fArtglosse.glNo,
-          glDomaine: 0,
+          glDomaine: 0, // 0 -> Article, 1 => document
           ...(fArticle?.fArtglosses?.[fArtglosse.glNo]?.glNoNavigation ?? {}),
         };
       }
@@ -135,6 +137,14 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                         response: cacheResponse,
                       };
                     }
+                    const whereCondition: ConditionFilterInterface = {
+                      andFields: {
+                        orFields: {
+                          fields: [0, 1],
+                        },
+                        fields: [2],
+                      },
+                    };
                     const params = new URLSearchParams({
                       "filter_field[0]": "glText",
                       "filter_type[0]": "contains",
@@ -144,7 +154,12 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                       "filter_type[1]": "contains",
                       "filter_value[1]": search,
 
-                      where_condition: "or",
+                      "filter_field[2]": "glDomaine",
+                      "filter_type[2]": "eq",
+                      "filter_value[2]":
+                        GlossaireDomaineTypeEnum.GlossaireDomaineTypeArticle.toString(),
+
+                      where_condition: JSON.stringify(whereCondition),
                       per_page: "100",
                     });
                     const response = await fetch(

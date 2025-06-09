@@ -644,8 +644,9 @@ final class SageGraphQl
             }
 
             if ($where !== []) {
-                $stringWhere = implode(',', $where);
-                $arguments['where'] = new RawObject('{' . ($queryParams["where_condition"] ?? 'or') . ': [' . $stringWhere . ']}');
+                $arguments['where'] = new RawObject($sageGraphQl->buildGraphQLWhereClause(
+                    $sageGraphQl->getGraphQLWhereClause($where, $queryParams["where_condition"] ?? null)[0]
+                ));
             }
 
             $query = (new Query($entityName))
@@ -704,6 +705,62 @@ final class SageGraphQl
         }
 
         return [null, $defaultSortValue];
+    }
+
+    private function buildGraphQLWhereClause(array $filter): string
+    {
+        if (!isset($filter['condition'], $filter['values']) || !is_array($filter['values'])) {
+            return '';
+        }
+
+        $logicalOperator = strtolower($filter['condition']) === 'or' ? 'or' : 'and';
+
+        $conditions = array_map(function ($value) {
+            if (is_array($value)) {
+                return $this->buildGraphQLWhereClause($value);
+            }
+
+            if (is_string($value)) {
+                return $value;
+            }
+            return '';
+        }, $filter['values']);
+
+        // Filter out empty conditions
+        $conditions = array_filter($conditions, fn($c) => !empty($c));
+
+        return '{ ' . $logicalOperator . ': [' . implode(', ', $conditions) . '] }';
+    }
+
+    private function getGraphQLWhereClause(array $where, array|string|null $whereCondition, &$result = []): array
+    {
+        if (is_null($whereCondition)) {
+            $whereCondition = 'or';
+        }
+        if (is_string($whereCondition)) {
+            if ($whereCondition === 'and' || $whereCondition === 'or') {
+                $whereCondition = [
+                    $whereCondition . 'Fields' => [
+                        'fields' => array_keys($where)
+                    ],
+                ];
+            } else {
+                $whereCondition = json_decode(stripslashes($whereCondition), true, 512, JSON_THROW_ON_ERROR);
+            }
+        }
+        if (array_key_exists('fields', $whereCondition)) {
+            foreach ($whereCondition['fields'] as $fieldIndex) {
+                $result[] = $where[$fieldIndex];
+            }
+        }
+        foreach (['or', 'and'] as $c) {
+            if (array_key_exists($c . 'Fields', $whereCondition)) {
+                $values = [];
+                $result[] = ['condition' => $c, 'values' => &$values];
+                $this->getGraphQLWhereClause($where, $whereCondition[$c . 'Fields'], $values);
+            }
+        }
+        return $result;
     }
 
     private function addKeysToCollection(array &$items, array $selectionSets, ?string $arrayKey = null): void
@@ -911,6 +968,20 @@ final class SageGraphQl
                 'glNo',
             ]),
             'glNoNavigation' => $this->_getFGlossaireSelectionSet()
+        ];
+    }
+
+    public function _getFGlossaireSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'glNo',
+                'glDomaine', // 0 -> Article, 1 => document
+            ]),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'glIntitule',
+                'glText',
+            ]),
         ];
     }
 
@@ -1564,20 +1635,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             allPages: true,
         );
         return $this->fGlossaires;
-    }
-
-    public function _getFGlossaireSelectionSet(): array
-    {
-        return [
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
-                'glNo',
-                'glDomaine', // 0 -> Article, 1 => document
-            ]),
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
-                'glIntitule',
-                'glText',
-            ]),
-        ];
     }
 
     public function getFCatalogues(
