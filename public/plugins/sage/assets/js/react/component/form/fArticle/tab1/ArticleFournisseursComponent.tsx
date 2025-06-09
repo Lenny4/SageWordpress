@@ -189,13 +189,16 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                   localStorageItemName: "fFournisseurs",
                   items: async (
                     search: string = "",
+                    page: number = 1,
                     cacheResponse: ResultTableInterface = undefined,
                   ): Promise<ResponseTableLineItemInterface> => {
                     const responseToData = (
                       thisResponse: ResultTableInterface,
                     ) => {
                       return thisResponse.items.map(
-                        (fComptet: FComptetInterface): TableLineItemInterface => {
+                        (
+                          fComptet: FComptetInterface,
+                        ): TableLineItemInterface => {
                           return {
                             item: fComptet,
                             identifier: fComptet.ctNum,
@@ -227,6 +230,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       "filter_type[1]": "contains",
                       "filter_value[1]": search,
 
+                      paged: page.toString(),
                       where_condition: "and",
                       per_page: "100",
                     });

@@ -30,6 +30,7 @@ export interface TableInterface {
     | TableLineItemInterface[]
     | ((
         search: string,
+        page?: number,
         cacheResponse?: ResultTableInterface,
       ) => Promise<ResponseTableLineItemInterface>);
   fullWidth?: boolean;

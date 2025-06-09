@@ -106,6 +106,7 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                   localStorageItemName: "fGlossaires",
                   items: async (
                     search: string = "",
+                    page: number = 1,
                     cacheResponse: ResultTableInterface = undefined,
                   ): Promise<ResponseTableLineItemInterface> => {
                     const responseToData = (
@@ -159,6 +160,7 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                       "filter_value[2]":
                         GlossaireDomaineTypeEnum.GlossaireDomaineTypeArticle.toString(),
 
+                      paged: page.toString(),
                       where_condition: JSON.stringify(whereCondition),
                       per_page: "100",
                     });

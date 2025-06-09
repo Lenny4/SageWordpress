@@ -672,6 +672,7 @@ final class SageTranslationUtils
                 'addItem' => __("Ajouter un élément.", Sage::TOKEN),
                 'addThisItem' => __("Ajouter cet élément.", Sage::TOKEN),
                 'modifySearchToFindMore' => __("Veuillez modifier votre recherche pour trouver d'autres résultats ...", Sage::TOKEN),
+                'noMoreResults' => __("Fin des résultats", Sage::TOKEN),
             ],
             'enum' => [
                 'syncWebsiteState' => [
