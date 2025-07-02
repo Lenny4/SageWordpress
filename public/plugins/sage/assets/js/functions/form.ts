@@ -4,7 +4,7 @@ import {
   FormContentInterface,
   FormInputOptions,
   FormInterface,
-  InputInterface,
+  InputInterface, OptionChangeInputInterface
 } from "../interface/InputInterface";
 import React, { Dispatch, SetStateAction } from "react";
 import { TabInterface } from "../interface/TabInterface";
@@ -56,11 +56,16 @@ export const handleChangeInputGeneric = (
   event: React.ChangeEvent<HTMLInputElement>,
   prop: any,
   setValues: Dispatch<SetStateAction<Record<string, InputInterface>>>,
+  options?: OptionChangeInputInterface,
 ) => {
   setValues((v) => {
+    let newValue = event.target.value as string;
+    if (options?.autoUppercase) {
+      newValue = newValue.toUpperCase();
+    }
     const result = {
       ...v,
-      [prop]: { ...v[prop], value: event.target.value as string, error: "" },
+      [prop]: { ...v[prop], value: newValue, error: "" },
     };
     isValidGeneric(result, setValues);
     return result;

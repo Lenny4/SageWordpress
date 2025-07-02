@@ -96,6 +96,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                           name:
                             prefix + "[" + fArtclient.ctNum + "].afRefFourniss",
                           DomField: FormInput,
+                          autoUppercase: true,
                           hideLabel: true,
                           initValues: {
                             value: getSageMetadata(

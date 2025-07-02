@@ -86,6 +86,7 @@ export interface FieldInterface<
   name: string;
   DomField: any;
   readOnly?: boolean;
+  autoUppercase?: boolean;
   cannotBeChangeOnWebsite?: boolean;
   tooltip?: string;
   hideLabel?: boolean;
@@ -106,3 +107,8 @@ export type FormInputOptions = {
   value: string;
   disabled?: boolean;
 };
+
+export interface OptionChangeInputInterface {
+  autoUppercase?: boolean;
+}
+

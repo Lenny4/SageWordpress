@@ -25,6 +25,7 @@ export const FormInput = React.forwardRef(
       tooltip,
       initValues,
       triggerFormContentChanged,
+      autoUppercase,
     }: FieldInterface,
     ref,
   ) => {
@@ -32,12 +33,16 @@ export const FormInput = React.forwardRef(
     const [values, setValues] = React.useState({
       [name]: {
         ...initValues,
-        value: initValues.value.toString(),
+        value: autoUppercase
+          ? initValues.value.toString().toUpperCase()
+          : initValues.value.toString(),
       },
     });
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      handleChangeInputGeneric(event, name, setValues);
+      handleChangeInputGeneric(event, name, setValues, {
+        autoUppercase: !!autoUppercase
+      });
     };
 
     useImperativeHandle(ref, () => ({

@@ -167,6 +167,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
               {
                 name: "arRaccourci",
                 DomField: FormInput,
+                autoUppercase: true,
                 initValues: {
                   value: getSageMetadata("arRaccourci", articleMeta),
                   validator: {

@@ -91,6 +91,7 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
               {
                 name: "arCodeBarre",
                 DomField: FormInput,
+                autoUppercase: true,
                 initValues: {
                   value: getSageMetadata("arCodeBarre", articleMeta),
                   validator: {
