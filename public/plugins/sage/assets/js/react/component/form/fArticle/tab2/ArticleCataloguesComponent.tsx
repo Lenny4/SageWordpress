@@ -1,9 +1,12 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { ChangeEvent, useImperativeHandle } from "react";
+import React, { ChangeEvent, useImperativeHandle, useRef } from "react";
 import { getTranslations } from "../../../../../functions/translations";
 import { MetadataInterface } from "../../../../../interface/WordpressInterface";
 import { FCatalogueInterface } from "../../../../../interface/FArticleInterface";
-import { InputInterface } from "../../../../../interface/InputInterface";
+import {
+  FormValidInterface,
+  InputInterface,
+} from "../../../../../interface/InputInterface";
 import { getSageMetadata } from "../../../../../functions/getMetadata";
 import Grid from "@mui/material/Grid";
 import { TOKEN } from "../../../../../token";
@@ -23,6 +26,7 @@ interface FormState {
 }
 
 export const ArticleCataloguesComponent = React.forwardRef((props, ref) => {
+  const inputRef = useRef<any>(null);
   const nbNiveau = 4;
   const getDefaultValue = (): FormState => {
     const result: FormState = {};
@@ -65,16 +69,25 @@ export const ArticleCataloguesComponent = React.forwardRef((props, ref) => {
     };
 
   useImperativeHandle(ref, () => ({
-    async isValid(): Promise<boolean> {
-      // todo
-      return false;
+    async isValid(): Promise<FormValidInterface> {
+      const valid = true;
+      return {
+        valid: valid,
+        details: [
+          {
+            valid: valid,
+            ref: ref,
+            dRef: inputRef,
+          },
+        ],
+      };
     },
   }));
 
   React.useEffect(() => {}, []);
 
   return (
-    <Grid container spacing={1}>
+    <Grid container spacing={1} ref={inputRef}>
       {Array.from({ length: nbNiveau }, (_, i) => i).map((niveau) => {
         niveau = niveau + 1;
         const disabled = niveau > 1 && values[`clNo${niveau - 1}`].value === "";

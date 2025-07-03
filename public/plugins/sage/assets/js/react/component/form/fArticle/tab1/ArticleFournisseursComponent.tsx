@@ -9,6 +9,7 @@ import {
 } from "../../../../../functions/getMetadata";
 import {
   FormInterface,
+  FormValidInterface,
   ResponseTableLineItemInterface,
   TableLineItemInterface,
   TriggerFormContentChanged,
@@ -264,7 +265,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
   const [form, setForm] = React.useState<FormInterface>(getForm());
 
   useImperativeHandle(ref, () => ({
-    async isValid(): Promise<boolean> {
+    async isValid(): Promise<FormValidInterface> {
       return await handleFormIsValid(form.content);
     },
   }));

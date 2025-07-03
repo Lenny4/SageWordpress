@@ -1,7 +1,10 @@
 import * as React from "react";
-import { useImperativeHandle } from "react";
+import { useImperativeHandle, useRef } from "react";
 import { Tooltip } from "@mui/material";
-import { FieldInterface } from "../../../../interface/InputInterface";
+import {
+  FieldInterface,
+  FormValidInterface,
+} from "../../../../interface/InputInterface";
 import {
   handleChangeInputGeneric,
   isValidGeneric,
@@ -29,6 +32,7 @@ export const FormInput = React.forwardRef(
     }: FieldInterface,
     ref,
   ) => {
+    const inputRef = useRef<any>(null);
     const nameField = `_${TOKEN}_` + name;
     const [values, setValues] = React.useState({
       [name]: {
@@ -41,13 +45,23 @@ export const FormInput = React.forwardRef(
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       handleChangeInputGeneric(event, name, setValues, {
-        autoUppercase: !!autoUppercase
+        autoUppercase: !!autoUppercase,
       });
     };
 
     useImperativeHandle(ref, () => ({
-      async isValid(): Promise<boolean> {
-        return await isValidGeneric(values, setValues);
+      async isValid(): Promise<FormValidInterface> {
+        const valid = await isValidGeneric(values, setValues);
+        return {
+          valid: valid,
+          details: [
+            {
+              valid: valid,
+              ref: ref,
+              dRef: inputRef,
+            },
+          ],
+        };
       },
     }));
 
@@ -79,6 +93,7 @@ export const FormInput = React.forwardRef(
               readOnly={readOnly || values[name].readOnly}
               onChange={handleChange}
               style={{ width: "100%" }}
+              ref={inputRef}
             />
           </div>
           <CannotBeChangeOnWebsiteComponent

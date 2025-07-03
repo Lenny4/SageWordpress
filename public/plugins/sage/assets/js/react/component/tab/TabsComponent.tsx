@@ -2,41 +2,46 @@ import React from "react";
 import Box from "@mui/material/Box";
 import { Tab, Tabs } from "@mui/material";
 import { CustomTabPanel } from "./CustomTabPanel";
-import { TabInterface } from "../../../interface/TabInterface";
-import { TabsProps } from "@mui/material/Tabs/Tabs";
+import { FormTabInterface } from "../../../interface/InputInterface";
 
 type State = {
-  tabs: TabInterface[];
-  tabProps?: TabsProps;
+  tabs: FormTabInterface;
 };
 
-export const TabsComponent = ({ tabs, tabProps }: State) => {
+export const TabsComponent = ({ tabs }: State) => {
   const [tabValue, setValue] = React.useState(
-    Number(tabProps?.defaultValue ?? 0),
+    Number(tabs.tabProps?.defaultValue ?? 0),
   );
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
+  React.useEffect(() => {
+    window.addEventListener(`sage-tabpanel-${tabs.id}`, (e) => {
+      // @ts-ignore
+      setValue(Number(e.detail));
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
-          {...tabProps}
+          {...tabs.tabProps}
           value={tabValue}
           onChange={handleChange}
           variant="scrollable"
           scrollButtons="auto"
           aria-label="scrollable auto tabs"
         >
-          {tabs.map((tab, index) => (
+          {tabs.tabs.map((tab, index) => (
             <Tab label={tab.label} key={index} />
           ))}
         </Tabs>
       </Box>
-      {tabs.map((tab, index) => (
-        <CustomTabPanel value={tabValue} index={index} key={index}>
+      {tabs.tabs.map((tab, index) => (
+        <CustomTabPanel value={tabValue} index={index} key={index} id={tabs.id}>
           {tab.dom}
         </CustomTabPanel>
       ))}

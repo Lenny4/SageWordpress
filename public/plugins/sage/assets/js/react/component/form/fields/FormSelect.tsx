@@ -1,7 +1,10 @@
 import * as React from "react";
-import { useImperativeHandle } from "react";
+import { useImperativeHandle, useRef } from "react";
 import { Tooltip } from "@mui/material";
-import { FieldInterface } from "../../../../interface/InputInterface";
+import {
+  FieldInterface,
+  FormValidInterface,
+} from "../../../../interface/InputInterface";
 import {
   handleChangeSelectGeneric,
   isValidGeneric,
@@ -28,6 +31,7 @@ export const FormSelect = React.forwardRef(
     }: FieldInterface,
     ref,
   ) => {
+    const inputRef = useRef<any>(null);
     const nameField = `_${TOKEN}_` + name;
     const [values, setValues] = React.useState({
       [name]: {
@@ -46,8 +50,18 @@ export const FormSelect = React.forwardRef(
     );
 
     useImperativeHandle(ref, () => ({
-      async isValid(): Promise<boolean> {
-        return await isValidGeneric(values, setValues);
+      async isValid(): Promise<FormValidInterface> {
+        const valid = await isValidGeneric(values, setValues);
+        return {
+          valid: valid,
+          details: [
+            {
+              valid: valid,
+              ref: ref,
+              dRef: inputRef,
+            },
+          ],
+        };
       },
     }));
 
@@ -79,6 +93,7 @@ export const FormSelect = React.forwardRef(
               onChange={handleChangeSelect}
               className={thisReadOnly ? "grayed-out-select" : ""}
               style={{ width: "100%" }}
+              ref={inputRef}
             >
               {options.map((opt, index) => {
                 return (

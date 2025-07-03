@@ -1,9 +1,12 @@
 import * as React from "react";
-import { useImperativeHandle } from "react";
+import { useImperativeHandle, useRef } from "react";
 import { IconButton, Tooltip } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import { getTranslations } from "../../../../../functions/translations";
-import { InputInterface } from "../../../../../interface/InputInterface";
+import {
+  FormValidInterface,
+  InputInterface,
+} from "../../../../../interface/InputInterface";
 import { handleChangeInputGeneric } from "../../../../../functions/form";
 import { stringValidator } from "../../../../../functions/validator";
 import { TOKEN } from "../../../../../token";
@@ -25,6 +28,7 @@ let currentArRef = "";
 
 export const ArRefInput = React.forwardRef(
   ({ isNew, defaultValue }: ArRefInputState, ref) => {
+    const inputRef = useRef<any>(null);
     const getDefaultValue = (): FormState => {
       return {
         arRef: { value: defaultValue ?? "" },
@@ -120,8 +124,18 @@ export const ArRefInput = React.forwardRef(
     };
 
     useImperativeHandle(ref, () => ({
-      async isValid(): Promise<boolean> {
-        return await isValid();
+      async isValid(): Promise<FormValidInterface> {
+        const valid = await isValid();
+        return {
+          valid: valid,
+          details: [
+            {
+              valid: valid,
+              ref: ref,
+              dRef: inputRef,
+            },
+          ],
+        };
       },
     }));
 
@@ -154,6 +168,7 @@ export const ArRefInput = React.forwardRef(
               readOnly={!isNew}
               onChange={handleChange("arRef")}
               style={{ width: "100%" }}
+              ref={inputRef}
             />
             {values.arRef.error && (
               <div className={`${TOKEN}_error_field`}>{values.arRef.error}</div>

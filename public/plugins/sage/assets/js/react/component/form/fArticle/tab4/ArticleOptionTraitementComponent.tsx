@@ -2,7 +2,10 @@
 import React, { useImperativeHandle } from "react";
 import { getTranslations } from "../../../../../functions/translations";
 import { MetadataInterface } from "../../../../../interface/WordpressInterface";
-import { FormInterface } from "../../../../../interface/InputInterface";
+import {
+  FormInterface,
+  FormValidInterface,
+} from "../../../../../interface/InputInterface";
 import { DividerText } from "../../../DividerText";
 import { getSageMetadata } from "../../../../../functions/getMetadata";
 import { FormContentComponent } from "../../FormContentComponent";
@@ -101,7 +104,7 @@ export const ArticleOptionTraitementComponent = React.forwardRef(
     const [form] = React.useState<FormInterface>(getForm());
 
     useImperativeHandle(ref, () => ({
-      async isValid(): Promise<boolean> {
+      async isValid(): Promise<FormValidInterface> {
         return await handleFormIsValid(form.content);
       },
     }));

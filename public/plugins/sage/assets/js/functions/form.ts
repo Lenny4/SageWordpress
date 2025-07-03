@@ -4,7 +4,9 @@ import {
   FormContentInterface,
   FormInputOptions,
   FormInterface,
-  InputInterface, OptionChangeInputInterface
+  FormValidInterface,
+  InputInterface,
+  OptionChangeInputInterface,
 } from "../interface/InputInterface";
 import React, { Dispatch, SetStateAction } from "react";
 import { TabInterface } from "../interface/TabInterface";
@@ -109,6 +111,24 @@ export const getKeyFromName = (name: string) => {
     .replace("]", "");
 };
 
+const _scrollElementIntoWindowView = (
+  el: any,
+  behavior: ScrollBehavior = "smooth",
+) => {
+  if (!el) return;
+
+  const rect = el.getBoundingClientRect();
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const viewportHeight = window.innerHeight;
+  const targetScroll =
+    scrollTop + rect.top - viewportHeight / 2 + rect.height / 2;
+
+  window.scrollTo({
+    top: targetScroll,
+    behavior,
+  });
+};
+
 export const onSubmitForm = (
   form: FormInterface,
   formSelector: string,
@@ -125,8 +145,31 @@ export const onSubmitForm = (
       onStart();
     }
     handleFormIsValid(form.content)
-      .then((result: boolean) => {
-        console.log("result", result);
+      .then((result) => {
+        if (!result.valid) {
+          const domToScroll = result.details.find(
+            (x) => x?.dRef?.current && !x.valid,
+          )?.dRef?.current;
+          if (domToScroll) {
+            const tabParents = $(domToScroll)
+              .parents("[id^='sage-tabpanel']")
+              .toArray();
+            for (const tabParent of tabParents) {
+              const str = tabParent.id;
+              const lastDashIndex = str.lastIndexOf("-");
+              const firstPart = str.substring(0, lastDashIndex);
+              const lastDigit = str.substring(lastDashIndex + 1);
+              window.dispatchEvent(
+                new CustomEvent(firstPart, { detail: lastDigit }),
+              );
+            }
+            setTimeout(() => {
+              _scrollElementIntoWindowView(domToScroll);
+            }, 500);
+          }
+          return;
+        }
+        console.log("all good", result);
         // let hasError = false;
         // for (const tab of tabs) {
         //   if (tab.ref.current) {
@@ -148,57 +191,87 @@ export const onSubmitForm = (
 
 export const handleFormIsValid = async (
   formContent: FormContentInterface,
-  result: boolean = true,
-): Promise<boolean> => {
-  if (formContent.tabs?.tabs) {
-    for (const tab of formContent.tabs.tabs) {
-      result = (await _validateTab(tab)) && result;
-    }
+  result: FormValidInterface | null = null,
+): Promise<FormValidInterface> => {
+  if (result === null) {
+    result = {
+      valid: true,
+      details: [],
+    };
   }
   if (formContent.Dom) {
-    result = (await _validateDom(formContent.Dom)) && result;
+    _mergeFormValidResult(result, await _validateDom(formContent.Dom));
   }
   if (formContent.fields) {
     for (const field of formContent.fields) {
-      result = (await _validateField(field)) && result;
+      _mergeFormValidResult(result, await _validateField(field));
     }
   }
   if (formContent.table && typeof formContent.table.items !== "function") {
     for (const item of formContent.table.items) {
       for (const line of item.lines) {
         if (line.field) {
-          result = (await _validateField(line.field)) && result;
+          _mergeFormValidResult(result, await _validateField(line.field));
         }
         if (line.Dom) {
-          result = (await _validateDom(line.Dom)) && result;
+          _mergeFormValidResult(result, await _validateDom(line.Dom));
         }
       }
     }
   }
+  if (formContent.tabs?.tabs) {
+    for (const [index, tab] of formContent.tabs.tabs.entries()) {
+      _mergeFormValidResult(result, await _validateTab(tab));
+    }
+  }
   if (formContent.children) {
     for (const child of formContent.children) {
-      result = (await handleFormIsValid(child, result)) && result;
+      await handleFormIsValid(child, result);
     }
   }
   return result;
 };
 
-const _validateTab = async (tab: TabInterface): Promise<boolean> => {
+const _mergeFormValidResult = (
+  a: FormValidInterface,
+  b: FormValidInterface,
+) => {
+  a.valid = a.valid && b.valid;
+  a.details = a.details.concat(b.details);
+};
+
+const _validateTab = async (tab: TabInterface): Promise<FormValidInterface> => {
   return await _validateDom(tab.dom);
 };
 
-const _validateField = async (field: FieldInterface): Promise<boolean> => {
-  if (field.initValues.validator) {
-    return (await field?.ref?.current?.isValid()) ?? true;
+const _validateField = async (
+  field: FieldInterface,
+): Promise<FormValidInterface> => {
+  if (field?.ref?.current) {
+    if (field.initValues.validator) {
+      const r: FormValidInterface = await field.ref.current.isValid();
+      if (r) {
+        return r;
+      }
+    }
   }
-  return true;
+  return {
+    valid: true,
+    details: [],
+  };
 };
 
-const _validateDom = async (dom: any): Promise<boolean> => {
-  if (!dom.ref?.current?.isValid) {
-    return true;
+const _validateDom = async (dom: any): Promise<FormValidInterface> => {
+  if (dom.ref?.current?.isValid) {
+    const r: FormValidInterface = await dom.ref.current.isValid();
+    if (r) {
+      return r;
+    }
   }
-  return await dom.ref.current.isValid();
+  return {
+    valid: true,
+    details: [],
+  };
 };
 
 export const createFormContent = (formContent: FormContentInterface) => {

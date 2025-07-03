@@ -6,7 +6,10 @@ import { ArticleTab1Component } from "./tab1/ArticleTab1Component";
 import { ArticleTab2Component } from "./tab2/ArticleTab2Component";
 import { ArticleTab4Component } from "./tab4/ArticleTab4Component";
 import { getTranslations } from "../../../../functions/translations";
-import { FormInterface } from "../../../../interface/InputInterface";
+import {
+  FormInterface,
+  FormValidInterface,
+} from "../../../../interface/InputInterface";
 import {
   createFormContent,
   handleFormIsValid,
@@ -37,6 +40,7 @@ export const ArticleComponent = React.forwardRef((props, ref) => {
               size: { xs: 12 },
             },
             tabs: {
+              id: "main-article",
               tabs: [
                 {
                   label: translations.words.identification,
@@ -75,7 +79,7 @@ export const ArticleComponent = React.forwardRef((props, ref) => {
   );
 
   useImperativeHandle(ref, () => ({
-    async isValid(): Promise<boolean> {
+    async isValid(): Promise<FormValidInterface> {
       return await handleFormIsValid(form.content);
     },
   }));

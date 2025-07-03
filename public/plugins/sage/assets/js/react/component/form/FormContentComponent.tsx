@@ -48,7 +48,7 @@ export const FormContentComponent: React.FC<State> = ({
             ))}
           </>
         )}
-        {tabs && <TabsComponent tabs={tabs.tabs} tabProps={tabs.tabProps} />}
+        {tabs && <TabsComponent tabs={tabs} />}
       </Container>
     </>
   );

@@ -5,7 +5,10 @@ import { ArticleCataloguesComponent } from "./ArticleCataloguesComponent";
 import { ArticleGlossairesComponent } from "./ArticleGlossairesComponent";
 import { getTranslations } from "../../../../../functions/translations";
 import { MetadataInterface } from "../../../../../interface/WordpressInterface";
-import { FormInterface } from "../../../../../interface/InputInterface";
+import {
+  FormInterface,
+  FormValidInterface,
+} from "../../../../../interface/InputInterface";
 import { DividerText } from "../../../DividerText";
 import { getSageMetadata } from "../../../../../functions/getMetadata";
 import { FormContentComponent } from "../../FormContentComponent";
@@ -16,7 +19,7 @@ import {
 import { FormInput } from "../../fields/FormInput";
 import { FormSelect } from "../../fields/FormSelect";
 import { TOKEN } from "../../../../../token";
-import {stringValidator} from "../../../../../functions/validator";
+import { stringValidator } from "../../../../../functions/validator";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
@@ -85,7 +88,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                       maxLength: 69,
                       isReference: true,
                     },
-                  }
+                  },
                 },
               },
             ],
@@ -106,7 +109,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                       maxLength: 69,
                       isReference: true,
                     },
-                  }
+                  },
                 },
               },
             ],
@@ -124,7 +127,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                       maxLength: 25,
                       isReference: true,
                     },
-                  }
+                  },
                 },
               },
               {
@@ -138,7 +141,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                       maxLength: 45,
                       isReference: true,
                     },
-                  }
+                  },
                 },
               },
             ],
@@ -176,7 +179,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                       maxLength: 7,
                       isReference: true,
                     },
-                  }
+                  },
                 },
               },
             ],
@@ -204,7 +207,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
   });
 
   useImperativeHandle(ref, () => ({
-    async isValid(): Promise<boolean> {
+    async isValid(): Promise<FormValidInterface> {
       return await handleFormIsValid(form.content);
     },
   }));

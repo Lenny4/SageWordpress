@@ -2,7 +2,10 @@
 import React, { useImperativeHandle } from "react";
 import Grid from "@mui/material/Grid";
 import { getTranslations } from "../../../../../functions/translations";
-import { FormInterface } from "../../../../../interface/InputInterface";
+import {
+  FormInterface,
+  FormValidInterface,
+} from "../../../../../interface/InputInterface";
 import { FormContentComponent } from "../../FormContentComponent";
 import {
   createFormContent,
@@ -33,7 +36,7 @@ export const ArticleTab3Component = React.forwardRef((props, ref) => {
   });
 
   useImperativeHandle(ref, () => ({
-    async isValid(): Promise<boolean> {
+    async isValid(): Promise<FormValidInterface> {
       return await handleFormIsValid(form.content);
     },
   }));

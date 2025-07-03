@@ -12,6 +12,7 @@ import {
 } from "../../../../../functions/getMetadata";
 import {
   FormInterface,
+  FormValidInterface,
   TableLineItemInterface,
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
@@ -48,7 +49,8 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
           ?.deNo?.toString() ?? ""
       );
     };
-    const [selectedDeNo, setDefaultDeNo] = React.useState<string>(getDefaultDeNo());
+    const [selectedDeNo, setDefaultDeNo] =
+      React.useState<string>(getDefaultDeNo());
     const onAsPrincipalChanged: TriggerFormContentChanged = (
       name,
       newValue,
@@ -209,7 +211,7 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
     const [form, setForm] = React.useState<FormInterface>(getForm());
 
     useImperativeHandle(ref, () => ({
-      async isValid(): Promise<boolean> {
+      async isValid(): Promise<FormValidInterface> {
         return await handleFormIsValid(form.content);
       },
     }));

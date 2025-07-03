@@ -10,6 +10,7 @@ import {
 } from "../../../../../functions/getMetadata";
 import {
   FormInterface,
+  FormValidInterface,
   TableLineItemInterface,
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
@@ -196,7 +197,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
     const [form, setForm] = React.useState<FormInterface>(getForm());
 
     useImperativeHandle(ref, () => ({
-      async isValid(): Promise<boolean> {
+      async isValid(): Promise<FormValidInterface> {
         return await handleFormIsValid(form.content);
       },
     }));

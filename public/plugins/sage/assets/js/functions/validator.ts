@@ -47,7 +47,7 @@ export const numberValidator = async ({
   minValue?: number;
 }): Promise<string> => {
   const isEmpty = value === "" || value === null || value === undefined;
-  if (canBeEmpty !== false && isEmpty) {
+  if (canBeEmpty !== true && isEmpty) {
     return "Ce champ ne peut pas être vide";
   }
   if (isEmpty) return ""; // allowed to be empty

@@ -5,6 +5,7 @@ import { getTranslations } from "../../../../../functions/translations";
 import { MetadataInterface } from "../../../../../interface/WordpressInterface";
 import {
   FormInterface,
+  FormValidInterface,
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
 import {
@@ -127,6 +128,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                     functionName: stringValidator,
                     params: {
                       maxLength: 69,
+                      canBeEmpty: false,
                     },
                   },
                 },
@@ -333,6 +335,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
               size: { xs: 12 },
             },
             tabs: {
+              id: "tab1-sub",
               tabs: [
                 {
                   label: translations.words.nCatTarif,
@@ -360,7 +363,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
   const [form, setForm] = React.useState<FormInterface>(getForm());
 
   useImperativeHandle(ref, () => ({
-    async isValid(): Promise<boolean> {
+    async isValid(): Promise<FormValidInterface> {
       return await handleFormIsValid(form.content);
     },
   }));

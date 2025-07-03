@@ -1,9 +1,12 @@
 import * as React from "react";
-import { useImperativeHandle } from "react";
+import { useImperativeHandle, useRef } from "react";
 import { IconButton, Tooltip } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import { getTranslations } from "../../../../../functions/translations";
-import { InputInterface } from "../../../../../interface/InputInterface";
+import {
+  FormValidInterface,
+  InputInterface,
+} from "../../../../../interface/InputInterface";
 import { handleChangeInputGeneric } from "../../../../../functions/form";
 import { TOKEN } from "../../../../../token";
 import { numberValidator } from "../../../../../functions/validator";
@@ -28,6 +31,7 @@ export const AcPrixVenInput = React.forwardRef(
     { defaultValue, acCategorie, acCoef, arPrixAch }: AcPrixVenInputState,
     ref,
   ) => {
+    const inputRef = useRef<any>(null);
     acCoef = Number(acCoef);
     arPrixAch = Number(arPrixAch);
     const getExpectedAcPrixVen = () => {
@@ -112,8 +116,18 @@ export const AcPrixVenInput = React.forwardRef(
     };
 
     useImperativeHandle(ref, () => ({
-      async isValid(): Promise<boolean> {
-        return await isValid();
+      async isValid(): Promise<FormValidInterface> {
+        const valid = await isValid();
+        return {
+          valid: valid,
+          details: [
+            {
+              valid: valid,
+              ref: ref,
+              dRef: inputRef,
+            },
+          ],
+        };
       },
     }));
 
@@ -149,6 +163,7 @@ export const AcPrixVenInput = React.forwardRef(
               value={values.acPrixVen.value}
               onChange={handleChange("acPrixVen")}
               style={{ width: "100%" }}
+              ref={inputRef}
               onBlur={() => {
                 if (Number(values.acPrixVen.value) === 0) {
                   resetAcPrixVen();

@@ -5,7 +5,10 @@ import { ArticleOptionTraitementComponent } from "./ArticleOptionTraitementCompo
 import { ArticleLogistiqueComponent } from "./ArticleLogistiqueComponent";
 import { ArticleDepotTraitementComponent } from "./ArticleDepotTraitementComponent";
 import { getTranslations } from "../../../../../functions/translations";
-import { FormInterface } from "../../../../../interface/InputInterface";
+import {
+  FormInterface,
+  FormValidInterface,
+} from "../../../../../interface/InputInterface";
 import { FormContentComponent } from "../../FormContentComponent";
 import {
   createFormContent,
@@ -29,6 +32,7 @@ export const ArticleTab4Component = React.forwardRef((props, ref) => {
               size: { xs: 12 },
             },
             tabs: {
+              id: "tab4-sub",
               tabs: [
                 {
                   label: translations.words.treatmentOptions,
@@ -58,7 +62,7 @@ export const ArticleTab4Component = React.forwardRef((props, ref) => {
   });
 
   useImperativeHandle(ref, () => ({
-    async isValid(): Promise<boolean> {
+    async isValid(): Promise<FormValidInterface> {
       return await handleFormIsValid(form.content);
     },
   }));

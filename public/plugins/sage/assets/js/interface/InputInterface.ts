@@ -48,6 +48,8 @@ export interface TableAddInterface {
 export interface FormTabInterface {
   tabProps?: TabsProps;
   tabs: TabInterface[];
+  id: string; // usefull for onSubmitForm to choose which tab to select
+  ref?: any;
 }
 
 export interface FormContentInterface {
@@ -57,7 +59,24 @@ export interface FormContentInterface {
   fields?: FieldInterface[];
   children?: FormContentInterface[];
   table?: TableInterface;
-  tabs?: FormTabInterface;
+  tabs?: FormTabInterface; // todo change name to formTab
+}
+
+export interface TabFormValidInterface {
+  tabRef: any;
+  index: number;
+}
+
+export interface FormValidInterface {
+  valid: any;
+  details: FormErrorDetailInterface[];
+}
+
+export interface FormErrorDetailInterface {
+  ref: any;
+  dRef: any;
+  valid: boolean;
+  tabs?: TabFormValidInterface[];
 }
 
 export interface ErrorMessageInterface {
@@ -111,4 +130,3 @@ export type FormInputOptions = {
 export interface OptionChangeInputInterface {
   autoUppercase?: boolean;
 }
-
