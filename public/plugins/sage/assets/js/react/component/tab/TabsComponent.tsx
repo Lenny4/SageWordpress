@@ -18,11 +18,14 @@ export const TabsComponent = ({ tabs }: State) => {
   };
 
   React.useEffect(() => {
-    window.addEventListener(`sage-tabpanel-${tabs.id}`, (e) => {
-      // @ts-ignore
+    const handler = (e: any) => {
       setValue(Number(e.detail));
-    });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    };
+    window.addEventListener(`sage-tabpanel-${tabs.id}`, handler);
+    return () => {
+      window.removeEventListener(`sage-tabpanel-${tabs.id}`, handler);
+    };
+  }, [tabs.id]);
 
   return (
     <>
