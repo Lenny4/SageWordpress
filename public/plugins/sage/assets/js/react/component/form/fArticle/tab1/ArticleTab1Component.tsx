@@ -22,11 +22,9 @@ import Grid from "@mui/material/Grid";
 import { FormContentComponent } from "../../FormContentComponent";
 import { FormInput } from "../../fields/FormInput";
 import { FormSelect } from "../../fields/FormSelect";
-import {
-  numberValidator,
-  stringValidator,
-} from "../../../../../functions/validator";
+import { numberValidator } from "../../../../../functions/validator";
 import { TOKEN } from "../../../../../token";
+import { ArDesignInput } from "../inputs/ArDesignInput";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
@@ -45,6 +43,7 @@ const pUnites: any[] = JSON.parse(
 
 export const ArticleTab1Component = React.forwardRef((props, ref) => {
   const arRefRef = useRef<any>(null);
+  const arDesignRef = useRef<any>(null);
 
   const [arCoef, setArCoef] = React.useState<string>(
     getSageMetadata("arCoef", articleMeta, "0").toString(),
@@ -118,22 +117,12 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
             props: {
               size: { xs: 12 },
             },
-            fields: [
-              {
-                name: "arDesign",
-                DomField: FormInput,
-                initValues: {
-                  value: getSageMetadata("arDesign", articleMeta),
-                  validator: {
-                    functionName: stringValidator,
-                    params: {
-                      maxLength: 69,
-                      canBeEmpty: false,
-                    },
-                  },
-                },
-              },
-            ],
+            Dom: (
+              <ArDesignInput
+                defaultValue={getSageMetadata("arDesign", articleMeta)}
+                ref={arDesignRef}
+              />
+            ),
           },
           {
             fields: [

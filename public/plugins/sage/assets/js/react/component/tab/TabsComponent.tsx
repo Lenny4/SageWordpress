@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import { Tab, Tabs } from "@mui/material";
 import { CustomTabPanel } from "./CustomTabPanel";
 import { FormTabInterface } from "../../../interface/InputInterface";
+import { TOKEN } from "../../../token";
 
 type State = {
   tabs: FormTabInterface;
@@ -21,9 +22,9 @@ export const TabsComponent = ({ tabs }: State) => {
     const handler = (e: any) => {
       setValue(Number(e.detail));
     };
-    window.addEventListener(`sage-tabpanel-${tabs.id}`, handler);
+    window.addEventListener(`${TOKEN}-tabpanel-${tabs.id}`, handler);
     return () => {
-      window.removeEventListener(`sage-tabpanel-${tabs.id}`, handler);
+      window.removeEventListener(`${TOKEN}-tabpanel-${tabs.id}`, handler);
     };
   }, [tabs.id]);
 

@@ -6,7 +6,6 @@ use App\class\Dto\ArgumentSelectionSetDto;
 use App\class\SageEntityMenu;
 use App\class\SageEntityMetadata;
 use App\class\SageShippingMethod__index__;
-use App\enum\Sage\GlossaireDomaineTypeEnum;
 use App\lib\SageRequest;
 use App\Utils\PathUtils;
 use App\Utils\SageTranslationUtils;
@@ -304,7 +303,7 @@ final class SageSettings
                             return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
                         }),
                         new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) use ($sageWoocommerce) {
-                            return $sageWoocommerce->getMaxPrice($fArticle->prices);
+                            return json_encode($sageWoocommerce->getMaxPrice($fArticle->prices), JSON_THROW_ON_ERROR);
                         }),
                         new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
                             return (new DateTime())->format('Y-m-d H:i:s');
@@ -904,9 +903,8 @@ final class SageSettings
             if ($hasChanges) {
                 foreach ($changeTypes as $type) {
                     foreach ($meta['changes'][$type] as $key => $value) {
-                        $decoded = json_decode($value, true);
-                        if (json_last_error() === JSON_ERROR_NONE) {
-                            $meta['changes'][$type][$key] = json_encode($decoded, JSON_PRETTY_PRINT);
+                        if (is_array($value) || is_object($value)) {
+                            $meta['changes'][$type][$key] = json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
                         }
                     }
                 }

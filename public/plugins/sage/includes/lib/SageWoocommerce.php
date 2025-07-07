@@ -121,13 +121,16 @@ final class SageWoocommerce
             return $this->prices[$identifier];
         }
         $prices = $this->getPricesProduct($product);
+        if (empty($prices)) {
+            return $price;
+        }
         $flattenPrices = [];
         foreach ($prices as $price1) {
             foreach ($price1 as $price2) {
                 $flattenPrices[] = $price2;
             }
         }
-        $maxPrice = json_decode($this->getMaxPrice($flattenPrices), false, 512, JSON_THROW_ON_ERROR);
+        $maxPrice = $this->getMaxPrice($flattenPrices);
         if ($userId === 0 || is_admin()) {
             $this->prices[$identifier] = $maxPrice->{$field};
             return $this->prices[$identifier];
@@ -171,12 +174,15 @@ final class SageWoocommerce
         return $r;
     }
 
-    public function getMaxPrice(array $prices): false|string
+    public function getMaxPrice(array $prices): stdClass|null
     {
+        if (count($prices) === 0) {
+            return null;
+        }
         usort($prices, static function (StdClass $a, StdClass $b) {
             return $b->priceTtc <=> $a->priceTtc;
         });
-        return json_encode($prices[0], JSON_THROW_ON_ERROR);
+        return $prices[0];
     }
 
     public static function instance(Sage $sage): ?self

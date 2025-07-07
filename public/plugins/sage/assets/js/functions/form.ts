@@ -165,21 +165,12 @@ export const onSubmitForm = (
             }
             setTimeout(() => {
               _scrollElementIntoWindowView(domToScroll);
-            }, 500);
+            }, 200);
           }
           return;
         }
-        console.log("all good", result);
-        // let hasError = false;
-        // for (const tab of tabs) {
-        //   if (tab.ref.current) {
-        //     hasError = hasError || !tab.ref.current.isValid();
-        //   }
-        // }
-        // if (!hasError) {
-        //   isValidForm = true;
-        //   $(formSelector).trigger("submit");
-        // }
+        isValidForm = true;
+        $(formSelector).trigger("submit");
       })
       .finally(() => {
         if (onDone) {

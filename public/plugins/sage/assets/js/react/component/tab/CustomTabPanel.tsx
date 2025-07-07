@@ -1,4 +1,5 @@
 import * as React from "react";
+import { TOKEN } from "../../../token";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -15,8 +16,8 @@ export function CustomTabPanel(props: TabPanelProps) {
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`sage-tabpanel-${id}-${index}`}
-      aria-labelledby={`sage-tab-${id}-${index}`}
+      id={`${TOKEN}-tabpanel-${id}-${index}`}
+      aria-labelledby={`${TOKEN}-tab-${id}-${index}`}
       {...other}
     >
       {keepDom !== false ? children : <>{value === index && children}</>}

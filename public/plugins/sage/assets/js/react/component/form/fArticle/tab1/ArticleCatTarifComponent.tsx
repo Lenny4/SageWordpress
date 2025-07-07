@@ -110,7 +110,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
                     lines: [
                       {
                         Dom: (
-                          <>{pCattarifs[fArtclient.acCategorie].ctIntitule}</>
+                          <>{pCattarifs[fArtclient.acCategorie]?.ctIntitule}</>
                         ),
                       },
                       {
