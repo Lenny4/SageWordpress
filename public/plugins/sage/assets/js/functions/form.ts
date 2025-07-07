@@ -134,16 +134,16 @@ export const onSubmitForm = (
   formSelector: string,
   isValidForm: boolean,
   onStart?: () => void,
-  onDone?: () => void,
+  onError?: () => void,
 ): void => {
   $(formSelector).on("submit", (e) => {
+    if (onStart) {
+      onStart();
+    }
     if (isValidForm) {
       return;
     }
     e.preventDefault();
-    if (onStart) {
-      onStart();
-    }
     handleFormIsValid(form.content)
       .then((result) => {
         if (!result.valid) {
@@ -172,9 +172,9 @@ export const onSubmitForm = (
         isValidForm = true;
         $(formSelector).trigger("submit");
       })
-      .finally(() => {
-        if (onDone) {
-          onDone();
+      .catch(() => {
+        if (onError) {
+          onError();
         }
       });
   });
