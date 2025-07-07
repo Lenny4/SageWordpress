@@ -167,6 +167,9 @@ export const onSubmitForm = (
               _scrollElementIntoWindowView(domToScroll);
             }, 200);
           }
+          if (onError) {
+            onError();
+          }
           return;
         }
         isValidForm = true;
