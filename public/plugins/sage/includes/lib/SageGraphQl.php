@@ -442,7 +442,8 @@ final class SageGraphQl
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "paged" => "1",
-            "per_page" => "1"
+            "per_page" => "1",
+            "sort" => '{"cbMarq": "asc"}',
         ];
         $selectionSets = $this->_getPDossierSelectionSet();
         $pDossier = $this->getEntitiesAndSaveInOption(
@@ -908,6 +909,8 @@ final class SageGraphQl
                 'arEdiCode',
                 'arPays',
                 'arRaccourci',
+                'arLangue1',
+                'arLangue2',
             ]),
             'fArtclients' => new ArgumentSelectionSetDto($this->_getFArtclientsSelectionSet(), 'acCategorie', [
                 'where' => new RawObject('{ ctNum: { eq: null } }'),
@@ -1967,7 +1970,8 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "paged" => "1",
-            "per_page" => "1"
+            "per_page" => "1",
+            "sort" => '{"cbMarq": "asc"}',
         ];
         $selectionSets = $this->_getPPreferenceSelectionSet();
         $pPreference = $this->getEntitiesAndSaveInOption(

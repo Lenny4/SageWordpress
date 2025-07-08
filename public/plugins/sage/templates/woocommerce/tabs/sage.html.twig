@@ -15,7 +15,7 @@
               {% elseif action == 'added' %}
                 {{ 'ajouté avec la valeur ' | trans }}
               {% elseif action == 'removed' %}
-                {{ 'supprimé' | trans }} ({{ 'la valeur précédente était ' | trans }}
+                {{ 'supprimé' | trans }} ({{ 'la valeur précédente était ' | trans }})
               {% endif %}
               <span class="json-inline">{{ value }}</span>
             </li>

@@ -909,6 +909,9 @@ final class SageSettings
                     }
                 }
             }
+            $meta["changes"]["removed"] = array_filter($meta["changes"]["removed"], static function (string $value) {
+                return !empty($value);
+            });
             echo $sageSettings->sage->twig->render('woocommerce/tabs/sage.html.twig', [
                 'fArticle' => $fArticle,
                 'pCattarifs' => $sageSettings->sage->sageGraphQl->getPCattarifs(),
