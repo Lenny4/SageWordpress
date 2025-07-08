@@ -153,8 +153,8 @@ export const AcPrixVenInput = React.forwardRef(
         <div style={{ display: "flex", alignItems: "flex-start" }}>
           <div style={{ position: "relative", flex: 1 }}>
             <input
-              id={`_${TOKEN}_fArtclients[` + acCategorie + "].acPrixVen"}
-              name={`_${TOKEN}_fArtclients[` + acCategorie + "].acPrixVen"}
+              id={`_${TOKEN}_fArtclients[` + acCategorie + "][acPrixVen]"}
+              name={`_${TOKEN}_fArtclients[` + acCategorie + "][acPrixVen]"}
               type={"hidden"}
               value={values.realAcPrixVen.value}
             />

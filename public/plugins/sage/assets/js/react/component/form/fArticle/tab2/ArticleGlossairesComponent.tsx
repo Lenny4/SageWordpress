@@ -193,7 +193,7 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                   lines: [
                     {
                       field: {
-                        name: prefix + "[" + fGlossaire.glNo + "].glNo",
+                        name: prefix + "[" + fGlossaire.glNo + "][glNo]",
                         DomField: FormInput,
                         type: "hidden",
                         hideLabel: true,

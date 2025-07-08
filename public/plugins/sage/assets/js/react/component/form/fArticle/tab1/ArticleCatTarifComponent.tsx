@@ -116,7 +116,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
                       {
                         field: {
                           name:
-                            prefix + "[" + fArtclient.acCategorie + "].acCoef",
+                            prefix + "[" + fArtclient.acCategorie + "][acCoef]",
                           DomField: FormInput,
                           type: "number",
                           hideLabel: true,
@@ -163,7 +163,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
                             prefix +
                             "[" +
                             fArtclient.acCategorie +
-                            "].acRemise",
+                            "][acRemise]",
                           DomField: FormInput,
                           type: "number",
                           hideLabel: true,

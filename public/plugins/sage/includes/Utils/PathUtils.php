@@ -2,6 +2,7 @@
 
 namespace App\Utils;
 
+use App\Sage;
 use stdClass;
 
 if (!defined('ABSPATH')) {
@@ -47,5 +48,23 @@ final class PathUtils
         }
 
         return $current;
+    }
+
+    public static function flatternPostSageData(array $post, string $prefix = ''): array
+    {
+        $result = [];
+        foreach ($post as $key => $value) {
+            if (is_array($value) && (str_starts_with($key, '_' . Sage::TOKEN . '_') || !empty($prefix))) {
+                foreach ($value as $k => $v) {
+                    $result = [
+                        ...$result,
+                        ...self::flatternPostSageData($v, $key . '[' . $k . '].'),
+                    ];
+                }
+            } else {
+                $result[$prefix . $key] = $value;
+            }
+        }
+        return $result;
     }
 }

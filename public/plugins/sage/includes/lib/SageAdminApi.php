@@ -3,6 +3,7 @@
 namespace App\lib;
 
 use App\Sage;
+use App\Utils\PathUtils;
 use DateTime;
 
 if (!defined('ABSPATH')) {
@@ -25,7 +26,8 @@ final class SageAdminApi
                 return;
             }
             $arRef = null;
-            foreach ($_REQUEST as $key => $value) {
+            $flatternPost = PathUtils::flatternPostSageData($_POST);
+            foreach ($flatternPost as $key => $value) {
                 if (str_starts_with($key, '_' . Sage::TOKEN)) {
                     if ($key === Sage::META_KEY_AR_REF) {
                         $arRef = $value;

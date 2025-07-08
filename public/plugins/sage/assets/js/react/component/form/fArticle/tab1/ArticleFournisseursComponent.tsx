@@ -95,7 +95,10 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       {
                         field: {
                           name:
-                            prefix + "[" + fArtclient.ctNum + "].afRefFourniss",
+                            prefix +
+                            "[" +
+                            fArtclient.ctNum +
+                            "][afRefFourniss]",
                           DomField: FormInput,
                           autoUppercase: true,
                           hideLabel: true,
@@ -120,7 +123,8 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       },
                       {
                         field: {
-                          name: prefix + "[" + fArtclient.ctNum + "].afPrixAch",
+                          name:
+                            prefix + "[" + fArtclient.ctNum + "][afPrixAch]",
                           DomField: FormInput,
                           type: "number",
                           hideLabel: true,
