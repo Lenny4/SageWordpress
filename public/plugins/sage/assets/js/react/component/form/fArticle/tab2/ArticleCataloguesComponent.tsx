@@ -90,7 +90,8 @@ export const ArticleCataloguesComponent = React.forwardRef((props, ref) => {
     <Grid container spacing={1} ref={inputRef}>
       {Array.from({ length: nbNiveau }, (_, i) => i).map((niveau) => {
         niveau = niveau + 1;
-        const disabled = niveau > 1 && values[`clNo${niveau - 1}`].value === "";
+        const disabled =
+          niveau > 1 && values[`clNo${niveau - 1}`].value === "0";
         return (
           <Grid size={{ xs: 12, md: 3 }} key={niveau}>
             <select
@@ -99,9 +100,8 @@ export const ArticleCataloguesComponent = React.forwardRef((props, ref) => {
               value={values[`clNo${niveau}`].value}
               onChange={handleChangeSelect(`clNo${niveau}`)}
               style={{ width: "100%" }}
-              disabled={disabled}
             >
-              <option value="">{translations.words.none}</option>
+              <option value="0">{translations.words.none}</option>
               {fCatalogues
                 .filter((c) => {
                   let result = c.clNiveau === niveau - 1;
@@ -115,7 +115,15 @@ export const ArticleCataloguesComponent = React.forwardRef((props, ref) => {
                 })
                 .map((opt, index) => {
                   return (
-                    <option key={index} value={opt.clNo.toString()}>
+                    <option
+                      key={index}
+                      value={opt.clNo.toString()}
+                      // disabled is useless
+                      disabled={
+                        disabled &&
+                        opt.clNo.toString() !== values[`clNo${niveau}`].value
+                      }
+                    >
                       {opt.clIntitule}
                     </option>
                   );

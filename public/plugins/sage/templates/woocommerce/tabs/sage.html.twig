@@ -4,7 +4,7 @@
 {% endif %}
 {% if hasChanges %}
   <div class="notice notice-info is-dismissible">
-    {% for action in ['removed', 'added', 'modified'] %}
+    {% for action in changeTypes %}
       {% if metaChanges[action] is iterable and metaChanges[action] is not empty %}
         <ul>
           {% for key, value in metaChanges[action] %}

@@ -22,7 +22,7 @@ export const AfPrincipalInput = React.forwardRef(
     ref,
   ) => {
     const inputRef = useRef<any>(null);
-    const name = `_${TOKEN}_fArtfournisses[${ctNum}].afPrincipal`;
+    const name = `_${TOKEN}_fArtfournisses[${ctNum}][afPrincipal]`;
 
     useImperativeHandle(ref, () => ({
       async isValid(): Promise<FormValidInterface> {
@@ -40,6 +40,7 @@ export const AfPrincipalInput = React.forwardRef(
       },
     }));
 
+    const checked = selectedCtNum === ctNum;
     return (
       <>
         <label htmlFor={name} style={{ display: "none" }}>
@@ -49,10 +50,15 @@ export const AfPrincipalInput = React.forwardRef(
         </label>
         <div style={{ display: "flex", alignItems: "center" }}>
           <input
+            type="hidden"
             id={name}
             name={name}
+            value={checked ? "1" : "0"}
+          />
+          <input
             type="checkbox"
-            checked={selectedCtNum === ctNum}
+            value="1"
+            checked={checked}
             onChange={(e) => {
               if (e.target.checked) {
                 onAfPrincipalChangedParent(name, ctNum);

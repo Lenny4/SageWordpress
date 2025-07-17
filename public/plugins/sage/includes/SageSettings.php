@@ -892,26 +892,24 @@ final class SageSettings
                     ];
                 }
             }
-            $changeTypes = ['added', 'removed', 'modified'];
+            $changeTypes = array_keys($meta['changes']);
+            foreach ($changeTypes as $type) {
+                foreach ($meta['changes'][$type] as $key => $value) {
+                    if (is_array($value) || is_object($value)) {
+                        $meta['changes'][$type][$key] = json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+                    }
+                }
+            }
+            if (isset($meta["changes"]["removed"])) {
+                $meta["changes"]["removed"] = array_filter($meta["changes"]["removed"], static function (string $value) {
+                    return !empty($value);
+                });
+            }
             $hasChanges = false;
             foreach ($changeTypes as $type) {
                 if (!empty($meta['changes'][$type])) {
                     $hasChanges = true;
                     break;
-                }
-            }
-            if ($hasChanges) {
-                foreach ($changeTypes as $type) {
-                    foreach ($meta['changes'][$type] as $key => $value) {
-                        if (is_array($value) || is_object($value)) {
-                            $meta['changes'][$type][$key] = json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
-                        }
-                    }
-                }
-                if (isset($meta["changes"]["removed"])) {
-                    $meta["changes"]["removed"] = array_filter($meta["changes"]["removed"], static function (string $value) {
-                        return !empty($value);
-                    });
                 }
             }
             echo $sageSettings->sage->twig->render('woocommerce/tabs/sage.html.twig', [
@@ -930,6 +928,7 @@ final class SageSettings
                 'productMeta' => $meta['new'],
                 'updateApi' => $updateApi,
                 'hasChanges' => $hasChanges,
+                'changeTypes' => $changeTypes,
             ]);
         });
         // endregion

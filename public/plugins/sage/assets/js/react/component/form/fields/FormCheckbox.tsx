@@ -65,6 +65,7 @@ export const FormCheckbox = React.forwardRef(
       }
     }, [values[name].value]);
 
+    const checked = values[name].value;
     return (
       <>
         <div
@@ -76,10 +77,15 @@ export const FormCheckbox = React.forwardRef(
           }}
         >
           <input
+            type="hidden"
             id={nameField}
             name={nameField}
+            value={checked ? "1" : "0"}
+          />
+          <input
             type="checkbox"
-            checked={values[name].value}
+            value="1"
+            checked={checked}
             readOnly={readOnly || values[name].readOnly}
             onChange={handleChange}
           />

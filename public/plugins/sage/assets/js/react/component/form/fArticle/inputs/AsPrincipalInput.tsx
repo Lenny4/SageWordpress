@@ -22,7 +22,7 @@ export const AsPrincipalInput = React.forwardRef(
     ref,
   ) => {
     const inputRef = useRef<any>(null);
-    const name = `_${TOKEN}_fArtstocks[${deNo}].asPrincipal`;
+    const name = `_${TOKEN}_fArtstocks[${deNo}][asPrincipal]`;
 
     useImperativeHandle(ref, () => ({
       async isValid(): Promise<FormValidInterface> {
@@ -40,6 +40,7 @@ export const AsPrincipalInput = React.forwardRef(
       },
     }));
 
+    const checked = selectedDeNo.toString() === deNo.toString();
     return (
       <>
         <label htmlFor={name} style={{ display: "none" }}>
@@ -49,10 +50,15 @@ export const AsPrincipalInput = React.forwardRef(
         </label>
         <div style={{ display: "flex", alignItems: "center" }}>
           <input
+            type="hidden"
             id={name}
             name={name}
+            value={checked ? "1" : "0"}
+          />
+          <input
             type="checkbox"
-            checked={selectedDeNo.toString() === deNo.toString()}
+            value="1"
+            checked={checked}
             onChange={(e) => {
               if (e.target.checked) {
                 onAsPrincipalChangedParent(name, deNo.toString());

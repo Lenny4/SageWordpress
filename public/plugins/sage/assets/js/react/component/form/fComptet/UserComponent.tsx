@@ -324,7 +324,7 @@ const UserComponent = () => {
     $(document).on(
       "submit",
       'form[name="createuser"], form[id="your-profile"]',
-      (e) => {
+      (e: any) => {
         // if (!validateForm()) {
         // todo doesn't work anymore as validateForm is async
         e.preventDefault();
@@ -333,6 +333,7 @@ const UserComponent = () => {
     );
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const checked = values.autoGenerateCtNum.value;
   return (
     <table className="form-table" role="presentation">
       <tbody>
@@ -398,11 +399,15 @@ const UserComponent = () => {
                 </th>
                 <td>
                   <input
-                    type="checkbox"
+                    type="hidden"
                     name={`_${TOKEN}_auto_generate_ctnum`}
                     id={`_${TOKEN}_auto_generate_ctnum`}
+                    value={checked ? "1" : "0"}
+                  />
+                  <input
+                    type="checkbox"
                     value="1"
-                    checked={values.autoGenerateCtNum.value}
+                    checked={checked}
                     onChange={handleChangeCheckbox("autoGenerateCtNum")}
                   />
                   <label htmlFor={`_${TOKEN}_auto_generate_ctnum`}>
