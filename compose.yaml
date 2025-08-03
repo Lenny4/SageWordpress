@@ -9,6 +9,8 @@ services:
       - ./:/var/www/html
       - ./docker/php.ini:/usr/local/etc/php/php.ini
       - ./docker/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - db
     ports:
@@ -38,3 +40,5 @@ services:
 
 volumes:
   dbmysql:
+  caddy_data:
+  caddy_config:
