@@ -15,3 +15,5 @@
 /public/wordpress
 /vendor
 auth.json
+cache
+!/public/mu-plugins/wp-cache-caddy

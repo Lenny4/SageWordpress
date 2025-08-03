@@ -30,11 +30,11 @@
         encode br zstd gzip
 
         wp_cache {
-                loc {$CACHE_LOC:/var/www/html/wp-content/cache}
+                loc {$CACHE_LOC:/var/www/html/cache}
                 cache_response_codes {$CACHE_RESPONSE_CODES:2XX,404,405}
                 ttl {$TTL:6000}
                 purge_path {$PURGE_PATH:/__cache/purge}
-                purge_key {$PURGE_KEY}
+                purge_key {$PURGE_KEY:IuIifdYa34Nlj6nZ84yrmevw}
                 bypass_home {$BYPASS_HOME:false}
                 bypass_path_prefixes {$BYPASS_PATH_PREFIXES:/wp-admin,/wp-json}
         }
