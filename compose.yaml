@@ -9,8 +9,8 @@ services:
       - ./:/var/www/html
       - ./docker/php.ini:/usr/local/etc/php/php.ini
       - ./docker/Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
+      - sage_wordpress_caddy_data:/data
+      - sage_wordpress_caddy_config:/config
     depends_on:
       - db
     ports:
@@ -28,7 +28,7 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - dbmysql:/var/lib/mysql
+      - sage_wordpress_mysql:/var/lib/mysql
 
   maildev:
     image: maildev/maildev
@@ -39,6 +39,6 @@ services:
     command: --web 80
 
 volumes:
-  dbmysql:
-  caddy_data:
-  caddy_config:
+  sage_wordpress_mysql:
+  sage_wordpress_caddy_data:
+  sage_wordpress_caddy_config:
