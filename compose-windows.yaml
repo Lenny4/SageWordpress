@@ -1,0 +1,26 @@
+services:
+  windows:
+    image: dockurr/windows
+    container_name: windows
+    environment:
+      VERSION: "10"
+      DISK_SIZE: "256G"
+      RAM_SIZE: "16G"
+      CPU_CORES: "10"
+      USERNAME: "alex"
+      PASSWORD: "computer"
+      REGION: "fr-FR"
+      KEYBOARD: "fr-FR"
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 8006:8006
+      - 3389:3389/tcp
+      - 3389:3389/udp
+    volumes:
+      - /home/alexandre/windows:/storage
+    restart: always
+    stop_grace_period: 2m

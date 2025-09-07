@@ -7,6 +7,8 @@ Wordpress db host: 192.168.0.31
 
 launch chrome this way: `google-chrome --ignore-certificate-errors`
 
+docker compose -f compose.yaml -f compose-windows.yaml up
+
 https://trello.com/b/t64T4Swz/sage-api
 
 https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password
