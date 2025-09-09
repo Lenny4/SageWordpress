@@ -5,7 +5,7 @@ services:
     environment:
       VERSION: "10"
       DISK_SIZE: "256G"
-      RAM_SIZE: "16G"
+      RAM_SIZE: "12G"
       CPU_CORES: "10"
       USERNAME: "alex"
       PASSWORD: "computer"
@@ -20,6 +20,7 @@ services:
       - 8006:8006
       - 3389:3389/tcp
       - 3389:3389/udp
+      - 1433:1433
     volumes:
       - /home/alexandre/windows:/storage
       - /home/alexandre/windows_share:/data # Open 'File Explorer' and click on the 'Network' section, you will see a computer called host.lan. Double-click it and it will show a folder called Data, which can be bound to any folder on your host via the compose file:
