@@ -22,5 +22,6 @@ services:
       - 3389:3389/udp
     volumes:
       - /home/alexandre/windows:/storage
+      - /home/alexandre/windows_share:/data # Open 'File Explorer' and click on the 'Network' section, you will see a computer called host.lan. Double-click it and it will show a folder called Data, which can be bound to any folder on your host via the compose file:
     restart: always
     stop_grace_period: 2m
