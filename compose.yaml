@@ -11,6 +11,10 @@ services:
       - ./docker/Caddyfile:/etc/caddy/Caddyfile
       - sage_wordpress_caddy_data:/data
       - sage_wordpress_caddy_config:/config
+    environment:
+      PHP_IDE_CONFIG: serverName=xdebug-sage-wp-plugin
+      XDEBUG_MODE: debug
+      XDEBUG_SESSION: PHPSTORM
     depends_on:
       - db
     ports:

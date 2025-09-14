@@ -16,12 +16,12 @@ define('FS_METHOD', 'direct');
 define('WP_ENVIRONMENT_TYPE', env('WP_ENVIRONMENT_TYPE', 'production'));
 
 // Set the default WordPress theme.
-define('WP_DEFAULT_THEME', env('WP_DEFAULT_THEME', 'best-shop'));
+define('WP_DEFAULT_THEME', env('WP_DEFAULT_THEME', 'twentytwentyfive')); // best-shop
 
 // For developers: WordPress debugging mode.
 $isDebugModeEnabled = true;
 define('WP_DEBUG', $isDebugModeEnabled);
-define('WP_DEBUG_LOG', env('WP_DEBUG_LOG', false));
+define('WP_DEBUG_LOG', env('WP_DEBUG_LOG', $isDebugModeEnabled));
 define('WP_DEBUG_DISPLAY', env('WP_DEBUG_DISPLAY', $isDebugModeEnabled));
 define('SCRIPT_DEBUG', env('SCRIPT_DEBUG', $isDebugModeEnabled));
 
