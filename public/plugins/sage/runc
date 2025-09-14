@@ -1,7 +1,0 @@
-#!/bin/sh
-
-if [ -z "$(docker compose ps -q caddy)" ]; then
-    echo "Unable to connect to docker container. Have you run 'docker compose up -d'?"
-else
-    docker compose exec caddy sh -c "cd public/plugins/sage && $*"
-fi

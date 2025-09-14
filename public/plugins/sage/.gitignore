@@ -1,7 +1,0 @@
-node*
-vendor*
-dist
-.vscode
-.DS_Store
-.idea
-templates/cache

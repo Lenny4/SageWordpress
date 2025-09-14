@@ -1,10 +1,15 @@
+import {defineConfig} from 'vite';
 import dotenv from 'dotenv';
-import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 
 dotenv.config();
 
 export default defineConfig({
   publicDir: 'resources/static',
+  server: {
+    cors: true,
+    strictPort: true,
+  },
   build: {
     assetsDir: '',
     emptyOutDir: true,
@@ -17,11 +22,12 @@ export default defineConfig({
   plugins: [
     {
       name: 'php',
-      handleHotUpdate({ file, server }) {
+      handleHotUpdate({file, server}) {
         if (file.endsWith('.php')) {
-          server.ws.send({ type: 'full-reload', path: '*' });
+          server.ws.send({type: 'full-reload', path: '*'});
         }
       },
     },
+    tailwindcss(),
   ],
 });

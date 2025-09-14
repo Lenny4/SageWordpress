@@ -16,7 +16,7 @@ define('FS_METHOD', 'direct');
 define('WP_ENVIRONMENT_TYPE', env('WP_ENVIRONMENT_TYPE', 'production'));
 
 // Set the default WordPress theme.
-define('WP_DEFAULT_THEME', env('WP_DEFAULT_THEME', 'twentytwentyfive')); // best-shop
+define('WP_DEFAULT_THEME', env('WP_DEFAULT_THEME', 'wordplate')); // best-shop
 
 // For developers: WordPress debugging mode.
 $isDebugModeEnabled = true;
