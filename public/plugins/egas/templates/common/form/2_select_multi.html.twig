@@ -1,0 +1,52 @@
+{% set TOKEN = getToken() %}
+<div data-shared-lists="{{ data|json_encode }}">
+  <div data-shared-lists-react></div>
+  <div
+    data-shared-lists-content
+    style="display: flex;flex-wrap: wrap;"
+  >
+    <div
+      style="
+    display: flex;
+    flex-direction: column;
+">
+      <label for="{{ data.field['id']|esc_attr }}_all">
+        {{ 'Toutes les options'|trans }}
+      </label>
+      <select
+        id="{{ data.field['id']|esc_attr }}_all"
+        multiple="multiple"
+        style="min-width: 200px;min-height: 200px;"
+        data-2-select-target="all"
+      >
+        {% for k,v in data.field['options'] %}
+          {% if k not in data.values %}
+            <option value="{{ k|esc_attr }}">{{ v }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+    {# separator #}
+    <div
+      style="
+    display: flex;
+    flex-direction: column;
+">
+      <label for="{{ data.field['id']|esc_attr }}">
+        {{ 'Options sélectionnées'|trans }}
+      </label>
+      <select
+        name="{{ data.optionName|esc_attr }}[]"
+        id="{{ data.field['id']|esc_attr }}"
+        multiple="multiple"
+        style="min-width: 200px;min-height: 200px;"
+        data-2-select-target="selected"
+      >
+        {% for v in data.values %}
+          <option value="{{ v|esc_attr }}">{{ data.field['options'][v] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+  </div>
+</div>

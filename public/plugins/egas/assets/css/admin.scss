@@ -1,0 +1,359 @@
+@import "../../node_modules/tippy.js/dist/tippy.css";
+
+// assets/js/token.ts
+// assets/css/admin.scss
+// includes/Sage.php
+$TOKEN: "sage";
+
+#all_filter_container select {
+  float: none !important;
+}
+
+#all_filter_container .error-message {
+  margin-top: 0;
+}
+
+.skeleton {
+  animation: skeleton-loading 1s linear infinite alternate;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-color: hsl(200, 20%, 80%);
+  }
+  100% {
+    background-color: hsl(200, 20%, 95%);
+  }
+}
+
+.skeleton-text {
+  width: 100%;
+  height: 0.7rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.skeleton-box {
+  width: 100%;
+  height: 10rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.d-block {
+  display: block;
+}
+
+/* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+
+  .tooltiptext {
+    visibility: hidden;
+    max-width: 200px;
+    position: absolute;
+    z-index: 1;
+    color: #fff;
+    font-size: .8em;
+    min-width: 150px;
+    background: #333;
+    text-align: left;
+    border-radius: 3px;
+    padding: 0.618em 1em;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+
+    * {
+      color: #fff;
+    }
+  }
+
+  &:hover .tooltiptext {
+    visibility: visible;
+  }
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-error {
+  color: red !important;
+  border-color: red !important;
+}
+
+.text-disabled {
+  color: gray !important;
+  border-color: gray !important;
+}
+
+.text-end {
+  text-align: right !important;
+}
+
+.text-start {
+  text-align: left !important;
+}
+
+.h1 {
+  font-size: 2.5rem;
+}
+
+.h2 {
+  font-size: 2rem;
+}
+
+.h3 {
+  font-size: 1.75rem;
+}
+
+.h4 {
+  font-size: 1.5rem;
+}
+
+.h5 {
+  font-size: 1.25rem;
+}
+
+.h6 {
+  font-size: 1rem;
+}
+
+table.wp-list-table .column-#{$TOKEN} {
+  width: 48px;
+  text-align: left !important;
+}
+
+table.table-border {
+  border-collapse: collapse;
+
+  td {
+    border: 1px solid black;
+  }
+}
+
+table.table-padding {
+  td {
+    padding: .75rem;
+  }
+}
+
+.endDashiconsInput {
+  position: absolute;
+  height: 0;
+  bottom: 25px;
+  margin: 0 0 0 -25px;
+}
+
+.svg-spinner {
+  animation: rotate 2s linear infinite;
+  z-index: 2;
+  position: absolute;
+  margin: -25px 0 0 -25px;
+  width: 20px;
+  height: 20px;
+  top: 30px;
+
+  & .path {
+    stroke: #000000;
+    stroke-linecap: round;
+    animation: dash 1.5s ease-in-out infinite;
+  }
+
+}
+
+pre {
+  overflow: auto;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+.td-separator {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.border-x {
+  border-left: 1px solid #c3c4c7;
+  border-right: 1px solid #c3c4c7;
+}
+
+.border-y {
+  border-top: 1px solid #c3c4c7;
+  border-bottom: 1px solid #c3c4c7;
+}
+
+.border-bottom {
+  border-bottom: 1px solid #c3c4c7;
+}
+
+.border-left {
+  border-left: 1px solid #c3c4c7;
+}
+
+.border-right {
+  border-right: 1px solid #c3c4c7;
+}
+
+.pt-1, .py-1 {
+  padding-top: 0.25rem !important;
+}
+
+.pr-1 {
+  padding-right: 0.25rem !important;
+}
+
+.pr-2 {
+  padding-right: 0.5rem !important;
+}
+
+.pr-3 {
+  padding-right: 1rem !important;
+}
+
+.pr-4 {
+  padding-right: 1.5rem !important;
+}
+
+.pr-5 {
+  padding-right: 3rem !important;
+}
+
+.mt-2 {
+  margin-top: 0.5rem !important;
+}
+
+.ml-2 {
+  margin-left: 0.5rem !important;
+}
+
+.mr-2 {
+  margin-right: 0.5rem !important;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem !important;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+.center-table {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+
+.text-divider {
+  display: flex;
+  align-items: center;
+  --text-divider-gap: 1rem; // set a customizable gap between label and lines
+}
+
+.text-divider::before,
+.text-divider::after {
+  content: '';
+  height: 1px;
+  background-color: silver;
+  flex-grow: 1;
+}
+
+.text-divider::before {
+  margin-right: var(--text-divider-gap);
+}
+
+.text-divider::after {
+  margin-left: var(--text-divider-gap);
+}
+
+.ul-horizontal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.progress-bar-light-grey {
+  color: #000 !important;
+  background-color: #f1f1f1 !important;
+}
+
+.progress-bar-container {
+  padding: 0.01em 16px;
+
+  &:after,
+  &:before {
+    content: "";
+    display: table;
+    clear: both;
+  }
+}
+
+.progress-bar-round-large {
+  border-radius: 8px;
+}
+
+.progress-bar-blue {
+  color: #fff !important;
+  background-color: #2196F3 !important;
+}
+
+#woocommerce-coupon-data ul.wc-tabs li.#{$TOKEN}_options a::before, #woocommerce-product-data ul.wc-tabs li.#{$TOKEN}_options a::before, .woocommerce ul.wc-tabs li.#{$TOKEN}_options a::before {
+  content: "\f124";
+}
+
+.grayed-out-select {
+  background-color: #f5f5f5 !important;
+}
+
+.#{$TOKEN}_error_field {
+  color: red;
+  margin-top: 4px;
+  font-size: 0.875em;
+}
+
+.json-inline {
+  display: inline-block;
+  max-width: 600px; /* or any suitable width */
+  white-space: nowrap;
+  overflow-x: auto;
+  background: #f8f8f8;
+  border: 1px solid #ccc;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}

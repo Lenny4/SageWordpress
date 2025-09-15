@@ -1,0 +1,402 @@
+# Copyright (C) 2023 Alexandre Beaujour
+# This file is distributed under the same license as the Sage plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Sage 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/sage\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2023-10-25T04:02:55+02:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.8.1\n"
+"X-Domain: sage\n"
+
+#. Plugin Name of the plugin
+#: includes/SageSettings.php:460
+#: includes/SageSettings.php:461
+#: includes/SageSettings.php:530
+msgid "Sage"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "https://github.com/Lenny4/SageWordpress"
+msgstr ""
+
+#. Description of the plugin
+msgid "A plugin to use Sage on your wordpress website."
+msgstr ""
+
+#. Author of the plugin
+msgid "Alexandre Beaujour"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://lenny4.github.io/"
+msgstr ""
+
+#: includes/lib/SageAdminApi.php:310
+msgid "Upload an image"
+msgstr ""
+
+#: includes/lib/SageAdminApi.php:310
+msgid "Use image"
+msgstr ""
+
+#: includes/lib/SageAdminApi.php:310
+msgid "Upload new image"
+msgstr ""
+
+#: includes/lib/SageAdminApi.php:311
+msgid "Remove image"
+msgstr ""
+
+#: includes/lib/SagePostType.php:76
+msgid "Add New"
+msgstr ""
+
+#: includes/lib/SagePostType.php:77
+#: includes/lib/SageTaxonomy.php:86
+msgid "Add New %s"
+msgstr ""
+
+#: includes/lib/SagePostType.php:78
+#: includes/lib/SageTaxonomy.php:83
+msgid "Edit %s"
+msgstr ""
+
+#: includes/lib/SagePostType.php:79
+msgid "New %s"
+msgstr ""
+
+#: includes/lib/SagePostType.php:80
+#: includes/lib/SageTaxonomy.php:82
+msgid "All %s"
+msgstr ""
+
+#: includes/lib/SagePostType.php:81
+#: includes/lib/SageTaxonomy.php:84
+msgid "View %s"
+msgstr ""
+
+#: includes/lib/SagePostType.php:82
+#: includes/lib/SageTaxonomy.php:90
+msgid "Search %s"
+msgstr ""
+
+#: includes/lib/SagePostType.php:83
+msgid "No %s Found"
+msgstr ""
+
+#: includes/lib/SagePostType.php:84
+msgid "No %s Found In Trash"
+msgstr ""
+
+#: includes/lib/SagePostType.php:128
+msgid "%1$s updated. %2$sView %3$s%4$s."
+msgstr ""
+
+#: includes/lib/SagePostType.php:129
+msgid "Custom field updated."
+msgstr ""
+
+#: includes/lib/SagePostType.php:130
+msgid "Custom field deleted."
+msgstr ""
+
+#: includes/lib/SagePostType.php:131
+msgid "%1$s updated."
+msgstr ""
+
+#: includes/lib/SagePostType.php:132
+msgid "%1$s restored to revision from %2$s."
+msgstr ""
+
+#: includes/lib/SagePostType.php:133
+msgid "%1$s published. %2$sView %3$s%4s."
+msgstr ""
+
+#: includes/lib/SagePostType.php:134
+msgid "%1$s saved."
+msgstr ""
+
+#: includes/lib/SagePostType.php:135
+msgid "%1$s submitted. %2$sPreview post%3$s%4$s."
+msgstr ""
+
+#: includes/lib/SagePostType.php:136
+msgid "%1$s scheduled for: %2$s. %3$sPreview %4$s%5$s."
+msgstr ""
+
+#: includes/lib/SagePostType.php:136
+msgid "M j, Y @ G:i"
+msgstr ""
+
+#: includes/lib/SagePostType.php:137
+msgid "%1$s draft updated. %2$sPreview %3$s%4$s."
+msgstr ""
+
+#: includes/lib/SagePostType.php:154
+msgid "%1$s %2$s updated."
+msgid_plural "%1$s %3$s updated."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/lib/SagePostType.php:155
+msgid "%1$s %2$s not updated, somebody is editing it."
+msgid_plural "%1$s %3$s not updated, somebody is editing them."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/lib/SagePostType.php:156
+msgid "%1$s %2$s permanently deleted."
+msgid_plural "%1$s %3$s permanently deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/lib/SagePostType.php:157
+msgid "%1$s %2$s moved to the Trash."
+msgid_plural "%1$s %3$s moved to the Trash."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/lib/SagePostType.php:158
+msgid "%1$s %2$s restored from the Trash."
+msgid_plural "%1$s %3$s restored from the Trash."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/lib/SageTaxonomy.php:85
+msgid "Update %s"
+msgstr ""
+
+#: includes/lib/SageTaxonomy.php:87
+msgid "New %s Name"
+msgstr ""
+
+#: includes/lib/SageTaxonomy.php:88
+msgid "Parent %s"
+msgstr ""
+
+#: includes/lib/SageTaxonomy.php:89
+msgid "Parent %s:"
+msgstr ""
+
+#: includes/lib/SageTaxonomy.php:91
+msgid "Popular %s"
+msgstr ""
+
+#: includes/lib/SageTaxonomy.php:92
+msgid "Separate %s with commas"
+msgstr ""
+
+#: includes/lib/SageTaxonomy.php:93
+msgid "Add or remove %s"
+msgstr ""
+
+#: includes/lib/SageTaxonomy.php:94
+msgid "Choose from the most used %s"
+msgstr ""
+
+#: includes/lib/SageTaxonomy.php:95
+msgid "No %s found"
+msgstr ""
+
+#: includes/Sage.php:154
+msgid "Sage plugin require WooCommerce to be installed."
+msgstr ""
+
+#: includes/Sage.php:162
+msgid "Sage plugin require WooCommerce to be activated."
+msgstr ""
+
+#: includes/SageSettings.php:100
+msgid "Api"
+msgstr ""
+
+#: includes/SageSettings.php:101
+msgid "These are fairly standard form input fields."
+msgstr ""
+
+#: includes/SageSettings.php:105
+msgid "Api host url"
+msgstr ""
+
+#: includes/SageSettings.php:106
+#: includes/SageSettings.php:114
+msgid "Can be found here."
+msgstr ""
+
+#: includes/SageSettings.php:109
+msgid "192.168.0.1"
+msgstr ""
+
+#: includes/SageSettings.php:113
+msgid "Api key"
+msgstr ""
+
+#: includes/SageSettings.php:117
+#: includes/SageSettings.php:139
+#: includes/SageSettings.php:147
+#: includes/SageSettings.php:155
+msgid "Placeholder text"
+msgstr ""
+
+#: includes/SageSettings.php:121
+msgid "Synchronize products"
+msgstr ""
+
+#: includes/SageSettings.php:122
+msgid "All products created with Sage will be automatically create in Wordpress and vice versa"
+msgstr ""
+
+#: includes/SageSettings.php:128
+msgid "Synchronize Sales documents"
+msgstr ""
+
+#: includes/SageSettings.php:129
+msgid "All sales documents created with Sage will be automatically create in Wordpress and vice versa"
+msgstr ""
+
+#: includes/SageSettings.php:135
+msgid "Some Text"
+msgstr ""
+
+#: includes/SageSettings.php:136
+msgid "This is a standard text field."
+msgstr ""
+
+#: includes/SageSettings.php:143
+msgid "A Password"
+msgstr ""
+
+#: includes/SageSettings.php:144
+msgid "This is a standard password field."
+msgstr ""
+
+#: includes/SageSettings.php:151
+msgid "Some Secret Text"
+msgstr ""
+
+#: includes/SageSettings.php:152
+msgid "This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved."
+msgstr ""
+
+#: includes/SageSettings.php:159
+msgid "A Text Block"
+msgstr ""
+
+#: includes/SageSettings.php:160
+msgid "This is a standard text area."
+msgstr ""
+
+#: includes/SageSettings.php:163
+msgid "Placeholder text for this textarea"
+msgstr ""
+
+#: includes/SageSettings.php:167
+msgid "An Option"
+msgstr ""
+
+#: includes/SageSettings.php:168
+msgid "A standard checkbox - if you save this option as checked then it will store the option as 'on', otherwise it will be an empty string."
+msgstr ""
+
+#: includes/SageSettings.php:174
+msgid "A Select Box"
+msgstr ""
+
+#: includes/SageSettings.php:175
+msgid "A standard select box."
+msgstr ""
+
+#: includes/SageSettings.php:182
+msgid "Some Options"
+msgstr ""
+
+#: includes/SageSettings.php:183
+msgid "A standard set of radio buttons."
+msgstr ""
+
+#: includes/SageSettings.php:190
+msgid "Some Items"
+msgstr ""
+
+#: includes/SageSettings.php:191
+msgid "You can select multiple items and they will be stored as an array."
+msgstr ""
+
+#: includes/SageSettings.php:200
+#: includes/SageSettings.php:485
+#: includes/SageSettings.php:486
+msgid "Clients"
+msgstr ""
+
+#: includes/SageSettings.php:201
+msgid "These are some extra input fields that maybe aren't as common as the others."
+msgstr ""
+
+#: includes/SageSettings.php:205
+msgid "Fields to show"
+msgstr ""
+
+#: includes/SageSettings.php:206
+msgid "Please select the fields to show on the table."
+msgstr ""
+
+#: includes/SageSettings.php:213
+msgid "A Number"
+msgstr ""
+
+#: includes/SageSettings.php:214
+msgid "This is a standard number field - if this field contains anything other than numbers then the form will not be submitted."
+msgstr ""
+
+#: includes/SageSettings.php:217
+msgid "42"
+msgstr ""
+
+#: includes/SageSettings.php:221
+msgid "Pick a colour"
+msgstr ""
+
+#: includes/SageSettings.php:222
+msgid "This uses WordPress' built-in colour picker - the option is stored as the colour's hex code."
+msgstr ""
+
+#: includes/SageSettings.php:228
+msgid "An Image"
+msgstr ""
+
+#: includes/SageSettings.php:229
+msgid "This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons."
+msgstr ""
+
+#: includes/SageSettings.php:236
+msgid "A Multi-Select Box"
+msgstr ""
+
+#: includes/SageSettings.php:237
+msgid "A standard multi-select box - the saved data is stored as an array."
+msgstr ""
+
+#: includes/SageSettings.php:327
+msgid "Successfully connected to API"
+msgstr ""
+
+#: includes/SageSettings.php:472
+#: includes/SageSettings.php:473
+#: includes/SageSettings.php:615
+msgid "Settings"
+msgstr ""
+
+#: includes/SageSettings.php:509
+#: includes/SageSettings.php:510
+msgid "About"
+msgstr ""
+
+#: includes/SageSettings.php:580
+msgid "Save Settings"
+msgstr ""

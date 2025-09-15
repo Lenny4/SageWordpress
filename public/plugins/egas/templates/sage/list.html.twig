@@ -1,0 +1,17 @@
+{% set allTranslations = getTranslations() %}
+<div class="wrap">
+  <h1 class="wp-heading-inline">
+    {{ allTranslations[sageEntityName].label }}
+  </h1>
+  <hr class="wp-header-end">
+  <div data-list-entity="{{ sageEntityName }}">
+    <div data-filtertypes="{{ getAllFilterType()|json_encode }}"></div>
+    <div data-paginationrange="{{ getPaginationRange()|json_encode }}"></div>
+    <div data-mandatoryfields="{{ mandatoryFields|json_encode }}"></div>
+    <div data-filterfields="{{ filterFields|json_encode }}"></div>
+    <div data-showfields="{{ showFields|json_encode }}"></div>
+    <div data-hidefields="{{ hideFields|json_encode }}"></div>
+    <div data-perpage="{{ perPage }}"></div>
+    <div data-list-entity-content></div>
+  </div>
+</div>

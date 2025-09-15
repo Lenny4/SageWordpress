@@ -1,0 +1,47 @@
+{% set currencySymbol = order_get_currency(order) %}
+{#  todo delete ?#}
+{% if tasksSynchronizeOrder.syncChanges is defined %}
+  <ul>
+    {% for syncChange in tasksSynchronizeOrder.syncChanges %}
+      {% for change in syncChange.changes %}
+        <li>
+          {% if change == 'replace_product_action' %}
+            {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.old, tasksSynchronizeOrder.products) ~'"'~'va être remplacé par'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~ '".' }}
+          {% elseif change == 'add_product_action' %}
+            {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'"'~'va être ajouté.'|trans }}
+          {% elseif change == 'remove_product_action' %}
+            {{ 'Le produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.old, tasksSynchronizeOrder.products) ~'" '~'va être supprimé.'|trans }}
+          {% elseif change == 'change_quantity_product_action' %}
+            {{ 'La quantité du produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'" '~'va passer de '~syncChange.old.quantity~' '~'à'~' '~ syncChange.new.quantity ~'.'|trans }}
+          {% elseif change == 'change_price_product_action' %}
+            {{ 'Le prix de la ligne du produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'" '~'va passer de '~syncChange.old.linePriceHt|number_format(2, ',', ' ')~ currencySymbol|raw ~' '~'à'~' '~ syncChange.new.linePriceHt|number_format(2, ',', ' ') ~currencySymbol|raw~'.'|trans }}
+          {% elseif change == 'change_taxes_product_action' %}
+            {{ 'Les taxes de la ligne du produit'|trans ~ ' "' ~ getProductChangeLabel(syncChange.new, tasksSynchronizeOrder.products) ~'" '~'vont êtres mises à jour ('~show_taxes_change(syncChange.new.taxes)~').'|trans }}
+          {% elseif change == 'remove_shipping_action' %}
+            {{ 'L\'expédition '|trans ~ syncChange.old.name ~ ' va être supprimée.' }}
+          {% elseif change == 'add_shipping_action' %}
+            {{ 'L\'expédition '|trans ~ syncChange.new.name ~ ' va être ajoutée.' }}
+          {% elseif change == 'update_wc_order_item_tax_action' %}
+            {{ 'Les codes de taxes vont être mis à jour.' }}
+          {% elseif change == 'remove_fee_action' %}
+            {{ 'Le frais "'~syncChange.old.name~'" va être supprimé.' }}
+          {% elseif change == 'remove_coupon_action' %}
+            {{ 'Le coupon "'~syncChange.old.name~'" va être supprimé.' }}
+          {% elseif change == 'change_customer_action' %}
+            {{ 'Le client va être mis à jour ["'~syncChange.new.ctNum~'"].' }}
+          {% elseif change == 'change_user_action_billing' %}
+            {{ 'L\'adresse de facturation par défaut de l\'utilisateur va être mise à jour.' }}
+          {% elseif change == 'change_user_action_shipping' %}
+            {{ 'L\'adresse de livraison par défaut de l\'utilisateur va être mise à jour.' }}
+          {% elseif change == 'change_order_address_type_action_billing' %}
+            {{ 'L\'adresse de facturation de la commande va être mise à jour.' }}
+          {% elseif change == 'change_order_address_type_action_shipping' %}
+            {{ 'L\'adresse de livraison de la commande va être mise à jour.' }}
+          {% else %}
+            {{ change }}
+          {% endif %}
+        </li>
+      {% endfor %}
+    {% endfor %}
+  </ul>
+{% endif %}

@@ -1,0 +1,48 @@
+services:
+
+  caddy:
+    container_name: wordpress
+    build:
+      context: .
+    restart: always
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php.ini:/usr/local/etc/php/php.ini
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile
+      - sage_wordpress_caddy_data:/data
+      - sage_wordpress_caddy_config:/config
+    environment:
+      PHP_IDE_CONFIG: serverName=xdebug-sage-wp-plugin
+      XDEBUG_MODE: debug
+      XDEBUG_SESSION: PHPSTORM
+    depends_on:
+      - db
+    ports:
+      - 80:80
+      - 443:443
+
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: exampledb
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    ports:
+      - 3306:3306
+    volumes:
+      - sage_wordpress_mysql:/var/lib/mysql
+
+  maildev:
+    image: maildev/maildev
+    restart: unless-stopped
+    ports:
+      - 8087:80
+      - 1025:1025
+    command: --web 80
+
+volumes:
+  sage_wordpress_mysql:
+  sage_wordpress_caddy_data:
+  sage_wordpress_caddy_config:

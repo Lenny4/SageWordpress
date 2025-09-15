@@ -14,3 +14,5 @@
 /vendor
 auth.json
 .idea
+!public/plugins/egas
+public/themes
