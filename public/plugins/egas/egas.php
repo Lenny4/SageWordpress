@@ -31,4 +31,13 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline) {
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 });
 
-return Sage::getInstance(__FILE__);
+$sage = Sage::getInstance(__FILE__);
+if (!$sage->isWooCommerceActive()) {
+    add_action('admin_notices', function () {
+        echo '<div class="notice notice-error"><p>' .
+            __('Egas a besoin de Woocommerce pour fonctionner.', Sage::TOKEN) .
+            '</p></div>';
+    });
+} else {
+    $sage->registerHooks();
+}

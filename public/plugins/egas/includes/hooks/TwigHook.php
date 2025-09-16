@@ -1,10 +1,9 @@
 <?php
 
-namespace App\services;
+namespace App\hooks;
 
 use App\Sage;
 use App\utils\SageTranslationUtils;
-use stdClass;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
 use Twig\Extra\Intl\IntlExtension;
@@ -12,18 +11,15 @@ use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
-final class TwigService
+class TwigHook
 {
     public Environment $twig;
     public string $dir;
 
-    public function __construct(string $file)
+    public function __construct()
     {
-        $templatesDir = __DIR__ . '/../templates';
+        $sage = Sage::getInstance();
+        $templatesDir = __DIR__ . '/../../templates';
         $filesystemLoader = new FilesystemLoader($templatesDir);
         $twigOptions = [
             'debug' => WP_DEBUG,
@@ -37,7 +33,8 @@ final class TwigService
             // https://twig.symfony.com/doc/3.x/functions/dump.html
             $this->twig->addExtension(new DebugExtension());
         }
-        $this->dir = dirname($file);
+        $this->dir = dirname($sage->file);
+//        $this->twig->addExtension(new IntlExtension());
         $this->registerFunction();
         $this->registerFilter();
     }
@@ -366,14 +363,8 @@ final class TwigService
 
             return implode('|', $r);
         }));
-        $this->twig->addExtension(new IntlExtension());
         $this->twig->addFilter(new TwigFilter('wpDate', static function (string $date): string {
             return date_i18n(wc_date_format(), strtotime($date)) . ' ' . date_i18n(wc_time_format(), strtotime($date));
         }));
-    }
-
-    public function render(string $name, array $context = [])
-    {
-        return $this->twig->render($name, $context);
     }
 }

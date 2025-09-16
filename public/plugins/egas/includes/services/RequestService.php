@@ -2,6 +2,7 @@
 
 namespace App\services;
 
+use App\Container;
 use App\Sage;
 use interfaces\ServiceInterface;
 use WP_Error;
@@ -11,8 +12,18 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-final class RequestService
+class RequestService
 {
+    private static ?RequestService $instance = null;
+
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
     public static function selfRequest(
         string $url,
         array  $params,
