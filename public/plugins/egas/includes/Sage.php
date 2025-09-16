@@ -2,8 +2,6 @@
 
 namespace App;
 
-use App\controllers\ApiController;
-
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -17,14 +15,14 @@ class Sage
     public static array $paginationRange = [20, 50, 100];
     private static ?Sage $instance = null;
 
-    private function __construct(public ?string $file = '', public ?string $_version = '1.0.0')
+    private function __construct(public ?string $file = '')
     {
     }
 
-    public static function getInstance(string $file = '', string $version = '1.0.0'): self
+    public static function getInstance(string $file = ''): self
     {
         if (self::$instance === null) {
-            self::$instance = new self($file, $version);
+            self::$instance = new self($file);
         }
         return self::$instance;
     }

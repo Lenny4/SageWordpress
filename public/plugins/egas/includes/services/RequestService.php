@@ -2,9 +2,7 @@
 
 namespace App\services;
 
-use App\Container;
 use App\Sage;
-use interfaces\ServiceInterface;
 use WP_Error;
 use WP_Http;
 
