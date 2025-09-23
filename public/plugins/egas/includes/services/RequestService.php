@@ -22,7 +22,7 @@ class RequestService
         return self::$instance;
     }
 
-    public static function selfRequest(
+    public function selfRequest(
         string $url,
         array  $params,
     ): WP_Error|array
@@ -38,7 +38,7 @@ class RequestService
         ]);
     }
 
-    public static function apiRequest(string $url): bool|string
+    public function apiRequest(string $url): bool|string
     {
         $host = get_option(Sage::TOKEN . '_api_host_url', null);
         $apiKey = get_option(Sage::TOKEN . '_api_key', null);

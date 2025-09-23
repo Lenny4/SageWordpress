@@ -4,23 +4,13 @@ namespace App\controllers;
 
 use App\resources\Resource;
 use App\Sage;
+use App\services\WordpressService;
 
 class AdminController
 {
     public static function registerMenu(): void
     {
-        /** @var Resource[] $resources */
-        $resources = [];
-        $files = glob(__DIR__ . '/../resources' . '/*.php');
-        foreach ($files as $file) {
-            if (str_ends_with($file, '/Resource.php')) {
-                continue;
-            }
-            $hookClass = 'App\\resources\\' . basename($file, '.php');
-            if (class_exists($hookClass)) {
-                $resources[] = $hookClass::getInstance();
-            }
-        }
+        $resources = WordpressService::getInstance()->getResources();
         $args = apply_filters(
             Sage::TOKEN . '_menu_settings',
             [
@@ -120,5 +110,18 @@ class AdminController
                 }
             }
         }
+    }
+
+    public static function showErrors(array|null|string $data): bool
+    {
+        if (is_string($data) || is_null($data)) {
+            if (is_string($data) && is_admin() /*on admin page*/) {
+                ?>
+                <div class="error"><?= $data ?></div>
+                <?php
+            }
+            return true;
+        }
+        return false;
     }
 }

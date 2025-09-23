@@ -12,6 +12,9 @@ if (!defined('ABSPATH')) {
 class Sage
 {
     public final const TOKEN = 'egas';
+    public final const PREFIX_META_DATA = 'metaData';
+    public const META_DATA_PREFIX = self::PREFIX_META_DATA . '_' . Sage::TOKEN;
+
     public static array $paginationRange = [20, 50, 100];
     private static ?Sage $instance = null;
 
