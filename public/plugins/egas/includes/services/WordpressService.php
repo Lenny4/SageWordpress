@@ -176,14 +176,11 @@ class WordpressService
         $graphqlService->updateAllSageEntitiesInOption(ignores: ['getFTaxes']);
         $this->updateTaxes(showMessage: false);
         $this->updateShippingMethodsWithSage();
-
-        add_action('admin_notices', static function (): void {
-            ?>
-            <div class="notice notice-success is-dismissible"><p><?=
-                    __('Connexion réussie à l\'API. Les paramètres ont été mis à jour.', Sage::TOKEN)
-                    ?></p></div>
-            <?php
-        });
+        AdminController::adminNotices("
+<div class='notice notice-success is-dismissible'>
+    <p>" . __('Connexion réussie à l\'API. Les paramètres ont été mis à jour.', Sage::TOKEN) . "</p>
+</div>
+");
         return true;
     }
 

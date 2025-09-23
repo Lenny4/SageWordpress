@@ -3,6 +3,7 @@
 namespace App\services;
 
 use App\class\Dto\ArgumentSelectionSetDto;
+use App\controllers\AdminController;
 use App\Sage;
 use App\Utils\FDocenteteUtils;
 use App\Utils\PCatComptaUtils;
@@ -37,19 +38,76 @@ class GraphqlService
     private ?array $cbSysLibres = null;
     private ?array $fDepots = null;
 
+    private function __construct(public ?string $file = '')
+    {
+        if (is_admin()) {
+            $this->ping();
+        }
+    }
+
+    private function ping(): void
+    {
+        $hostUrl = get_option(Sage::TOKEN . '_api_host_url');
+        $message = null;
+        if (!is_string($hostUrl) || ($hostUrl === '' || $hostUrl === '0')) {
+            $message = __("Veuillez renseigner l'host du serveur Sage.", Sage::TOKEN);
+        } else if (filter_var($hostUrl, FILTER_VALIDATE_URL) === false) {
+            $message = __("L'host du serveur Sage n'est pas une url valide.", Sage::TOKEN);
+        }
+        if (!is_null($message)) {
+            AdminController::adminNotices("
+<div class='notice notice-info'>
+    <p>" . $message . "</p>
+</div>
+");
+            $this->pingApi = false;
+            return;
+        }
+
+        $curlHandle = curl_init();
+        $sslVerification = (bool)get_option(Sage::TOKEN . '_activate_https_verification_graphql');
+        $data = [
+            CURLOPT_URL => $hostUrl . '/healthz',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 2,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+        ];
+        if (!$sslVerification) {
+            $data[CURLOPT_SSL_VERIFYPEER] = false;
+            $data[CURLOPT_SSL_VERIFYHOST] = 0;
+        }
+
+        curl_setopt_array($curlHandle, $data);
+        $response = curl_exec($curlHandle);
+        $errorMsg = null;
+        if (curl_errno($curlHandle) !== 0) {
+            $errorMsg = curl_error($curlHandle);
+        }
+
+        curl_close($curlHandle);
+        $this->pingApi = $response === 'Healthy';
+        if (!$this->pingApi) {
+            AdminController::adminNotices(
+                "<div id='" . Sage::TOKEN . "_join_api' class='error'><p>" .
+                __("L'API Sage n'est pas joignable. Avez-vous lancé le serveur ?", Sage::TOKEN)
+                . (!is_null($errorMsg)
+                    ? "<br>" . __('Error', Sage::TOKEN) . ": " . $errorMsg
+                    : ""
+                ) .
+                "</p></div>");
+        }
+    }
+
     public static function getInstance(): self
     {
         if (self::$instance === null) {
             self::$instance = new self();
         }
         return self::$instance;
-    }
-
-    private function __construct(public ?string $file = '')
-    {
-        if (is_admin()) {
-            $this->ping();
-        }
     }
 
     public function createUpdateWebsite(
@@ -62,24 +120,20 @@ class GraphqlService
         $hasError = false;
         $wordpressHostUrl = parse_url((string)get_option(Sage::TOKEN . '_wordpress_host_url'));
         if (!array_key_exists("scheme", $wordpressHostUrl)) {
-            add_action('admin_notices', static function (): void {
-                ?>
-                <div class="error"><p>
-                    <?= __("Wordpress host url doit commencer par 'http://' ou 'https://'", Sage::TOKEN) ?>
-                </p>
-                </div><?php
-            });
+            AdminController::adminNotices("
+<div class='error'>
+    <p>" . __("Wordpress host url doit commencer par 'http://' ou 'https://'", Sage::TOKEN) . "</p>
+</div>
+");
             $hasError = true;
         }
         $apiHostUrl = parse_url((string)get_option(Sage::TOKEN . '_api_host_url'));
         if (!array_key_exists("scheme", $apiHostUrl)) {
-            add_action('admin_notices', static function (): void {
-                ?>
-                <div class="error"><p>
-                    <?= __("Api host url doit commencer par 'http://' ou 'https://'", Sage::TOKEN) ?>
-                </p>
-                </div><?php
-            });
+            AdminController::adminNotices("
+<div class='error'>
+    <p>" . __("Api host url doit commencer par 'http://' ou 'https://'", Sage::TOKEN) . "</p>
+</div>
+");
             $hasError = true;
         }
         if ($hasError) {
@@ -147,13 +201,11 @@ class GraphqlService
             if ($getError) {
                 return $message;
             }
-            add_action('admin_notices', static function () use ($message): void {
-                ?>
-                <div class="error"><p>
-                        <?= $message ?>
-                    </p></div>
-                <?php
-            });
+            AdminController::adminNotices("
+<div class='error'>
+    <p>" . $message . "</p>
+</div>
+");
         }
 
         return null;
@@ -2054,70 +2106,5 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         }
 
         return $typeModel;
-    }
-
-    private function ping(): void
-    {
-        $hostUrl = get_option(Sage::TOKEN . '_api_host_url');
-        $message = null;
-        if (!is_string($hostUrl) || ($hostUrl === '' || $hostUrl === '0')) {
-            $message = __("Veuillez renseigner l'host du serveur Sage.", Sage::TOKEN);
-        } else if (filter_var($hostUrl, FILTER_VALIDATE_URL) === false) {
-            $message = __("L'host du serveur Sage n'est pas une url valide.", Sage::TOKEN);
-        }
-        if (!is_null($message)) {
-            add_action('admin_notices', static function () use ($message): void {
-                ?>
-                <div class="notice notice-info">
-                    <p>
-                        <?= $message ?>
-                    </p>
-                </div>
-                <?php
-            });
-            $this->pingApi = false;
-            return;
-        }
-
-        $curlHandle = curl_init();
-        $sslVerification = (bool)get_option(Sage::TOKEN . '_activate_https_verification_graphql');
-        $data = [
-            CURLOPT_URL => $hostUrl . '/healthz',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 2,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-        ];
-        if (!$sslVerification) {
-            $data[CURLOPT_SSL_VERIFYPEER] = false;
-            $data[CURLOPT_SSL_VERIFYHOST] = 0;
-        }
-
-        curl_setopt_array($curlHandle, $data);
-        $response = curl_exec($curlHandle);
-        $errorMsg = null;
-        if (curl_errno($curlHandle) !== 0) {
-            $errorMsg = curl_error($curlHandle);
-        }
-
-        curl_close($curlHandle);
-        $this->pingApi = $response === 'Healthy';
-        if (!$this->pingApi) {
-            add_action('admin_notices', static function () use ($errorMsg): void {
-                ?>
-                <div id="<?= Sage::TOKEN ?>_join_api" class="error"><p>
-                        <?= __("L'API Sage n'est pas joignable. Avez vous lancé le serveur ?", Sage::TOKEN) ?>
-                        <?php
-                        if (!is_null($errorMsg)) {
-                            echo "<br>" . __('Error', Sage::TOKEN) . ": " . $errorMsg;
-                        }
-                        ?>
-                    </p></div>
-                <?php
-            });
-        }
     }
 }

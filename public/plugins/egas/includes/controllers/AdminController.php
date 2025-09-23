@@ -124,4 +124,11 @@ class AdminController
         }
         return false;
     }
+
+    public static function adminNotices($message): void
+    {
+        add_action('admin_notices', static function () use ($message): void {
+            echo $message;
+        });
+    }
 }
