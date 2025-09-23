@@ -2,9 +2,14 @@
 
 namespace App\controllers;
 
+use App\class\SageExpectedOption;
 use App\resources\Resource;
 use App\Sage;
+use App\services\GraphqlService;
+use App\services\WoocommerceService;
 use App\services\WordpressService;
+use App\utils\SageTranslationUtils;
+use WC_Order;
 
 class AdminController
 {
@@ -130,5 +135,99 @@ class AdminController
         add_action('admin_notices', static function () use ($message): void {
             echo $message;
         });
+    }
+
+    public static function showWrongOptions(): void
+    {
+        $pDossier = GraphqlService::getInstance()->getPDossier();
+        $sageExpectedOptions = [
+            new SageExpectedOption(
+                optionName: 'woocommerce_enable_guest_checkout',
+                optionValue: 'no',
+                trans: __('Allow customers to place orders without an account', 'woocommerce'),
+                description: __("Lorsque cette option est activée vos clients ne sont pas obligés de se connecter à leurs comptes pour passer commande et il est donc impossible de créer automatiquement la commande passé dans Woocommerce dans Sage.", Sage::TOKEN),
+            ),
+            new SageExpectedOption(
+                optionName: 'woocommerce_calc_taxes',
+                optionValue: 'yes',
+                trans: __('Enable tax rates and calculations', 'woocommerce'),
+                description: __("Cette option doit être activé pour que le plugin Sage fonctionne correctement afin de récupérer les taxes directement renseignées dans Sage.", Sage::TOKEN),
+            ),
+        ];
+        if (!is_null($pDossier?->nDeviseCompteNavigation?->dCodeIso)) {
+            $sageExpectedOptions[] = new SageExpectedOption(
+                optionName: 'woocommerce_currency',
+                optionValue: $pDossier->nDeviseCompteNavigation->dCodeIso,
+                trans: __('Currency', 'woocommerce'),
+                description: __("La devise dans Woocommerce n'est pas la même que dans Sage.", Sage::TOKEN),
+            );
+        }
+        /** @var SageExpectedOption[] $changes */
+        $changes = [];
+        foreach ($sageExpectedOptions as $sageExpectedOption) {
+            $optionName = $sageExpectedOption->getOptionName();
+            $expectedOptionValue = $sageExpectedOption->getOptionValue();
+            $value = get_option($optionName);
+            $sageExpectedOption->setCurrentOptionValue($value);
+            if ($value !== $expectedOptionValue) {
+                $changes[] = $sageExpectedOption;
+            }
+        }
+        if ($changes !== []) {
+            ?>
+            <div class="error">
+            <?php
+            $fieldsForm = '';
+            $optionNames = [];
+            foreach ($changes as $sageExpectedOption) {
+                $optionValue = $sageExpectedOption->getOptionValue();
+                echo "<div>" . __('Le plugin Sage a besoin de modifier l\'option', Sage::TOKEN) . " <code>" .
+                    $sageExpectedOption->getTrans() . "</code> " . __('pour lui donner la valeur', Sage::TOKEN) . " <code>" .
+                    $optionValue . "</code>
+<div class='tooltip'>
+        <span class='dashicons dashicons-info' style='padding-right: 22px'></span>
+        <div class='tooltiptext' style='right: 0'>" . $sageExpectedOption->getDescription() . "</div>
+    </div>
+</div>";
+                $optionName = $sageExpectedOption->getOptionName();
+                $fieldsForm .= '<input type="hidden" name="' . $optionName . '" value="' . $optionValue . '">';
+                $optionNames[] = $optionName;
+            } ?>
+            <form method="post" action="options.php" enctype="multipart/form-data">
+                <?= $fieldsForm ?>
+                <input type="hidden" name="page_options" value="<?= implode(',', $optionNames) ?>"/>
+                <input type="hidden" name="_wp_http_referer" value="<?= $_SERVER["REQUEST_URI"] ?>">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="option_page" value="options"/>
+                <?php wp_nonce_field('options-options'); ?>
+                <p class="submit">
+                    <input name="Update" type="submit" class="button-primary"
+                           value="<?= __('Mettre à jour', Sage::TOKEN) ?>">
+                </p>
+            </form>
+            </div><?php
+        }
+    }
+
+    public static function addColumn(array $columns): array
+    {
+        $columns[Sage::TOKEN] = __('Sage', Sage::TOKEN);
+        return $columns;
+    }
+
+    public static function displayColumn(string $column_name, WC_Order $order): void
+    {
+        $trans = SageTranslationUtils::getTranslations();
+        if (Sage::TOKEN !== $column_name) {
+            return;
+        }
+        $identifier = WoocommerceService::getInstance()->getFDocenteteIdentifierFromOrder($order);
+        if (empty($identifier)) {
+            echo '<span class="dashicons dashicons-no" style="color: red"></span>';
+            return;
+        }
+        echo $trans["fDocentetes"]["doType"]["values"][$identifier['doType']]
+            . ': n° '
+            . $identifier["doPiece"];
     }
 }
