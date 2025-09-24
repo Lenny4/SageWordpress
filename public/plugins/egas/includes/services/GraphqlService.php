@@ -4,6 +4,23 @@ namespace App\services;
 
 use App\class\Dto\ArgumentSelectionSetDto;
 use App\controllers\AdminController;
+use App\enum\WebsiteEnum;
+use App\resources\CbSyslibreResource;
+use App\resources\FArticleResource;
+use App\resources\FCatalogueResource;
+use App\resources\FComptetResource;
+use App\resources\FDepotResource;
+use App\resources\FDocenteteResource;
+use App\resources\FFamilleResource;
+use App\resources\FGlossaireResource;
+use App\resources\FPaysResource;
+use App\resources\FTaxeResource;
+use App\resources\PCatcomptaResource;
+use App\resources\PCattarifResource;
+use App\resources\PDossierResource;
+use App\resources\PExpeditionResource;
+use App\resources\PPreferenceResource;
+use App\resources\PUniteResource;
 use App\resources\Resource;
 use App\Sage;
 use App\Utils\FDocenteteUtils;
@@ -14,7 +31,11 @@ use GraphQL\Mutation;
 use GraphQL\Query;
 use GraphQL\RawObject;
 use GraphQL\Variable;
+use ReflectionClass;
+use ReflectionMethod;
+use RuntimeException;
 use stdClass;
+use Throwable;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -39,7 +60,7 @@ class GraphqlService
     private ?array $cbSysLibres = null;
     private ?array $fDepots = null;
 
-    private function __construct(public ?string $file = '')
+    private function __construct()
     {
         if (is_admin()) {
             $this->ping();
@@ -103,14 +124,6 @@ class GraphqlService
         }
     }
 
-    public static function getInstance(): self
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
-
     public function createUpdateWebsite(
         string $username,
         string $password,
@@ -149,6 +162,7 @@ class GraphqlService
                     'authorization',
                 ]
             );
+        $sageService = SageService::getInstance();
         $variables = [
             'websiteDto' => [
                 'name' => get_bloginfo(),
@@ -164,21 +178,29 @@ class GraphqlService
                 'tablePrefix' => $wpdb->prefix,
                 'dbName' => get_option(Sage::TOKEN . '_wordpress_db_name'),
                 'autoCreateSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_create_' . Sage::TOKEN . '_fcomptet'),
-                'autoImportSageFcomptet' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_' . Sage::TOKEN . '_fcomptet')?->format('Y-m-d H:i:s'),
+                'autoImportSageFcomptet' => $sageService->get_option_date_or_null(Sage::TOKEN . '_auto_import_' . Sage::TOKEN . '_fcomptet')?->format('Y-m-d H:i:s'),
                 'autoCreateWebsiteAccount' => (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_account'),
-                'autoImportWebsiteAccount' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_account')?->format('Y-m-d H:i:s'),
+                'autoImportWebsiteAccount' => $sageService->get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_account')?->format('Y-m-d H:i:s'),
                 'autoCreateSageFdocentete' => (bool)get_option(Sage::TOKEN . '_auto_create_' . Sage::TOKEN . '_fdocentete'),
-                'autoImportWebsiteOrderDate' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_order_date')?->format('Y-m-d H:i:s'),
+                'autoImportWebsiteOrderDate' => $sageService->get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_order_date')?->format('Y-m-d H:i:s'),
                 'autoImportWebsiteOrderDoType' => get_option(Sage::TOKEN . '_auto_import_wordpress_order_dotype', null),
                 'autoCreateWebsiteOrder' => get_option(Sage::TOKEN . '_auto_create_wordpress_order', null),
                 'autoCreateWebsiteArticle' => (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_article'),
-                'autoImportWebsiteArticle' => SageSettings::get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article')?->format('Y-m-d H:i:s'),
-                'pluginVersion' => get_plugin_data($this->sage->file)['Version'],
+                'autoImportWebsiteArticle' => $sageService->get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article')?->format('Y-m-d H:i:s'),
+                'pluginVersion' => get_plugin_data(Sage::getInstance()->file)['Version'],
                 'autoUpdateSageFComptetWhenEditAccount' => (bool)get_option(Sage::TOKEN . '_auto_update_' . Sage::TOKEN . '_fcomptet_when_edit_account'),
                 'autoUpdateAccountWhenEditSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_update_account_when_edit_' . Sage::TOKEN . '_fcomptet'),
             ]
         ];
         return $this->runQuery($mutation, $getError, $variables);
+    }
+
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
     }
 
     private function runQuery(
@@ -277,7 +299,7 @@ class GraphqlService
         $result = [];
         foreach ($selectionSets as $key => $value) {
             if (is_numeric($key)) {
-                if (!str_starts_with($value['name'], SageSettings::PREFIX_META_DATA)) {
+                if (!str_starts_with($value['name'], Sage::PREFIX_META_DATA)) {
                     $result[] = $value['name'];
                 }
             } else {
@@ -357,16 +379,16 @@ class GraphqlService
     public function getTypeModel(string $object): array|null
     {
         $cacheName = 'TypeModel_' . $object;
+        $cacheService = CacheService::getInstance();
         if (!$this->pingApi) {
-            $result = $this->sage->cache->get($cacheName, static fn() => null);
+            $result = $cacheService->get($cacheName, static fn() => null);
             if (is_null($result)) {
-                $this->sage->cache->delete($cacheName);
+                $cacheService->delete($cacheName);
             }
             return $result;
         }
 
-        $sageGraphQl = $this;
-        $function = static function () use ($object, $sageGraphQl) {
+        $function = static function () use ($object) {
             // https://graphql.org/learn/introspection/
             $query = (new Query('__type'))
                 ->setArguments(['name' => $object])
@@ -396,12 +418,12 @@ class GraphqlService
                             ),
                     ]
                 );
-            return $sageGraphQl->runQuery($query)?->data?->__type?->fields;
+            return $this->runQuery($query)?->data?->__type?->fields;
         };
-        $typeModel = $this->sage->cache->get($cacheName, $function);
+        $typeModel = $cacheService->get($cacheName, $function);
         if (empty($typeModel)) {
-            $this->sage->cache->delete($cacheName);
-            $typeModel = $this->sage->cache->get($cacheName, $function);
+            $cacheService->delete($cacheName);
+            $typeModel = $cacheService->get($cacheName, $function);
         }
 
         return $typeModel;
@@ -417,7 +439,7 @@ class GraphqlService
         if (!is_null($this->pDossier) && $getFromSage !== true) {
             return $this->pDossier;
         }
-        $entityName = Resource::PDOSSIER_ENTITY_NAME;
+        $entityName = PDossierResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "paged" => "1",
@@ -557,18 +579,18 @@ class GraphqlService
         }
         if (!$this->pingApi && !$ignorePingApi) {
             if (!is_null($cacheName)) {
-                $result = $this->sage->cache->get($cacheName, static fn() => null);
+                $cacheService ??= CacheService::getInstance();
+                $result = $cacheService->get($cacheName, static fn() => null);
                 if (is_null($result)) {
-                    $this->sage->cache->delete($cacheName);
+                    $cacheService->delete($cacheName);
                 }
                 return $result;
             }
             return null;
         }
 
-        $sageGraphQl = $this;
-        $function = static function () use ($entityName, $queryParams, $selectionSets, $getError, $sageGraphQl) {
-            $nbPerPage = (int)($queryParams["per_page"] ?? SageSettings::$defaultPagination);
+        $function = static function () use ($entityName, $queryParams, $selectionSets, $getError) {
+            $nbPerPage = (int)($queryParams["per_page"] ?? Sage::$defaultPagination);
             $page = (int)($queryParams["paged"] ?? 1);
             $where = [];
             if (array_key_exists('filter_field', $queryParams)) {
@@ -624,8 +646,8 @@ class GraphqlService
             }
 
             if ($where !== []) {
-                $arguments['where'] = new RawObject($sageGraphQl->buildGraphQLWhereClause(
-                    $sageGraphQl->getGraphQLWhereClause($where, $queryParams["where_condition"] ?? null)[0]
+                $arguments['where'] = new RawObject($this->buildGraphQLWhereClause(
+                    $this->getGraphQLWhereClause($where, $queryParams["where_condition"] ?? null)[0]
                 ));
             }
 
@@ -635,21 +657,22 @@ class GraphqlService
                     [
                         'totalCount',
                         (new Query('items'))
-                            ->setSelectionSet($sageGraphQl->formatSelectionSet($selectionSets)),
+                            ->setSelectionSet($this->formatSelectionSet($selectionSets)),
                     ]
                 );
-            return $sageGraphQl->runQuery($query, $getError);
+            return $this->runQuery($query, $getError);
         };
         if (is_null($cacheName)) {
             $results = $function();
         } else {
+            $cacheService ??= CacheService::getInstance();
             if ($getFromSage) {
-                $this->sage->cache->delete($cacheName);
+                $cacheService->delete($cacheName);
             }
-            $results = $this->sage->cache->get($cacheName, $function);
+            $results = $cacheService->get($cacheName, $function);
             if (empty($results) || is_string($results)) { // if $results is string it means it's an error
-                $this->sage->cache->delete($cacheName);
-                $results = $this->sage->cache->get($cacheName, $function);
+                $cacheService->delete($cacheName);
+                $results = $cacheService->get($cacheName, $function);
             }
         }
 
@@ -669,19 +692,19 @@ class GraphqlService
         }
 
         if (array_key_exists('page', $queryParams)) {
-            if ($queryParams['page'] === Sage::TOKEN . '_' . Resource::FDOCENTETE_ENTITY_NAME) {
-                return [Resource::FDOCENTETE_DEFAULT_SORT, 'desc'];
+            if ($queryParams['page'] === Sage::TOKEN . '_' . FDocenteteResource::ENTITY_NAME) {
+                return [FDocenteteResource::DEFAULT_SORT, 'desc'];
             }
 
-            if ($queryParams['page'] === Sage::TOKEN . '_' . Resource::FCOMPTET_ENTITY_NAME) {
-                return [Resource::FCOMPTET_DEFAULT_SORT, $defaultSortValue];
+            if ($queryParams['page'] === Sage::TOKEN . '_' . FComptetResource::ENTITY_NAME) {
+                return [FComptetResource::DEFAULT_SORT, $defaultSortValue];
             }
 
-            if ($queryParams['page'] === Sage::TOKEN . '_' . Resource::FARTICLE_ENTITY_NAME) {
-                return [Resource::FARTICLE_DEFAULT_SORT, $defaultSortValue];
+            if ($queryParams['page'] === Sage::TOKEN . '_' . FArticleResource::ENTITY_NAME) {
+                return [FArticleResource::DEFAULT_SORT, $defaultSortValue];
             }
 
-            throw new Exception("Unknown page " . $queryParams['page']);
+            throw new RuntimeException("Unknown page " . $queryParams['page']);
         }
 
         return [null, $defaultSortValue];
@@ -780,7 +803,7 @@ class GraphqlService
         if (!is_null($this->pExpeditions) && $getFromSage !== true) {
             return $this->pExpeditions;
         }
-        $entityName = Resource::PEXPEDITION_ENTITY_NAME;
+        $entityName = PExpeditionResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [
@@ -925,7 +948,7 @@ class GraphqlService
         ];
     }
 
-    public function _getFArtfournisseSelectionSet()
+    public function _getFArtfournisseSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
@@ -943,7 +966,7 @@ class GraphqlService
         ];
     }
 
-    public function _getFArtglossesSelectionSet()
+    public function _getFArtglossesSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
@@ -967,7 +990,7 @@ class GraphqlService
         ];
     }
 
-    public function _getFArtstocksSelectionSet()
+    public function _getFArtstocksSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
@@ -1055,7 +1078,7 @@ class GraphqlService
             return $this->pUnites;
         }
 
-        $entityName = Resource::PUNITE_ENTITY_NAME;
+        $entityName = PUniteResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [
@@ -1105,7 +1128,7 @@ class GraphqlService
             return $this->fDepots;
         }
 
-        $entityName = Resource::FDEPOT_ENTITY_NAME;
+        $entityName = FDepotResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [],
@@ -1151,7 +1174,7 @@ class GraphqlService
             return $this->fFamilles;
         }
 
-        $entityName = Resource::FFAMILLE_ENTITY_NAME;
+        $entityName = FFamilleResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [
@@ -1202,7 +1225,7 @@ class GraphqlService
     ): StdClass|null
     {
         $fArticle = $this->searchEntities(
-            Resource::FARTICLE_ENTITY_NAME,
+            FArticleResource::ENTITY_NAME,
             [
                 "filter_field" => [
                     "arRef"
@@ -1288,7 +1311,7 @@ class GraphqlService
             }
         }
         $fDocentetes = $this->searchEntities(
-            Resource::FDOCENTETE_ENTITY_NAME,
+            FDocenteteResource::ENTITY_NAME,
             [
                 "filter_field" => $filterField,
                 "filter_type" => $filterType,
@@ -1343,14 +1366,14 @@ SELECT order_id, meta_value
 FROM " . $wpdb->prefix . "wc_orders_meta
 WHERE meta_key = %s
   AND meta_value IN ('" . implode(', ', $values) . "')
-", [Sage::META_KEY_IDENTIFIER]));
-            foreach ($fDocentetes as $i => $fDocentete) {
-                $fDocentetes[$i]->wordpressIds = [];
+", [FDocenteteResource::META_KEY]));
+            foreach ($fDocentetes as $fDocentete) {
+                $fDocentete->wordpressIds = [];
                 foreach ($r as $wcOrdersMeta) {
                     $data = json_decode($wcOrdersMeta->meta_value, false, 512, JSON_THROW_ON_ERROR);
                     if ($data->doPiece === $fDocentete->doPiece &&
                         $data->doType === $fDocentete->doType) {
-                        $fDocentetes[$i]->wordpressIds[] = (int)$wcOrdersMeta->order_id;
+                        $fDocentete->wordpressIds[] = (int)$wcOrdersMeta->order_id;
                         break;
                     }
                 }
@@ -1462,7 +1485,7 @@ SELECT user_id, meta_value
 FROM {$wpdb->usermeta}
 WHERE meta_key = %s
   AND meta_value IN ('" . implode(', ', $ctNums) . "')
-", [Sage::META_KEY_CT_NUM]));
+", [FComptetResource::META_KEY]));
         $mapping = [];
         foreach ($r as $row) {
             $mapping[$row->meta_value] = $row->user_id;
@@ -1492,7 +1515,7 @@ FROM {$wpdb->postmeta}
 WHERE {$wpdb->postmeta}.meta_key = %s
   AND {$wpdb->postmeta}.meta_value IN ('" . implode("','", $arRefs) . "')
 ", [
-                Sage::META_KEY_AR_REF,
+                FArticleResource::META_KEY,
             ]));
         foreach ($fDoclignes as $fDocligne) {
             $fDocligne->postId = null;
@@ -1509,7 +1532,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     public function getFComptet(string $ctNum, bool $ignorePingApi = false): StdClass|null
     {
         $fComptet = $this->searchEntities(
-            Resource::FCOMPTET_ENTITY_NAME,
+            FComptetResource::ENTITY_NAME,
             [
                 "filter_field" => [
                     "ctNum"
@@ -1543,7 +1566,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->pCattarifs) && $getFromSage !== true) {
             return $this->pCattarifs;
         }
-        $entityName = Resource::PCATTARIF_ENTITY_NAME;
+        $entityName = PCattarifResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [
@@ -1595,7 +1618,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->fGlossaires) && $getFromSage !== true) {
             return $this->fGlossaires;
         }
-        $entityName = Resource::FGLOSSAIRE_ENTITY_NAME;
+        $entityName = FGlossaireResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [],
@@ -1629,7 +1652,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->fCatalogues) && $getFromSage !== true) {
             return $this->fCatalogues;
         }
-        $entityName = Resource::FCATALOGUE_ENTITY_NAME;
+        $entityName = FCatalogueResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [],
@@ -1677,7 +1700,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->cbSysLibres) && $getFromSage !== true) {
             return $this->cbSysLibres;
         }
-        $entityName = Resource::CBSYSLIBRE_ENTITY_NAME;
+        $entityName = CbSyslibreResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [],
@@ -1701,7 +1724,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $this->cbSysLibres;
     }
 
-    public function _getCbSysLibreSelectionSet()
+    public function _getCbSysLibreSelectionSet(): array
     {
         return [
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
@@ -1725,7 +1748,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->fPays) && $getFromSage !== true) {
             return $this->fPays;
         }
-        $entityName = Resource::FPAYS_ENTITY_NAME;
+        $entityName = FPaysResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "paged" => "1",
@@ -1764,7 +1787,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->fTaxes) && $getFromSage !== true) {
             return $this->fTaxes;
         }
-        $entityName = Resource::FTAXES_ENTITY_NAME;
+        $entityName = FTaxeResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "paged" => "1",
@@ -1794,7 +1817,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->pCatComptas) && $getFromSage !== true) {
             return $this->pCatComptas;
         }
-        $entityName = Resource::PCATCOMPTA_ENTITY_NAME;
+        $entityName = PCatcomptaResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [],
@@ -1905,7 +1928,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                     }
 
                     // Call the method with constructed arguments
-                    $method->invokeArgs($this->sage->sageGraphQl, $args);
+                    $method->invokeArgs($this, $args);
                 }
             }
         }
@@ -1945,7 +1968,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->pPreference) && $getFromSage !== true) {
             return $this->pPreference;
         }
-        $entityName = Resource::PPREFERENCE_ENTITY_NAME;
+        $entityName = PPreferenceResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "paged" => "1",
@@ -2038,7 +2061,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!isset($queryParams['per_page'])) {
             $queryParams['per_page'] = get_option(Sage::TOKEN . '_' . $entityName . '_perPage');
             if ($queryParams['per_page'] === false) {
-                $queryParams['per_page'] = (string)SageSettings::$defaultPagination;
+                $queryParams['per_page'] = (string)Sage::$defaultPagination;
             }
         }
 
@@ -2046,10 +2069,10 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if ($getData) {
             $data = json_decode(json_encode($this->searchEntities($entityName, $queryParams, $showFields, ignorePingApi: true)
                 , JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
-            $data = $this->sage->sageWoocommerce->populateMetaDatas($data, $showFields, $resource);
+            $data = SageService::getInstance()->populateMetaDatas($data, $showFields, $resource);
         }
         $hideFields = array_map(static function (string $hideField) {
-            return str_replace(SageSettings::PREFIX_META_DATA, '', $hideField);
+            return str_replace(Sage::PREFIX_META_DATA, '', $hideField);
         }, $hideFields);
         return [
             $data,
@@ -2064,16 +2087,16 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     public function getTypeFilter(string $object): array|null
     {
         $cacheName = 'TypeFilter_' . $object;
+        $cacheService = CacheService::getInstance();
         if (!$this->pingApi) {
-            $result = $this->sage->cache->get($cacheName, static fn() => null);
+            $result = $cacheService->get($cacheName, static fn() => null);
             if (is_null($result)) {
-                $this->sage->cache->delete($cacheName);
+                $cacheService->delete($cacheName);
             }
             return $result;
         }
 
-        $sageGraphQl = $this;
-        $function = static function () use ($object, $sageGraphQl) {
+        $function = static function () use ($object) {
             $query = (new Query('__type'))
                 ->setArguments(['name' => $object])
                 ->setSelectionSet(
@@ -2093,17 +2116,17 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                             ),
                     ]
                 );
-            $temps = $sageGraphQl->runQuery($query)?->data?->__type?->inputFields;
+            $temps = $this->runQuery($query)?->data?->__type?->inputFields;
             $r = [];
             foreach ($temps as $temp) {
                 $r[$temp->name] = $temp;
             }
             return $r;
         };
-        $typeModel = $this->sage->cache->get($cacheName, $function);
+        $typeModel = $cacheService->get($cacheName, $function);
         if (empty($typeModel)) {
-            $this->sage->cache->delete($cacheName);
-            $typeModel = $this->sage->cache->get($cacheName, $function);
+            $cacheService->delete($cacheName);
+            $typeModel = $cacheService->get($cacheName, $function);
         }
 
         return $typeModel;

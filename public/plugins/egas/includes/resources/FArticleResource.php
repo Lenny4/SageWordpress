@@ -104,4 +104,9 @@ class FArticleResource extends Resource
         }
         return self::$instance;
     }
+
+    public static function supports(): bool
+    {
+        return true;
+    }
 }

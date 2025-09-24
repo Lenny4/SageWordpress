@@ -28,4 +28,14 @@ class CacheService
     {
         $this->cache->clear();
     }
+
+    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null)
+    {
+        return $this->cache->get($key, $callback, $beta, $metadata);
+    }
+
+    public function delete(string $key)
+    {
+        return $this->cache->delete($key);
+    }
 }

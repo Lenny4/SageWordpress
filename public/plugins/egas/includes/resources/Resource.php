@@ -66,6 +66,11 @@ abstract class Resource
      */
     protected ?Closure $getIdentifier = null;
 
+    public static function supports(): bool
+    {
+        return false;
+    }
+
     public function getTitle(): string
     {
         return $this->title;

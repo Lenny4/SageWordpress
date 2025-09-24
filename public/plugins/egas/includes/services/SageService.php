@@ -15,6 +15,7 @@ use App\Utils\OrderUtils;
 use App\Utils\PathUtils;
 use App\Utils\RoundUtils;
 use App\Utils\SageTranslationUtils;
+use DateTime;
 use StdClass;
 use Symfony\Component\HttpFoundation\Response;
 use WC_Order;
@@ -103,7 +104,7 @@ WHERE user_login LIKE %s
                     continue;
                 }
                 $hookClass = 'App\\resources\\' . basename($file, '.php');
-                if (class_exists($hookClass)) {
+                if (class_exists($hookClass) && $hookClass::supports()) {
                     $resources[] = $hookClass::getInstance();
                 }
             }
@@ -814,5 +815,96 @@ WHERE user_login LIKE %s
             $result[] = __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN);
         }
         return $result;
+    }
+
+    public function get_option_date_or_null(string $option, bool $default_value = false): ?DateTime
+    {
+        $dateString = get_option($option, $default_value);
+        if (($date = DateTime::createFromFormat('Y-m-d', $dateString)) !== false) {
+            return new DateTime($date->format('Y-m-d 00:00:00'));
+        }
+        if (($date = DateTime::createFromFormat('Y-m-d H:i:s', $dateString)) !== false) {
+            return $date;
+        }
+        return null;
+    }
+
+    public function populateMetaDatas(?array $data, array $fields, Resource $resource): array|null
+    {
+        if (empty($data)) {
+            return $data;
+        }
+        $entityName = $resource->getEntityName();
+        $fieldNames = array_map(static function (array $field) {
+            return str_replace(Sage::PREFIX_META_DATA, '', $field['name']);
+        }, array_filter($fields, static function (array $field) {
+            return str_starts_with($field['name'], Sage::PREFIX_META_DATA);
+        }));
+        $mandatoryField = $resource->getMandatoryFields()[0];
+        $getIdentifier = $resource->getGetIdentifier();
+        if (is_null($getIdentifier)) {
+            $getIdentifier = static function (array $entity) use ($mandatoryField) {
+                return $entity[$mandatoryField];
+            };
+        }
+        $ids = array_map($getIdentifier, $data["data"][$entityName]["items"]);
+
+        $metaKeyIdentifier = $resource->getMetaKeyIdentifier();
+        $metaTable = $resource->getMetaTable();
+        $metaColumnIdentifier = $resource->getMetaColumnIdentifier();
+        global $wpdb;
+        $temps = $wpdb->get_results("
+SELECT " . $metaTable . "2." . $metaColumnIdentifier . " post_id, " . $metaTable . "2.meta_value, " . $metaTable . "2.meta_key
+FROM " . $metaTable . "
+         LEFT JOIN " . $metaTable . " " . $metaTable . "2 ON " . $metaTable . "2." . $metaColumnIdentifier . " = " . $metaTable . "." . $metaColumnIdentifier . "
+WHERE " . $metaTable . ".meta_value IN ('" . implode("','", $ids) . "')
+  AND " . $metaTable . "2.meta_key IN ('" . implode("','", [$metaKeyIdentifier, ...$fieldNames]) . "')
+ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
+");
+        $results = [];
+        $mapping = [];
+        foreach ($temps as $temp) {
+            if ($temp->meta_key === $metaKeyIdentifier) {
+                $results[$temp->meta_value] = [];
+                $mapping[$temp->post_id] = $temp->meta_value;
+                continue;
+            }
+            $results[$mapping[$temp->post_id]][$temp->meta_key] = $temp->meta_value;
+        }
+
+        $includePostId = array_filter($fields, static function (array $field) {
+                return $field['name'] === Sage::META_DATA_PREFIX . '_postId';
+            }) !== [];
+        $mapping = array_flip($mapping);
+        $canImport = $resource->getCanImport();
+        $postUrl = $resource->getPostUrl();
+        if (is_null($postUrl)) {
+            $postUrl = static function (array $entity) {
+                if (!empty($entity["_" . Sage::TOKEN . "_postId"])) {
+                    return admin_url('post.php?post=' . $entity["_" . Sage::TOKEN . "_postId"]) . '&action=edit';
+                }
+                return null;
+            };
+        }
+        foreach ($data["data"][$entityName]["items"] as $i => &$item) {
+            foreach ($fieldNames as $fieldName) {
+                if (isset($results[$item[$mandatoryField]][$fieldName])) {
+                    $item[$fieldName] = $results[$item[$mandatoryField]][$fieldName];
+                } else {
+                    $item[$fieldName] = '';
+                }
+            }
+            if ($includePostId) {
+                $item['_' . Sage::TOKEN . '_postId'] = null;
+                $key = $getIdentifier($item);
+                if (array_key_exists($key, $mapping)) {
+                    $item['_' . Sage::TOKEN . '_postId'] = $mapping[$key];
+                }
+            }
+            $item['_' . Sage::TOKEN . '_can_import'] = $canImport($item);
+            $item['_' . Sage::TOKEN . '_post_url'] = $postUrl($item);
+            $item['_' . Sage::TOKEN . '_identifier'] = $ids[$i];
+        }
+        return $data;
     }
 }
