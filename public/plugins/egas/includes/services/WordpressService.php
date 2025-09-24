@@ -257,7 +257,6 @@ class WordpressService
     {
         // Handle localisation.
         $this->load_plugin_textdomain();
-        // todo register_post_type here
     }
 
     private function load_plugin_textdomain(): void
@@ -399,5 +398,181 @@ WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
                                 AND meta_value = %s)
   AND {$wpdb->postmeta}.meta_key LIKE '_" . Sage::TOKEN . "_%'
         ", [$key, $value]));
+    }
+
+    public function addSections()
+    {
+        $url = parse_url(get_site_url());
+        $defaultWordpressUrl = $url["scheme"] . '://' . $url["host"];
+        global $wpdb;
+        $settings = [
+            'api' => [
+                'title' => __('Api', Sage::TOKEN),
+                'description' => __('These are fairly standard form input fields.', Sage::TOKEN),
+                'fields' => [
+                    [
+                        'id' => 'api_key',
+                        'label' => __('Api key', Sage::TOKEN),
+                        'description' => __('Can be found here.', Sage::TOKEN),
+                        'type' => 'text',
+                        'default' => '',
+                        'placeholder' => __('XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX', Sage::TOKEN)
+                    ],
+                    [
+                        'id' => 'api_host_url',
+                        'label' => __('Api host url', Sage::TOKEN),
+                        'description' => __('Can be found here.', Sage::TOKEN),
+                        'type' => 'text',
+                        'default' => '',
+                        'placeholder' => __('https://192.168.0.1', Sage::TOKEN)
+                    ],
+                    [
+                        'id' => 'activate_https_verification_api',
+                        'label' => __('Activer Https Api', Sage::TOKEN),
+                        'description' => __("Décochez cette case si vous avez l'erreur: cURL error 60: SSL certificate problem: self-signed certificate.", Sage::TOKEN),
+                        'type' => 'checkbox',
+                        'default' => 'on'
+                    ],
+                    [
+                        'id' => 'wordpress_host_url',
+                        'label' => __('Wordpress host url', Sage::TOKEN),
+                        'description' => __('Renseigner l\'url à laquelle l\'API Sage peut contacter l\'API de Wordpress. Modifier C:\Windows\System32\drivers\etc\hosts si nécessaire sur le serveur de l\'API Sage.', Sage::TOKEN),
+                        'type' => 'text',
+                        'default' => $defaultWordpressUrl,
+                        'placeholder' => __($defaultWordpressUrl, Sage::TOKEN)
+                    ],
+                    [
+                        'id' => 'activate_https_verification_wordpress',
+                        'label' => __('Activer Https Wordpress', Sage::TOKEN),
+                        'description' => __("Décochez cette case si vous avez l'erreur: <br>The SSL connection could not be established, see inner exception.", Sage::TOKEN),
+                        'type' => 'checkbox',
+                        'default' => 'on'
+                    ],
+                    [
+                        'id' => 'wordpress_db_host',
+                        'label' => __('Wordpress db host', Sage::TOKEN),
+                        'description' => __('Renseigner l\'IP à laquelle l\'API Sage peut contacter la base de données de wordpress.', Sage::TOKEN),
+                        'type' => 'text',
+                        'default' => $wpdb->dbhost,
+                        'placeholder' => __($wpdb->dbhost, Sage::TOKEN)
+                    ],
+                    [
+                        'id' => 'wordpress_db_name',
+                        'label' => __('Wordpress database name', Sage::TOKEN),
+                        'description' => __('Renseigner le nom de la base de données de wordpress.', Sage::TOKEN),
+                        'type' => 'text',
+                        'default' => $wpdb->dbname,
+                        'placeholder' => __($wpdb->dbname, Sage::TOKEN)
+                    ],
+                    [
+                        'id' => 'wordpress_db_username',
+                        'label' => __('Wordpress database username', Sage::TOKEN),
+                        'description' => __('Renseigner le nom de l\'utilisateur de la base de données de wordpress.', Sage::TOKEN),
+                        'type' => 'text',
+                        'default' => $wpdb->dbuser,
+                        'placeholder' => __($wpdb->dbuser, Sage::TOKEN)
+                    ],
+                    [
+                        'id' => 'wordpress_db_password',
+                        'label' => __('Wordpress database password', Sage::TOKEN),
+                        'description' => __('Renseigner le mot de passe de la base de données de wordpress.', Sage::TOKEN),
+                        'type' => 'text',
+                        'default' => $wpdb->dbpassword,
+                        'placeholder' => __($wpdb->dbpassword, Sage::TOKEN)
+                    ],
+                ]
+            ],
+        ];
+        // Check posted/selected tab.
+        $current_section = '';
+        if (isset($_POST['tab']) && $_POST['tab']) {
+            $current_section = $_POST['tab'];
+        } elseif (isset($_GET['tab']) && $_GET['tab']) {
+            $current_section = $_GET['tab'];
+        }
+        $sageService = SageService::getInstance();
+        foreach (SageService::getInstance()->getResources() as $sageEntityMenu) {
+            $fieldOptions = $sageService->getFieldsForEntity($sageEntityMenu);
+            $defaultFields = $sageEntityMenu->getDefaultFields();
+            $options = [
+                [
+                    'id' => $sageEntityMenu->getEntityName() . '_show_fields',
+                    'label' => __('Champs à montrer', Sage::TOKEN),
+                    'description' => __('Veuillez sélectionner les champs à afficher sur le tableau.', Sage::TOKEN),
+                    'type' => '2_select_multi',
+                    'options' => $fieldOptions,
+                    'default' => $defaultFields,
+                ],
+                [
+                    'id' => $sageEntityMenu->getEntityName() . '_perPage',
+                    'label' => __('Nombre d\'élément par défaut par page', Sage::TOKEN),
+                    'description' => __('Veuillez sélectionner le nombre de lignes à afficher sur le tableau.', Sage::TOKEN),
+                    'type' => 'select',
+                    'options' => array_combine(Sage::$paginationRange, Sage::$paginationRange),
+                    'default' => (string)Sage::$defaultPagination
+                ],
+                [
+                    'id' => $sageEntityMenu->getEntityName() . '_filter_fields',
+                    'label' => __('Champs pouvant être filtrés', Sage::TOKEN),
+                    'description' => __('Veuillez sélectionner les champs pouvant servir à filter vos résultats.', Sage::TOKEN),
+                    'type' => '2_select_multi',
+                    'options' => array_filter($fieldOptions, static function (string $key) {
+                        return !str_starts_with($key, Sage::PREFIX_META_DATA);
+                    }, ARRAY_FILTER_USE_KEY),
+                    'default' => array_filter($defaultFields, static function (string $v) {
+                        return !str_starts_with($v, Sage::PREFIX_META_DATA);
+                    }),
+                ],
+                ...$sageEntityMenu->getOptions(),
+            ];
+            $sageEntityMenu->setOptions($options);
+            $settings[$sageEntityMenu->getEntityName()] = [
+                'title' => __($sageEntityMenu->getTitle(), Sage::TOKEN),
+                'description' => $sageEntityMenu->getDescription(),
+                'fields' => $options,
+            ];
+        }
+
+        foreach ($settings as $section => $data) {
+
+            if ($current_section && $current_section !== $section) {
+                continue;
+            }
+
+            // Add section to page.
+            add_settings_section($section, $data['title'], function (array $section) use ($settings): void {
+                $html = '<p>' . $settings[$section['id']]['description'] . '</p>' . "\n";
+                echo $html;
+            }, Sage::TOKEN . '_settings');
+
+            foreach ($data['fields'] as $field) {
+
+                // Validation callback for field.
+                $validation = '';
+                if (isset($field['callback'])) {
+                    $validation = $field['callback'];
+                }
+
+                // Register field.
+                $option_name = Sage::TOKEN . '_' . $field['id'];
+                register_setting(Sage::TOKEN . '_settings', $option_name, $validation);
+
+                // Add field to page.
+                add_settings_field(
+                    $field['id'],
+                    $field['label'],
+                    function (...$args): void {
+                        AdminController::display_field(...$args);
+                    },
+                    Sage::TOKEN . '_settings',
+                    $section,
+                    ['field' => $field, 'prefix' => Sage::TOKEN . '_']
+                );
+            }
+
+            if (!$current_section) {
+                break;
+            }
+        }
     }
 }

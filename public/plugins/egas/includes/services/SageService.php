@@ -2,6 +2,7 @@
 
 namespace App\services;
 
+use App\class\SageEntityMenu;
 use App\controllers\AdminController;
 use App\enum\Sage\TiersTypeEnum;
 use App\resources\Resource;
@@ -9,6 +10,7 @@ use App\Sage;
 use App\Utils\FDocenteteUtils;
 use App\Utils\OrderUtils;
 use App\Utils\RoundUtils;
+use App\Utils\SageTranslationUtils;
 use StdClass;
 use Symfony\Component\HttpFoundation\Response;
 use WC_Order;
@@ -43,20 +45,6 @@ class SageService
         $r->liCodeRegion = $fComptet->ctCodeRegion;
         $r->liAdresseFact = 0;
         return $r;
-    }
-
-    public function getFirstNameLastName(...$fullNames): array
-    {
-        foreach ($fullNames as $fullName) {
-            if (empty($fullName)) {
-                continue;
-            }
-            $fullName = trim($fullName);
-            $lastName = (!str_contains($fullName, ' ')) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $fullName);
-            $firstName = trim(preg_replace('#' . preg_quote($lastName, '#') . '#', '', $fullName));
-            return [$firstName, $lastName];
-        }
-        return ['', ''];
     }
 
     public function getName(?string $intitule, ?string $contact): string
@@ -465,6 +453,55 @@ WHERE user_login LIKE %s
         return $userChanges;
     }
 
+    private function getUserChanges(int $userId, stdClass $fComptet): array
+    {
+        $userChanges = [];
+        $userMetaWordpress = get_user_meta($userId);
+        [$userId, $userFromSage, $metadata] = WoocommerceService::getInstance()->convertSageUserToWoocommerce($fComptet, userId: $userId);
+        if (!($userFromSage instanceof WP_User)) {
+            return $userChanges;
+        }
+        foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
+            $old = new stdClass();
+            $new = new stdClass();
+            $fields = [];
+            foreach ($userMetaWordpress as $key => $value) {
+                if (str_starts_with($key, $addressType)) {
+                    $fields[] = $key;
+                }
+            }
+            foreach ($metadata as $key => $value) {
+                if (str_starts_with($key, $addressType)) {
+                    $fields[] = $key;
+                }
+            }
+            $fields = array_values(array_unique($fields));
+            foreach ($fields as $field) {
+                if (
+                    !array_key_exists($field, $userMetaWordpress) ||
+                    $userMetaWordpress[$field][0] !== $metadata[$field]
+                ) {
+                    if (array_key_exists($field, $userMetaWordpress)) {
+                        $old->{$field} = $userMetaWordpress[$field][0];
+                    } else {
+                        $old->{$field} = null;
+                    }
+                    $new->{$field} = $metadata[$field];
+                }
+            }
+            if ((array)$new !== []) {
+                $userChanges[] = [
+                    'old' => $old,
+                    'new' => $new,
+                    'changes' => [
+                        OrderUtils::CHANGE_USER_ACTION . '_' . $addressType
+                    ],
+                ];
+            }
+        }
+        return $userChanges;
+    }
+
     private function getOrderAddressTypeChanges(WC_Order $order, stdClass $fComptet, stdClass $fLivraison): array
     {
         $addressTypeChanges = [];
@@ -522,53 +559,18 @@ WHERE user_login LIKE %s
         return $addressTypeChanges;
     }
 
-    private function getUserChanges(int $userId, stdClass $fComptet): array
+    public function getFirstNameLastName(...$fullNames): array
     {
-        $userChanges = [];
-        $userMetaWordpress = get_user_meta($userId);
-        [$userId, $userFromSage, $metadata] = WoocommerceService::getInstance()->convertSageUserToWoocommerce($fComptet, userId: $userId);
-        if (!($userFromSage instanceof WP_User)) {
-            return $userChanges;
+        foreach ($fullNames as $fullName) {
+            if (empty($fullName)) {
+                continue;
+            }
+            $fullName = trim($fullName);
+            $lastName = (!str_contains($fullName, ' ')) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $fullName);
+            $firstName = trim(preg_replace('#' . preg_quote($lastName, '#') . '#', '', $fullName));
+            return [$firstName, $lastName];
         }
-        foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
-            $old = new stdClass();
-            $new = new stdClass();
-            $fields = [];
-            foreach ($userMetaWordpress as $key => $value) {
-                if (str_starts_with($key, $addressType)) {
-                    $fields[] = $key;
-                }
-            }
-            foreach ($metadata as $key => $value) {
-                if (str_starts_with($key, $addressType)) {
-                    $fields[] = $key;
-                }
-            }
-            $fields = array_values(array_unique($fields));
-            foreach ($fields as $field) {
-                if (
-                    !array_key_exists($field, $userMetaWordpress) ||
-                    $userMetaWordpress[$field][0] !== $metadata[$field]
-                ) {
-                    if (array_key_exists($field, $userMetaWordpress)) {
-                        $old->{$field} = $userMetaWordpress[$field][0];
-                    } else {
-                        $old->{$field} = null;
-                    }
-                    $new->{$field} = $metadata[$field];
-                }
-            }
-            if ((array)$new !== []) {
-                $userChanges[] = [
-                    'old' => $old,
-                    'new' => $new,
-                    'changes' => [
-                        OrderUtils::CHANGE_USER_ACTION . '_' . $addressType
-                    ],
-                ];
-            }
-        }
-        return $userChanges;
+        return ['', ''];
     }
 
     public function createResource(
@@ -739,5 +741,38 @@ WHERE user_login LIKE %s
             $result[] = __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", Sage::TOKEN);
         }
         return $result;
+    }
+
+    public function getFieldsForEntity(Resource $resource): array
+    {
+        $transDomain = $resource->getTransDomain();
+        $typeModel = GraphqlService::getInstance()->getTypeModel($resource->getTypeModel());
+        if (!is_null($typeModel)) {
+            $fieldsObject = array_filter($typeModel,
+                static fn(stdClass $entity): bool => $entity->type->kind !== 'OBJECT' &&
+                    $entity->type->kind !== 'LIST' &&
+                    $entity->type->ofType?->kind !== 'LIST');
+        } else {
+            $fieldsObject = [];
+        }
+
+        $trans = SageTranslationUtils::getTranslations();
+        $objectFields = [];
+        foreach ($fieldsObject as $fieldObject) {
+            $v = $trans[$transDomain][$fieldObject->name];
+            $objectFields[$fieldObject->name] = $v['label'] ?? $v;
+        }
+
+        // region custom meta fields
+        foreach ($resource->getMetadata() as $metadata) {
+            if (!$metadata->getShowInOptions()) {
+                continue;
+            }
+            $fieldName = Sage::META_DATA_PREFIX . $metadata->getField();
+            $objectFields[$fieldName] = $trans[$transDomain][$fieldName];
+        }
+        // endregion
+
+        return $objectFields;
     }
 }
