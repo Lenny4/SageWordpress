@@ -1,29 +1,23 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { useImperativeHandle } from "react";
-import { Tooltip } from "@mui/material";
-import { getTranslations } from "../../../../../functions/translations";
-import { MetadataInterface } from "../../../../../interface/WordpressInterface";
-import {
-  FArtglosseInterface,
-  FGlossaireInterface,
-} from "../../../../../interface/FArticleInterface";
-import { getListObjectSageMetadata } from "../../../../../functions/getMetadata";
+import React, {useImperativeHandle} from "react";
+import {Tooltip} from "@mui/material";
+import {getTranslations} from "../../../../../functions/translations";
+import {MetadataInterface} from "../../../../../interface/WordpressInterface";
+import {FArtglosseInterface, FGlossaireInterface,} from "../../../../../interface/FArticleInterface";
+import {getListObjectSageMetadata} from "../../../../../functions/getMetadata";
 import {
   FormInterface,
   FormValidInterface,
   ResponseTableLineItemInterface,
   TableLineItemInterface,
 } from "../../../../../interface/InputInterface";
-import { FormContentComponent } from "../../FormContentComponent";
-import {
-  createFormContent,
-  handleFormIsValid,
-} from "../../../../../functions/form";
-import { FormInput } from "../../fields/FormInput";
-import { TOKEN } from "../../../../../token";
-import { ResultTableInterface } from "../../../list/ListSageEntityComponent";
-import { ConditionFilterInterface } from "../../../../../interface/FilterInterface";
-import { GlossaireDomaineTypeEnum } from "../../../../../enum/GlossaireDomaineTypeEnum";
+import {FormContentComponent} from "../../FormContentComponent";
+import {createFormContent, handleFormIsValid,} from "../../../../../functions/form";
+import {FormInput} from "../../fields/FormInput";
+import {TOKEN} from "../../../../../token";
+import {ResultTableInterface} from "../../../list/ListSageEntityComponent";
+import {ConditionFilterInterface} from "../../../../../interface/FilterInterface";
+import {GlossaireDomaineTypeEnum} from "../../../../../enum/GlossaireDomaineTypeEnum";
 
 let translations: any = getTranslations();
 const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
@@ -65,12 +59,12 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
         props: {
           container: true,
           spacing: 1,
-          sx: { p: 1 },
+          sx: {p: 1},
         },
         children: [
           {
             props: {
-              size: { xs: 12 },
+              size: {xs: 12},
             },
             table: {
               headers: ["", translations.words.intitule, ""],
@@ -167,7 +161,7 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                     });
                     const response = await fetch(
                       siteUrl +
-                        `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search-entities/fGlossaires`)}&${params}&_wpnonce=${wpnonce}`,
+                      `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search-entities/fGlossaires`)}&${params}&_wpnonce=${wpnonce}`,
                     );
                     if (response.ok) {
                       const data: ResultTableInterface = await response.json();
@@ -239,6 +233,6 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
   }, [fArtglosses]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <FormContentComponent content={form.content} transPrefix="fArticles" />
+    <FormContentComponent content={form.content} transPrefix="fArticles"/>
   );
 });

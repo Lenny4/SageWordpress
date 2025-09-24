@@ -1,30 +1,21 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { useImperativeHandle } from "react";
-import { getTranslations } from "../../../../../functions/translations";
-import { MetadataInterface } from "../../../../../interface/WordpressInterface";
-import {
-  FArtstockInterface,
-  FDepotInterface,
-} from "../../../../../interface/FArticleInterface";
-import {
-  getListObjectSageMetadata,
-  getSageMetadata,
-} from "../../../../../functions/getMetadata";
+import React, {useImperativeHandle} from "react";
+import {getTranslations} from "../../../../../functions/translations";
+import {MetadataInterface} from "../../../../../interface/WordpressInterface";
+import {FArtstockInterface, FDepotInterface,} from "../../../../../interface/FArticleInterface";
+import {getListObjectSageMetadata, getSageMetadata,} from "../../../../../functions/getMetadata";
 import {
   FormInterface,
   FormValidInterface,
   TableLineItemInterface,
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
-import { FormContentComponent } from "../../FormContentComponent";
-import { AsPrincipalInput } from "../inputs/AsPrincipalInput";
-import {
-  createFormContent,
-  handleFormIsValid,
-} from "../../../../../functions/form";
-import { FormInput } from "../../fields/FormInput";
-import { numberValidator } from "../../../../../functions/validator";
-import { TOKEN } from "../../../../../token";
+import {FormContentComponent} from "../../FormContentComponent";
+import {AsPrincipalInput} from "../inputs/AsPrincipalInput";
+import {createFormContent, handleFormIsValid,} from "../../../../../functions/form";
+import {FormInput} from "../../fields/FormInput";
+import {numberValidator} from "../../../../../functions/validator";
+import {TOKEN} from "../../../../../token";
 
 let translations: any = getTranslations();
 
@@ -64,12 +55,12 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
           props: {
             container: true,
             spacing: 1,
-            sx: { p: 1 },
+            sx: {p: 1},
           },
           children: [
             {
               props: {
-                size: { xs: 12 },
+                size: {xs: 12},
               },
               table: {
                 headers: [
@@ -225,7 +216,7 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
     }, [fArtstocks]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
-      <FormContentComponent content={form.content} transPrefix="fArticles" />
+      <FormContentComponent content={form.content} transPrefix="fArticles"/>
     );
   },
 );

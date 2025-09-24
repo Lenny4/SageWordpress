@@ -1,4 +1,4 @@
-import { TOKEN } from "../token";
+import {TOKEN} from "../token";
 
 export const getTranslations = (): any => {
   let translationString = $(`[data-${TOKEN}-translation]`).attr(

@@ -6,9 +6,9 @@ import "./react/component/form/fComptet/UserComponent";
 import "./react/component/form/fArticle/ArticleComponent.tsx";
 import "./react/component/form/SharedListComponent.tsx";
 import "./react/component/list/ListSageEntityComponent.tsx";
-import { getTranslations } from "./functions/translations";
-import { basePlacements } from "@popperjs/core/lib/enums";
-import { TOKEN } from "./token"; // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
+import {getTranslations} from "./functions/translations";
+import {basePlacements} from "@popperjs/core/lib/enums";
+import {TOKEN} from "./token"; // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 
 // todo intégrer: https://github.com/woocommerce/woocommerce/pull/55508
 // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
@@ -121,12 +121,12 @@ $(() => {
     const [orderId, wpnonce] = getOrderIdWpnonce();
     const response = await fetch(
       siteUrl +
-        "/index.php?rest_route=" +
-        encodeURIComponent(
-          `/${TOKEN}/v1/orders/` + orderId + "/meta-box-order",
-        ) +
-        "&_wpnonce=" +
-        wpnonce,
+      "/index.php?rest_route=" +
+      encodeURIComponent(
+        `/${TOKEN}/v1/orders/` + orderId + "/meta-box-order",
+      ) +
+      "&_wpnonce=" +
+      wpnonce,
     );
     // @ts-ignore
     $(blockDomData).unblock();
@@ -207,12 +207,12 @@ $(() => {
       $(spinner).removeClass("hidden");
       const response = await fetch(
         siteUrl +
-          "/index.php?rest_route=" +
-          encodeURIComponent(
-            `/${TOKEN}/v1/fdocentetes/` + encodeURIComponent(currentSearch),
-          ) +
-          "&_wpnonce=" +
-          $(inputWpnonce).val(),
+        "/index.php?rest_route=" +
+        encodeURIComponent(
+          `/${TOKEN}/v1/fdocentetes/` + encodeURIComponent(currentSearch),
+        ) +
+        "&_wpnonce=" +
+        $(inputWpnonce).val(),
       );
       if (currentSearch !== searchFDocentete) {
         return;
@@ -231,8 +231,8 @@ $(() => {
               ).appendTo(dom);
               $(
                 "<p>" +
-                  translations.sentences.fDoceneteteAlreadyHasOrders +
-                  ":</p>",
+                translations.sentences.fDoceneteteAlreadyHasOrders +
+                ":</p>",
               ).appendTo(notice);
               const listOrders = $('<ul class="ul-horizontal"></ul>').appendTo(
                 notice,
@@ -240,12 +240,12 @@ $(() => {
               for (const wordpressId of fDocentete.wordpressIds) {
                 $(
                   '<li class="ml-2 mr-2"><a href="' +
-                    siteUrl +
-                    "/wp-admin/admin.php?page=wc-orders&action=edit&id=" +
-                    wordpressId +
-                    '">#' +
-                    wordpressId +
-                    "</a></li>",
+                  siteUrl +
+                  "/wp-admin/admin.php?page=wc-orders&action=edit&id=" +
+                  wordpressId +
+                  '">#' +
+                  wordpressId +
+                  "</a></li>",
                 ).appendTo(listOrders);
               }
             }
@@ -277,16 +277,16 @@ $(() => {
                   label =
                     translations.fDocentetes.doType.values[key][
                       fDocentete.doType
-                    ];
+                      ];
                   break;
                 }
               }
               const cardDoType = $(
                 `<div class="card cursor-pointer" data-select-${TOKEN}-fdocentete-dotype="` +
-                  fDocentete.doType +
-                  '" style="max-width: none">' +
-                  label +
-                  "</div>",
+                fDocentete.doType +
+                '" style="max-width: none">' +
+                label +
+                "</div>",
               ).appendTo(listDom);
               addNoticeToCard(fDocentete, cardDoType);
             }
@@ -330,7 +330,7 @@ $(() => {
       $(validateButton).prop("disabled", false);
     },
   );
-  $(document).on("click", "[data-order-fdocentete]", async function (e) {
+  $(document).on("click", "[data-order-fdocentete]", async function (_) {
     const blockDom = $(`[id^='woocommerce-order-${TOKEN}']`);
     // @ts-ignore
     $(blockDom).block({
@@ -343,10 +343,10 @@ $(() => {
     const [orderId, wpnonce] = getOrderIdWpnonce();
     const response = await fetch(
       siteUrl +
-        "/index.php?rest_route=" +
-        encodeURIComponent(`/${TOKEN}/v1/orders/` + orderId + "/fdocentete") +
-        "&_wpnonce=" +
-        wpnonce,
+      "/index.php?rest_route=" +
+      encodeURIComponent(`/${TOKEN}/v1/orders/` + orderId + "/fdocentete") +
+      "&_wpnonce=" +
+      wpnonce,
       {
         method: "POST",
         body: JSON.stringify({
@@ -395,12 +395,12 @@ $(() => {
 
     const response = await fetch(
       siteUrl +
-        "/index.php?rest_route=" +
-        encodeURIComponent(`/${TOKEN}/v1/farticle/` + arRef + "/import") +
-        "&_wpnonce=" +
-        wpnonce +
-        "&orderId=" +
-        orderId,
+      "/index.php?rest_route=" +
+      encodeURIComponent(`/${TOKEN}/v1/farticle/` + arRef + "/import") +
+      "&_wpnonce=" +
+      wpnonce +
+      "&orderId=" +
+      orderId,
     );
     // @ts-ignore
     $(blockDom).unblock();
@@ -425,7 +425,7 @@ $(() => {
   });
   // endregion
 
-  // region link sageEntityMenu
+  // region link resource
   $(document.body).on("click", `a[href*="page=${TOKEN}_"]`, function (e) {
     const defaultFilters = JSON.parse(
       $(`[data-${TOKEN}-default-filters]`).attr(

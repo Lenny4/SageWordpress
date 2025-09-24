@@ -1,13 +1,13 @@
 import * as React from "react";
-import { FormContentInterface } from "../../../interface/InputInterface";
-import { Grid } from "@mui/material";
-import { FormTableComponent } from "./FormTableComponent";
-import { TabsComponent } from "../tab/TabsComponent";
-import { FormFieldComponent } from "./fields/FormFieldComponent";
+import {FormContentInterface} from "../../../interface/InputInterface";
+import {Grid} from "@mui/material";
+import {FormTableComponent} from "./FormTableComponent";
+import {TabsComponent} from "../tab/TabsComponent";
+import {FormFieldComponent} from "./fields/FormFieldComponent";
 
 const defaultContainer = Grid;
 const defaultProps = {
-  size: { xs: 12, md: 6 },
+  size: {xs: 12, md: 6},
 };
 
 type State = {
@@ -16,10 +16,10 @@ type State = {
 };
 
 export const FormContentComponent: React.FC<State> = ({
-  content,
-  transPrefix,
-}) => {
-  let { Container, props, Dom, fields, children, table, tabs } = content;
+                                                        content,
+                                                        transPrefix,
+                                                      }) => {
+  let {Container, props, Dom, fields, children, table, tabs} = content;
   Container = Container ?? defaultContainer;
   props = props ?? defaultProps;
 
@@ -35,7 +35,7 @@ export const FormContentComponent: React.FC<State> = ({
           />
         ))}
         {table && (
-          <FormTableComponent table={table} transPrefix={transPrefix} />
+          <FormTableComponent table={table} transPrefix={transPrefix}/>
         )}
         {children && children.length > 0 && (
           <>
@@ -48,7 +48,7 @@ export const FormContentComponent: React.FC<State> = ({
             ))}
           </>
         )}
-        {tabs && <TabsComponent tabs={tabs} />}
+        {tabs && <TabsComponent tabs={tabs}/>}
       </Container>
     </>
   );

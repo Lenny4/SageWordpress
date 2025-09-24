@@ -266,13 +266,13 @@ class TwigHook
         }));
         // todo
 //        $twig->addFunction(new TwigFunction('getDefaultFilters', static function () use ($settings): array {
-//            return array_map(static function (SageEntityMenu $sageEntityMenu) {
-//                $entityName = $sageEntityMenu->getEntityName();
+//            return array_map(static function (Resource $resource) {
+//                $entityName = $resource->getEntityName();
 //                return [
 //                    'entityName' => Sage::TOKEN . '_' . $entityName,
 //                    'value' => get_option(Sage::TOKEN . '_default_filter_' . $entityName, null),
 //                ];
-//            }, $settings->sageEntityMenus);
+//            }, $settings->resources);
 //        }));
         // todo
 //        $twig->addFunction(new TwigFunction('getFDoclignes', static function (array|null|string $fDocentetes) use ($sageWoocommerce): array {

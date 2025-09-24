@@ -1,5 +1,5 @@
 import * as React from "react";
-import { TOKEN } from "../../token";
+import {TOKEN} from "../../token";
 
 const language = $(`[data-${TOKEN}-language]`).attr(`data-${TOKEN}-language`);
 const currency = $(`[data-${TOKEN}-currency]`).attr(`data-${TOKEN}-currency`);
@@ -8,7 +8,7 @@ export type State = {
   price: number;
 };
 
-export const PriceComponent: React.FC<State> = ({ price }) => {
+export const PriceComponent: React.FC<State> = ({price}) => {
   const priceFormat = (
     price: number | undefined,
     locale: string,

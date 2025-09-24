@@ -1,19 +1,10 @@
 import * as React from "react";
-import { useImperativeHandle, useRef } from "react";
-import { Tooltip } from "@mui/material";
-import {
-  FieldInterface,
-  FormValidInterface,
-} from "../../../../interface/InputInterface";
-import {
-  handleChangeSelectGeneric,
-  isValidGeneric,
-} from "../../../../functions/form";
-import {
-  CannotBeChangeOnWebsiteComponent,
-  FieldTooltipComponent,
-} from "./FormFieldComponent";
-import { TOKEN } from "../../../../token";
+import {useImperativeHandle, useRef} from "react";
+import {Tooltip} from "@mui/material";
+import {FieldInterface, FormValidInterface,} from "../../../../interface/InputInterface";
+import {handleChangeSelectGeneric, isValidGeneric,} from "../../../../functions/form";
+import {CannotBeChangeOnWebsiteComponent, FieldTooltipComponent,} from "./FormFieldComponent";
+import {TOKEN} from "../../../../token";
 
 export const FormSelect = React.forwardRef(
   (
@@ -84,15 +75,15 @@ export const FormSelect = React.forwardRef(
             <span>{label}</span>
           </Tooltip>
         </label>
-        <div style={{ display: "flex" }}>
-          <div style={{ flex: 1 }}>
+        <div style={{display: "flex"}}>
+          <div style={{flex: 1}}>
             <select
               id={nameField}
               name={nameField}
               value={values[name].value}
               onChange={handleChangeSelect}
               className={thisReadOnly ? "grayed-out-select" : ""}
-              style={{ width: "100%" }}
+              style={{width: "100%"}}
               ref={inputRef}
             >
               {options.map((opt, index) => {
@@ -103,7 +94,7 @@ export const FormSelect = React.forwardRef(
                       (thisReadOnly &&
                         !(
                           opt.value.toString() ===
-                            values[name].value.toString() ||
+                          values[name].value.toString() ||
                           (!hasOption && index === 0)
                         ))
                     }
@@ -119,7 +110,7 @@ export const FormSelect = React.forwardRef(
           <CannotBeChangeOnWebsiteComponent
             cannotBeChangeOnWebsite={cannotBeChangeOnWebsite}
           />
-          <FieldTooltipComponent tooltip={tooltip} />
+          <FieldTooltipComponent tooltip={tooltip}/>
         </div>
         {errorMessage && (
           <div className={`${TOKEN}_error_field`}>{errorMessage}</div>

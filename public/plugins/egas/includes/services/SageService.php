@@ -2,8 +2,20 @@
 
 namespace App\services;
 
+use App\controllers\AdminController;
+use App\enum\Sage\TiersTypeEnum;
+use App\resources\Resource;
+use App\Sage;
+use App\Utils\FDocenteteUtils;
+use App\Utils\OrderUtils;
+use App\Utils\RoundUtils;
 use StdClass;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\HttpFoundation\Response;
+use WC_Order;
+use WC_Order_Item_Tax;
+use WC_Product;
+use WP_Error;
+use WP_User;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -11,18 +23,8 @@ if (!defined('ABSPATH')) {
 
 class SageService
 {
-    public final const CACHE_LIFETIME = 3600;
-
     private static ?SageService $instance = null;
-
-    public static function getInstance(): self
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-            self::$instance->cache = new FilesystemAdapter(defaultLifetime: self::CACHE_LIFETIME);
-        }
-        return self::$instance;
-    }
+    public ?array $resources = null;
 
     public function createAddressWithFComptet(StdClass $fComptet): StdClass
     {
@@ -93,5 +95,649 @@ WHERE user_login LIKE %s
             return $result;
         }
         return $ctNum;
+    }
+
+    /**
+     * @return Resource[]
+     */
+    public function getResources(): array
+    {
+        if (is_null($this->resources)) {
+            /** @var Resource[] $resources */
+            $resources = [];
+            $files = glob(__DIR__ . '/../resources' . '/*.php');
+            foreach ($files as $file) {
+                if (str_ends_with($file, '/Resource.php')) {
+                    continue;
+                }
+                $hookClass = 'App\\resources\\' . basename($file, '.php');
+                if (class_exists($hookClass)) {
+                    $resources[] = $hookClass::getInstance();
+                }
+            }
+            $this->resources = $resources;
+        }
+        return $this->resources;
+    }
+
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    public function getResource(string $entityName): Resource|null
+    {
+        if (is_null($this->resources)) {
+            $files = glob(__DIR__ . '/../resources' . '/*.php');
+            foreach ($files as $file) {
+                if (str_ends_with($file, '/Resource.php')) {
+                    continue;
+                }
+                $hookClass = 'App\\resources\\' . basename($file, '.php');
+                if (class_exists($hookClass)) {
+                    /** @var Resource $resource */
+                    $resource = $hookClass::getInstance();
+                    if ($resource->getEntityName() === $entityName) {
+                        return $resource;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public function getFDoclignes(array|null|string $fDocentetes): array
+    {
+        if (!is_array($fDocentetes)) {
+            return [];
+        }
+        $fDoclignes = [];
+        foreach ($fDocentetes as $fDocentete) {
+            $fDoclignes = [...$fDoclignes, ...$fDocentete->fDoclignes];
+        }
+        usort($fDoclignes, static function (stdClass $a, stdClass $b) {
+            foreach (FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE as $suffix) {
+                if ($a->{'dlPiece' . $suffix} !== $b->{'dlPiece' . $suffix}) {
+                    return strcmp($a->{'dlPiece' . $suffix}, $b->{'dlPiece' . $suffix});
+                }
+            }
+            if ($a->doType !== $b->doType) {
+                return $a->doType <=> $b->doType;
+            }
+            return $a->doPiece <=> $b->doPiece;
+        });
+        return $fDoclignes;
+    }
+
+    public function getMainFDocenteteOfExtendedFDocentetes(WC_Order $order, array|null|string $extendedFDocentetes): stdClass|null|string
+    {
+        if (empty($extendedFDocentetes)) {
+            return null;
+        }
+        if (!is_array($extendedFDocentetes)) {
+            return $extendedFDocentetes;
+        }
+        $fDocenteteIdentifier = WoocommerceService::getInstance()->getFDocenteteIdentifierFromOrder($order);
+        if (count($extendedFDocentetes) > 1) {
+            usort($extendedFDocentetes, static function (stdClass $a, stdClass $b) use ($fDocenteteIdentifier) {
+                if ($fDocenteteIdentifier["doPiece"] === $a->doPiece && $fDocenteteIdentifier["doType"] === $a->doType) {
+                    return -1;
+                }
+                if ($fDocenteteIdentifier["doPiece"] === $b->doPiece && $fDocenteteIdentifier["doType"] === $b->doType) {
+                    return 1;
+                }
+                return $b->doType <=> $a->doType;
+            });
+        }
+        return array_values($extendedFDocentetes)[0];
+    }
+
+    public function getTasksSynchronizeOrder_Products(WC_Order $order, array $fDoclignes): array
+    {
+        $taxeCodes = [];
+        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:24
+        $lineItems = array_values($order->get_items());
+
+        $nbLines = max(count($lineItems), count($fDoclignes));
+        $productChanges = [];
+        [$taxe, $rates] = WoocommerceService::getInstance()->getWordpressTaxes();
+        for ($i = 0; $i < $nbLines; $i++) {
+            $old = null;
+            if (isset($lineItems[$i])) {
+                $data = $lineItems[$i]->get_data();
+                $old = new stdClass();
+                $old->itemId = $data["id"];
+                $old->postId = $data["product_id"];
+                $old->quantity = $data["quantity"];
+                $old->linePriceHt = (float)$data["total"];
+                $old->taxes = [];
+                $taxeNumber = 1;
+                foreach ($data["taxes"]["total"] as $idRate => $amount) {
+                    $old->taxes[$taxeNumber] = ['code' => $rates[$idRate]->tax_rate_name, 'amount' => (float)$amount];
+                    $taxeNumber++;
+                }
+            }
+            $new = null;
+            if (isset($fDoclignes[$i])) {
+                $new = new stdClass();
+                $new->postId = $fDoclignes[$i]->postId;
+                $new->arRef = $fDoclignes[$i]->arRef;
+                $new->fDocligneLabel = $fDoclignes[$i]->dlDesign;
+                $new->quantity = (int)$fDoclignes[$i]->dlQte;
+                $new->linePriceHt = (float)$fDoclignes[$i]->dlMontantHt;
+                $new->taxes = [];
+                foreach (FDocenteteUtils::ALL_TAXES as $taxeNumber) {
+                    $code = $fDoclignes[$i]->{'dlCodeTaxe' . $taxeNumber};
+                    if (!is_null($code)) {
+                        $taxeCodes[] = $fDoclignes[$i]->{'dlCodeTaxe' . $taxeNumber};
+                        $new->taxes[$taxeNumber] = ['code' => $fDoclignes[$i]->{'dlCodeTaxe' . $taxeNumber}, 'amount' => (float)$fDoclignes[$i]->{'dlMontantTaxe' . $taxeNumber}];
+                    }
+                }
+            }
+            $changes = [];
+            if (!is_null($new) && !is_null($old)) {
+                if ($new->postId !== $old->postId) {
+                    $changes[] = OrderUtils::REPLACE_PRODUCT_ACTION;
+                } else {
+                    if ($new->quantity !== $old->quantity) {
+                        $changes[] = OrderUtils::CHANGE_QUANTITY_PRODUCT_ACTION;
+                    }
+                    if ($new->linePriceHt !== $old->linePriceHt) {
+                        $changes[] = OrderUtils::CHANGE_PRICE_PRODUCT_ACTION;
+                    }
+                    if (array_values($new->taxes) !== array_values($old->taxes)) {
+                        $changes[] = OrderUtils::CHANGE_TAXES_PRODUCT_ACTION;
+                    }
+                }
+            } else if (is_null($new)) {
+                $changes[] = OrderUtils::REMOVE_PRODUCT_ACTION;
+            } else if (is_null($old) && !is_null($new->arRef)) {
+                $changes[] = OrderUtils::ADD_PRODUCT_ACTION;
+            }
+            if (!empty($changes)) {
+                $productChanges[$i] = [
+                    'old' => $old,
+                    'new' => $new,
+                    'changes' => $changes,
+                ];
+            }
+        }
+        $productIds = [];
+        foreach ($productChanges as $productChange) {
+            $productIds[] = $productChange["old"]?->postId;
+            $productIds[] = $productChange["new"]?->postId;
+        }
+        $productIds = array_values(array_filter(array_unique($productIds)));
+        $products = [];
+        if (!empty($productIds)) {
+            $products = wc_get_products(['include' => $productIds]); // https://github.com/woocommerce/woocommerce/wiki/wc_get_products-and-WC_Product_Query
+            $products = array_combine(array_map(static function (WC_Product $product) {
+                return $product->get_id();
+            }, $products), $products);
+        }
+        return [$productChanges, $products, $taxeCodes];
+    }
+
+    public function getTasksSynchronizeOrder_Shipping(WC_Order $order, stdClass $fDocentete): array
+    {
+        $taxeCodes = [];
+        [$taxe, $rates] = WoocommerceService::getInstance()->getWordpressTaxes();
+        $pExpeditions = GraphqlService::getInstance()->getPExpeditions(
+            getError: true, // on admin page
+        );
+        if (AdminController::showErrors($pExpeditions)) {
+            return [];
+        }
+        $shippingChanges = [];
+
+        // to get order data: wp-content/plugins/woocommerce/includes/admin/meta-boxes/views/html-order-items.php:27
+        $lineItemsShipping = array_values($order->get_items('shipping'));
+
+        $old = null;
+        // region new
+        $new = new stdClass();
+        $new->method_id = FDocenteteUtils::slugifyPExpeditionEIntitule($fDocentete->doExpeditNavigation->eIntitule);
+        $pExpedition = current(array_filter($pExpeditions, static function (stdClass $pExpedition) use ($new) {
+            return $pExpedition->slug === $new->method_id;
+        }));
+        $new->name = '';
+        if ($pExpedition !== false) {
+            $new->name = $pExpedition->eIntitule;
+        }
+        $new->priceHt = RoundUtils::round($fDocentete->fraisExpedition->priceHt);
+        $new->priceTtc = RoundUtils::round($fDocentete->fraisExpedition->priceTtc);
+        $new->taxes = [];
+        if (!is_null($fDocentete->fraisExpedition->taxes)) {
+            foreach ($fDocentete->fraisExpedition->taxes as $taxe) {
+                $taxeCodes[] = $taxe->fTaxe->taCode;
+                $new->taxes[$taxe->taxeNumber] = ['code' => $taxe->fTaxe->taCode, 'amount' => (float)$taxe->amount];
+            }
+        }
+        // endregion
+
+        $foundSimilar = false;
+        $formatFunction = function (stdClass $oldOrNew) {
+            $oldOrNew->taxes = array_filter($oldOrNew->taxes, static function (array $taxe) {
+                return $taxe['amount'] > 0;
+            });
+            usort($oldOrNew->taxes, static function (array $a, array $b) {
+                return strcmp($a['code'], $b['code']);
+            });
+            $oldOrNew->taxes = array_values($oldOrNew->taxes);
+            return $oldOrNew;
+        };
+        if (!empty($lineItemsShipping)) {
+            foreach ($lineItemsShipping as $lineItemShipping) {
+                $data = $lineItemShipping->get_data();
+                $old = new stdClass();
+                $old->method_id = $data["method_id"];
+                $old->name = $data["method_title"];
+                $old->priceHt = RoundUtils::round($data["total"]);
+                $old->priceTtc = RoundUtils::round($old->priceHt + RoundUtils::round($data["total_tax"]));
+                $old->taxes = [];
+                if (!is_null($data["taxes"])) {
+                    $taxeNumber = 1;
+                    foreach ($data["taxes"]["total"] as $idRate => $amount) {
+                        $old->taxes[$taxeNumber] = ['code' => $rates[$idRate]->tax_rate_name, 'amount' => (float)$amount];
+                        $taxeNumber++;
+                    }
+                }
+                if (
+                    json_encode($formatFunction($old), JSON_THROW_ON_ERROR) ===
+                    json_encode($formatFunction($new), JSON_THROW_ON_ERROR)
+                    && !$foundSimilar
+                ) {
+                    $foundSimilar = true;
+                } else {
+                    $old->id = $lineItemShipping->get_id();
+                    $shippingChanges[] = [
+                        'old' => $old,
+                        'new' => $new,
+                        'changes' => [OrderUtils::REMOVE_SHIPPING_ACTION],
+                    ];
+                }
+            }
+        }
+        if (!$foundSimilar) {
+            $shippingChanges[] = [
+                'old' => $old,
+                'new' => $new,
+                'changes' => [OrderUtils::ADD_SHIPPING_ACTION],
+            ];
+        }
+
+        // todo faire un cron qui regarde si une commande a été modifié dans Sage mais pas dans wordpress -> mettre à jour la commande wordpress
+
+        return [$shippingChanges, $taxeCodes];
+    }
+
+    public function getTasksSynchronizeOrder_Fee(WC_Order $order): array
+    {
+        $feeChanges = [];
+        $lineItemsFee = array_values($order->get_items('fee'));
+        foreach ($lineItemsFee as $lineItemFee) {
+            $old = new stdClass();
+            $old->id = $lineItemFee->get_id();
+            $old->name = $lineItemFee->get_name();
+            $new = null;
+            $feeChanges[] = [
+                'old' => $old,
+                'new' => $new,
+                'changes' => [
+                    OrderUtils::REMOVE_FEE_ACTION,
+                ],
+            ];
+        }
+        return $feeChanges;
+    }
+
+    public function getTasksSynchronizeOrder_Coupon(WC_Order $order): array
+    {
+        $couponChanges = [];
+        $coupons = $order->get_coupons();
+        foreach ($coupons as $coupon) {
+            $old = new stdClass();
+            $old->id = $coupon->get_id();
+            $old->name = $coupon->get_name();
+            $new = null;
+            $couponChanges[] = [
+                'old' => $old,
+                'new' => $new,
+                'changes' => [
+                    OrderUtils::REMOVE_COUPON_ACTION,
+                ],
+            ];
+        }
+        return $couponChanges;
+    }
+
+    public function getTasksSynchronizeOrder_Taxes(WC_Order $order, array $new): array
+    {
+        $taxesChanges = [];
+        $old = array_values(array_map(static function (WC_Order_Item_Tax $wcOrderItemTax) {
+            return $wcOrderItemTax->get_label();
+        }, $order->get_taxes()));
+        $changes = [];
+        [$toRemove, $toAdd] = WoocommerceService::getInstance()->getToRemoveToAddTaxes($order, $new);
+        if (count($toRemove) > 0 || count($toAdd) > 0) {
+            $changes[] = OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION;
+        }
+        if (!empty($changes)) {
+            $taxesChanges[] = [
+                'old' => $old,
+                'new' => $new,
+                'changes' => $changes,
+            ];
+        }
+        return $taxesChanges;
+    }
+
+    public function getTasksSynchronizeOrder_User(WC_Order $order, stdClass $fDocentete): array
+    {
+        $userChanges = [];
+        $orderUserId = $order->get_user_id();
+        $ctNum = $fDocentete->doTiers;
+        $expectedUserId = WordpressService::getInstance()->getUserIdWithCtNum($ctNum);
+        if ($expectedUserId !== $orderUserId) {
+            $old = new stdClass();
+            $old->userId = $orderUserId;
+            $new = new stdClass();
+            $new->userId = $expectedUserId;
+            $new->ctNum = $ctNum;
+            $userChanges[] = [
+                'old' => $old,
+                'new' => $new,
+                'changes' => [
+                    OrderUtils::CHANGE_CUSTOMER_ACTION
+                ],
+            ];
+        } else if (!is_null($orderUserId)) {
+            $userChanges = [...$userChanges, ...$this->getUserChanges($orderUserId, $fDocentete->doTiersNavigation)];
+            $userChanges = [...$userChanges, ...$this->getOrderAddressTypeChanges(
+                $order,
+                $fDocentete->doTiersNavigation,
+                $fDocentete->cbLiNoNavigation
+            )];
+        }
+        return $userChanges;
+    }
+
+    private function getOrderAddressTypeChanges(WC_Order $order, stdClass $fComptet, stdClass $fLivraison): array
+    {
+        $addressTypeChanges = [];
+        $addressTypes = [
+            OrderUtils::BILLING_ADDRESS_TYPE => ['obj' => $fComptet, 'prefix' => 'ct'],
+            OrderUtils::SHIPPING_ADDRESS_TYPE => ['obj' => $fLivraison, 'prefix' => 'li'],
+        ];
+        foreach ($addressTypes as $type => $data) {
+            $old = new stdClass();
+            $new = new stdClass();
+            $obj = $data['obj'];
+            $prefix = $data['prefix'];
+            [$firstName, $lastName] = $this->getFirstNameLastName($obj->{$prefix . 'Contact'}, $obj->{$prefix . 'Intitule'});
+            $obj->firstName = $firstName;
+            $obj->lastName = $lastName;
+            $fieldMaps = [
+                "first_name" => "firstName",
+                "last_name" => "lastName",
+                "company" => "%pIntitule",
+                "address_1" => "%pAdresse",
+                "address_2" => "%pComplement",
+                "city" => "%pVille",
+                "postcode" => "%pCodePostal",
+                "state" => "%pCodeRegion",
+                "country" => "%pPaysCode",
+                "phone" => "%pTelephone",
+            ];
+            if ($type === OrderUtils::BILLING_ADDRESS_TYPE) {
+                $fieldMaps['email'] = "%pEmail";
+            }
+            foreach ($fieldMaps as $key1 => $key2) {
+                $key2 = str_replace('%p', $prefix, $key2);
+                $objValue = $obj->{$key2};
+                if ($key1 === 'email') {
+                    $objValue = WordpressService::getInstance()->getValidWordpressMail($objValue);
+                }
+                if (
+                    ($oldValue = $order->{'get_' . $type . '_' . $key1}()) !== $objValue &&
+                    (!empty($oldValue) || !empty($objValue))
+                ) {
+                    $old->{$key1} = $oldValue;
+                    $new->{$key1} = $objValue;
+                }
+            }
+            if ((array)$new !== []) {
+                $addressTypeChanges[] = [
+                    'old' => $old,
+                    'new' => $new,
+                    'changes' => [
+                        OrderUtils::CHANGE_ORDER_ADDRESS_TYPE_ACTION . '_' . $type,
+                    ],
+                ];
+            }
+        }
+        return $addressTypeChanges;
+    }
+
+    private function getUserChanges(int $userId, stdClass $fComptet): array
+    {
+        $userChanges = [];
+        $userMetaWordpress = get_user_meta($userId);
+        [$userId, $userFromSage, $metadata] = WoocommerceService::getInstance()->convertSageUserToWoocommerce($fComptet, userId: $userId);
+        if (!($userFromSage instanceof WP_User)) {
+            return $userChanges;
+        }
+        foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
+            $old = new stdClass();
+            $new = new stdClass();
+            $fields = [];
+            foreach ($userMetaWordpress as $key => $value) {
+                if (str_starts_with($key, $addressType)) {
+                    $fields[] = $key;
+                }
+            }
+            foreach ($metadata as $key => $value) {
+                if (str_starts_with($key, $addressType)) {
+                    $fields[] = $key;
+                }
+            }
+            $fields = array_values(array_unique($fields));
+            foreach ($fields as $field) {
+                if (
+                    !array_key_exists($field, $userMetaWordpress) ||
+                    $userMetaWordpress[$field][0] !== $metadata[$field]
+                ) {
+                    if (array_key_exists($field, $userMetaWordpress)) {
+                        $old->{$field} = $userMetaWordpress[$field][0];
+                    } else {
+                        $old->{$field} = null;
+                    }
+                    $new->{$field} = $metadata[$field];
+                }
+            }
+            if ((array)$new !== []) {
+                $userChanges[] = [
+                    'old' => $old,
+                    'new' => $new,
+                    'changes' => [
+                        OrderUtils::CHANGE_USER_ACTION . '_' . $addressType
+                    ],
+                ];
+            }
+        }
+        return $userChanges;
+    }
+
+    public function createResource(
+        string  $url,
+        string  $method,
+        array   $body,
+        ?string $deleteKey,
+        ?string $deleteValue,
+        array   $headers = [],
+    ): array
+    {
+        if (!is_null($deleteKey) && !is_null($deleteValue)) {
+            WordpressService::getInstance()->deleteMetaTrashResource($deleteKey, $deleteValue);
+        }
+        $response = RequestService::getInstance()->selfRequest($url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                ...$headers,
+            ],
+            'method' => $method,
+            'body' => json_encode($body, JSON_THROW_ON_ERROR),
+        ]);
+        $responseError = null;
+        if ($response instanceof WP_Error) {
+            $responseError = "<div class='notice notice-error is-dismissible'>
+                                <pre>" . $response->get_error_code() . "</pre>
+                                <pre>" . $response->get_error_message() . "</pre>
+                                </div>";
+        }
+
+        if ($response instanceof WP_Error) {
+            $responseError = "<div class='notice notice-error is-dismissible'>
+                                <pre>" . json_encode($response, JSON_THROW_ON_ERROR) . "</pre>
+                                </div>";
+        } else if (!in_array($response["response"]["code"], [Response::HTTP_OK, Response::HTTP_CREATED], true)) {
+            $responseError = "<div class='notice notice-error is-dismissible'>
+                                <pre>" . $response['response']['code'] . "</pre>
+                                <pre>" . $response['body'] . "</pre>
+                                </div>";
+        }
+        return [$response, $responseError];
+    }
+
+    /**
+     * If fComptet is more up to date than user -> update user in wordpress
+     * If user is more up to date than fComptet -> update fComptet in sage
+     */
+    public function updateUserOrFComptet(
+        ?string              $ctNum,
+        ?int                 $shouldBeUserId = null,
+        stdClass|string|null $fComptet = null,
+        bool                 $ignorePingApi = false,
+        bool                 $newFComptet = false,
+    ): array
+    {
+        if (is_null($ctNum) && !$newFComptet) {
+            return [null, "<div class='error'>
+                    " . __("Vous devez spécifier le numéro de compte Sage", Sage::TOKEN) . "
+                            </div>"];
+        }
+        if (is_null($fComptet) && !is_null($ctNum)) {
+            $ctNum = str_replace(' ', '', strtoupper($ctNum));
+            $fComptet = GraphqlService::getInstance()->getFComptet($ctNum, ignorePingApi: $ignorePingApi);
+        }
+        if ($newFComptet) {
+            if (!is_null($fComptet)) {
+                return [null, "<div class='error'>
+                    " . __("Vous essayez de créer compte Sage qui existe déjà (" . $ctNum . ")", Sage::TOKEN) . "
+                            </div>"];
+            }
+            if (is_null($shouldBeUserId)) {
+                return [null, "<div class='error'>
+                    " . __("Vous devez spécifier l'id compte Wordpress", Sage::TOKEN) . "
+                            </div>"];
+            }
+            $fComptet = GraphqlService::getInstance()->createUpdateFComptet(
+                userId: $shouldBeUserId,
+                ctNum: $ctNum,
+                new: true,
+                getError: true,
+            );
+            if (is_string($fComptet)) {
+                return [null, "<div class='notice notice-error is-dismissible'>" . $fComptet . "</div>"];
+            }
+        }
+        if (is_null($fComptet)) {
+            $word = 'importé';
+            if ($newFComptet) {
+                $word = 'crée';
+            }
+            return [null, "<div class='error'>
+                    " . __("Le compte Sage n'a pas pu être " . $word, Sage::TOKEN) . "
+                            </div>"];
+        }
+        $canImportFComptet = $this->canUpdateUserOrFComptet($fComptet);
+        if (!empty($canImportFComptet)) {
+            return [null, null, "<div class='error'>
+                        " . implode(' ', $canImportFComptet) . "
+                                </div>"];
+        }
+        $ctNum = $fComptet->ctNum;
+        $userId = WordpressService::getInstance()->getUserIdWithCtNum($ctNum);
+        if (!is_null($shouldBeUserId)) {
+            if (is_null($userId)) {
+                $userId = $shouldBeUserId;
+            } else if ($userId !== $shouldBeUserId) {
+                return [null, "<div class='error'>
+                        " . __("Ce numéro de compte Sage est déjà assigné à un utilisateur Wordpress", Sage::TOKEN) . "
+                                </div>"];
+            }
+        }
+        [$userId, $userFromSage, $metadata] = WoocommerceService::getInstance()->convertSageUserToWoocommerce(
+            $fComptet,
+            $userId,
+        );
+        if (is_string($userFromSage)) {
+            return [null, $userFromSage];
+        }
+        $newUser = is_null($userId);
+        if ($newUser) {
+            $userId = wp_create_user($userFromSage->user_login, $userFromSage->user_pass, $userFromSage->user_email);
+        }
+        if ($userId instanceof WP_Error) {
+            return [null, "<div class='notice notice-error is-dismissible'>
+                                <pre>" . $userId->get_error_code() . "</pre>
+                                <pre>" . $userId->get_error_message() . "</pre>
+                                </div>"];
+        }
+        $updateApi = empty(get_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', true));
+        if ($updateApi) {
+            $wpUser = new WP_User($userId);
+            if ($wpUser->user_login !== $userFromSage->user_login) {
+                wp_update_user($userFromSage);
+            }
+            foreach ($metadata as $key => $value) {
+                update_user_meta($userId, $key, $value);
+            }
+        } else {
+            if (!$newFComptet) { // no need update fComptet as sageGraphQl->createUpdateFComptet already update fComptet
+                $fComptet = GraphqlService::getInstance()->updateFComptetFromWebsite(
+                    ctNum: $ctNum,
+                    getError: true,
+                );
+                if (is_string($fComptet)) {
+                    return [null, $fComptet];
+                }
+            }
+            // no need because it's done directly by Sage Api
+            // update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', null);
+        }
+
+        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "user-edit.php?user_id=" . $userId . "'>" . __("Voir l'utilisateur", Sage::TOKEN) . "</a></span></strong>";
+        if (!$newUser) {
+            return [$userId, "<div class='notice notice-success is-dismissible'>
+                        " . __('L\'utilisateur a été modifié', Sage::TOKEN) . $url . "
+                                </div>"];
+        }
+        return [$userId, "<div class='notice notice-success is-dismissible'>
+                        " . __('L\'utilisateur a été créé', Sage::TOKEN) . $url . "
+                                </div>"];
+    }
+
+    public function canUpdateUserOrFComptet(stdClass $fComptet): array
+    {
+        // all fields here must be [IsProjected(false)]
+        $result = [];
+        if ($fComptet->ctType !== TiersTypeEnum::TiersTypeClient->value) {
+            $result[] = __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", Sage::TOKEN);
+        }
+        return $result;
     }
 }

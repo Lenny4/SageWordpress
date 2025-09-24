@@ -1,16 +1,7 @@
-import React, {
-  Dispatch,
-  RefObject,
-  SetStateAction,
-  useImperativeHandle,
-  useRef,
-} from "react";
-import {
-  FilterShowFieldInterface,
-  FilterTypeInterface,
-} from "../../../interface/ListSageEntityInterface";
-import { getTranslations } from "../../../functions/translations";
-import { useSearchParams } from "react-router-dom";
+import React, {Dispatch, RefObject, SetStateAction, useImperativeHandle, useRef,} from "react";
+import {FilterShowFieldInterface, FilterTypeInterface,} from "../../../interface/ListSageEntityInterface";
+import {getTranslations} from "../../../functions/translations";
+import {useSearchParams} from "react-router-dom";
 
 let translations: any = getTranslations();
 
@@ -96,7 +87,7 @@ export const FilterSubInputComponent = React.forwardRef(
     };
 
     const onFilterChange = () => {
-      const result = { ...filter };
+      const result = {...filter};
       let hasChanged = false;
       const filterField = filterFields.find(
         (x) => x.name === result.field.value,
@@ -274,11 +265,11 @@ export const FilterInputComponent = React.forwardRef(
 );
 
 export const ListSageEntityFilterComponent: React.FC<State> = ({
-  filterTypes,
-  filterFields,
-  showFields,
-  hideFields,
-}) => {
+                                                                 filterTypes,
+                                                                 filterFields,
+                                                                 showFields,
+                                                                 hideFields,
+                                                               }) => {
   const [init, setInit] = React.useState<boolean>(false);
   const [filterCondition, setFilterCondition] = React.useState<string>("or");
   const [filters, setFilters] = React.useState<(FilterInput | undefined)[]>([]);
@@ -367,7 +358,7 @@ export const ListSageEntityFilterComponent: React.FC<State> = ({
     const result = filters
       .filter((x) => x)
       .map((x) => x.ref.current.getValue())
-      .reduce((acc, curr) => ({ ...acc, ...curr }), {});
+      .reduce((acc, curr) => ({...acc, ...curr}), {});
     const sort = searchParams.get("sort");
     setSearchParams(
       {
@@ -401,7 +392,7 @@ export const ListSageEntityFilterComponent: React.FC<State> = ({
         value={translations.words.addFilter}
         onClick={addFilter}
       />
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{display: "flex", alignItems: "center"}}>
         {hasMultipleFilters && (
           <div>
             <select

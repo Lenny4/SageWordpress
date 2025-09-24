@@ -1,16 +1,10 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { useImperativeHandle } from "react";
+import React, {useImperativeHandle} from "react";
 import Grid from "@mui/material/Grid";
-import { getTranslations } from "../../../../../functions/translations";
-import {
-  FormInterface,
-  FormValidInterface,
-} from "../../../../../interface/InputInterface";
-import { FormContentComponent } from "../../FormContentComponent";
-import {
-  createFormContent,
-  handleFormIsValid,
-} from "../../../../../functions/form";
+import {getTranslations} from "../../../../../functions/translations";
+import {FormInterface, FormValidInterface,} from "../../../../../interface/InputInterface";
+import {FormContentComponent} from "../../FormContentComponent";
+import {createFormContent, handleFormIsValid,} from "../../../../../functions/form";
 
 let translations: any = getTranslations();
 
@@ -22,12 +16,12 @@ export const ArticleTab3Component = React.forwardRef((props, ref) => {
         props: {
           container: true,
           spacing: 1,
-          sx: { p: 1 },
+          sx: {p: 1},
         },
         children: [
           {
             props: {
-              size: { xs: 12 },
+              size: {xs: 12},
             },
           },
         ],
@@ -43,8 +37,8 @@ export const ArticleTab3Component = React.forwardRef((props, ref) => {
 
   return (
     <Grid container>
-      <Grid size={{ xs: 12 }}>
-        <FormContentComponent content={form.content} transPrefix="fArticles" />
+      <Grid size={{xs: 12}}>
+        <FormContentComponent content={form.content} transPrefix="fArticles"/>
       </Grid>
     </Grid>
   );

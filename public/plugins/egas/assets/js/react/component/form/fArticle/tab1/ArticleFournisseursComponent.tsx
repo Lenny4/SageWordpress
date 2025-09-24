@@ -1,12 +1,9 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { useImperativeHandle } from "react";
-import { getTranslations } from "../../../../../functions/translations";
-import { MetadataInterface } from "../../../../../interface/WordpressInterface";
-import { FArtfournisseInterface } from "../../../../../interface/FArticleInterface";
-import {
-  getListObjectSageMetadata,
-  getSageMetadata,
-} from "../../../../../functions/getMetadata";
+import React, {useImperativeHandle} from "react";
+import {getTranslations} from "../../../../../functions/translations";
+import {MetadataInterface} from "../../../../../interface/WordpressInterface";
+import {FArtfournisseInterface} from "../../../../../interface/FArticleInterface";
+import {getListObjectSageMetadata, getSageMetadata,} from "../../../../../functions/getMetadata";
 import {
   FormInterface,
   FormValidInterface,
@@ -14,20 +11,14 @@ import {
   TableLineItemInterface,
   TriggerFormContentChanged,
 } from "../../../../../interface/InputInterface";
-import { AfPrincipalInput } from "../inputs/AfPrincipalInput";
-import { FormContentComponent } from "../../FormContentComponent";
-import {
-  createFormContent,
-  handleFormIsValid,
-} from "../../../../../functions/form";
-import { FormInput } from "../../fields/FormInput";
-import {
-  numberValidator,
-  stringValidator,
-} from "../../../../../functions/validator";
-import { TOKEN } from "../../../../../token";
-import { FComptetInterface } from "../../../../../interface/FComptetInterface";
-import { ResultTableInterface } from "../../../list/ListSageEntityComponent";
+import {AfPrincipalInput} from "../inputs/AfPrincipalInput";
+import {FormContentComponent} from "../../FormContentComponent";
+import {createFormContent, handleFormIsValid,} from "../../../../../functions/form";
+import {FormInput} from "../../fields/FormInput";
+import {numberValidator, stringValidator,} from "../../../../../functions/validator";
+import {TOKEN} from "../../../../../token";
+import {FComptetInterface} from "../../../../../interface/FComptetInterface";
+import {ResultTableInterface} from "../../../list/ListSageEntityComponent";
 
 let translations: any = getTranslations();
 const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
@@ -59,12 +50,12 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
         props: {
           container: true,
           spacing: 1,
-          sx: { p: 1 },
+          sx: {p: 1},
         },
         children: [
           {
             props: {
-              size: { xs: 12 },
+              size: {xs: 12},
             },
             table: {
               headers: [
@@ -105,9 +96,9 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                           initValues: {
                             value: getSageMetadata(
                               prefix +
-                                "[" +
-                                fArtclient.ctNum +
-                                "].afRefFourniss",
+                              "[" +
+                              fArtclient.ctNum +
+                              "].afRefFourniss",
                               articleMeta,
                               fArtclient.afRefFourniss,
                             ),
@@ -242,7 +233,7 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                     });
                     const response = await fetch(
                       siteUrl +
-                        `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search-entities/fComptets`)}&${params}&_wpnonce=${wpnonce}`,
+                      `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search-entities/fComptets`)}&${params}&_wpnonce=${wpnonce}`,
                     );
                     if (response.ok) {
                       const data: ResultTableInterface = await response.json();
@@ -283,6 +274,6 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
   }, [fArtfournisses]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <FormContentComponent content={form.content} transPrefix="fArticles" />
+    <FormContentComponent content={form.content} transPrefix="fArticles"/>
   );
 });

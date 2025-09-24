@@ -6,16 +6,13 @@ use App\class\SageExpectedOption;
 use App\resources\Resource;
 use App\Sage;
 use App\services\GraphqlService;
-use App\services\WoocommerceService;
-use App\services\WordpressService;
-use App\utils\SageTranslationUtils;
-use WC_Order;
+use App\services\SageService;
 
 class AdminController
 {
     public static function registerMenu(): void
     {
-        $resources = WordpressService::getInstance()->getResources();
+        $resources = SageService::getInstance()->getResources();
         $args = apply_filters(
             Sage::TOKEN . '_menu_settings',
             [
@@ -47,12 +44,12 @@ class AdminController
                     'location' => 'submenu',
                     // Possible settings: options, menu, submenu.
                     'parent_slug' => Sage::TOKEN . '_settings',
-                    'page_title' => __($resource->title, Sage::TOKEN),
-                    'menu_title' => __($resource->title, Sage::TOKEN),
+                    'page_title' => __($resource->getTitle(), Sage::TOKEN),
+                    'menu_title' => __($resource->getTitle(), Sage::TOKEN),
                     'capability' => 'manage_options',
-                    'menu_slug' => Sage::TOKEN . '_' . $resource->entityName,
+                    'menu_slug' => Sage::TOKEN . '_' . $resource->getEntityName(),
                     'function' => static function () use ($resource): void {
-                        echo $resource->title;
+                        echo $resource->getTitle();
                     },
                     'position' => null,
                 ], $resources),
@@ -137,7 +134,7 @@ class AdminController
         });
     }
 
-    public static function showWrongOptions(): void
+    public static function getWrongOptions(): string|null
     {
         $pDossier = GraphqlService::getInstance()->getPDossier();
         $sageExpectedOptions = [
@@ -174,14 +171,13 @@ class AdminController
             }
         }
         if ($changes !== []) {
-            ?>
-            <div class="error">
-            <?php
+            $result = "<div class='error''>";
             $fieldsForm = '';
             $optionNames = [];
             foreach ($changes as $sageExpectedOption) {
+                // todo use twig
                 $optionValue = $sageExpectedOption->getOptionValue();
-                echo "<div>" . __('Le plugin Sage a besoin de modifier l\'option', Sage::TOKEN) . " <code>" .
+                $result .= "<div>" . __('Le plugin Sage a besoin de modifier l\'option', Sage::TOKEN) . " <code>" .
                     $sageExpectedOption->getTrans() . "</code> " . __('pour lui donner la valeur', Sage::TOKEN) . " <code>" .
                     $optionValue . "</code>
 <div class='tooltip'>
@@ -192,42 +188,21 @@ class AdminController
                 $optionName = $sageExpectedOption->getOptionName();
                 $fieldsForm .= '<input type="hidden" name="' . $optionName . '" value="' . $optionValue . '">';
                 $optionNames[] = $optionName;
-            } ?>
-            <form method="post" action="options.php" enctype="multipart/form-data">
-                <?= $fieldsForm ?>
-                <input type="hidden" name="page_options" value="<?= implode(',', $optionNames) ?>"/>
-                <input type="hidden" name="_wp_http_referer" value="<?= $_SERVER["REQUEST_URI"] ?>">
+            }
+            $result .= '<form method="post" action="options.php" enctype="multipart/form-data">'
+                . $fieldsForm
+                . '<input type="hidden" name="page_options" value="' . esc_attr(implode(',', $optionNames)) . '"/>
+                <input type="hidden" name="_wp_http_referer" value="' . esc_attr($_SERVER["REQUEST_URI"]) . '">
                 <input type="hidden" name="action" value="update">
-                <input type="hidden" name="option_page" value="options"/>
-                <?php wp_nonce_field('options-options'); ?>
-                <p class="submit">
-                    <input name="Update" type="submit" class="button-primary"
-                           value="<?= __('Mettre à jour', Sage::TOKEN) ?>">
+                <input type="hidden" name="option_page" value="options"/>'
+                . wp_nonce_field('options-options', '_wpnonce', true, false)
+                . '<p class="submit">
+                <input name="Update" type="submit" class="button-primary" value="' . esc_attr(__('Mettre à jour', Sage::TOKEN)) . '">
                 </p>
-            </form>
-            </div><?php
+                </form>
+                </div>';
+            return $result;
         }
-    }
-
-    public static function addColumn(array $columns): array
-    {
-        $columns[Sage::TOKEN] = __('Sage', Sage::TOKEN);
-        return $columns;
-    }
-
-    public static function displayColumn(string $column_name, WC_Order $order): void
-    {
-        $trans = SageTranslationUtils::getTranslations();
-        if (Sage::TOKEN !== $column_name) {
-            return;
-        }
-        $identifier = WoocommerceService::getInstance()->getFDocenteteIdentifierFromOrder($order);
-        if (empty($identifier)) {
-            echo '<span class="dashicons dashicons-no" style="color: red"></span>';
-            return;
-        }
-        echo $trans["fDocentetes"]["doType"]["values"][$identifier['doType']]
-            . ': n° '
-            . $identifier["doPiece"];
+        return null;
     }
 }

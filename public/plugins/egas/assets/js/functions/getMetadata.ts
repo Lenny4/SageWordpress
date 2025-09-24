@@ -1,4 +1,4 @@
-import { TOKEN } from "../token";
+import {TOKEN} from "../token";
 
 interface MetadataInterface {
   id: number;

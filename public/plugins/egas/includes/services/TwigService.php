@@ -45,8 +45,8 @@ class TwigService
         return self::$instance;
     }
 
-    public function render(string $name, array $context = [])
+    public function render(string $name, array $context = []): string
     {
-        echo $this->twig->render($name, $context);
+        return $this->twig->render($name, $context);
     }
 }

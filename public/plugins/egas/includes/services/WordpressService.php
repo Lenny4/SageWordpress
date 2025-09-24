@@ -3,7 +3,6 @@
 namespace App\services;
 
 use App\controllers\AdminController;
-use App\enum\Sage\TiersTypeEnum;
 use App\resources\FArticleResource;
 use App\resources\FComptetResource;
 use App\Sage;
@@ -15,10 +14,7 @@ use stdClass;
 use Symfony\Component\Filesystem\Filesystem;
 use WC_Shipping_Zone;
 use WC_Shipping_Zones;
-use WC_Tax;
 use WP_Application_Passwords;
-use WP_Error;
-use WP_User;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -27,7 +23,6 @@ if (!defined('ABSPATH')) {
 class WordpressService
 {
     private static ?WordpressService $instance = null;
-    public ?array $resources = null;
 
     public function install(): void
     {
@@ -46,7 +41,7 @@ class WordpressService
             $filesystem->remove([$dir]);
         }
         // endregion
-        $this->applyDefaultSageEntityMenuOptions();
+        $this->applyDefaultResourceOptions();
         $this->addWebsiteSageApi(true);
 
         // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
@@ -66,11 +61,11 @@ class WordpressService
      * We specifically set the default value in bdd in case between an upgrade we change the default value.
      * This way the user we keep the previous value if he never changed it.
      */
-    private function applyDefaultSageEntityMenuOptions(bool $force = false): void
+    private function applyDefaultResourceOptions(bool $force = false): void
     {
         $optionNames = [];
-        foreach ($this->getResources() as $sageEntityMenu) {
-            foreach ($sageEntityMenu->getOptions() as $option) {
+        foreach (SageService::getInstance()->getResources() as $resource) {
+            foreach ($resource->getOptions() as $option) {
                 $optionNames[Sage::TOKEN . '_' . $option['id']] = $option['default'];
             }
         }
@@ -80,29 +75,6 @@ class WordpressService
                 update_option($option, $optionNames[$option]);
             }
         }
-    }
-
-    /**
-     * @return Resource[]
-     */
-    public function getResources(): array
-    {
-        if (is_null($this->resources)) {
-            /** @var Resource[] $resources */
-            $resources = [];
-            $files = glob(__DIR__ . '/../resources' . '/*.php');
-            foreach ($files as $file) {
-                if (str_ends_with($file, '/Resource.php')) {
-                    continue;
-                }
-                $hookClass = 'App\\resources\\' . basename($file, '.php');
-                if (class_exists($hookClass)) {
-                    $resources[] = $hookClass::getInstance();
-                }
-            }
-            $this->resources = $resources;
-        }
-        return $this->resources;
     }
 
     public function addWebsiteSageApi(bool $force = false): bool|string
@@ -193,12 +165,12 @@ class WordpressService
 
     public function updateTaxes(bool $showMessage = true): void
     {
-        $graphqlService = GraphQLService::getInstance();
-        [$taxe, $rates] = $this->getWordpressTaxes();
-        $fTaxes = $graphqlService->getFTaxes(useCache: false, getFromSage: true);
+        $woocommerceService = WoocommerceService::getInstance();
+        [$taxe, $rates] = $woocommerceService->getWordpressTaxes();
+        $fTaxes = GraphQLService::getInstance()->getFTaxes(useCache: false, getFromSage: true);
         if (!AdminController::showErrors($fTaxes)) {
             $taxeChanges = $this->getTaxesChanges($fTaxes, $rates);
-            $this->applyTaxesChanges($taxeChanges);
+            $woocommerceService->applyTaxesChanges($taxeChanges);
             if ($showMessage && $taxeChanges !== []) {
                 ?>
                 <div class="notice notice-success is-dismissible">
@@ -207,23 +179,6 @@ class WordpressService
                 <?php
             }
         }
-    }
-
-    public function getWordpressTaxes(): array
-    {
-        $taxes = WC_Tax::get_tax_rate_classes();
-        $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
-            return $taxe->slug === Sage::TOKEN;
-        }));
-        if ($taxe === false) {
-            WC_Tax::create_tax_class(__('Sage', Sage::TOKEN), Sage::TOKEN);
-            $taxes = WC_Tax::get_tax_rate_classes();
-            $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
-                return $taxe->slug === Sage::TOKEN;
-            }));
-        }
-        $rates = WC_Tax::get_rates_for_tax_class($taxe->slug);
-        return [$taxe, $rates];
     }
 
     private function getTaxesChanges(array $fTaxes, array $rates): array
@@ -263,26 +218,6 @@ class WordpressService
             }
         }
         return $taxeChanges;
-    }
-
-    private function applyTaxesChanges(array $taxeChanges): void
-    {
-        foreach ($taxeChanges as $taxeChange) {
-            if ($taxeChange["change"] === TaxeUtils::ADD_TAXE_ACTION) {
-                WC_Tax::_insert_tax_rate([
-                    "tax_rate_country" => "",
-                    "tax_rate_state" => "",
-                    "tax_rate" => $taxeChange["new"]->taNp === 1 ? 0 : (string)$taxeChange["new"]->taTaux,
-                    "tax_rate_name" => $taxeChange["new"]->taCode,
-                    "tax_rate_priority" => "1",
-                    "tax_rate_compound" => "0",
-                    "tax_rate_shipping" => "1",
-                    "tax_rate_class" => Sage::TOKEN
-                ]);
-            } else if ($taxeChange["change"] === TaxeUtils::REMOVE_TAXE_ACTION) {
-                WC_Tax::_delete_tax_rate($taxeChange["old"]->tax_rate_id);
-            }
-        }
     }
 
     private function updateShippingMethodsWithSage(): void
@@ -393,7 +328,7 @@ class WordpressService
             return;
         }
         update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
-        [$createdOrUpdatedUserId, $message] = $this->updateUserOrFComptet($ctNum, $userId, newFComptet: $newFComptet);
+        [$createdOrUpdatedUserId, $message] = SageService::getInstance()->updateUserOrFComptet($ctNum, $userId, newFComptet: $newFComptet);
         if ($newFComptet && is_null($createdOrUpdatedUserId)) {
             $this->deleteSageMetadataForUser($userId);
         }
@@ -404,133 +339,14 @@ class WordpressService
         }
     }
 
-    /**
-     * If fComptet is more up to date than user -> update user in wordpress
-     * If user is more up to date than fComptet -> update fComptet in sage
-     */
-    public function updateUserOrFComptet(
-        ?string              $ctNum,
-        ?int                 $shouldBeUserId = null,
-        stdClass|string|null $fComptet = null,
-        bool                 $ignorePingApi = false,
-        bool                 $newFComptet = false,
-    ): array
+    public function deleteSageMetadataForUser(int $userId): void
     {
-        if (is_null($ctNum) && !$newFComptet) {
-            return [null, "<div class='error'>
-                    " . __("Vous devez spécifier le numéro de compte Sage", Sage::TOKEN) . "
-                            </div>"];
-        }
-        if (is_null($fComptet) && !is_null($ctNum)) {
-            $ctNum = str_replace(' ', '', strtoupper($ctNum));
-            $fComptet = GraphqlService::getInstance()->getFComptet($ctNum, ignorePingApi: $ignorePingApi);
-        }
-        if ($newFComptet) {
-            if (!is_null($fComptet)) {
-                return [null, "<div class='error'>
-                    " . __("Vous essayez de créer compte Sage qui existe déjà (" . $ctNum . ")", Sage::TOKEN) . "
-                            </div>"];
-            }
-            if (is_null($shouldBeUserId)) {
-                return [null, "<div class='error'>
-                    " . __("Vous devez spécifier l'id compte Wordpress", Sage::TOKEN) . "
-                            </div>"];
-            }
-            $fComptet = GraphqlService::getInstance()->createUpdateFComptet(
-                userId: $shouldBeUserId,
-                ctNum: $ctNum,
-                new: true,
-                getError: true,
-            );
-            if (is_string($fComptet)) {
-                return [null, "<div class='notice notice-error is-dismissible'>" . $fComptet . "</div>"];
-            }
-        }
-        if (is_null($fComptet)) {
-            $word = 'importé';
-            if ($newFComptet) {
-                $word = 'crée';
-            }
-            return [null, "<div class='error'>
-                    " . __("Le compte Sage n'a pas pu être " . $word, Sage::TOKEN) . "
-                            </div>"];
-        }
-        $canImportFComptet = $this->canUpdateUserOrFComptet($fComptet);
-        if (!empty($canImportFComptet)) {
-            return [null, null, "<div class='error'>
-                        " . implode(' ', $canImportFComptet) . "
-                                </div>"];
-        }
-        $ctNum = $fComptet->ctNum;
-        $userId = $this->getUserIdWithCtNum($ctNum);
-        if (!is_null($shouldBeUserId)) {
-            if (is_null($userId)) {
-                $userId = $shouldBeUserId;
-            } else if ($userId !== $shouldBeUserId) {
-                return [null, "<div class='error'>
-                        " . __("Ce numéro de compte Sage est déjà assigné à un utilisateur Wordpress", Sage::TOKEN) . "
-                                </div>"];
-            }
-        }
-        [$userId, $userFromSage, $metadata] = WoocommerceService::getInstance()->convertSageUserToWoocommerce(
-            $fComptet,
-            $userId,
-        );
-        if (is_string($userFromSage)) {
-            return [null, $userFromSage];
-        }
-        $newUser = is_null($userId);
-        if ($newUser) {
-            $userId = wp_create_user($userFromSage->user_login, $userFromSage->user_pass, $userFromSage->user_email);
-        }
-        if ($userId instanceof WP_Error) {
-            return [null, "<div class='notice notice-error is-dismissible'>
-                                <pre>" . $userId->get_error_code() . "</pre>
-                                <pre>" . $userId->get_error_message() . "</pre>
-                                </div>"];
-        }
-        $updateApi = empty(get_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', true));
-        if ($updateApi) {
-            $wpUser = new WP_User($userId);
-            if ($wpUser->user_login !== $userFromSage->user_login) {
-                wp_update_user($userFromSage);
-            }
-            foreach ($metadata as $key => $value) {
-                update_user_meta($userId, $key, $value);
-            }
-        } else {
-            if (!$newFComptet) { // no need update fComptet as sageGraphQl->createUpdateFComptet already update fComptet
-                $fComptet = GraphqlService::getInstance()->updateFComptetFromWebsite(
-                    ctNum: $ctNum,
-                    getError: true,
-                );
-                if (is_string($fComptet)) {
-                    return [null, $fComptet];
-                }
-            }
-            // no need because it's done directly by Sage Api
-            // update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', null);
-        }
-
-        $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "user-edit.php?user_id=" . $userId . "'>" . __("Voir l'utilisateur", Sage::TOKEN) . "</a></span></strong>";
-        if (!$newUser) {
-            return [$userId, "<div class='notice notice-success is-dismissible'>
-                        " . __('L\'utilisateur a été modifié', Sage::TOKEN) . $url . "
-                                </div>"];
-        }
-        return [$userId, "<div class='notice notice-success is-dismissible'>
-                        " . __('L\'utilisateur a été créé', Sage::TOKEN) . $url . "
-                                </div>"];
-    }
-
-    public function canUpdateUserOrFComptet(stdClass $fComptet): array
-    {
-        // all fields here must be [IsProjected(false)]
-        $result = [];
-        if ($fComptet->ctType !== TiersTypeEnum::TiersTypeClient->value) {
-            $result[] = __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", Sage::TOKEN);
-        }
-        return $result;
+        global $wpdb;
+        $wpdb->query($wpdb->prepare("
+DELETE
+FROM {$wpdb->usermeta}
+WHERE user_id = %s AND meta_key LIKE '_" . Sage::TOKEN . "_%'
+        ", [$userId]));
     }
 
     public function getUserIdWithCtNum(string $ctNum): int|null
@@ -549,18 +365,39 @@ WHERE meta_key = %s
         return null;
     }
 
-    public function deleteSageMetadataForUser(int $userId): void
+    public function getUserWordpressIdForSage(int $userId)
+    {
+        return get_user_meta($userId, FComptetResource::META_KEY, true);
+    }
+
+    public function getValidWordpressMail(?string $value): string|null
+    {
+        if (is_null($value)) {
+            return null;
+        }
+        if (empty($value = trim($value))) {
+            return null;
+        }
+        $emails = explode(';', $value);
+        if (!filter_var(($email = trim($emails[0])), FILTER_VALIDATE_EMAIL)) {
+            return null;
+        }
+        return $email;
+    }
+
+    public function deleteMetaTrashResource(string $key, string $value): void
     {
         global $wpdb;
         $wpdb->query($wpdb->prepare("
 DELETE
-FROM {$wpdb->usermeta}
-WHERE user_id = %s AND meta_key LIKE '_" . Sage::TOKEN . "_%'
-        ", [$userId]));
-    }
-
-    public function getUserWordpressIdForSage(int $userId)
-    {
-        return get_user_meta($userId, FComptetResource::META_KEY, true);
+FROM {$wpdb->postmeta}
+WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
+                              FROM (SELECT * FROM {$wpdb->postmeta}) postmeta2
+                                       INNER JOIN {$wpdb->posts}
+                                                  ON {$wpdb->posts}.ID = postmeta2.post_id AND {$wpdb->posts}.post_status = 'trash'
+                              WHERE meta_key = %s
+                                AND meta_value = %s)
+  AND {$wpdb->postmeta}.meta_key LIKE '_" . Sage::TOKEN . "_%'
+        ", [$key, $value]));
     }
 }

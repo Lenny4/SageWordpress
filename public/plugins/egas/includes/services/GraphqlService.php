@@ -4,6 +4,7 @@ namespace App\services;
 
 use App\class\Dto\ArgumentSelectionSetDto;
 use App\controllers\AdminController;
+use App\resources\Resource;
 use App\Sage;
 use App\Utils\FDocenteteUtils;
 use App\Utils\PCatComptaUtils;
@@ -416,7 +417,7 @@ class GraphqlService
         if (!is_null($this->pDossier) && $getFromSage !== true) {
             return $this->pDossier;
         }
-        $entityName = SageEntityMenu::PDOSSIER_ENTITY_NAME;
+        $entityName = Resource::PDOSSIER_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "paged" => "1",
@@ -668,16 +669,16 @@ class GraphqlService
         }
 
         if (array_key_exists('page', $queryParams)) {
-            if ($queryParams['page'] === Sage::TOKEN . '_' . SageEntityMenu::FDOCENTETE_ENTITY_NAME) {
-                return [SageEntityMenu::FDOCENTETE_DEFAULT_SORT, 'desc'];
+            if ($queryParams['page'] === Sage::TOKEN . '_' . Resource::FDOCENTETE_ENTITY_NAME) {
+                return [Resource::FDOCENTETE_DEFAULT_SORT, 'desc'];
             }
 
-            if ($queryParams['page'] === Sage::TOKEN . '_' . SageEntityMenu::FCOMPTET_ENTITY_NAME) {
-                return [SageEntityMenu::FCOMPTET_DEFAULT_SORT, $defaultSortValue];
+            if ($queryParams['page'] === Sage::TOKEN . '_' . Resource::FCOMPTET_ENTITY_NAME) {
+                return [Resource::FCOMPTET_DEFAULT_SORT, $defaultSortValue];
             }
 
-            if ($queryParams['page'] === Sage::TOKEN . '_' . SageEntityMenu::FARTICLE_ENTITY_NAME) {
-                return [SageEntityMenu::FARTICLE_DEFAULT_SORT, $defaultSortValue];
+            if ($queryParams['page'] === Sage::TOKEN . '_' . Resource::FARTICLE_ENTITY_NAME) {
+                return [Resource::FARTICLE_DEFAULT_SORT, $defaultSortValue];
             }
 
             throw new Exception("Unknown page " . $queryParams['page']);
@@ -779,7 +780,7 @@ class GraphqlService
         if (!is_null($this->pExpeditions) && $getFromSage !== true) {
             return $this->pExpeditions;
         }
-        $entityName = SageEntityMenu::PEXPEDITION_ENTITY_NAME;
+        $entityName = Resource::PEXPEDITION_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [
@@ -1054,7 +1055,7 @@ class GraphqlService
             return $this->pUnites;
         }
 
-        $entityName = SageEntityMenu::PUNITE_ENTITY_NAME;
+        $entityName = Resource::PUNITE_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [
@@ -1104,7 +1105,7 @@ class GraphqlService
             return $this->fDepots;
         }
 
-        $entityName = SageEntityMenu::FDEPOT_ENTITY_NAME;
+        $entityName = Resource::FDEPOT_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [],
@@ -1150,7 +1151,7 @@ class GraphqlService
             return $this->fFamilles;
         }
 
-        $entityName = SageEntityMenu::FFAMILLE_ENTITY_NAME;
+        $entityName = Resource::FFAMILLE_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [
@@ -1201,7 +1202,7 @@ class GraphqlService
     ): StdClass|null
     {
         $fArticle = $this->searchEntities(
-            SageEntityMenu::FARTICLE_ENTITY_NAME,
+            Resource::FARTICLE_ENTITY_NAME,
             [
                 "filter_field" => [
                     "arRef"
@@ -1287,7 +1288,7 @@ class GraphqlService
             }
         }
         $fDocentetes = $this->searchEntities(
-            SageEntityMenu::FDOCENTETE_ENTITY_NAME,
+            Resource::FDOCENTETE_ENTITY_NAME,
             [
                 "filter_field" => $filterField,
                 "filter_type" => $filterType,
@@ -1508,7 +1509,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     public function getFComptet(string $ctNum, bool $ignorePingApi = false): StdClass|null
     {
         $fComptet = $this->searchEntities(
-            SageEntityMenu::FCOMPTET_ENTITY_NAME,
+            Resource::FCOMPTET_ENTITY_NAME,
             [
                 "filter_field" => [
                     "ctNum"
@@ -1542,7 +1543,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->pCattarifs) && $getFromSage !== true) {
             return $this->pCattarifs;
         }
-        $entityName = SageEntityMenu::PCATTARIF_ENTITY_NAME;
+        $entityName = Resource::PCATTARIF_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [
@@ -1594,7 +1595,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->fGlossaires) && $getFromSage !== true) {
             return $this->fGlossaires;
         }
-        $entityName = SageEntityMenu::FGLOSSAIRE_ENTITY_NAME;
+        $entityName = Resource::FGLOSSAIRE_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [],
@@ -1628,7 +1629,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->fCatalogues) && $getFromSage !== true) {
             return $this->fCatalogues;
         }
-        $entityName = SageEntityMenu::FCATALOGUE_ENTITY_NAME;
+        $entityName = Resource::FCATALOGUE_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [],
@@ -1676,7 +1677,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->cbSysLibres) && $getFromSage !== true) {
             return $this->cbSysLibres;
         }
-        $entityName = SageEntityMenu::CBSYSLIBRE_ENTITY_NAME;
+        $entityName = Resource::CBSYSLIBRE_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [],
@@ -1724,7 +1725,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->fPays) && $getFromSage !== true) {
             return $this->fPays;
         }
-        $entityName = SageEntityMenu::FPAYS_ENTITY_NAME;
+        $entityName = Resource::FPAYS_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "paged" => "1",
@@ -1763,7 +1764,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->fTaxes) && $getFromSage !== true) {
             return $this->fTaxes;
         }
-        $entityName = SageEntityMenu::FTAXES_ENTITY_NAME;
+        $entityName = Resource::FTAXES_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "paged" => "1",
@@ -1793,7 +1794,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->pCatComptas) && $getFromSage !== true) {
             return $this->pCatComptas;
         }
-        $entityName = SageEntityMenu::PCATCOMPTA_ENTITY_NAME;
+        $entityName = Resource::PCATCOMPTA_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "filter_field" => [],
@@ -1944,7 +1945,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if (!is_null($this->pPreference) && $getFromSage !== true) {
             return $this->pPreference;
         }
-        $entityName = SageEntityMenu::PPREFERENCE_ENTITY_NAME;
+        $entityName = Resource::PPREFERENCE_ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
             "paged" => "1",
@@ -1977,30 +1978,30 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         ];
     }
 
-    public function getSageEntityMenuWithQuery(SageEntityMenu $sageEntityMenu, bool $getData = true): array
+    public function getResourceWithQuery(Resource $resource, bool $getData = true): array
     {
         $queryParams = $_GET;
-        $entityName = $sageEntityMenu->getEntityName();
+        $entityName = $resource->getEntityName();
         $rawShowFields = get_option(Sage::TOKEN . '_' . $entityName . '_show_fields');
         $rawFilterFields = get_option(Sage::TOKEN . '_' . $entityName . '_filter_fields');
         $perPage = get_option(Sage::TOKEN . '_' . $entityName . '_perPage');
         if ($rawShowFields === false) {
-            $rawShowFields = $sageEntityMenu->getDefaultFields();
+            $rawShowFields = $resource->getDefaultFields();
         }
         if ($rawFilterFields === false) {
-            $rawFilterFields = $sageEntityMenu->getDefaultFields();
+            $rawFilterFields = $resource->getDefaultFields();
         }
 
-        $mandatoryFields = $sageEntityMenu->getMandatoryFields();
+        $mandatoryFields = $resource->getMandatoryFields();
         $hideFields = [...array_diff($mandatoryFields, $rawShowFields)];
         $rawShowFields = array_unique([...$rawShowFields, ...$hideFields]);
         $showFields = [];
         $filterFields = [];
-        $inputFields = $this->getTypeFilter($sageEntityMenu->getFilterType()) ?? [];
-        $transDomain = $sageEntityMenu->getTransDomain();
+        $inputFields = $this->getTypeFilter($resource->getFilterType()) ?? [];
+        $transDomain = $resource->getTransDomain();
         $trans = SageTranslationUtils::getTranslations();
         $selectionSets = [];
-        foreach ($sageEntityMenu->getSelectionSet() as $selectionSet) {
+        foreach ($resource->getSelectionSet() as $selectionSet) {
             if (is_array($selectionSet) && array_key_exists('name', $selectionSet)) {
                 $selectionSets[$selectionSet['name']] = $selectionSet['type'];
             }
@@ -2045,7 +2046,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         if ($getData) {
             $data = json_decode(json_encode($this->searchEntities($entityName, $queryParams, $showFields, ignorePingApi: true)
                 , JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
-            $data = $this->sage->sageWoocommerce->populateMetaDatas($data, $showFields, $sageEntityMenu);
+            $data = $this->sage->sageWoocommerce->populateMetaDatas($data, $showFields, $resource);
         }
         $hideFields = array_map(static function (string $hideField) {
             return str_replace(SageSettings::PREFIX_META_DATA, '', $hideField);

@@ -3,10 +3,12 @@
 namespace App\hooks;
 
 use App\controllers\AdminController;
+use App\controllers\WoocommerceController;
 use App\Sage;
 use App\services\GraphqlService;
 use App\services\TwigService;
 use App\services\WordpressService;
+use WC_Order;
 use WP_User;
 
 class WordpressHook
@@ -28,7 +30,7 @@ class WordpressHook
             if (str_contains($accept, 'application/json')) {
                 return;
             }
-            TwigService::getInstance()->render('data.html.twig');
+            echo TwigService::getInstance()->render('data.html.twig');
             if (is_admin() && current_user_can('activate_plugins')) {
                 AdminController::adminNotices(
                     "<div id='" . Sage::TOKEN . "_appstate' class='notice notice-info is-dismissible hidden'>
@@ -39,20 +41,26 @@ class WordpressHook
                         : ""
                     )
                 );
-                AdminController::showWrongOptions();
+                if (!is_null($wrongOptions = AdminController::getWrongOptions())) {
+                    echo $wrongOptions;
+                }
             }
             $screen_id = WordpressService::getInstance()->get_order_screen_id();
             // like register_order_origin_column in woocommerce/src/Internal/Orders/OrderAttributionController.php
             // HPOS and non-HPOS use different hooks.
-            add_filter("manage_{$screen_id}_columns", [AdminController::class, 'addColumn'], 11);
-            add_filter("manage_edit-{$screen_id}_columns", [AdminController::class, 'addColumn'], 11);
-            add_action("manage_{$screen_id}_custom_column", [AdminController::class, 'displayColumn'], 10, 2);
-            add_action("manage_{$screen_id}_posts_custom_column", [AdminController::class, 'displayColumn'], 10, 2);
+            add_filter("manage_{$screen_id}_columns", [WoocommerceController::class, 'addColumn'], 11);
+            add_filter("manage_edit-{$screen_id}_columns", [WoocommerceController::class, 'addColumn'], 11);
+            add_action("manage_{$screen_id}_custom_column", static function (string $column_name, WC_Order $order) {
+                echo WoocommerceController::displayColumn($column_name, $order);
+            }, 10, 2);
+            add_action("manage_{$screen_id}_posts_custom_column", static function (string $column_name, WC_Order $order) {
+                echo WoocommerceController::displayColumn($column_name, $order);
+            }, 10, 2);
         });
         // region link wordpress user to sage user
         add_action('personal_options', function (WP_User $user): void {
             $sageGraphQl = GraphQLService::getInstance();
-            TwigService::getInstance()->render('user/formMetaFields.html.twig', [
+            echo TwigService::getInstance()->render('user/formMetaFields.html.twig', [
                 'user' => $user,
                 'userMetaWordpress' => get_user_meta($user->ID),
                 'pCattarifs' => $sageGraphQl->getPCattarifs(),
@@ -61,7 +69,7 @@ class WordpressHook
         });
         add_action('user_new_form', function (): void {
             $sageGraphQl = GraphQLService::getInstance();
-            TwigService::getInstance()->render('user/formMetaFields.html.twig', [
+            echo TwigService::getInstance()->render('user/formMetaFields.html.twig', [
                 'user' => null,
                 'userMetaWordpress' => null,
                 'pCattarifs' => $sageGraphQl->getPCattarifs(),
@@ -70,10 +78,10 @@ class WordpressHook
         });
         add_action('profile_update', function (int $userId) {
             WordpressService::getInstance()->saveCustomerUserMetaFields($userId);
-        }, accepted_args: 1);
+        });
         add_action('user_register', function (int $userId) {
             WordpressService::getInstance()->saveCustomerUserMetaFields($userId);
-        }, accepted_args: 1);
+        });
         // endregion
     }
 }

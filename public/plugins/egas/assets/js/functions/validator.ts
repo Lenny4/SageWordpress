@@ -1,12 +1,12 @@
 // todo translate
 
 export const stringValidator = async ({
-  value,
-  maxLength,
-  canBeEmpty,
-  canHaveSpace,
-  isReference,
-}: {
+                                        value,
+                                        maxLength,
+                                        canBeEmpty,
+                                        canHaveSpace,
+                                        isReference,
+                                      }: {
   value: string | null;
   maxLength?: number;
   canBeEmpty?: boolean;
@@ -32,13 +32,13 @@ export const stringValidator = async ({
 };
 
 export const numberValidator = async ({
-  value,
-  canBeEmpty,
-  positive,
-  canBeFloat,
-  maxValue,
-  minValue,
-}: {
+                                        value,
+                                        canBeEmpty,
+                                        positive,
+                                        canBeFloat,
+                                        maxValue,
+                                        minValue,
+                                      }: {
   value: string | number | null | undefined;
   canBeEmpty?: boolean;
   positive?: boolean;

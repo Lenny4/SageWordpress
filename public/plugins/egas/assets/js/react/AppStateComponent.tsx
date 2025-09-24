@@ -1,16 +1,16 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import { createRoot } from "react-dom/client";
+import {createRoot} from "react-dom/client";
 import React from "react";
 import {
   AppStateInterface,
   SyncWebsiteJobInterface,
   TaskJobSyncWebsiteJobInterface,
 } from "../interface/AppStateInterface";
-import { getTranslations } from "../functions/translations";
-import { LinearProgress } from "@mui/material";
-import { LinearProgressWithLabel } from "./component/LinearProgressWithLabel";
-import { getDiff } from "json-difference";
-import { TOKEN } from "../token";
+import {getTranslations} from "../functions/translations";
+import {LinearProgress} from "@mui/material";
+import {LinearProgressWithLabel} from "./component/LinearProgressWithLabel";
+import {getDiff} from "json-difference";
+import {TOKEN} from "../token";
 
 const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
 const wpnonce = $(`[data-${TOKEN}-nonce]`).attr(`data-${TOKEN}-nonce`);
@@ -39,7 +39,7 @@ interface State2 {
 }
 
 const TaskJobSyncWebsiteJobComponent: React.FC<State2> = React.memo(
-  ({ TaskJobSyncWebsiteJob }) => {
+  ({TaskJobSyncWebsiteJob}) => {
     return (
       <>
         <p>
@@ -48,7 +48,7 @@ const TaskJobSyncWebsiteJobComponent: React.FC<State2> = React.memo(
           </span>
           {TaskJobSyncWebsiteJob.TaskJobDoneSpeed !== null && (
             <>
-              <br />
+              <br/>
               <span>
                 {translations.words.taskJobDoneSpeed + ": "}
                 {humanizeDuration(TaskJobSyncWebsiteJob.TaskJobDoneSpeed, {
@@ -59,7 +59,7 @@ const TaskJobSyncWebsiteJobComponent: React.FC<State2> = React.memo(
           )}
           {TaskJobSyncWebsiteJob.RemainingTime !== null && (
             <>
-              <br />
+              <br/>
               <span>
                 {translations.words.remainingTime + ": "}
                 {humanizeDuration(TaskJobSyncWebsiteJob.RemainingTime, {
@@ -72,7 +72,7 @@ const TaskJobSyncWebsiteJobComponent: React.FC<State2> = React.memo(
         </p>
         <div>
           {TaskJobSyncWebsiteJob.NewNbTasks === null ? (
-            <LinearProgress />
+            <LinearProgress/>
           ) : (
             <LinearProgressWithLabel
               done={TaskJobSyncWebsiteJob.NbTaskDone}
@@ -94,7 +94,7 @@ const TaskJobSyncWebsiteJobComponent: React.FC<State2> = React.memo(
 );
 
 const SyncWebsiteJobComponent: React.FC<State> = React.memo(
-  ({ SyncWebsiteJob }) => {
+  ({SyncWebsiteJob}) => {
     return (
       <>
         {SyncWebsiteJob.Show && (
@@ -103,7 +103,7 @@ const SyncWebsiteJobComponent: React.FC<State> = React.memo(
               <span className="h5">
                 {translations.enum.syncWebsiteState[SyncWebsiteJob.State]}
               </span>
-              <br />
+              <br/>
               <span>
                 {translations.sentences.nbThreads}: {SyncWebsiteJob.NbThreads}
               </span>
@@ -288,10 +288,10 @@ const AppStateComponent = () => {
     setLoadingAuthorizationError(true);
     const response = await fetch(
       siteUrl +
-        "/index.php?rest_route=" +
-        encodeURIComponent(`/${TOKEN}/v1/add-website-sage-api`) +
-        "&_wpnonce=" +
-        wpnonce,
+      "/index.php?rest_route=" +
+      encodeURIComponent(`/${TOKEN}/v1/add-website-sage-api`) +
+      "&_wpnonce=" +
+      wpnonce,
     );
     if (response.ok) {
       window.location.reload();
@@ -341,7 +341,7 @@ const AppStateComponent = () => {
           )}
           {hasErrorWebsocketAuthorization && (
             <>
-              <br />
+              <br/>
               <button
                 className="button-primary"
                 disabled={loadingAuthorizationError}
@@ -358,7 +358,7 @@ const AppStateComponent = () => {
       ) : (
         appState?.SyncWebsiteJob && (
           <>
-            <SyncWebsiteJobComponent SyncWebsiteJob={appState.SyncWebsiteJob} />
+            <SyncWebsiteJobComponent SyncWebsiteJob={appState.SyncWebsiteJob}/>
           </>
         )
       )}
@@ -370,4 +370,4 @@ const AppStateComponent = () => {
 const root = createRoot(
   document.querySelector(containerSelector + " .content"),
 );
-root.render(<AppStateComponent />);
+root.render(<AppStateComponent/>);

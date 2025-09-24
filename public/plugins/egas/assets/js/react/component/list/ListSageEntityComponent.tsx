@@ -1,14 +1,11 @@
-import { createRoot } from "react-dom/client";
+import {createRoot} from "react-dom/client";
 import React from "react";
-import { ListSageEntityFilterComponent } from "./ListSageEntityFilterComponent";
-import { ListSageEntityPagingComponent } from "./ListSageEntityPagingComponent";
-import { ListSageEntityTableComponent } from "./ListSageEntityTableComponent";
-import {
-  FilterShowFieldInterface,
-  FilterTypeInterface,
-} from "../../../interface/ListSageEntityInterface";
-import { BrowserRouter, useSearchParams } from "react-router-dom";
-import { TOKEN } from "../../../token";
+import {ListSageEntityFilterComponent} from "./ListSageEntityFilterComponent";
+import {ListSageEntityPagingComponent} from "./ListSageEntityPagingComponent";
+import {ListSageEntityTableComponent} from "./ListSageEntityTableComponent";
+import {FilterShowFieldInterface, FilterTypeInterface,} from "../../../interface/ListSageEntityInterface";
+import {BrowserRouter, useSearchParams} from "react-router-dom";
+import {TOKEN} from "../../../token";
 
 const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
 const wpnonce = $(`[data-${TOKEN}-nonce]`).attr(`data-${TOKEN}-nonce`);
@@ -31,15 +28,15 @@ export interface ResultTableInterface {
 }
 
 export const ListSageEntityComponent: React.FC<State> = ({
-  filterTypes,
-  filterFields,
-  showFields,
-  hideFields,
-  sageEntityName,
-  mandatoryFields,
-  paginationRange,
-  perPage,
-}) => {
+                                                           filterTypes,
+                                                           filterFields,
+                                                           showFields,
+                                                           hideFields,
+                                                           sageEntityName,
+                                                           mandatoryFields,
+                                                           paginationRange,
+                                                           perPage,
+                                                         }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [result, setResult] = React.useState<ResultTableInterface | undefined>(
     undefined,
@@ -54,7 +51,7 @@ export const ListSageEntityComponent: React.FC<State> = ({
     setSearching(true);
     const response = await fetch(
       siteUrl +
-        `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search/sage-entity-menu/${sageEntityName}`)}&${stringParams}&_wpnonce=${wpnonce}`,
+      `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search/sage-entity-menu/${sageEntityName}`)}&${stringParams}&_wpnonce=${wpnonce}`,
     );
     if (response.ok) {
       if (realSearch === stringParams) {
@@ -85,7 +82,7 @@ export const ListSageEntityComponent: React.FC<State> = ({
           paginationRange={paginationRange}
           defaultPerPage={Number(perPage)}
         />
-        <br className="clear" />
+        <br className="clear"/>
       </div>
       <ListSageEntityTableComponent
         hideFields={hideFields}

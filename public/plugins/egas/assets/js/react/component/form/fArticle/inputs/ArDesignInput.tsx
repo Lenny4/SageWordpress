@@ -1,14 +1,11 @@
 import * as React from "react";
-import { useImperativeHandle, useRef } from "react";
-import { Tooltip } from "@mui/material";
-import { getTranslations } from "../../../../../functions/translations";
-import {
-  FormValidInterface,
-  InputInterface,
-} from "../../../../../interface/InputInterface";
-import { handleChangeInputGeneric } from "../../../../../functions/form";
-import { stringValidator } from "../../../../../functions/validator";
-import { TOKEN } from "../../../../../token";
+import {useImperativeHandle, useRef} from "react";
+import {Tooltip} from "@mui/material";
+import {getTranslations} from "../../../../../functions/translations";
+import {FormValidInterface, InputInterface,} from "../../../../../interface/InputInterface";
+import {handleChangeInputGeneric} from "../../../../../functions/form";
+import {stringValidator} from "../../../../../functions/validator";
+import {TOKEN} from "../../../../../token";
 
 let translations: any = getTranslations();
 
@@ -21,10 +18,10 @@ type FormState = {
 };
 
 export const ArDesignInput = React.forwardRef(
-  ({ defaultValue }: ArDesignInputState, ref) => {
+  ({defaultValue}: ArDesignInputState, ref) => {
     const getDefaultValue = (): FormState => {
       return {
-        arDesign: { value: defaultValue ?? "" },
+        arDesign: {value: defaultValue ?? ""},
       };
     };
     const [values, setValues] = React.useState<FormState>(getDefaultValue());
@@ -33,9 +30,9 @@ export const ArDesignInput = React.forwardRef(
 
     const handleChange =
       (prop: keyof FormState) =>
-      (event: React.ChangeEvent<HTMLInputElement>) => {
-        handleChangeInputGeneric(event, prop, setValues);
-      };
+        (event: React.ChangeEvent<HTMLInputElement>) => {
+          handleChangeInputGeneric(event, prop, setValues);
+        };
 
     const isValid = async () => {
       const error = await stringValidator({
@@ -119,15 +116,15 @@ export const ArDesignInput = React.forwardRef(
             <span>{translations["fArticles"]["arDesign"]}</span>
           </Tooltip>
         </label>
-        <div style={{ display: "flex" }}>
-          <div style={{ flex: 1 }}>
+        <div style={{display: "flex"}}>
+          <div style={{flex: 1}}>
             <input
               id={`_${TOKEN}_arDesign`}
               name={`_${TOKEN}_arDesign`}
               type={"text"}
               value={values.arDesign.value}
               onChange={handleChange("arDesign")}
-              style={{ width: "100%" }}
+              style={{width: "100%"}}
               ref={inputRef}
             />
           </div>

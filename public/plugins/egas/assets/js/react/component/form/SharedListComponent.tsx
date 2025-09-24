@@ -1,4 +1,4 @@
-import { createRoot } from "react-dom/client";
+import {createRoot} from "react-dom/client";
 import React from "react";
 import Grid from "@mui/material/Grid";
 import List from "@mui/material/List";
@@ -11,24 +11,13 @@ import Checkbox from "@mui/material/Checkbox";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import {
-  closestCenter,
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { IconButton, InputAdornment, TextField, Tooltip } from "@mui/material";
+import {closestCenter, DndContext, PointerSensor, useSensor, useSensors,} from "@dnd-kit/core";
+import {arrayMove, SortableContext, useSortable, verticalListSortingStrategy,} from "@dnd-kit/sortable";
+import {CSS} from "@dnd-kit/utilities";
+import {IconButton, InputAdornment, TextField, Tooltip} from "@mui/material";
 import Box from "@mui/material/Box";
 import ClearIcon from "@mui/icons-material/Clear";
-import { getTranslations } from "../../../functions/translations";
+import {getTranslations} from "../../../functions/translations";
 
 let translations: any = getTranslations();
 
@@ -65,11 +54,11 @@ function union(a: string[], b: string[]) {
 }
 
 const SortableItem = ({
-  id,
-  label,
-  checked,
-  onToggle,
-}: {
+                        id,
+                        label,
+                        checked,
+                        onToggle,
+                      }: {
   id: string;
   label: string;
   checked: boolean;
@@ -82,7 +71,7 @@ const SortableItem = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id });
+  } = useSortable({id});
 
   // Conditionally apply the cursor style based on whether the item is being dragged
   const cursorStyle = isDragging ? "move" : "grab";
@@ -104,19 +93,19 @@ const SortableItem = ({
               minWidth: "auto",
             }}
           >
-            <DragIndicatorIcon fontSize="small" />
+            <DragIndicatorIcon fontSize="small"/>
           </ListItemIcon>
           <ListItemIcon>
-            <Checkbox checked={checked} tabIndex={-1} disableRipple />
+            <Checkbox checked={checked} tabIndex={-1} disableRipple/>
           </ListItemIcon>
-          <ListItemText primary={label} />
+          <ListItemText primary={label}/>
         </ListItemButton>
       </Tooltip>
     </div>
   );
 };
 
-const SharedListComponent: React.FC<State> = ({ data, formDom }) => {
+const SharedListComponent: React.FC<State> = ({data, formDom}) => {
   // https://mui.com/material-ui/react-transfer-list/
   const [checked, setChecked] = React.useState<string[]>([]);
   const compareOption = (a: string, b: string): number => {
@@ -129,7 +118,7 @@ const SharedListComponent: React.FC<State> = ({ data, formDom }) => {
     const realB = Object.prototype.hasOwnProperty.call(data.field.options, b)
       ? data.field.options[b]
       : b;
-    return realA.localeCompare(realB, undefined, { sensitivity: "base" });
+    return realA.localeCompare(realB, undefined, {sensitivity: "base"});
   };
 
   const [leftSearch, setLeftSearch] = React.useState("");
@@ -191,7 +180,7 @@ const SharedListComponent: React.FC<State> = ({ data, formDom }) => {
   const sensors = useSensors(useSensor(PointerSensor));
 
   const handleDragEnd = (event: any) => {
-    const { active, over } = event;
+    const {active, over} = event;
     if (active.id !== over?.id) {
       const oldIndex = right.indexOf(active.id);
       const newIndex = right.indexOf(over.id);
@@ -221,7 +210,7 @@ const SharedListComponent: React.FC<State> = ({ data, formDom }) => {
     return (
       <Card>
         <CardHeader
-          sx={{ px: 2, py: 1 }}
+          sx={{px: 2, py: 1}}
           avatar={
             <Checkbox
               onClick={handleToggleAll(filteredItems)}
@@ -239,8 +228,8 @@ const SharedListComponent: React.FC<State> = ({ data, formDom }) => {
           title={title}
           subheader={`${numberOfChecked(filteredItems)}/${filteredItems.length}`}
         />
-        <Divider />
-        <Box sx={{ padding: 1 }}>
+        <Divider/>
+        <Box sx={{padding: 1}}>
           <TextField
             size="small"
             placeholder="Rechercher..."
@@ -258,7 +247,7 @@ const SharedListComponent: React.FC<State> = ({ data, formDom }) => {
                       edge="end"
                       size="small"
                     >
-                      <ClearIcon fontSize="small" />
+                      <ClearIcon fontSize="small"/>
                     </IconButton>
                   </InputAdornment>
                 ) : null,
@@ -362,7 +351,7 @@ const SharedListComponent: React.FC<State> = ({ data, formDom }) => {
     <Grid
       container
       spacing={2}
-      sx={{ justifyContent: "flex-start", alignItems: "center" }}
+      sx={{justifyContent: "flex-start", alignItems: "center"}}
     >
       <Grid>
         {customList(
@@ -374,9 +363,9 @@ const SharedListComponent: React.FC<State> = ({ data, formDom }) => {
         )}
       </Grid>
       <Grid>
-        <Grid container direction="column" sx={{ alignItems: "center" }}>
+        <Grid container direction="column" sx={{alignItems: "center"}}>
           <Button
-            sx={{ my: 0.5 }}
+            sx={{my: 0.5}}
             variant="outlined"
             size="small"
             onClick={handleCheckedRight}
@@ -385,7 +374,7 @@ const SharedListComponent: React.FC<State> = ({ data, formDom }) => {
             &gt;
           </Button>
           <Button
-            sx={{ my: 0.5 }}
+            sx={{my: 0.5}}
             variant="outlined"
             size="small"
             onClick={handleCheckedLeft}

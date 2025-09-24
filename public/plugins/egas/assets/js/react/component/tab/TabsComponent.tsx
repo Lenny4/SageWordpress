@@ -1,15 +1,15 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import { Tab, Tabs } from "@mui/material";
-import { CustomTabPanel } from "./CustomTabPanel";
-import { FormTabInterface } from "../../../interface/InputInterface";
-import { TOKEN } from "../../../token";
+import {Tab, Tabs} from "@mui/material";
+import {CustomTabPanel} from "./CustomTabPanel";
+import {FormTabInterface} from "../../../interface/InputInterface";
+import {TOKEN} from "../../../token";
 
 type State = {
   tabs: FormTabInterface;
 };
 
-export const TabsComponent = ({ tabs }: State) => {
+export const TabsComponent = ({tabs}: State) => {
   const [tabValue, setValue] = React.useState(
     Number(tabs.tabProps?.defaultValue ?? 0),
   );
@@ -30,7 +30,7 @@ export const TabsComponent = ({ tabs }: State) => {
 
   return (
     <>
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Box sx={{borderBottom: 1, borderColor: "divider"}}>
         <Tabs
           {...tabs.tabProps}
           value={tabValue}
@@ -40,7 +40,7 @@ export const TabsComponent = ({ tabs }: State) => {
           aria-label="scrollable auto tabs"
         >
           {tabs.tabs.map((tab, index) => (
-            <Tab label={tab.label} key={index} />
+            <Tab label={tab.label} key={index}/>
           ))}
         </Tabs>
       </Box>

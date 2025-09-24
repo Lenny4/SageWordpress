@@ -1,25 +1,19 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, { useImperativeHandle } from "react";
+import React, {useImperativeHandle} from "react";
 import Grid from "@mui/material/Grid";
-import { ArticleCataloguesComponent } from "./ArticleCataloguesComponent";
-import { ArticleGlossairesComponent } from "./ArticleGlossairesComponent";
-import { getTranslations } from "../../../../../functions/translations";
-import { MetadataInterface } from "../../../../../interface/WordpressInterface";
-import {
-  FormInterface,
-  FormValidInterface,
-} from "../../../../../interface/InputInterface";
-import { DividerText } from "../../../DividerText";
-import { getSageMetadata } from "../../../../../functions/getMetadata";
-import { FormContentComponent } from "../../FormContentComponent";
-import {
-  createFormContent,
-  handleFormIsValid,
-} from "../../../../../functions/form";
-import { FormInput } from "../../fields/FormInput";
-import { FormSelect } from "../../fields/FormSelect";
-import { TOKEN } from "../../../../../token";
-import { stringValidator } from "../../../../../functions/validator";
+import {ArticleCataloguesComponent} from "./ArticleCataloguesComponent";
+import {ArticleGlossairesComponent} from "./ArticleGlossairesComponent";
+import {getTranslations} from "../../../../../functions/translations";
+import {MetadataInterface} from "../../../../../interface/WordpressInterface";
+import {FormInterface, FormValidInterface,} from "../../../../../interface/InputInterface";
+import {DividerText} from "../../../DividerText";
+import {getSageMetadata} from "../../../../../functions/getMetadata";
+import {FormContentComponent} from "../../FormContentComponent";
+import {createFormContent, handleFormIsValid,} from "../../../../../functions/form";
+import {FormInput} from "../../fields/FormInput";
+import {FormSelect} from "../../fields/FormSelect";
+import {TOKEN} from "../../../../../token";
+import {stringValidator} from "../../../../../functions/validator";
 
 let translations: any = getTranslations();
 const articleMeta: MetadataInterface[] = JSON.parse(
@@ -37,12 +31,12 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
         props: {
           container: true,
           spacing: 1,
-          sx: { p: 1 },
+          sx: {p: 1},
         },
         children: [
           {
             props: {
-              size: { xs: 12 },
+              size: {xs: 12},
             },
             Dom: (
               <DividerText
@@ -53,13 +47,13 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
           },
           {
             props: {
-              size: { xs: 12 },
+              size: {xs: 12},
             },
-            Dom: <ArticleCataloguesComponent />,
+            Dom: <ArticleCataloguesComponent/>,
           },
           {
             props: {
-              size: { xs: 12 },
+              size: {xs: 12},
             },
             Dom: (
               <DividerText
@@ -74,7 +68,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
           },
           {
             props: {
-              size: { xs: 12 },
+              size: {xs: 12},
             },
             fields: [
               {
@@ -95,7 +89,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
           },
           {
             props: {
-              size: { xs: 12 },
+              size: {xs: 12},
             },
             fields: [
               {
@@ -186,7 +180,7 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
           },
           {
             props: {
-              size: { xs: 12 },
+              size: {xs: 12},
             },
             Dom: (
               <DividerText
@@ -197,9 +191,9 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
           },
           {
             props: {
-              size: { xs: 12 },
+              size: {xs: 12},
             },
-            Dom: <ArticleGlossairesComponent />,
+            Dom: <ArticleGlossairesComponent/>,
           },
         ],
       }),
@@ -214,8 +208,8 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
 
   return (
     <Grid container>
-      <Grid size={{ xs: 12 }}>
-        <FormContentComponent content={form.content} transPrefix="fArticles" />
+      <Grid size={{xs: 12}}>
+        <FormContentComponent content={form.content} transPrefix="fArticles"/>
       </Grid>
     </Grid>
   );

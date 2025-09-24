@@ -2,8 +2,8 @@
 
 namespace App\utils;
 
+use App\resources\FComptetResource;
 use App\Sage;
-use App\SageSettings;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -172,11 +172,11 @@ final class SageTranslationUtils
                 "ctDeliveryDay07" => __("ctDeliveryDay07", Sage::TOKEN),
                 "calNo" => __("calNo", Sage::TOKEN),
                 "cbCalNo" => __("cbCalNo", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_last_update' => __("Dernière synchronisation dans Wordpress", Sage::TOKEN),
-                SageSettings::PREFIX_META_DATA . Sage::META_KEY_CT_NUM => __("Numéro de compte Sage", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_nCatTarif' => __("Catégorie de tarif", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_nCatCompta' => __("Catégorie comptable", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_postId' => __("Wordpress ID", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_last_update' => __("Dernière synchronisation dans Wordpress", Sage::TOKEN),
+                Sage::PREFIX_META_DATA . FComptetResource::META_KEY => __("Numéro de compte Sage", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_nCatTarif' => __("Catégorie de tarif", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_nCatCompta' => __("Catégorie comptable", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_postId' => __("Wordpress ID", Sage::TOKEN),
             ],
             self::TRANS_FDOCENTETES => [
                 "label" => __("Documents", Sage::TOKEN),
@@ -361,8 +361,8 @@ final class SageTranslationUtils
                 "dlMontantTaxe1" => __("dlMontantTaxe1", Sage::TOKEN),
                 "dlMontantTaxe2" => __("dlMontantTaxe2", Sage::TOKEN),
                 "dlMontantTaxe3" => __("dlMontantTaxe3", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_last_update' => __("Dernière synchronisation dans Wordpress", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_postId' => __("Wordpress ID", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_last_update' => __("Dernière synchronisation dans Wordpress", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_postId' => __("Wordpress ID", Sage::TOKEN),
             ],
             self::TRANS_FARTICLES => [
                 "label" => __("Articles", Sage::TOKEN),
@@ -561,27 +561,27 @@ final class SageTranslationUtils
                 "arExclure" => __("arExclure", Sage::TOKEN),
                 "prices" => __("Prices", Sage::TOKEN),
                 "canEditArSuiviStock" => __("Can Edit ArSuiviStock", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_last_update' => __("Dernière synchronisation dans Wordpress", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arRef' => __("arRef", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_prices' => __("Prices", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_max_price' => __("Prix max", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_postId' => __("Wordpress ID", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_poids_net' => __("Poids net", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_poids_brut' => __("Poids brut", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arType' => __("Type", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arDesign' => __("Désignation", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_faCodeFamille' => __("Famille", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arNomencl' => __("Nomenclature", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arSuiviStock' => __("Suivi de stock", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arCondition' => __("U. Vente", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arPrixAch' => __("Prix d'achat", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arCoef' => __("Coefficient", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arPrixVen' => __("Prix de vente", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arPrixTtc' => __("Prix en TTC", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arPunet' => __("Dernier prix d'achat", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arCoutStd' => __("Coût standard", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_arUniteVen' => __("Unité de vente", Sage::TOKEN),
-                SageSettings::META_DATA_PREFIX . '_canEditArSuiviStock' => __("Peut modifier le mode de suivi", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_last_update' => __("Dernière synchronisation dans Wordpress", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arRef' => __("arRef", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_prices' => __("Prices", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_max_price' => __("Prix max", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_postId' => __("Wordpress ID", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_poids_net' => __("Poids net", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_poids_brut' => __("Poids brut", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arType' => __("Type", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arDesign' => __("Désignation", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_faCodeFamille' => __("Famille", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arNomencl' => __("Nomenclature", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arSuiviStock' => __("Suivi de stock", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arCondition' => __("U. Vente", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arPrixAch' => __("Prix d'achat", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arCoef' => __("Coefficient", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arPrixVen' => __("Prix de vente", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arPrixTtc' => __("Prix en TTC", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arPunet' => __("Dernier prix d'achat", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arCoutStd' => __("Coût standard", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_arUniteVen' => __("Unité de vente", Sage::TOKEN),
+                Sage::META_DATA_PREFIX . '_canEditArSuiviStock' => __("Peut modifier le mode de suivi", Sage::TOKEN),
             ],
             'words' => [
                 'contains' => __("Contient", Sage::TOKEN),
@@ -676,8 +676,8 @@ final class SageTranslationUtils
             ],
             'enum' => [
                 'syncWebsiteState' => [
-                    0 => __("[Sage] Création des tâches de synchronisation en cours ...", Sage::TOKEN), // CreateTasks
-                    1 => __("[Sage] Synchronisation en cours ...", Sage::TOKEN), // DoTasks
+                    0 => __("[Egas] Création des tâches de synchronisation en cours ...", Sage::TOKEN), // CreateTasks
+                    1 => __("[Egas] Synchronisation en cours ...", Sage::TOKEN), // DoTasks
                 ],
                 'taskJobType' => [
                     0 => __('Créer automatiquement le client Sage', Sage::TOKEN), // AutoCreateSageFcomptet => auto_create_sage_fcomptet

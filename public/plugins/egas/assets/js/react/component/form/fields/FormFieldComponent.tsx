@@ -1,8 +1,8 @@
 import * as React from "react";
-import { IconButton, Tooltip } from "@mui/material";
+import {IconButton, Tooltip} from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
-import { getTranslations } from "../../../../functions/translations";
-import { FieldInterface } from "../../../../interface/InputInterface";
+import {getTranslations} from "../../../../functions/translations";
+import {FieldInterface} from "../../../../interface/InputInterface";
 
 let translations: any = getTranslations();
 
@@ -19,14 +19,14 @@ type State3 = {
   tooltip: string | undefined;
 };
 
-export const FieldTooltipComponent: React.FC<State3> = ({ tooltip }) => {
+export const FieldTooltipComponent: React.FC<State3> = ({tooltip}) => {
   return (
     <>
       {tooltip && (
-        <div style={{ position: "relative", top: "-2px" }}>
+        <div style={{position: "relative", top: "-2px"}}>
           <Tooltip title={tooltip} arrow>
             <IconButton>
-              <InfoIcon fontSize="small" />
+              <InfoIcon fontSize="small"/>
             </IconButton>
           </Tooltip>
         </div>
@@ -36,15 +36,15 @@ export const FieldTooltipComponent: React.FC<State3> = ({ tooltip }) => {
 };
 
 export const CannotBeChangeOnWebsiteComponent: React.FC<State2> = ({
-  cannotBeChangeOnWebsite,
-}) => {
+                                                                     cannotBeChangeOnWebsite,
+                                                                   }) => {
   return (
     <>
       {cannotBeChangeOnWebsite && (
-        <div style={{ position: "relative", top: "-2px" }}>
+        <div style={{position: "relative", top: "-2px"}}>
           <Tooltip title={translations.sentences.cannotBeChangeOnWebsite} arrow>
             <IconButton>
-              <InfoIcon fontSize="small" />
+              <InfoIcon fontSize="small"/>
             </IconButton>
           </Tooltip>
         </div>
@@ -53,8 +53,8 @@ export const CannotBeChangeOnWebsiteComponent: React.FC<State2> = ({
   );
 };
 
-export const FormFieldComponent: React.FC<State> = ({ field, transPrefix }) => {
-  let { label, name, DomField } = field;
+export const FormFieldComponent: React.FC<State> = ({field, transPrefix}) => {
+  let {label, name, DomField} = field;
 
   if (!label) {
     label = "";
@@ -69,5 +69,5 @@ export const FormFieldComponent: React.FC<State> = ({ field, transPrefix }) => {
     }
   }
 
-  return <DomField {...field} label={label} />;
+  return <DomField {...field} label={label}/>;
 };
