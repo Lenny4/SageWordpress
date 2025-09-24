@@ -4,7 +4,10 @@ namespace App\resources;
 
 use App\class\SageEntityMetadata;
 use App\Sage;
+use App\services\GraphqlService;
+use App\services\SageService;
 use App\Utils\SageTranslationUtils;
+use DateTime;
 use stdClass;
 
 class FComptetResource extends Resource
@@ -99,19 +102,19 @@ class FComptetResource extends Resource
                 }, showInOptions: true),
                 new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
             ];
-            return $sageSettings->addSelectionSetAsMetadata($sageGraphQl->_getFComptetSelectionSet(), $result, $obj);
+            return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFComptetSelectionSet(), $result, $obj);
         };
         $this->metaKeyIdentifier = self::META_KEY;
         $this->metaTable = $wpdb->usermeta;
         $this->metaColumnIdentifier = 'user_id';
         $this->canImport = static function (array $fComptet) {
-            return $sage->canUpdateUserOrFComptet((object)$fComptet);
+            return SageService::getInstance()->canUpdateUserOrFComptet((object)$fComptet);
         };
         $this->import = static function (string $identifier) {
-            [$userId, $message] = $sageSettings->sage->updateUserOrFComptet($identifier, ignorePingApi: true);
+            [$userId, $message] = SageService::getInstance()->updateUserOrFComptet($identifier, ignorePingApi: true);
             return $userId;
         };
-        $this->selectionSet = $sageGraphQl->_getFComptetSelectionSet();
+        $this->selectionSet = GraphqlService::getInstance()->_getFComptetSelectionSet();
     }
 
     public static function getInstance(): self

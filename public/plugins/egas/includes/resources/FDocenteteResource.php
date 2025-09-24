@@ -4,6 +4,9 @@ namespace App\resources;
 
 use App\class\SageEntityMetadata;
 use App\Sage;
+use App\services\GraphqlService;
+use App\services\SageService;
+use App\services\WoocommerceService;
 use App\Utils\SageTranslationUtils;
 use stdClass;
 
@@ -93,20 +96,20 @@ class FDocenteteResource extends Resource
             $result = [
                 new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
             ];
-            return $sageSettings->addSelectionSetAsMetadata($sageGraphQl->_getFDocenteteSelectionSet(), $result, $obj);
+            return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFDocenteteSelectionSet(), $result, $obj);
         };
         $this->metaKeyIdentifier = self::META_KEY;
         $this->metaTable = $wpdb->prefix . 'wc_orders_meta';
         $this->metaColumnIdentifier = 'order_id';
         $this->canImport = static function (array $fDocentete) {
-            return $sageWoocommerce->canImportOrderFromSage((object)$fDocentete);
+            return SageService::getInstance()->canImportOrderFromSage((object)$fDocentete);
         };
         $this->import = static function (string $identifier) {
             $data = json_decode(stripslashes($identifier), false, 512, JSON_THROW_ON_ERROR);
-            [$message, $order] = $sageWoocommerce->importFDocenteteFromSage($data->doPiece, $data->doType);
+            [$message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($data->doPiece, $data->doType);
             return $order->get_id();
         };
-        $this->selectionSet = $sageGraphQl->_getFDocenteteSelectionSet();
+        $this->selectionSet = GraphqlService::getInstance()->_getFDocenteteSelectionSet();
         $this->getIdentifier = static function (array $fDocentete) {
             return json_encode(['doPiece' => $fDocentete["doPiece"], 'doType' => $fDocentete["doType"]], JSON_THROW_ON_ERROR);
         };

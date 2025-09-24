@@ -2,13 +2,17 @@
 
 namespace App\services;
 
+use App\class\Dto\ArgumentSelectionSetDto;
+use App\class\SageEntityMetadata;
 use App\controllers\AdminController;
+use App\enum\Sage\DomaineTypeEnum;
 use App\enum\Sage\TiersTypeEnum;
 use App\resources\FArticleResource;
 use App\resources\Resource;
 use App\Sage;
 use App\Utils\FDocenteteUtils;
 use App\Utils\OrderUtils;
+use App\Utils\PathUtils;
 use App\Utils\RoundUtils;
 use App\Utils\SageTranslationUtils;
 use StdClass;
@@ -779,5 +783,36 @@ WHERE user_login LIKE %s
     public function getArRef(int $postId): mixed
     {
         return get_post_meta($postId, FArticleResource::META_KEY, true);
+    }
+
+    public function addSelectionSetAsMetadata(array $selectionSets, array &$sageEntityMetadatas, ?stdClass $obj, string $prefix = ''): array
+    {
+        foreach ($selectionSets as $subEntity => $selectionSet) {
+            if (is_array($selectionSet) && array_key_exists('name', $selectionSet)) {
+                $sageEntityMetadatas[] = new SageEntityMetadata(field: '_' . $prefix . $selectionSet['name'], value: static function (StdClass $entity) use ($selectionSet, $prefix) {
+                    return PathUtils::getByPath($entity, $prefix)->{$selectionSet['name']};
+                });
+            } else if (!is_null($obj) && $selectionSet instanceof ArgumentSelectionSetDto) {
+                foreach ($obj->{$subEntity} as $subObject) {
+                    $this->addSelectionSetAsMetadata(
+                        $selectionSet->getSelectionSet(),
+                        $sageEntityMetadatas,
+                        $subObject,
+                        $subEntity . '[' . $subObject->{$selectionSet->getKey()} . '].'
+                    );
+                }
+            }
+        }
+        return $sageEntityMetadatas;
+    }
+
+    public function canImportOrderFromSage(stdClass $fDocentete): array
+    {
+        // all fields here must be [IsProjected(false)]
+        $result = [];
+        if ($fDocentete->doDomaine !== DomaineTypeEnum::DomaineTypeVente->value) {
+            $result[] = __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN);
+        }
+        return $result;
     }
 }

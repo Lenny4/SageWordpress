@@ -2,8 +2,13 @@
 
 namespace App\resources;
 
+use App\class\SageEntityMetadata;
 use App\Sage;
+use App\services\GraphqlService;
+use App\services\SageService;
+use App\services\WoocommerceService;
 use App\Utils\SageTranslationUtils;
+use DateTime;
 use stdClass;
 
 class FArticleResource extends Resource
@@ -64,7 +69,7 @@ class FArticleResource extends Resource
                     return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
                 }),
                 new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) {
-                    return json_encode($sageWoocommerce->getMaxPrice($fArticle->prices), JSON_THROW_ON_ERROR);
+                    return json_encode(WoocommerceService::getInstance()->getMaxPrice($fArticle->prices), JSON_THROW_ON_ERROR);
                 }),
                 new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
                     return (new DateTime())->format('Y-m-d H:i:s');
@@ -74,22 +79,22 @@ class FArticleResource extends Resource
                     return $fArticle->canEditArSuiviStock;
                 }),
             ];
-            return $sageSettings->addSelectionSetAsMetadata($sageGraphQl->_getFArticleSelectionSet(), $result, $obj);
+            return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFArticleSelectionSet(), $result, $obj);
         };
         $this->metaKeyIdentifier = self::META_KEY;
         $this->metaTable = $wpdb->postmeta;
         $this->metaColumnIdentifier = 'post_id';
         $this->canImport = static function (array $fArticle) {
-            return $sageWoocommerce->canImportFArticle((object)$fArticle);
+            return WoocommerceService::getInstance()->canImportFArticle((object)$fArticle);
         };
         $this->import = static function (string $identifier) {
-            [$response, $responseError, $message, $postId] = $sageWoocommerce->importFArticleFromSage(
+            [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage(
                 $identifier,
                 ignorePingApi: true,
             );
             return $postId;
         };
-        $this->selectionSet = $sageGraphQl->_getFArticleSelectionSet();
+        $this->selectionSet = GraphqlService::getInstance()->_getFArticleSelectionSet();
     }
 
     public static function getInstance(): self
