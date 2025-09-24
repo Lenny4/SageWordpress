@@ -1124,4 +1124,87 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
         return $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder, $headers);
     }
+
+    public function custom_price(string $price, WC_Product $product, int $userId = 0, ?bool $withTaxes = null): float|string
+    {
+        $field = 'priceHt';
+        if (
+            $withTaxes === true ||
+            (is_null($withTaxes) && get_option('woocommerce_tax_display_shop') !== 'excl') // excl || incl
+        ) {
+            $field = 'priceTtc';
+        }
+        $identifier = $product->get_id() . '_' . $userId . '_' . $field;
+        if (array_key_exists($identifier, $this->prices)) { // performance
+            return $this->prices[$identifier];
+        }
+        $arRef = $product->get_meta(FArticleResource::META_KEY);
+        if (empty($arRef)) {
+            $this->prices[$identifier] = $price;
+            return $this->prices[$identifier];
+        }
+        $prices = $this->getPricesProduct($product);
+        if (empty($prices)) {
+            return $price;
+        }
+        $flattenPrices = [];
+        foreach ($prices as $price1) {
+            foreach ($price1 as $price2) {
+                $flattenPrices[] = $price2;
+            }
+        }
+        $maxPrice = $this->getMaxPrice($flattenPrices);
+        if ($userId === 0 || is_admin()) {
+            $this->prices[$identifier] = $maxPrice->{$field};
+            return $this->prices[$identifier];
+        }
+        $metadata = get_user_meta($userId);
+        if (!isset(
+            $metadata["_" . Sage::TOKEN . "_nCatTarif"][0],
+            $metadata["_" . Sage::TOKEN . "_nCatCompta"][0]
+        )) {
+            $this->prices[$identifier] = $maxPrice->{$field};
+            return $this->prices[$identifier];
+        }
+        $this->prices[$identifier] = $prices
+        [$metadata["_" . Sage::TOKEN . "_nCatTarif"][0]]
+        [$metadata["_" . Sage::TOKEN . "_nCatCompta"][0]]->{$field} ?? $maxPrice->{$field};
+        return $this->prices[$identifier];
+    }
+
+    public function getPricesProduct(WC_Product $product, bool $flat = false): array
+    {
+        $r = [];
+        /** @var WC_Meta_Data[] $metaDatas */
+        $metaDatas = $product->get_meta_data();
+        foreach ($metaDatas as $metaData) {
+            $data = $metaData->get_data();
+            if ($data["key"] !== '_' . Sage::TOKEN . '_prices') {
+                continue;
+            }
+            $prices = json_decode($data["value"], false, 512, JSON_THROW_ON_ERROR);
+            foreach ($prices as $price) {
+                // Catégorie comptable (nCatCompta): [Locale, Export, Métropole]
+                // Catégorie tarifaire (nCatTarif): [Tarif GC, Tarif Remise, Prix public, Tarif Partenaire]
+                if ($flat) {
+                    $r[] = $price;
+                } else {
+                    $r[$price->nCatTarif->cbIndice][$price->nCatCompta->cbIndice] = $price;
+                }
+            }
+            break;
+        }
+        return $r;
+    }
+
+    public function getMaxPrice(array $prices): stdClass|null
+    {
+        if (count($prices) === 0) {
+            return null;
+        }
+        usort($prices, static function (StdClass $a, StdClass $b) {
+            return $b->priceTtc <=> $a->priceTtc;
+        });
+        return $prices[0];
+    }
 }

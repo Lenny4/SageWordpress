@@ -13,7 +13,10 @@ use App\services\TwigService;
 use App\services\WoocommerceService;
 use stdClass;
 use Swaggest\JsonDiff\JsonDiff;
+use WC_Meta_Data;
 use WC_Order;
+use WC_Order_Item;
+use WC_Order_Item_Product;
 use WC_Product;
 use WC_Shipping_Rate;
 
@@ -260,6 +263,67 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                 ';
             }
         });
+        // endregion
+
+        // region edit woocommerce price
+        // https://stackoverflow.com/a/45807054/6824121
+        add_filter('woocommerce_get_price_including_tax', function ($price, $quantity, $product) {
+            return WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id(), true);
+        }, 99, 3);
+        add_filter('woocommerce_get_price_excluding_tax', function ($price, $quantity, $product) {
+            return WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id(), false);
+        }, 99, 3);
+        // Simple, grouped and external products
+        add_filter('woocommerce_product_get_price', fn($price, $product) => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
+        add_filter('woocommerce_product_get_regular_price', fn($price, $product) => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
+        // Variations
+        add_filter('woocommerce_product_variation_get_regular_price', fn($price, $product) => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
+        add_filter('woocommerce_product_variation_get_price', fn($price, $product) => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
+        // Variable (price range)
+//        add_filter('woocommerce_variation_prices_price', fn($price, $variation, $product) => $this->custom_variable_price($price, $variation, $product), 99, 3);
+//        add_filter('woocommerce_variation_prices_regular_price', fn($price, $variation, $product) => $this->custom_variable_price($price, $variation, $product), 99, 3);
+        // Handling price caching (see explanations at the end)
+//        add_filter('woocommerce_get_variation_prices_hash', fn($price_hash, $product, $for_display) => $this->add_price_multiplier_to_variation_prices_hash($price_hash, $product, $for_display), 99, 3);
+        // endregion
+
+        // region edit woocommerce product display
+        add_action('woocommerce_after_order_itemmeta', function (int $item_id, WC_Order_Item $item, WC_Product|bool|null $product) {
+            if (
+                is_bool($product) ||
+                is_null($product) ||
+                !($item instanceof WC_Order_Item_Product)
+            ) {
+                return;
+            }
+            /** @var WC_Meta_Data[] $metaDatas */
+            $metaDatas = $product->get_meta_data();
+            foreach ($metaDatas as $metaData) {
+                $data = $metaData->get_data();
+                if ($data["key"] === FArticleResource::META_KEY) {
+                    echo __('Sage ref', Sage::TOKEN) . ': ' . $data["value"];
+                    break;
+                }
+            }
+        }, 10, 3);
+        // endregion
+
+        // region add column to product list
+        add_filter('manage_edit-product_columns', function (array $columns) { // https://stackoverflow.com/a/44702012/6824121
+            $columns[Sage::TOKEN] = __('Sage', Sage::TOKEN); // todo change css class
+            return $columns;
+        }, 10, 1);
+
+        add_action('manage_product_posts_custom_column', function (string $column, int $postId) { // https://www.conicsolutions.net/tutorials/woocommerce-how-to-add-custom-columns-on-the-products-list-in-dashboard/
+            if ($column === Sage::TOKEN) {
+                $arRef = SageService::getInstance()->getArRef($postId);
+                if (!empty($arRef)) {
+//                    echo '<span class="dashicons dashicons-yes" style="color: green"></span>';
+                    echo $arRef;
+                } else {
+                    echo '<span class="dashicons dashicons-no" style="color: red"></span>';
+                }
+            }
+        }, 10, 2);
         // endregion
     }
 }
