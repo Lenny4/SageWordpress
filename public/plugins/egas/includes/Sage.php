@@ -14,6 +14,7 @@ class Sage
     public final const TOKEN = 'egas';
     public final const PREFIX_META_DATA = 'metaData';
     public const META_DATA_PREFIX = self::PREFIX_META_DATA . '_' . Sage::TOKEN;
+    public final const TARGET_PANEL = Sage::TOKEN . '_product_data';
     public static array $paginationRange = [20, 50, 100];
     public static int $defaultPagination = 20;
     private static ?Sage $instance = null;

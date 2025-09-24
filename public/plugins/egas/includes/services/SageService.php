@@ -2,9 +2,9 @@
 
 namespace App\services;
 
-use App\class\SageEntityMenu;
 use App\controllers\AdminController;
 use App\enum\Sage\TiersTypeEnum;
+use App\resources\FArticleResource;
 use App\resources\Resource;
 use App\Sage;
 use App\Utils\FDocenteteUtils;
@@ -774,5 +774,10 @@ WHERE user_login LIKE %s
         // endregion
 
         return $objectFields;
+    }
+
+    public function getArRef(int $postId): mixed
+    {
+        return get_post_meta($postId, FArticleResource::META_KEY, true);
     }
 }

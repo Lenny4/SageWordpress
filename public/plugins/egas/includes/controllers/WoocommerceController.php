@@ -4,6 +4,7 @@ namespace App\controllers;
 
 use App\Sage;
 use App\services\GraphqlService;
+use App\services\SageService;
 use App\services\TwigService;
 use App\services\WoocommerceService;
 use App\Utils\FDocenteteUtils;
@@ -12,6 +13,7 @@ use App\utils\SageTranslationUtils;
 use PHPHtmlParser\Dom;
 use WC_Meta_Box_Order_Data;
 use WC_Order;
+use WP_Post;
 
 class WoocommerceController
 {
@@ -84,6 +86,61 @@ class WoocommerceController
         ]);
     }
 
+    public static function getMetaBoxOrderItems(WC_Order $order): string
+    {
+        ob_start();
+        include __DIR__ . '/../../woocommerce/includes/admin/meta-boxes/views/html-order-items.php';
+        return ob_get_clean();
+    }
+
+    public static function showMetaBoxProduct(array $wp_meta_boxes, string $screen): void
+    {
+        $arRef = SageService::getInstance()->getArRef(get_the_ID());
+        $id = 'woocommerce-product-data';
+        $context = 'normal';
+        remove_meta_box($id, $screen, $context);
+
+        $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
+        add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $wpPost) use ($arRef, $callback): void {
+            ob_start();
+            $callback($wpPost);
+            $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
+            $dom->loadStr(ob_get_clean());
+
+            $a = $dom->find('span.product-data-wrapper')[0];
+            $content = $a->innerHtml();
+            $hasArRef = !empty($arRef);
+            $labelArRef = '';
+            if ($hasArRef) {
+                $labelArRef = ': <span style="display: initial" class="h4">' . $arRef . '</span>';
+            }
+            $content = str_replace($content, $labelArRef . $content, $dom);
+            if ($hasArRef || str_contains($wpPost->post_status, 'draft')) {
+                $content = str_replace(
+                    ["selected='selected'", "option value=" . Sage::TOKEN],
+                    ['', "option value=" . Sage::TOKEN . " selected='selected'"],
+                    $content
+                );
+            }
+            echo $content;
+        }, $screen, $context, 'high');
+    }
+
+    /**
+     * woocommerce/src/Internal/Admin/Orders/Edit.php:78 add_meta_box('woocommerce-order-data'
+     */
+    public static function showMetaBoxOrder(array $wp_meta_boxes, string $screen): void
+    {
+        $id = 'woocommerce-order-data';
+        $context = 'normal';
+        remove_meta_box($id, $screen, $context);
+
+        $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
+        add_meta_box($id, sprintf(__('%s data', 'woocommerce'), __('Order', 'woocommerce')), static function (WC_Order $order) use ($callback): void {
+            echo WoocommerceController::getMetaBoxOrder($order, $callback);
+        }, $screen, $context, 'high');
+    }
+
     public static function getMetaBoxOrder(WC_Order $order, ?callable $callback = null): string
     {
         ob_start();
@@ -106,12 +163,5 @@ class WoocommerceController
                 . ']', $dom);
         }
         return $dom;
-    }
-
-    public static function getMetaBoxOrderItems(WC_Order $order): string
-    {
-        ob_start();
-        include __DIR__ . '/../../woocommerce/includes/admin/meta-boxes/views/html-order-items.php';
-        return ob_get_clean();
     }
 }
