@@ -2,7 +2,7 @@
 
 namespace App\resources;
 
-class FFamilleResource
+class FFamilleResource extends Resource
 {
     public const ENTITY_NAME = 'fFamilles';
 }

@@ -6,7 +6,7 @@ use App\class\SageEntityMetadata;
 use App\Sage;
 use App\services\GraphqlService;
 use App\services\SageService;
-use App\Utils\SageTranslationUtils;
+use App\utils\SageTranslationUtils;
 use DateTime;
 use stdClass;
 

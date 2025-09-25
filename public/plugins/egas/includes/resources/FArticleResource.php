@@ -7,7 +7,7 @@ use App\Sage;
 use App\services\GraphqlService;
 use App\services\SageService;
 use App\services\WoocommerceService;
-use App\Utils\SageTranslationUtils;
+use App\utils\SageTranslationUtils;
 use DateTime;
 use stdClass;
 

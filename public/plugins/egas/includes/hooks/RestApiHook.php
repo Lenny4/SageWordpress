@@ -9,7 +9,7 @@ use App\services\GraphqlService;
 use App\services\SageService;
 use App\services\WoocommerceService;
 use App\services\WordpressService;
-use App\Utils\FDocenteteUtils;
+use App\utils\FDocenteteUtils;
 use Automattic\WooCommerce\Admin\Overrides\Order;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;

@@ -2,7 +2,7 @@
 
 namespace App\resources;
 
-class PExpeditionResource
+class PExpeditionResource extends Resource
 {
     public const ENTITY_NAME = 'pExpeditions';
 }

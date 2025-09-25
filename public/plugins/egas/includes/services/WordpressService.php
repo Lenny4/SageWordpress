@@ -7,7 +7,7 @@ use App\resources\FArticleResource;
 use App\resources\FComptetResource;
 use App\Sage;
 use App\utils\PathUtils;
-use App\Utils\TaxeUtils;
+use App\utils\TaxeUtils;
 use Automattic\WooCommerce\Utilities\OrderUtil;
 use DateTime;
 use stdClass;

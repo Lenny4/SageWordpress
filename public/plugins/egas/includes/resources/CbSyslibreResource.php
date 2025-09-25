@@ -2,7 +2,7 @@
 
 namespace App\resources;
 
-class CbSyslibreResource
+class CbSyslibreResource extends Resource
 {
     public const ENTITY_NAME = 'cbSysLibres';
 }

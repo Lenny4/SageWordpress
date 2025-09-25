@@ -2,7 +2,7 @@
 
 namespace App\resources;
 
-class FGlossaireResource
+class FGlossaireResource extends Resource
 {
     public const ENTITY_NAME = 'fGlossaires';
 }

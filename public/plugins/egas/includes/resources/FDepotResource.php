@@ -2,7 +2,7 @@
 
 namespace App\resources;
 
-class FDepotResource
+class FDepotResource extends Resource
 {
     public const ENTITY_NAME = 'fDepots';
 }

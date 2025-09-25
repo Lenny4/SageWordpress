@@ -2,7 +2,7 @@
 
 namespace App\resources;
 
-class PDossierResource
+class PDossierResource extends Resource
 {
     public const ENTITY_NAME = 'pDossiers';
 }

@@ -2,7 +2,7 @@
 
 namespace App\services;
 
-use App\class\Dto\ArgumentSelectionSetDto;
+use App\class\dto\ArgumentSelectionSetDto;
 use App\controllers\AdminController;
 use App\enum\WebsiteEnum;
 use App\resources\CbSyslibreResource;
@@ -23,9 +23,9 @@ use App\resources\PPreferenceResource;
 use App\resources\PUniteResource;
 use App\resources\Resource;
 use App\Sage;
-use App\Utils\FDocenteteUtils;
-use App\Utils\PCatComptaUtils;
-use App\Utils\SageTranslationUtils;
+use App\utils\FDocenteteUtils;
+use App\utils\PCatComptaUtils;
+use App\utils\SageTranslationUtils;
 use GraphQL\Client;
 use GraphQL\Mutation;
 use GraphQL\Query;

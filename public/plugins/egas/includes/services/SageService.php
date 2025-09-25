@@ -2,7 +2,7 @@
 
 namespace App\services;
 
-use App\class\Dto\ArgumentSelectionSetDto;
+use App\class\dto\ArgumentSelectionSetDto;
 use App\class\SageEntityMetadata;
 use App\controllers\AdminController;
 use App\enum\Sage\DomaineTypeEnum;
@@ -10,11 +10,11 @@ use App\enum\Sage\TiersTypeEnum;
 use App\resources\FArticleResource;
 use App\resources\Resource;
 use App\Sage;
-use App\Utils\FDocenteteUtils;
-use App\Utils\OrderUtils;
-use App\Utils\PathUtils;
-use App\Utils\RoundUtils;
-use App\Utils\SageTranslationUtils;
+use App\utils\FDocenteteUtils;
+use App\utils\OrderUtils;
+use App\utils\PathUtils;
+use App\utils\RoundUtils;
+use App\utils\SageTranslationUtils;
 use DateTime;
 use StdClass;
 use Symfony\Component\HttpFoundation\Response;

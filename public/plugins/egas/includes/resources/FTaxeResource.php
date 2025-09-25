@@ -2,7 +2,7 @@
 
 namespace App\resources;
 
-class FTaxeResource
+class FTaxeResource extends Resource
 {
     public const ENTITY_NAME = 'fTaxes';
 }

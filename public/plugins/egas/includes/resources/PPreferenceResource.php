@@ -2,7 +2,7 @@
 
 namespace App\resources;
 
-class PPreferenceResource
+class PPreferenceResource extends Resource
 {
     public const ENTITY_NAME = 'pPreferences';
 }

@@ -2,7 +2,7 @@
 
 namespace App\resources;
 
-class PCatcomptaResource
+class PCatcomptaResource extends Resource
 {
     public const ENTITY_NAME = 'pCatcomptas';
 }

@@ -2,19 +2,26 @@
 
 namespace App\hooks;
 
+use App\resources\Resource;
 use App\Sage;
+use App\services\SageService;
 use App\services\TwigService;
+use App\utils\FDocenteteUtils;
 use App\utils\SageTranslationUtils;
+use stdClass;
 use Twig\Extra\Intl\IntlExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
+use WC_Order;
+use WC_Product;
 
 class TwigHook
 {
     public function __construct()
     {
         add_action('init', function (): void {
-//        $twig->addExtension(new IntlExtension());
+            $twig = TwigService::getInstance()->twig;
+            $twig->addExtension(new IntlExtension());
             $this->registerFunction();
             $this->registerFilter();
         });
@@ -77,45 +84,7 @@ class TwigHook
         }));
         $twig->addFunction(new TwigFunction('getPaginationRange', static fn(): array => Sage::$paginationRange));
         $twig->addFunction(new TwigFunction('get_site_url', static fn() => get_site_url()));
-        $twig->addFunction(new TwigFunction('getUrlWithParam', static function (string $paramName, int|string $v): string|array|null {
-            $url = $_SERVER['REQUEST_URI'];
-            if (str_contains($url, $paramName)) {
-                $url = preg_replace('/' . $paramName . '=([^&]*)/', $paramName . '=' . $v, $url);
-            } else {
-                $url .= '&' . $paramName . '=' . $v;
-            }
-
-            return $url;
-        }));
-        // todo remove
-        $twig->addFunction(new TwigFunction('getSortData', static function (array $queryParams): array {
-            [$sortField, $sortValue] = SageGraphQl::getSortField($queryParams);
-
-            if ($sortValue === 'asc') {
-                $otherSort = 'desc';
-            } else {
-                $sortValue = 'desc';
-                $otherSort = 'asc';
-            }
-
-            return [
-                'sortValue' => $sortValue,
-                'otherSort' => $otherSort,
-                'sortField' => $sortField,
-            ];
-        }));
-        $twig->addFunction(new TwigFunction('file_exists', static fn(string $path): bool => file_exists($this->dir . '/' . $path)));
         $twig->addFunction(new TwigFunction('get_option', static fn(string $option): string => get_option($option)));
-        // todo
-//        $twig->addFunction(new TwigFunction('getPricesProduct', static function (WC_Product $product) use ($sageWoocommerce): array {
-//            $r = $sageWoocommerce->getPricesProduct($product);
-//            foreach ($r as &$r1) {
-//                foreach ($r1 as &$r2) {
-//                    $r2 = (array)$r2;
-//                }
-//            }
-//            return $r;
-//        }));
         $twig->addFunction(new TwigFunction('get_woocommerce_currency_symbol', static function (): string {
             return html_entity_decode(get_woocommerce_currency_symbol());
         }));
@@ -229,7 +198,6 @@ class TwigHook
             $p = $products[$productChange->postId];
             return $p->get_name();
         }));
-        $twig->addExtension(new IntlExtension());
         $twig->addFunction(new TwigFunction('flattenAllTranslations', static function (array $allTranslations): array {
             $flatten = function (array $values, array &$result = []) use (&$flatten) {
                 foreach ($values as $key => $value) {
@@ -253,57 +221,33 @@ class TwigHook
 
             return $allTranslations;
         }));
-        $twig->addFunction(new TwigFunction('getFilterInput', static function (array $fields, string $prop) {
-            foreach ($fields as $field) {
-                if ($field['name'] === $prop) {
-                    return $field['type'];
-                }
-            }
-            return null;
-        }));
         $twig->addFunction(new TwigFunction('get_admin_url', static function (): string {
             return get_admin_url();
         }));
-        // todo
-//        $twig->addFunction(new TwigFunction('getDefaultFilters', static function () use ($settings): array {
-//            return array_map(static function (Resource $resource) {
-//                $entityName = $resource->getEntityName();
-//                return [
-//                    'entityName' => Sage::TOKEN . '_' . $entityName,
-//                    'value' => get_option(Sage::TOKEN . '_default_filter_' . $entityName, null),
-//                ];
-//            }, $settings->resources);
-//        }));
-        // todo
-//        $twig->addFunction(new TwigFunction('getFDoclignes', static function (array|null|string $fDocentetes) use ($sageWoocommerce): array {
-//            return $sageWoocommerce->getFDoclignes($fDocentetes);
-//        }));
-        // todo
-//        $twig->addFunction(new TwigFunction('getMainFDocenteteOfExtendedFDocentetes', static function (WC_Order $order, array|null|string $fDocentetes) use ($sageWoocommerce): stdClass|null|string {
-//            return $sageWoocommerce->getMainFDocenteteOfExtendedFDocentetes($order, $fDocentetes);
-//        }));
-        // todo
-//        $twig->addFunction(new TwigFunction('getFDocentete', static function (array $fDocentetes, string $doPiece, int $doType) use ($sageWoocommerce): stdClass|null|string {
-//            $fDocentete = current(array_filter($fDocentetes, static function (stdClass $fDocentete) use ($doPiece, $doType) {
-//                return $fDocentete->doPiece === $doPiece && $fDocentete->doType === $doType;
-//            }));
-//            if ($fDocentete !== false) {
-//                return $fDocentete;
-//            }
-//            return null;
-//        }));
-        // todo
-//        $twig->addFunction(new TwigFunction('canUpdateUserOrFComptet', static function (array $fComptet) use ($sage): array {
-//            return $sage->canUpdateUserOrFComptet(json_decode(json_encode($fComptet), false));
-//        }));
-        // todo
-//        $twig->addFunction(new TwigFunction('canImportFArticle', static function (array $fArticle) use ($sageWoocommerce): array {
-//            return $sageWoocommerce->canImportFArticle(json_decode(json_encode($fArticle), false));
-//        }));
-        // todo
-//        $twig->addFunction(new TwigFunction('canImportOrderFromSage', static function (array $fDocentete) use ($sageWoocommerce): array {
-//            return $sageWoocommerce->canImportOrderFromSage(json_decode(json_encode($fDocentete), false));
-//        }));
+        $twig->addFunction(new TwigFunction('getDefaultFilters', static function (): array {
+            return array_map(static function (Resource $resource) {
+                $entityName = $resource->getEntityName();
+                return [
+                    'entityName' => Sage::TOKEN . '_' . $entityName,
+                    'value' => get_option(Sage::TOKEN . '_default_filter_' . $entityName, null),
+                ];
+            }, SageService::getInstance()->getResources());
+        }));
+        $twig->addFunction(new TwigFunction('getFDoclignes', static function (array|null|string $fDocentetes): array {
+            return SageService::getInstance()->getFDoclignes($fDocentetes);
+        }));
+        $twig->addFunction(new TwigFunction('getMainFDocenteteOfExtendedFDocentetes', static function (WC_Order $order, array|null|string $fDocentetes): stdClass|null|string {
+            return SageService::getInstance()->getMainFDocenteteOfExtendedFDocentetes($order, $fDocentetes);
+        }));
+        $twig->addFunction(new TwigFunction('getFDocentete', static function (array $fDocentetes, string $doPiece, int $doType): stdClass|null|string {
+            $fDocentete = current(array_filter($fDocentetes, static function (stdClass $fDocentete) use ($doPiece, $doType) {
+                return $fDocentete->doPiece === $doPiece && $fDocentete->doType === $doType;
+            }));
+            if ($fDocentete !== false) {
+                return $fDocentete;
+            }
+            return null;
+        }));
         $twig->addFunction(new TwigFunction('getToken', static function (): string {
             return Sage::TOKEN;
         }));
@@ -314,40 +258,7 @@ class TwigHook
         $twig = TwigService::getInstance()->twig;
         $twig->addFilter(new TwigFilter('trans', static fn(string $string) => __($string, Sage::TOKEN)));
         $twig->addFilter(new TwigFilter('esc_attr', static fn(string $string) => esc_attr($string)));
-        $twig->addFilter(new TwigFilter('selected', static fn(bool $selected) => selected($selected, true, false)));
-        $twig->addFilter(new TwigFilter('disabled', static fn(bool $disabled) => disabled($disabled, true, false)));
-        $twig->addFilter(new TwigFilter('bytesToString', static fn(array $bytes): string => implode('', array_map("chr", $bytes))));
-        $twig->addFilter(new TwigFilter('wp_nonce_field', static fn(string $action) => wp_nonce_field($action)));
         $twig->addFilter(new TwigFilter('wp_create_nonce', static fn(string $action) => wp_create_nonce($action)));
-        $twig->addFilter(new TwigFilter('sortByFields', static function (array $item, array $fields): array {
-            uksort($item, static function (string $a, string $b) use ($fields): int {
-                $fieldsOrder = [];
-                foreach ($fields as $i => $f) {
-                    $fieldsOrder[str_replace(SageSettings::PREFIX_META_DATA, '', $f['name'])] = $i;
-                }
-
-                return $fieldsOrder[$a] <=> $fieldsOrder[$b];
-            });
-            return $item;
-        }));
-        $twig->addFilter(new TwigFilter('json_decode', static fn(string $string): mixed => json_decode(stripslashes($string), true, 512, JSON_THROW_ON_ERROR)));
         $twig->addFilter(new TwigFilter('gettype', static fn(mixed $value): string => gettype($value)));
-        // todo remove
-        $twig->addFilter(new TwigFilter('removeFields', static fn(array $fields, array $hideFields): array => array_values(array_filter($fields, static fn(array $field): bool => !in_array($field["name"], $hideFields)))));
-        $twig->addFilter(new TwigFilter('sortInsensitive', static function (array $array): array {
-            uasort($array, 'strnatcasecmp');
-            return $array;
-        }));
-        $twig->addFilter(new TwigFilter('getEntityIdentifier', static function (array $obj, array $mandatoryFields): string {
-            $r = [];
-            foreach ($mandatoryFields as $mandatoryField) {
-                $r[] = $obj[str_replace(SageSettings::PREFIX_META_DATA, '', $mandatoryField)];
-            }
-
-            return implode('|', $r);
-        }));
-        $twig->addFilter(new TwigFilter('wpDate', static function (string $date): string {
-            return date_i18n(wc_date_format(), strtotime($date)) . ' ' . date_i18n(wc_time_format(), strtotime($date));
-        }));
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\resources;
 
-class PUniteResource
+class PUniteResource extends Resource
 {
     public const ENTITY_NAME = 'pUnites';
 }
