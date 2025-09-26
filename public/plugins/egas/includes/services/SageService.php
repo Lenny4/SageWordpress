@@ -130,7 +130,7 @@ WHERE user_login LIKE %s
                     continue;
                 }
                 $hookClass = 'App\\resources\\' . basename($file, '.php');
-                if (class_exists($hookClass)) {
+                if (class_exists($hookClass) && $hookClass::supports()) {
                     /** @var Resource $resource */
                     $resource = $hookClass::getInstance();
                     if ($resource->getEntityName() === $entityName) {

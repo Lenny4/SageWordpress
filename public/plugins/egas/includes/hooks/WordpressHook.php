@@ -48,7 +48,7 @@ class WordpressHook
             if (!is_null($wrongOptions = AdminController::getWrongOptions())) {
                 echo $wrongOptions;
             }
-            $wordpressService->addSections();
+            AdminController::addSections();
             $wordpressService->addWebsiteSageApi();
             $screen_id = $wordpressService->get_order_screen_id();
             // like register_order_origin_column in woocommerce/src/Internal/Orders/OrderAttributionController.php

@@ -10,6 +10,7 @@ import {
 } from "../interface/InputInterface";
 import React, {Dispatch, SetStateAction} from "react";
 import {TabInterface} from "../interface/TabInterface";
+import {TOKEN} from "../token";
 
 export function transformOptionsObject(
   obj: Record<string | number, string>,
@@ -152,7 +153,7 @@ export const onSubmitForm = (
           )?.dRef?.current;
           if (domToScroll) {
             const tabParents = $(domToScroll)
-              .parents("[id^='sage-tabpanel']")
+              .parents(`[id^='${TOKEN}-tabpanel']`)
               .toArray();
             for (const tabParent of tabParents) {
               const str = tabParent.id;

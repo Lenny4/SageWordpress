@@ -388,7 +388,7 @@ class GraphqlService
             return $result;
         }
 
-        $function = static function () use ($object) {
+        $function = function () use ($object) {
             // https://graphql.org/learn/introspection/
             $query = (new Query('__type'))
                 ->setArguments(['name' => $object])
@@ -589,7 +589,7 @@ class GraphqlService
             return null;
         }
 
-        $function = static function () use ($entityName, $queryParams, $selectionSets, $getError) {
+        $function = function () use ($entityName, $queryParams, $selectionSets, $getError) {
             $nbPerPage = (int)($queryParams["per_page"] ?? Sage::$defaultPagination);
             $page = (int)($queryParams["paged"] ?? 1);
             $where = [];
@@ -2096,7 +2096,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             return $result;
         }
 
-        $function = static function () use ($object) {
+        $function = function () use ($object) {
             $query = (new Query('__type'))
                 ->setArguments(['name' => $object])
                 ->setSelectionSet(
