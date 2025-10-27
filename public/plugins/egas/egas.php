@@ -9,6 +9,7 @@
  * Requires at least: 6.3
  * Tested up to: 6.3
  * Requires Plugins: woocommerce
+ * Requires PHP: 8.2
  *
  * Text Domain: egas
  * Domain Path: /lang/

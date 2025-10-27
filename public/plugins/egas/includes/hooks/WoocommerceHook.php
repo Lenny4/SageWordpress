@@ -216,7 +216,7 @@ class WoocommerceHook
             ) {
                 preg_match(
                     '/class ' . $className . '[\s\S]*/',
-                    file_get_contents(__DIR__ . '/class/' . $className . '.php'),
+                    file_get_contents(__DIR__ . '/../class/' . $className . '.php'),
                     $skeletonShippingMethod);
                 foreach ($pExpeditions as $i => $pExpedition) {
                     $thisSkeletonShippingMethod = str_replace(

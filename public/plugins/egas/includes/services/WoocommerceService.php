@@ -35,6 +35,7 @@ if (!defined('ABSPATH')) {
 class WoocommerceService
 {
     private static ?WoocommerceService $instance = null;
+    private array $prices = [];
 
     private function __construct()
     {
@@ -506,7 +507,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
             'name' => $fArticle->arDesign,
             'meta_data' => [],
         ];
-        foreach ($resource->getMetadata($fArticle) as $metadata) {
+        foreach ($resource->getMetadata()($fArticle) as $metadata) {
             $value = $metadata->getValue();
             if (!is_null($value)) {
                 $v = $value($fArticle);

@@ -123,20 +123,10 @@ WHERE user_login LIKE %s
 
     public function getResource(string $entityName): Resource|null
     {
-        if (is_null($this->resources)) {
-            $files = glob(__DIR__ . '/../resources' . '/*.php');
-            foreach ($files as $file) {
-                if (str_ends_with($file, '/Resource.php')) {
-                    continue;
-                }
-                $hookClass = 'App\\resources\\' . basename($file, '.php');
-                if (class_exists($hookClass) && $hookClass::supports()) {
-                    /** @var Resource $resource */
-                    $resource = $hookClass::getInstance();
-                    if ($resource->getEntityName() === $entityName) {
-                        return $resource;
-                    }
-                }
+        $resources = $this->getResources();
+        foreach ($resources as $resource) {
+            if ($resource->getEntityName() == $entityName) {
+                return $resource;
             }
         }
         return null;

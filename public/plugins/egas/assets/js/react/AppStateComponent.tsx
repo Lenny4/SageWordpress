@@ -12,6 +12,7 @@ import {LinearProgressWithLabel} from "./component/LinearProgressWithLabel";
 import {getDiff} from "json-difference";
 import {TOKEN} from "../token";
 
+declare const SOCKET_PORT: number | undefined;
 const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
 const wpnonce = $(`[data-${TOKEN}-nonce]`).attr(`data-${TOKEN}-nonce`);
 
@@ -168,8 +169,12 @@ const AppStateComponent = () => {
       }
       let hasError = false;
       let ignoreErrorTimeout = false;
+      let socketPort = '';
+      if (SOCKET_PORT) {
+        socketPort = ':' + SOCKET_PORT;
+      }
       const url =
-        "wss://" + apiHostUrl.host + "/ws?authorization=" + stringAuthorization;
+        "wss://" + apiHostUrl.host + socketPort + "/ws?authorization=" + stringAuthorization;
       const ws = new WebSocket(url);
       const connectionTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
