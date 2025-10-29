@@ -691,6 +691,7 @@ final class SageTranslationUtils
                     8 => __('Importer automatiquement les anciens documents de vente Sage', Sage::TOKEN), // AutoImportWebsiteOrder => auto_import_wordpress_order
                     9 => __("Mettre à jour automatiquement un compte Sage lorsqu'un compte Wordpress est modifié", Sage::TOKEN), // AutoUpdateSageFComptetWhenEditAccount => auto_update_sage_fcomptet_when_edit_account
                     10 => __("Mettre à jour automatiquement un compte Wordpress lorsqu'un compte Sage est modifié", Sage::TOKEN), // AutoUpdateAccountWhenEditSageFcomptet => auto_update_account_when_edit_sage_fcomptet
+                    11 => __("Mettre à jour automatiquement un article Sage lorsqu'un produit Wordpress est modifié", Sage::TOKEN), // AutoUpdateSageFArticleWhenEditArticle => cette option n'existe pas elle est toujours vrai
                 ]
             ]
         ];

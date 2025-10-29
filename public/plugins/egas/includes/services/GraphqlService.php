@@ -1936,13 +1936,11 @@ WHERE {$wpdb->postmeta}.meta_key = %s
 
     public function updateFArticleFromWebsite(
         string $arRef,
-        bool   $new,
         bool   $getError = false,
     ): StdClass|null|string
     {
         $arguments = [
             'arRef' => $arRef,
-            'new' => $new,
             'websiteId' => (int)get_option(Sage::TOKEN . '_website_id'),
         ];
         $mutation = (new Mutation('updateFArticleFromWebsite'))
