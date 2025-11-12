@@ -35,6 +35,7 @@ class WordpressHook
                 return;
             }
             $wordpressService = WordpressService::getInstance();
+            $wordpressService->addWebsiteSageApi();
             echo TwigService::getInstance()->render('data.html.twig');
             AdminController::adminNotices(
                 "<div id='" . Sage::TOKEN . "_appstate' class='notice notice-info is-dismissible hidden'>
@@ -49,7 +50,6 @@ class WordpressHook
                 echo $wrongOptions;
             }
             AdminController::addSections();
-            $wordpressService->addWebsiteSageApi();
             $screen_id = $wordpressService->get_order_screen_id();
             // like register_order_origin_column in woocommerce/src/Internal/Orders/OrderAttributionController.php
             // HPOS and non-HPOS use different hooks.

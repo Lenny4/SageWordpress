@@ -31,7 +31,7 @@ class WoocommerceHook
                 'woocommerce-order-' . Sage::TOKEN . '-main',
                 __('Sage', Sage::TOKEN),
                 static function () use ($order) {
-                    WoocommerceController::getMetaboxSage($order);
+                    echo WoocommerceController::getMetaboxSage($order);
                 },
                 $screenId,
                 'normal',

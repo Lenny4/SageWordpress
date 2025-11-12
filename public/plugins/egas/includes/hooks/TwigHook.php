@@ -20,10 +20,14 @@ class TwigHook
     public function __construct()
     {
         add_action('init', function (): void {
-            $twig = TwigService::getInstance()->twig;
-            $twig->addExtension(new IntlExtension());
+            $twig = TwigService::getInstance();
+            if ($twig->register) {
+                return;
+            }
+            $twig->twig->addExtension(new IntlExtension());
             $this->registerFunction();
             $this->registerFilter();
+            $twig->register = true;
         });
     }
 

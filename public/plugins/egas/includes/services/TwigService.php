@@ -16,6 +16,7 @@ class TwigService
     private static ?TwigService $instance = null;
     public Environment $twig;
     public string $dir;
+    public bool $register = false;
 
     private function __construct()
     {

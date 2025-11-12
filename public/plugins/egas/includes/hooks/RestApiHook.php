@@ -14,6 +14,7 @@ use Automattic\WooCommerce\Admin\Overrides\Order;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 use WC_Order;
+use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -124,13 +125,19 @@ class RestApiHook
                         headers: $headers,
                     );
                     if ($request->get_param('json') === '1') {
-                        $body = $response["body"];
-                        try {
-                            $body = json_decode($body, false, 512, JSON_THROW_ON_ERROR);
-                        } catch (Throwable) {
-                            // nothing
+                        if ($response instanceof WP_Error) {
+                            $body = json_encode($response->get_error_messages());
+                            $code = $response->get_error_code();
+                        } else {
+                            $body = $response["body"];
+                            $code = $response['response']['code'];
+                            try {
+                                $body = json_decode($body, false, 512, JSON_THROW_ON_ERROR);
+                            } catch (Throwable) {
+                                // nothing
+                            }
                         }
-                        return new WP_REST_Response($body, $response['response']['code']);
+                        return new WP_REST_Response($body, $code);
                     }
                     $order = new Order($request['orderId']);
                     return new WP_REST_Response([

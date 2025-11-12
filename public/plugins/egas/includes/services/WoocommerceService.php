@@ -418,14 +418,6 @@ class WoocommerceService
             $postId = null;
             if (is_string($responseError)) {
                 $message = $responseError;
-            } else if ($response["response"]["code"] === 200) {
-                $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
-                $urlArticle = str_replace('%id%', $body->id, $urlArticle);
-                $postId = $body->id;
-                $message = "<div class='notice notice-success is-dismissible'>
-                    <p>" . __('Article mis à jour: ' . $body->name, Sage::TOKEN) . "</p>" . $urlArticle . "
-                    $dismissNotice
-                            </div>";
             } else if ($response["response"]["code"] === 201) {
                 $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
                 $urlArticle = str_replace('%id%', $body->id, $urlArticle);
@@ -451,7 +443,14 @@ class WoocommerceService
                 $product->update_meta_data($meta['key'], $meta['value']);
             }
             $product->save();
-            $response = ['response' => ['code' => 200]];
+            $response = [
+                'body' => [
+                    'id' => $articlePostId,
+                ],
+                'response' => [
+                    'code' => 200,
+                ]
+            ];
             $responseError = null;
             $urlArticle = str_replace('%id%', $articlePostId, $urlArticle);
             $postId = $articlePostId;
