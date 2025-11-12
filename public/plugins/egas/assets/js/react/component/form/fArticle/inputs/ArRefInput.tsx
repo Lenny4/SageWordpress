@@ -56,7 +56,7 @@ export const ArRefInput = React.forwardRef(
         siteUrl +
         "/index.php?rest_route=" +
         encodeURIComponent(
-          `/${TOKEN}/v1/farticle/` + values.arRef.value + "/available",
+          `/${TOKEN}/v1/farticles/` + values.arRef.value + "/available",
         ) +
         "&_wpnonce=" +
         wpnonce,

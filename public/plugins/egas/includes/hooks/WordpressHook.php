@@ -64,7 +64,7 @@ class WordpressHook
         });
         // region link wordpress user to sage user
         add_action('personal_options', function (WP_User $user): void {
-            $sageGraphQl = GraphQLService::getInstance();
+            $sageGraphQl = GraphqlService::getInstance();
             echo TwigService::getInstance()->render('user/formMetaFields.html.twig', [
                 'user' => $user,
                 'userMetaWordpress' => get_user_meta($user->ID),
@@ -73,7 +73,7 @@ class WordpressHook
             ]);
         });
         add_action('user_new_form', function (): void {
-            $sageGraphQl = GraphQLService::getInstance();
+            $sageGraphQl = GraphqlService::getInstance();
             echo TwigService::getInstance()->render('user/formMetaFields.html.twig', [
                 'user' => null,
                 'userMetaWordpress' => null,

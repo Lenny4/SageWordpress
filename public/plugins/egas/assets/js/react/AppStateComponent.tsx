@@ -44,7 +44,7 @@ const TaskJobSyncWebsiteJobComponent: React.FC<State2> = React.memo(
     return (
       <>
         <p>
-          <span>
+          <span style={{fontWeight: "bold"}}>
             {translations.enum.taskJobType[TaskJobSyncWebsiteJob.TaskJobType]}
           </span>
           {TaskJobSyncWebsiteJob.TaskJobDoneSpeed !== null && (

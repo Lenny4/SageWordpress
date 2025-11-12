@@ -463,9 +463,10 @@ class WoocommerceService
         return [$response, $responseError, $message, $postId];
     }
 
+    // same as AutoImportWebsiteArticle_CreateTaskJobs_BindParameters
     public function canImportFArticle(stdClass $fArticle): array
     {
-        // all fields here must be [IsProjected(false)]
+        // all fields here must be [IsProjected(true)]
         $result = [];
         if (
             $fArticle->arType !== ArticleTypeEnum::ArticleTypeStandard->value &&

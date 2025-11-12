@@ -136,7 +136,7 @@ class WordpressService
 
     private function createUpdateWebsite(string $user_id, string $password): bool|string
     {
-        $graphqlService = GraphQLService::getInstance();
+        $graphqlService = GraphqlService::getInstance();
         $user = get_user_by('id', $user_id);
         $stdClass = $graphqlService->createUpdateWebsite(
             username: $user->data->user_login,
@@ -167,7 +167,7 @@ class WordpressService
     {
         $woocommerceService = WoocommerceService::getInstance();
         [$taxe, $rates] = $woocommerceService->getWordpressTaxes();
-        $fTaxes = GraphQLService::getInstance()->getFTaxes(useCache: false, getFromSage: true);
+        $fTaxes = GraphqlService::getInstance()->getFTaxes(useCache: false, getFromSage: true);
         if (!AdminController::showErrors($fTaxes)) {
             $taxeChanges = $this->getTaxesChanges($fTaxes, $rates);
             $woocommerceService->applyTaxesChanges($taxeChanges);
@@ -222,7 +222,7 @@ class WordpressService
 
     private function updateShippingMethodsWithSage(): void
     {
-        $graphqlService = GraphQLService::getInstance();
+        $graphqlService = GraphqlService::getInstance();
         // woocommerce/includes/class-wc-ajax.php : shipping_zone_add_method
         $pExpeditions = $graphqlService->getPExpeditions();
         $newSlugs = array_map(static function (stdClass $pExpedition) {

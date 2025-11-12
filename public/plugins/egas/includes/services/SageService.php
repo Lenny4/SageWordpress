@@ -90,6 +90,17 @@ WHERE user_login LIKE %s
         return $ctNum;
     }
 
+    public function getResource(string $entityName): Resource|null
+    {
+        $resources = $this->getResources();
+        foreach ($resources as $resource) {
+            if ($resource->getEntityName() == $entityName) {
+                return $resource;
+            }
+        }
+        return null;
+    }
+
     /**
      * @return Resource[]
      */
@@ -119,17 +130,6 @@ WHERE user_login LIKE %s
             self::$instance = new self();
         }
         return self::$instance;
-    }
-
-    public function getResource(string $entityName): Resource|null
-    {
-        $resources = $this->getResources();
-        foreach ($resources as $resource) {
-            if ($resource->getEntityName() == $entityName) {
-                return $resource;
-            }
-        }
-        return null;
     }
 
     public function getFDoclignes(array|null|string $fDocentetes): array
@@ -728,9 +728,10 @@ WHERE user_login LIKE %s
                                 </div>"];
     }
 
+    // same as AutoImportWebsiteAccount_CreateTaskJobs_BindParameters
     public function canUpdateUserOrFComptet(stdClass $fComptet): array
     {
-        // all fields here must be [IsProjected(false)]
+        // all fields here must be [IsProjected(true)]
         $result = [];
         if ($fComptet->ctType !== TiersTypeEnum::TiersTypeClient->value) {
             $result[] = __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", Sage::TOKEN);
@@ -797,9 +798,10 @@ WHERE user_login LIKE %s
         return $sageEntityMetadatas;
     }
 
+    // same as AutoImportWebsiteOrder_CreateTaskJobs_BindParameters
     public function canImportOrderFromSage(stdClass $fDocentete): array
     {
-        // all fields here must be [IsProjected(false)]
+        // all fields here must be [IsProjected(true)]
         $result = [];
         if ($fDocentete->doDomaine !== DomaineTypeEnum::DomaineTypeVente->value) {
             $result[] = __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN);

@@ -67,7 +67,7 @@ class RestApiHook
                     return current_user_can('manage_options');
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/farticle/(?P<arRef>([^&]*))/available', args: [ // https://stackoverflow.com/a/10126995/6824121
+            register_rest_route(Sage::TOKEN . '/v1', '/farticles/(?P<arRef>([^&]*))/available', args: [ // https://stackoverflow.com/a/10126995/6824121
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
                     return new WP_REST_Response([
@@ -109,7 +109,8 @@ class RestApiHook
                     return current_user_can('manage_options');
                 },
             ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/farticle/(?P<arRef>([^&]*))/import', args: [ // https://stackoverflow.com/a/10126995/6824121
+            // todo supprimer ? utiliser seulement /import/(?P<entityName>[A-Za-z0-9]+)/(?P<identifier>.+)
+            register_rest_route(Sage::TOKEN . '/v1', '/farticles/(?P<arRef>([^&]*))/import', args: [ // https://stackoverflow.com/a/10126995/6824121
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
                     $arRef = $request['arRef'];
@@ -139,6 +140,26 @@ class RestApiHook
                             message: $message,
                         )
                     ], $response['response']['code']);
+                },
+                'permission_callback' => static function (WP_REST_Request $request) {
+                    return current_user_can('manage_options');
+                },
+            ]);
+            // todo supprimer ? utiliser seulement /import/(?P<entityName>[A-Za-z0-9]+)/(?P<identifier>.+)
+            register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+)/(?P<doType>\d+)/import', args: [
+                'methods' => 'GET',
+                'callback' => static function (WP_REST_Request $request) {
+                    $doPiece = $request['doPiece'];
+                    $doType = $request['doType'];
+                    $headers = [];
+                    if (!empty($authorization = $request->get_header('authorization'))) {
+                        $headers['authorization'] = $authorization;
+                    }
+                    [$message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, $headers);
+                    return new WP_REST_Response([
+                        'id' => $order->get_id(),
+                        'message' => $message,
+                    ], $message === "" ? Response::HTTP_CREATED : Response::HTTP_INTERNAL_SERVER_ERROR);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can('manage_options');
@@ -266,25 +287,6 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                         'orderHtml' => $orderHtml,
                         'itemHtml' => $itemHtml
                     ], Response::HTTP_OK);
-                },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
-            ]);
-            register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+)/(?P<doType>\d+)/import', args: [
-                'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request) {
-                    $doPiece = $request['doPiece'];
-                    $doType = $request['doType'];
-                    $headers = [];
-                    if (!empty($authorization = $request->get_header('authorization'))) {
-                        $headers['authorization'] = $authorization;
-                    }
-                    [$message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, $headers);
-                    return new WP_REST_Response([
-                        'id' => $order->get_id(),
-                        'message' => $message,
-                    ], $message === "" ? Response::HTTP_CREATED : Response::HTTP_INTERNAL_SERVER_ERROR);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can('manage_options');

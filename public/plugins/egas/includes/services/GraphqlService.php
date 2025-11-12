@@ -190,6 +190,7 @@ class GraphqlService
                 'pluginVersion' => get_plugin_data(Sage::getInstance()->file)['Version'],
                 'autoUpdateSageFComptetWhenEditAccount' => (bool)get_option(Sage::TOKEN . '_auto_update_' . Sage::TOKEN . '_fcomptet_when_edit_account'),
                 'autoUpdateAccountWhenEditSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_update_account_when_edit_' . Sage::TOKEN . '_fcomptet'),
+                'nbThreads' => (int)get_option(Sage::TOKEN . '_nb_threads'),
             ]
         ];
         return $this->runQuery($mutation, $getError, $variables);

@@ -148,6 +148,14 @@ class AdminController
                             'default' => $wpdb->dbpassword,
                             'placeholder' => __($wpdb->dbpassword, Sage::TOKEN)
                         ],
+                        [
+                            'id' => 'nb_threads',
+                            'label' => __("Nombre de d'opérations simultanées (nb threads)", Sage::TOKEN),
+                            'description' => '',
+                            'type' => 'number',
+                            'default' => '2',
+                            'placeholder' => __('2', Sage::TOKEN)
+                        ],
                     ]
                 ],
             ];

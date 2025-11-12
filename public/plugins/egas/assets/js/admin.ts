@@ -396,7 +396,7 @@ $(() => {
     const response = await fetch(
       siteUrl +
       "/index.php?rest_route=" +
-      encodeURIComponent(`/${TOKEN}/v1/farticle/` + arRef + "/import") +
+      encodeURIComponent(`/${TOKEN}/v1/farticles/` + arRef + "/import") +
       "&_wpnonce=" +
       wpnonce +
       "&orderId=" +

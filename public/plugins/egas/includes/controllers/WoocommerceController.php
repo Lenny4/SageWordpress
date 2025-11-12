@@ -104,6 +104,7 @@ class WoocommerceController
         add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $wpPost) use ($arRef, $callback): void {
             ob_start();
             $callback($wpPost);
+            // todo https://www.php.net/manual/en/class.dom-htmldocument.php
             $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
             $dom->loadStr(ob_get_clean());
 
@@ -149,6 +150,7 @@ class WoocommerceController
         } else {
             $callback($order);
         }
+        // todo https://www.php.net/manual/en/class.dom-htmldocument.php
         $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
         $dom->loadStr(ob_get_clean());
         $fDocenteteIdentifier = WoocommerceService::getInstance()->getFDocenteteIdentifierFromOrder($order);
