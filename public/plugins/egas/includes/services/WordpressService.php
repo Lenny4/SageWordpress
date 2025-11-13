@@ -297,10 +297,10 @@ class WordpressService
         return OrderUtil::custom_orders_table_usage_is_enabled() ? wc_get_page_screen_id('shop-order') : 'shop_order';
     }
 
-    public function saveCustomerUserMetaFields(?int $userId): void
+    public function saveCustomerUserMetaFields(int $userId, bool $new): void
     {
         $nbUpdatedMeta = 0;
-        $inSage = (bool)get_option(Sage::TOKEN . '_auto_create_' . Sage::TOKEN . '_fcomptet');
+        $autoCreateSageFcomptet = (bool)get_option(Sage::TOKEN . '_auto_create_' . Sage::TOKEN . '_fcomptet');
         $ctNum = null;
         $newFComptet = false;
         foreach ($_POST as $key => $value) {
@@ -310,7 +310,7 @@ class WordpressService
                     if ($value === 'new') {
                         $newFComptet = true;
                     } else if ($value === 'none') {
-                        $inSage = false;
+                        $autoCreateSageFcomptet = false;
                     }
                 }
                 if ($key === FComptetResource::META_KEY) {
@@ -321,7 +321,7 @@ class WordpressService
                 update_user_meta($userId, $key, $value);
             }
         }
-        if (!$inSage || $nbUpdatedMeta === 0) {
+        if (!$autoCreateSageFcomptet || ($nbUpdatedMeta === 0 && !$new)) {
             return;
         }
         update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));

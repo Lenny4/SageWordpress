@@ -16,6 +16,7 @@ use App\Sage;
 use App\utils\FDocenteteUtils;
 use App\utils\OrderUtils;
 use App\utils\TaxeUtils;
+use DateTime;
 use stdClass;
 use WC_Cart;
 use WC_Meta_Data;
@@ -148,9 +149,8 @@ class WoocommerceService
                 true,
             );
         } else if ($isNewOrder) {
-            $optionName = Sage::TOKEN . '_auto_create_' . Sage::TOKEN . '_fdocentete';
-            if (get_option($optionName)) {
-                $order->update_meta_data($optionName, true);
+            if (get_option(Sage::TOKEN . '_auto_create_' . Sage::TOKEN . '_fdocentete')) {
+                $order->update_meta_data('_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
                 $order->save();
             }
         }

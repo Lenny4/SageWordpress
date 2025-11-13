@@ -82,10 +82,10 @@ class WordpressHook
             ]);
         });
         add_action('profile_update', function (int $userId) {
-            WordpressService::getInstance()->saveCustomerUserMetaFields($userId);
+            WordpressService::getInstance()->saveCustomerUserMetaFields($userId, false);
         });
         add_action('user_register', function (int $userId) {
-            WordpressService::getInstance()->saveCustomerUserMetaFields($userId);
+            WordpressService::getInstance()->saveCustomerUserMetaFields($userId, true);
         });
         // endregion
         // Add settings link to plugins page.
@@ -156,8 +156,7 @@ WHERE meta_key = %s
             bool            $creating
         ): void {
             if ($creating) {
-                $sendMail = (bool)get_option(Sage::TOKEN . '_auto_send_mail_import_' . Sage::TOKEN . '_fcomptet');
-                if ($sendMail) {
+                if (get_option(Sage::TOKEN . '_auto_send_mail_import_' . Sage::TOKEN . '_fcomptet')) {
                     // Accepts only 'user', 'admin' , 'both' or default '' as $notify.
                     wp_send_new_user_notifications($user->ID, 'user');
                 }
