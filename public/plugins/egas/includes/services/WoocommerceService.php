@@ -168,7 +168,7 @@ class WoocommerceService
             single: true
         );
         if ($fDocentete instanceof stdClass) {
-            $order->update_meta_data(FComptetResource::META_KEY, json_encode([
+            $order->update_meta_data(FDocenteteResource::META_KEY, json_encode([
                 'doPiece' => $fDocentete->doPiece,
                 'doType' => $fDocentete->doType,
             ], JSON_THROW_ON_ERROR));
@@ -1098,7 +1098,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $fDocenteteIdentifier = $this->getFDocenteteIdentifierFromOrder($order);
         if (!empty($fDocenteteIdentifier)) {
             $order->add_order_note(__('Le document de vente Sage a été désynchronisé de la commande.', Sage::TOKEN) . ' [' . $fDocenteteIdentifier["doPiece"] . ']');
-            $order->delete_meta_data(FComptetResource::META_KEY);
+            $order->delete_meta_data(FDocenteteResource::META_KEY);
             $order->save();
         }
         return $order;

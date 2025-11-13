@@ -442,7 +442,7 @@ WHERE user_login LIKE %s
             $userChanges = [...$userChanges, ...$this->getOrderAddressTypeChanges(
                 $order,
                 $fDocentete->doTiersNavigation,
-                $fDocentete->cbLiNoNavigation
+                $fDocentete->liNoNavigation
             )];
         }
         return $userChanges;

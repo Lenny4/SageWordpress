@@ -153,8 +153,8 @@ class AdminController
                             'label' => __("Nombre de d'opérations simultanées (nb threads)", Sage::TOKEN),
                             'description' => '',
                             'type' => 'number',
-                            'default' => '2',
-                            'placeholder' => __('2', Sage::TOKEN)
+                            'default' => '1',
+                            'placeholder' => __('1', Sage::TOKEN)
                         ],
                     ]
                 ],

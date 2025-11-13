@@ -1418,7 +1418,7 @@ WHERE meta_key = %s
             $result['doTiersNavigation'] = $this->_getFComptetSelectionSet();
         }
         if ($getLivraison) {
-            $result['cbLiNoNavigation'] = $this->_getFLivraisonSelectionSet();
+            $result['liNoNavigation'] = $this->_getFLivraisonSelectionSet();
         }
         return $result;
     }

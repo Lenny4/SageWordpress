@@ -321,16 +321,21 @@ const UserComponent = () => {
   }, [values.autoGenerateCtNum.value, values.creationType.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
-    $(document).on(
-      "submit",
-      'form[name="createuser"], form[id="your-profile"]',
-      (e: any) => {
-        // if (!validateForm()) {
-        // todo doesn't work anymore as validateForm is async
-        e.preventDefault();
-        // }
-      },
-    );
+    const formSelector = 'form[name="createuser"], form[id="your-profile"]';
+    const handleSubmit = async (e: any) => {
+      e.preventDefault();
+      const form = e.target as HTMLFormElement;
+      const isValid = await validateForm();
+      if (isValid) {
+        $(document).off("submit", formSelector, handleSubmit);
+        HTMLFormElement.prototype.submit.call(form);
+      }
+    };
+    $(document).on("submit", formSelector, handleSubmit);
+
+    return () => {
+      $(document).off("submit", formSelector, handleSubmit);
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checked = values.autoGenerateCtNum.value;
@@ -449,7 +454,7 @@ const UserComponent = () => {
                     cy="25"
                     r="20"
                     fill="none"
-                    stroke-width="5"
+                    strokeWidth="5"
                   ></circle>
                 </svg>
               )}
