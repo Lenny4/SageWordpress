@@ -46,6 +46,7 @@ class GraphqlService
     private static ?GraphqlService $instance = null;
     private ?Client $client = null;
     private bool $pingApi = false;
+    private ?string $apiVersion = null;
     private ?array $pExpeditions = null;
     private ?array $fFamilles = null;
     private ?array $pUnites = null;
@@ -104,14 +105,25 @@ class GraphqlService
         }
 
         curl_setopt_array($curlHandle, $data);
-        $response = curl_exec($curlHandle);
+        $responseString = curl_exec($curlHandle);
         $errorMsg = null;
         if (curl_errno($curlHandle) !== 0) {
             $errorMsg = curl_error($curlHandle);
         }
 
         curl_close($curlHandle);
-        $this->pingApi = $response === 'Healthy';
+        try {
+            $response = json_decode($responseString, true);
+            if (!is_null($response)) {
+                $this->pingApi = $response === $response["status"];
+                if (!$this->pingApi) {
+                    error_log('healthz responseString: ' . $responseString);
+                }
+                $this->apiVersion = $response["version"];
+            }
+        } catch (Throwable $e) {
+            error_log($e->getMessage());
+        }
         if (!$this->pingApi) {
             AdminController::adminNotices(
                 "<div id='" . Sage::TOKEN . "_join_api' class='error'><p>" .

@@ -22,7 +22,40 @@ class RestApiHook
 {
     public function __construct()
     {
-        add_action('rest_api_init', static function () {
+        // add meta_data for .line_items for request https://localhost/?rest_route=/wc/v2/orders/1996
+        add_filter('woocommerce_rest_prepare_shop_order_object', function ($response, $order, $request) {
+            $data = $response->get_data();
+            if (empty($data['line_items'])) {
+                return $response;
+            }
+            foreach ($data['line_items'] as $index => $li) {
+                if (empty($li['product_id'])) {
+                    continue;
+                }
+                $product_id = (int)$li['product_id'];
+                $meta = get_post_meta($product_id);
+                $metaDataList = [];
+                foreach ($meta as $meta_key => $values) {
+                    $value = maybe_unserialize($values[0]);
+                    if (is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
+                        $decoded = json_decode($value, true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $value = $decoded;
+                        }
+                    }
+                    $metaDataList[] = [
+                        'key' => $meta_key,
+                        'value' => maybe_unserialize($value ?? null),
+                    ];
+                }
+                $existing = $data['line_items'][$index]['meta_data'] ?? [];
+                $data['line_items'][$index]['meta_data'] = array_merge($existing, $metaDataList);
+            }
+            $response->set_data($data);
+            return $response;
+        }, 10, 3);
+        add_action('rest_api_init', function () {
+            $this->expose_all_user_meta_in_rest();
             register_rest_route(Sage::TOKEN . '/v1', '/search-entities/(?P<entityName>[A-Za-z0-9]+)', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
@@ -336,5 +369,30 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                 },
             ]);
         });
+    }
+
+    private function expose_all_user_meta_in_rest(): void
+    {
+        $sage = Sage::getInstance();
+        $plugin_data = get_plugin_data($sage->file);
+        $version = $plugin_data['Version'];
+        $cache_key = Sage::TOKEN . '_all_user_meta_keys_' . md5($version);
+        $meta_keys = get_transient($cache_key);
+        if (empty($meta_keys)) {
+            global $wpdb;
+            $meta_keys = $wpdb->get_col("SELECT DISTINCT meta_key FROM {$wpdb->usermeta}");
+            if (!empty($meta_keys)) {
+                set_transient($cache_key, $meta_keys, 24 * 3_600);
+            }
+        }
+        if (!empty($meta_keys)) {
+            foreach ($meta_keys as $key) {
+                register_meta('user', $key, [
+                    'show_in_rest' => true,
+                    'single' => true,
+                    'type' => 'string',
+                ]);
+            }
+        }
     }
 }

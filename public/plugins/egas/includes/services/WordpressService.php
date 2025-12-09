@@ -110,7 +110,7 @@ class WordpressService
 
     private function isApiAuthenticated(): bool
     {
-        $response = RequestService::getInstance()->apiRequest('/Website/' . $_SERVER['HTTP_HOST'] . '/Authorization');
+        $response = RequestService::getInstance()->apiRequest('/Website/' . $_SERVER['HTTP_HOST'] . '/authorization');
         return $response === 'true';
     }
 
