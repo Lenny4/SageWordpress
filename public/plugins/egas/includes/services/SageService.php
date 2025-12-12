@@ -821,7 +821,7 @@ WHERE user_login LIKE %s
         return null;
     }
 
-    public function get_option_not_empty_array_or_null(string $option, bool $default_value = null): ?DateTime
+    public function get_option_not_empty_array_or_null(string $option, bool $default_value = null): ?array
     {
         $arrayString = get_option($option, $default_value);
         if (empty($arrayString)) {

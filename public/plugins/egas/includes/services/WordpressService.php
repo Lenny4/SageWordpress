@@ -300,7 +300,7 @@ class WordpressService
     public function saveCustomerUserMetaFields(int $userId, bool $new): void
     {
         $nbUpdatedMeta = 0;
-        $autoCreateSageFcomptet = (bool)get_option(Sage::TOKEN . '_auto_create_' . Sage::TOKEN . '_fcomptet');
+        $autoCreateSageFcomptet = (bool)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet');
         $ctNum = null;
         $newFComptet = false;
         foreach ($_POST as $key => $value) {

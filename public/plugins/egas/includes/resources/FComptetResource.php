@@ -44,14 +44,14 @@ class FComptetResource extends Resource
         $this->transDomain = SageTranslationUtils::TRANS_FCOMPTETS;
         $this->options = [
             [
-                'id' => 'auto_create_' . Sage::TOKEN . '_fcomptet',
+                'id' => 'auto_create_sage_fcomptet',
                 'label' => __('Créer automatiquement le client Sage', Sage::TOKEN),
                 'description' => __("Créer automatiquement un compte client dans Sage lorsqu'un compte Wordpress est crée.", Sage::TOKEN),
                 'type' => 'checkbox',
                 'default' => 'off'
             ],
             [
-                'id' => 'auto_import_' . Sage::TOKEN . '_fcomptet',
+                'id' => 'auto_import_sage_fcomptet',
                 'label' => __('Importer automatiquement les anciens clients Woocommerce', Sage::TOKEN),
                 'description' => __("Importe les comptes Woocommerce dans Sage à compter de la date renseignée (date de création du compte dans Woocommerce). Laissez vide pour ne pas importer.", Sage::TOKEN),
                 'type' => 'date',
@@ -74,21 +74,21 @@ class FComptetResource extends Resource
                 'placeholder' => __('', Sage::TOKEN)
             ],
             [
-                'id' => 'mail_auto_create_' . Sage::TOKEN . '_fcomptet',
+                'id' => 'mail_auto_create_sage_fcomptet',
                 'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', Sage::TOKEN),
                 'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", Sage::TOKEN),
                 'type' => 'checkbox',
                 'default' => 'off'
             ],
             [
-                'id' => 'auto_update_' . Sage::TOKEN . '_fcomptet_when_edit_account',
+                'id' => 'auto_update_sage_fcomptet_when_edit_account',
                 'label' => __("Mettre à jour automatiquement un compte Sage lorsqu'un compte Wordpress est modifié", Sage::TOKEN),
                 'description' => __("Lorsque qu’un utilisateur WordPress met à jour ses informations, ou lorsqu’un administrateur modifie les informations d’un compte WordPress, celles-ci sont également mises à jour dans Sage si un compte y est lié.", Sage::TOKEN),
                 'type' => 'checkbox',
                 'default' => 'off'
             ],
             [
-                'id' => 'auto_update_account_when_edit_' . Sage::TOKEN . '_fcomptet',
+                'id' => 'auto_update_account_when_edit_sage_fcomptet',
                 'label' => __("Mettre à jour automatiquement un compte Wordpress lorsqu'un compte Sage est modifié", Sage::TOKEN),
                 'description' => __("Lorsque les informations d’un compte Sage sont modifiées, elles sont également mises à jour dans WordPress si un compte y est lié.", Sage::TOKEN),
                 'type' => 'checkbox',

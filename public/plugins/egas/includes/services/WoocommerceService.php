@@ -149,7 +149,7 @@ class WoocommerceService
                 true,
             );
         } else if ($isNewOrder) {
-            if (get_option(Sage::TOKEN . '_auto_create_' . Sage::TOKEN . '_fdocentete')) {
+            if (get_option(Sage::TOKEN . '_auto_create_sage_fdocentete')) {
                 $order->update_meta_data('_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
                 $order->save();
             }
