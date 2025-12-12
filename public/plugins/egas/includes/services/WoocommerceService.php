@@ -78,7 +78,7 @@ class WoocommerceService
         }
         $meta = [];
         $resource = FComptetResource::getInstance();
-        foreach ($resource->getMetadata() as $metadata) {
+        foreach ($resource->getMetadata()() as $metadata) {
             $value = $metadata->getValue();
             if (!is_null($value)) {
                 $meta['_' . Sage::TOKEN . $metadata->getField()] = $value($fComptet);

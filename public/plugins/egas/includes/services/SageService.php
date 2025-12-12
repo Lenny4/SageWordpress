@@ -760,7 +760,7 @@ WHERE user_login LIKE %s
         }
 
         // region custom meta fields
-        foreach ($resource->getMetadata() as $metadata) {
+        foreach ($resource->getMetadata()() as $metadata) {
             if (!$metadata->getShowInOptions()) {
                 continue;
             }

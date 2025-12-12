@@ -291,7 +291,7 @@ const SharedListComponent: React.FC<State> = ({data, formDom}) => {
             filteredItems.map((value: string) => {
               const labelId = `transfer-list-all-item-${value}-label`;
               return (
-                <Tooltip title={value} arrow placement="left">
+                <Tooltip title={value} arrow placement="left" key={value}>
                   <ListItemButton
                     key={value}
                     role="listitem"
