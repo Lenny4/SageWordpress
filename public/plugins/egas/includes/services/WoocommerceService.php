@@ -954,7 +954,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
             if ($key === 'email') {
                 $value = WordpressService::getInstance()->getValidWordpressMail($value);
             }
-            $order->{'set_' . $addressType . '_' . $key}($value);
+            $order->{'set_' . $addressType . '_' . $key}($value ?? ''); // doesn't accept null value
         }
         $order->save();
         return $message;

@@ -821,6 +821,15 @@ WHERE user_login LIKE %s
         return null;
     }
 
+    public function get_option_not_empty_array_or_null(string $option, bool $default_value = null): ?DateTime
+    {
+        $arrayString = get_option($option, $default_value);
+        if (empty($arrayString)) {
+            return null;
+        }
+        return $arrayString;
+    }
+
     public function populateMetaDatas(?array $data, array $fields, Resource $resource): array|null
     {
         if (empty($data)) {

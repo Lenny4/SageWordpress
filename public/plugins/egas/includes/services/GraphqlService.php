@@ -115,7 +115,7 @@ class GraphqlService
         try {
             $response = json_decode($responseString, true);
             if (!is_null($response)) {
-                $this->pingApi = $response === $response["status"];
+                $this->pingApi = $response["status"] === 'Healthy';
                 if (!$this->pingApi) {
                     error_log('healthz responseString: ' . $responseString);
                 }
@@ -195,8 +195,8 @@ class GraphqlService
                 'autoImportWebsiteAccount' => $sageService->get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_account')?->format('Y-m-d H:i:s'),
                 'autoCreateSageFdocentete' => (bool)get_option(Sage::TOKEN . '_auto_create_' . Sage::TOKEN . '_fdocentete'),
                 'autoImportWebsiteOrderDate' => $sageService->get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_order_date')?->format('Y-m-d H:i:s'),
-                'autoImportWebsiteOrderDoType' => get_option(Sage::TOKEN . '_auto_import_wordpress_order_dotype', null),
-                'autoCreateWebsiteOrder' => get_option(Sage::TOKEN . '_auto_create_wordpress_order', null),
+                'autoImportWebsiteOrderDoType' => $sageService->get_option_not_empty_array_or_null(Sage::TOKEN . '_auto_import_wordpress_order_dotype'),
+                'autoCreateWebsiteOrder' => $sageService->get_option_not_empty_array_or_null(Sage::TOKEN . '_auto_create_wordpress_order'),
                 'autoCreateWebsiteArticle' => (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_article'),
                 'autoImportWebsiteArticle' => $sageService->get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article')?->format('Y-m-d H:i:s'),
                 'pluginVersion' => get_plugin_data(Sage::getInstance()->file)['Version'],
@@ -397,8 +397,9 @@ class GraphqlService
             $result = $cacheService->get($cacheName, static fn() => null);
             if (is_null($result)) {
                 $cacheService->delete($cacheName);
+            } else {
+                return $result;
             }
-            return $result;
         }
 
         $function = function () use ($object) {
