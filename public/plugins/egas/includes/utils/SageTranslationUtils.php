@@ -661,7 +661,7 @@ final class SageTranslationUtils
                 'synchronizeOrder' => __("Voulez vous vraiment synchroniser la commande Woocommerce avec le document de vente Sage ?", Sage::TOKEN),
                 'desynchronizeOrder' => __("Voulez vous vraiment désynchroniser la commande Woocommerce avec le document de vente Sage ?", Sage::TOKEN),
                 'nbThreads' => __("Nombre de d'opérations simultanées (nb threads)", Sage::TOKEN),
-                'errorWebsocket' => __("Wordpress n'arrive pas à se connecter à l'API Sage", Sage::TOKEN),
+                'errorWebsocket' => __("Wordpress n'arrive pas à se connecter à l'API Sage.", Sage::TOKEN),
                 'availableArRef' => __("Votre article sera créé avec cette référence. Vous pouvez la modifier à l’aide du champ prévu à cet effet.", Sage::TOKEN),
                 'availableArRefError' => __("Nous n'avons pas trouvé de référence disponible pour cet article.", Sage::TOKEN),
                 'acPrixVenInput' => __("Le prix de vente ne correspond pas au résultat du prix d'achat multiplié par le coefficient.", Sage::TOKEN),

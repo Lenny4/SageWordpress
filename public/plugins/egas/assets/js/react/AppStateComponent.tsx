@@ -267,19 +267,22 @@ const AppStateComponent = () => {
       };
 
       ws.onerror = (evt) => {
-        console.log("ws.onerror", evt);
+        console.error("ws.onerror", evt);
         clearTimeout(connectionTimeout);
         hasError = true;
       };
 
       ws.onclose = (evt) => {
-        console.log("ws.onclose alreadyClose: " + alreadyClose, evt);
+        console.error("ws.onclose alreadyClose: " + alreadyClose, evt);
         clearTimeout(connectionTimeout);
-        $(containerSelector).removeClass("hidden");
-        $(containerSelector).removeClass("notice-info");
-        $(containerSelector).addClass("notice-error");
-        setErrorWebsocket(evt.reason);
-        setHasErrorWebsocketAuthorization(evt.code === 1008);
+        let newHasErrorWebsocketAuthorization = evt.code === 1008;
+        if ($(joinApiContainerSelector).is(':hidden') || newHasErrorWebsocketAuthorization) {
+          $(containerSelector).removeClass("hidden");
+          $(containerSelector).removeClass("notice-info");
+          $(containerSelector).addClass("notice-error");
+          setErrorWebsocket(evt.reason);
+          setHasErrorWebsocketAuthorization(newHasErrorWebsocketAuthorization);
+        }
         wsReconnect();
       };
     }
