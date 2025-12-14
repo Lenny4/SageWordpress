@@ -3,6 +3,8 @@
 namespace App\resources;
 
 use App\class\SageEntityMetadata;
+use App\enum\Sage\ArticleTypeEnum;
+use App\enum\Sage\NomenclatureTypeEnum;
 use App\Sage;
 use App\services\GraphqlService;
 use App\services\SageService;
@@ -23,6 +25,7 @@ class FArticleResource extends Resource
 
     private function __construct()
     {
+        parent::__construct();
         global $wpdb;
         $this->title = __("Articles", Sage::TOKEN);
         $this->description = __("Gestion des articles", Sage::TOKEN);
@@ -84,9 +87,32 @@ class FArticleResource extends Resource
         $this->metaKeyIdentifier = self::META_KEY;
         $this->metaTable = $wpdb->postmeta;
         $this->metaColumnIdentifier = 'post_id';
-        $this->canImport = static function (array $fArticle) {
-            return WoocommerceService::getInstance()->canImportFArticle((object)$fArticle);
-        };
+        $this->importCondition = [
+            new ImportConditionDto(
+                field: 'arType',
+                value: [
+                    ArticleTypeEnum::ArticleTypeStandard->value,
+                    ArticleTypeEnum::ArticleTypeGamme->value
+                ],
+                message: function ($fArticle) {
+                    return __("Seuls les articles standard ou à gamme peuvent être importés.", Sage::TOKEN);
+                }
+            ),
+            new ImportConditionDto(
+                field: 'arNomencl',
+                value: NomenclatureTypeEnum::NomenclatureTypeAucun->value,
+                message: function ($fArticle) {
+                    return __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", Sage::TOKEN);
+                }
+            ),
+            new ImportConditionDto(
+                field: 'arPublie',
+                value: 1,
+                message: function ($fArticle) {
+                    return __("Seuls les articles publiés sur le site marchand peuvent être importés.", Sage::TOKEN);
+                }
+            ),
+        ];
         $this->import = static function (string $identifier) {
             [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage(
                 $identifier,

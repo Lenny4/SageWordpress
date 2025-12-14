@@ -3,6 +3,7 @@
 namespace App\resources;
 
 use App\class\SageEntityMetadata;
+use App\enum\Sage\TiersTypeEnum;
 use App\Sage;
 use App\services\GraphqlService;
 use App\services\SageService;
@@ -21,6 +22,7 @@ class FComptetResource extends Resource
 
     private function __construct()
     {
+        parent::__construct();
         global $wpdb;
         $this->title = __("Clients", Sage::TOKEN);
         // todo afficher les clients Sage qui partagent le même email et expliqués qu'il ne seront pas dupliqués sur le site
@@ -107,9 +109,14 @@ class FComptetResource extends Resource
         $this->metaKeyIdentifier = self::META_KEY;
         $this->metaTable = $wpdb->usermeta;
         $this->metaColumnIdentifier = 'user_id';
-        $this->canImport = static function (array $fComptet) {
-            return SageService::getInstance()->canUpdateUserOrFComptet((object)$fComptet);
-        };
+        $this->importCondition = [
+            new ImportConditionDto(
+                field: 'ctType',
+                value: TiersTypeEnum::TiersTypeClient->value,
+                message: function ($fComptet) {
+                    return __("Le compte n'est pas un compte client.", Sage::TOKEN);
+                }),
+        ];
         $this->import = static function (string $identifier) {
             [$userId, $message] = SageService::getInstance()->updateUserOrFComptet($identifier, ignorePingApi: true);
             return $userId;

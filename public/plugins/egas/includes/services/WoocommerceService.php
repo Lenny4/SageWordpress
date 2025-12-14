@@ -388,7 +388,8 @@ class WoocommerceService
                                 </div>"];
         }
         if (!$ignoreCanImport) {
-            $canImportFArticle = $this->canImportFArticle($fArticle);
+            $resource = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME);
+            $canImportFArticle = $resource->getCanImport()($fArticle);
             if (!empty($canImportFArticle)) {
                 return [null, null, "<div class='error'>
                         " . implode(' ', $canImportFArticle) . "
@@ -460,26 +461,6 @@ class WoocommerceService
                             </div>";
         }
         return [$response, $responseError, $message, $postId];
-    }
-
-    // same as AutoImportWebsiteArticle_CreateTaskJobs_BindParameters
-    public function canImportFArticle(stdClass $fArticle): array
-    {
-        // all fields here must be [IsProjected(true)]
-        $result = [];
-        if (
-            $fArticle->arType !== ArticleTypeEnum::ArticleTypeStandard->value &&
-            $fArticle->arType !== ArticleTypeEnum::ArticleTypeGamme->value
-        ) {
-            $result[] = __("Seuls les articles standard ou à gamme peuvent être importés.", Sage::TOKEN);
-        }
-        if ($fArticle->arNomencl !== NomenclatureTypeEnum::NomenclatureTypeAucun->value) {
-            $result[] = __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", Sage::TOKEN);
-        }
-        if (!$fArticle->arPublie) {
-            $result[] = __("Seuls les articles publiés sur le site marchand peuvent être importés.", Sage::TOKEN);
-        }
-        return $result;
     }
 
     public function getWooCommerceIdArticle(string $arRef): int|null

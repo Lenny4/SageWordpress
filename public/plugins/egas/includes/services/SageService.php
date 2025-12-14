@@ -8,6 +8,7 @@ use App\controllers\AdminController;
 use App\enum\Sage\DomaineTypeEnum;
 use App\enum\Sage\TiersTypeEnum;
 use App\resources\FArticleResource;
+use App\resources\FComptetResource;
 use App\resources\Resource;
 use App\Sage;
 use App\utils\FDocenteteUtils;
@@ -111,7 +112,10 @@ WHERE user_login LIKE %s
             $resources = [];
             $files = glob(__DIR__ . '/../resources' . '/*.php');
             foreach ($files as $file) {
-                if (str_ends_with($file, '/Resource.php')) {
+                if (
+                    str_ends_with($file, '/Resource.php') ||
+                    str_ends_with($file, '/ImportConditionDto.php')
+                ) {
                     continue;
                 }
                 $hookClass = 'App\\resources\\' . basename($file, '.php');
@@ -660,7 +664,8 @@ WHERE user_login LIKE %s
                     " . __("Le compte Sage n'a pas pu être " . $word, Sage::TOKEN) . "
                             </div>"];
         }
-        $canImportFComptet = $this->canUpdateUserOrFComptet($fComptet);
+        $resource = SageService::getInstance()->getResource(FComptetResource::ENTITY_NAME);
+        $canImportFComptet = $resource->getCanImport()($fComptet);
         if (!empty($canImportFComptet)) {
             return [null, null, "<div class='error'>
                         " . implode(' ', $canImportFComptet) . "
@@ -728,17 +733,6 @@ WHERE user_login LIKE %s
                                 </div>"];
     }
 
-    // same as AutoImportWebsiteAccount_CreateTaskJobs_BindParameters
-    public function canUpdateUserOrFComptet(stdClass $fComptet): array
-    {
-        // all fields here must be [IsProjected(true)]
-        $result = [];
-        if ($fComptet->ctType !== TiersTypeEnum::TiersTypeClient->value) {
-            $result[] = __("Le compte " . $fComptet->ctNum . " n'est pas un compte client.", Sage::TOKEN);
-        }
-        return $result;
-    }
-
     public function getFieldsForEntity(Resource $resource): array
     {
         $transDomain = $resource->getTransDomain();
@@ -796,17 +790,6 @@ WHERE user_login LIKE %s
             }
         }
         return $sageEntityMetadatas;
-    }
-
-    // same as AutoImportWebsiteOrder_CreateTaskJobs_BindParameters
-    public function canImportOrderFromSage(stdClass $fDocentete): array
-    {
-        // all fields here must be [IsProjected(true)]
-        $result = [];
-        if ($fDocentete->doDomaine !== DomaineTypeEnum::DomaineTypeVente->value) {
-            $result[] = __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN);
-        }
-        return $result;
     }
 
     public function get_option_date_or_null(string $option, bool $default_value = false): ?DateTime

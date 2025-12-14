@@ -3,6 +3,8 @@
 namespace App\resources;
 
 use App\class\SageEntityMetadata;
+use App\enum\Sage\DomaineTypeEnum;
+use App\enum\Sage\TiersTypeEnum;
 use App\Sage;
 use App\services\GraphqlService;
 use App\services\SageService;
@@ -22,6 +24,7 @@ class FDocenteteResource extends Resource
 
     private function __construct()
     {
+        parent::__construct();
         global $wpdb;
         $this->title = __("Documents", Sage::TOKEN);
         $this->description = __("Gestion Commerciale / Menu Traitement / Documents des ventes, des achats, des stocks et internes / Fenêtre Document", Sage::TOKEN);
@@ -101,9 +104,14 @@ class FDocenteteResource extends Resource
         $this->metaKeyIdentifier = self::META_KEY;
         $this->metaTable = $wpdb->prefix . 'wc_orders_meta';
         $this->metaColumnIdentifier = 'order_id';
-        $this->canImport = static function (array $fDocentete) {
-            return SageService::getInstance()->canImportOrderFromSage((object)$fDocentete);
-        };
+        $this->importCondition = [
+            new ImportConditionDto(
+                field: 'doDomaine',
+                value: DomaineTypeEnum::DomaineTypeVente->value,
+                message: function ($fDocentete) {
+                    return __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN);
+                }),
+        ];
         $this->import = static function (string $identifier) {
             $data = json_decode(stripslashes($identifier), false, 512, JSON_THROW_ON_ERROR);
             [$message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($data->doPiece, $data->doType);

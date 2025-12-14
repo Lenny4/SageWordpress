@@ -397,9 +397,8 @@ class GraphqlService
             $result = $cacheService->get($cacheName, static fn() => null);
             if (is_null($result)) {
                 $cacheService->delete($cacheName);
-            } else {
-                return $result;
             }
+            return $result;
         }
 
         $function = function () use ($object) {
@@ -1948,6 +1947,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         }
     }
 
+    // todo enlever un maximum de mutation et utiliser _updateApi
     public function updateFArticleFromWebsite(
         string $arRef,
         bool   $getError = false,

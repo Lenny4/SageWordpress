@@ -3,6 +3,7 @@
 namespace App\resources;
 
 use Closure;
+use stdClass;
 
 abstract class Resource
 {
@@ -57,7 +58,11 @@ abstract class Resource
      * Column in the meta table to use to identify
      */
     protected string $metaColumnIdentifier;
-    protected Closure $canImport;
+    /**
+     * @var ImportConditionDto[]
+     */
+    protected array $importCondition;
+    private Closure $canImport;
     protected Closure $import;
     protected array $selectionSet;
     protected ?Closure $postUrl = null;
@@ -65,6 +70,25 @@ abstract class Resource
      * Can be use if the Sage entity has multiple column as id
      */
     protected ?Closure $getIdentifier = null;
+
+    protected function __construct()
+    {
+        $this->canImport = function (stdClass|array $entity) {
+            $r = [];
+            $entity = (array)$entity;
+            foreach ($this->importCondition as $importCondition) {
+                $v = $entity[$importCondition->getField()];
+                if (is_array($importCondition->getValue())) {
+                    if (!in_array($v, $importCondition->getValue())) {
+                        $r[] = $importCondition->getMessage()($entity);
+                    }
+                } else if ($v !== $importCondition->getValue()) {
+                    $r[] = $importCondition->getMessage()($entity);
+                }
+            }
+            return $r;
+        };
+    }
 
     public static function supports(): bool
     {
@@ -277,6 +301,17 @@ abstract class Resource
     public function setGetIdentifier(?Closure $getIdentifier): Resource
     {
         $this->getIdentifier = $getIdentifier;
+        return $this;
+    }
+
+    public function getImportCondition(): array
+    {
+        return $this->importCondition;
+    }
+
+    public function setImportCondition(array $importCondition): Resource
+    {
+        $this->importCondition = $importCondition;
         return $this;
     }
 }
