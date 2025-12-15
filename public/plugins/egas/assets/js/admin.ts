@@ -6,6 +6,7 @@ import "./react/component/form/fComptet/UserComponent";
 import "./react/component/form/fArticle/ArticleComponent.tsx";
 import "./react/component/form/SharedListComponent.tsx";
 import "./react/component/list/ListSageEntityComponent.tsx";
+import "./react/component/form/resource/ResourceFilterComponent.tsx";
 import {getTranslations} from "./functions/translations";
 import {basePlacements} from "@popperjs/core/lib/enums";
 import {TOKEN} from "./token"; // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)

@@ -51,48 +51,22 @@ class FDocenteteResource extends Resource
                 'id' => 'auto_create_' . Sage::TOKEN . '_fdocentete',
                 'label' => __('Créer automatiquement le document de vente Sage', Sage::TOKEN),
                 'description' => __("Créer automatiquement un document de vente dans Sage lorsqu'une commande Woocommerce est crée.", Sage::TOKEN),
-                'type' => 'checkbox',
+                'type' => 'resource',
                 'default' => 'off'
             ],
             [
                 'id' => 'auto_create_wordpress_order',
                 'label' => __('Créer automatiquement la commande Woocommerce', Sage::TOKEN),
                 'description' => __("Créer automatiquement une commande dans Woocommerce lorsqu'un document de vente Sage est crée pour les types de documents sélectionnés.", Sage::TOKEN),
-                'type' => '2_select_multi',
-                'options' => [
-                    '0' => __("Devis", Sage::TOKEN),
-                    '1' => __("Bon de commande", Sage::TOKEN),
-                    '2' => __("Préparation de livraison", Sage::TOKEN),
-                    '3' => __("Bon de livraison", Sage::TOKEN),
-                    '6' => __("Facture", Sage::TOKEN),
-                    '7' => __("Facture comptabilisée", Sage::TOKEN),
-                ],
-                'default' => [],
-                'sort' => false,
+                'type' => 'resource',
+                'default' => 'off'
             ],
             [
-                'id' => 'auto_import_wordpress_order_date',
+                'id' => 'auto_import_wordpress_order',
                 'label' => __('Importer automatiquement les anciens documents de vente Sage', Sage::TOKEN),
                 'description' => __("Importe les documents de vente Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage). Laissez vide pour ne pas importer.", Sage::TOKEN),
-                'type' => 'date',
-                'default' => '',
-                'placeholder' => __('', Sage::TOKEN)
-            ],
-            [
-                'id' => 'auto_import_wordpress_order_dotype',
-                'label' => '',
-                'description' => __("Importe les documents de vente Sage dans Woocommerce qui ont les status sélectionnés. Laissez vide pour ne pas importer.", Sage::TOKEN),
-                'type' => '2_select_multi',
-                'options' => [
-                    '0' => __("Devis", Sage::TOKEN),
-                    '1' => __("Bon de commande", Sage::TOKEN),
-                    '2' => __("Préparation de livraison", Sage::TOKEN),
-                    '3' => __("Bon de livraison", Sage::TOKEN),
-                    '6' => __("Facture", Sage::TOKEN),
-                    '7' => __("Facture comptabilisée", Sage::TOKEN),
-                ],
-                'default' => [],
-                'sort' => false,
+                'type' => 'resource',
+                'default' => 'off'
             ],
         ];
         $this->metadata = static function (?stdClass $obj = null): array {

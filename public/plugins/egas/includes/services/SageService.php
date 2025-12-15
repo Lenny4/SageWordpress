@@ -572,6 +572,58 @@ WHERE user_login LIKE %s
         return ['', ''];
     }
 
+    public function getAllFilterType(): array
+    {
+        $r = [];
+        foreach ([
+                     'StringOperationFilterInput',
+                     'IntOperationFilterInput',
+                     'ShortOperationFilterInput',
+                     'DecimalOperationFilterInput',
+                     'DateTimeOperationFilterInput',
+                     'UuidOperationFilterInput',
+                 ] as $f) {
+            switch ($f) {
+                case 'StringOperationFilterInput':
+                    $r[$f] = [
+                        'contains',
+                        'endsWith',
+                        'eq',
+                        'in',
+                        'ncontains',
+                        'nendsWith',
+                        'neq',
+                        'nin',
+                        'nstartsWith',
+                        'startsWith',
+                    ];
+                    break;
+                case 'IntOperationFilterInput':
+                case 'ShortOperationFilterInput':
+                case 'DecimalOperationFilterInput':
+                case 'DateTimeOperationFilterInput':
+                case 'UuidOperationFilterInput':
+                    $r[$f] = [
+                        'eq',
+                        'gt',
+                        'gte',
+                        'in',
+                        'lt',
+                        'lte',
+                        'neq',
+                        'ngt',
+                        'ngte',
+                        'nin',
+                        'nlt',
+                        'nlte',
+                    ];
+                    break;
+            }
+        }
+
+        return $r;
+    }
+
     public function createResource(
         string  $url,
         string  $method,

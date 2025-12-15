@@ -3,6 +3,7 @@
 namespace App\controllers;
 
 use App\class\SageExpectedOption;
+use App\resources\ImportConditionDto;
 use App\resources\Resource;
 use App\Sage;
 use App\services\GraphqlService;
@@ -47,13 +48,16 @@ class AdminController
                 // Register field.
                 $option_name = Sage::TOKEN . '_' . $field['id'];
                 register_setting(Sage::TOKEN . '_settings', $option_name, $validation);
-
+                $resource = null;
+                if (isset($data["resource"])) {
+                    $resource = $data["resource"];
+                }
                 // Add field to page.
                 add_settings_field(
                     $field['id'],
                     $field['label'],
-                    function (...$args): void {
-                        AdminController::display_field(...$args);
+                    function (...$args) use ($resource): void {
+                        AdminController::display_field(...$args, resource: $resource);
                     },
                     Sage::TOKEN . '_settings',
                     $section,
@@ -199,6 +203,7 @@ class AdminController
                     'title' => __($resource->getTitle(), Sage::TOKEN),
                     'description' => $resource->getDescription(),
                     'fields' => $options,
+                    'resource' => $resource,
                 ];
             }
             self::$settings = $settings;
@@ -213,7 +218,7 @@ class AdminController
      * @param object|null $post Post object.
      * @param boolean $echo Whether to echo the field HTML or return it.
      */
-    public static function display_field(array $data = [], object $post = null, bool $echo = true): string
+    public static function display_field(array $data = [], object $post = null, bool $echo = true, ?Resource $resource = null): string
     {
 
         // Get field info.
@@ -262,7 +267,6 @@ class AdminController
             case 'email':
                 $html .= '<input id="' . esc_attr($field['id']) . '" type="text" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" value="' . esc_attr($data) . '" />' . "\n";
                 break;
-
             case 'date':
                 $html .= '<input id="' . esc_attr($field['id']) . '" type="date" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" value="' . esc_attr($data) . '" />' . "\n";
                 break;
@@ -281,15 +285,12 @@ class AdminController
 
                 $html .= '<input id="' . esc_attr($field['id']) . '" type="' . esc_attr($field['type']) . '" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" value="' . esc_attr($data) . '"' . $min . $max . '/>' . "\n";
                 break;
-
             case 'text_secret':
                 $html .= '<input id="' . esc_attr($field['id']) . '" type="text" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" value="" />' . "\n";
                 break;
-
             case 'textarea':
                 $html .= '<textarea id="' . esc_attr($field['id']) . '" rows="5" cols="50" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '">' . $data . '</textarea><br/>' . "\n";
                 break;
-
             case 'checkbox':
                 $checked = '';
                 if ('on' === $data) {
@@ -298,7 +299,6 @@ class AdminController
 
                 $html .= '<input id="' . esc_attr($field['id']) . '" type="' . esc_attr($field['type']) . '" name="' . esc_attr($option_name) . '" ' . $checked . '/>' . "\n";
                 break;
-
             case 'checkbox_multi':
                 foreach ($field['options'] as $k => $v) {
                     $checked = false;
@@ -310,7 +310,6 @@ class AdminController
                 }
 
                 break;
-
             case 'radio':
                 foreach ($field['options'] as $k => $v) {
                     $checked = false;
@@ -322,7 +321,6 @@ class AdminController
                 }
 
                 break;
-
             case 'select':
                 $html .= '<select name="' . esc_attr($option_name) . '" id="' . esc_attr($field['id']) . '">';
                 foreach ($field['options'] as $k => $v) {
@@ -336,7 +334,6 @@ class AdminController
 
                 $html .= '</select> ';
                 break;
-
             case 'select_multi':
                 $html .= '<select name="' . esc_attr($option_name) . '[]" id="' . esc_attr($field['id']) . '" multiple="multiple">';
                 foreach ($field['options'] as $k => $v) {
@@ -350,7 +347,6 @@ class AdminController
 
                 $html .= '</select> ';
                 break;
-
             case 'image':
                 $image_thumb = '';
                 if ($data) {
@@ -362,7 +358,6 @@ class AdminController
                 $html .= '<input id="' . $option_name . '_delete" type="button" class="image_delete_button button" value="' . __('Remove image', Sage::TOKEN) . '" />' . "\n";
                 $html .= '<input id="' . $option_name . '" class="image_data_field" type="hidden" name="' . $option_name . '" value="' . $data . '"/><br/>' . "\n";
                 break;
-
             case 'color':
                 ?>
                 <div class="color-picker" style="position:relative;">
@@ -375,7 +370,6 @@ class AdminController
                 </div>
                 <?php
                 break;
-
             case 'editor':
                 wp_editor(
                     $data,
@@ -392,6 +386,40 @@ class AdminController
                     ]
                 ]);
                 break;
+            case 'resource':
+                $sageService = SageService::getInstance();
+                $checked = '';
+                if (!empty($data)) {
+                    $checked = 'checked="checked"';
+                }
+                $allFilterType = $sageService->getAllFilterType();
+                $inputFields = GraphqlService::getInstance()->getTypeFilter($resource->getFilterType()) ?? [];
+                $filterFields = [];
+                [
+                    $data2,
+                    $showFields,
+                    $filterFields,
+                    $hideFields,
+                    $perPage,
+                    $queryParams,
+                ] = GraphqlService::getInstance()->getResourceWithQuery($resource, getData: false, allFilterField: true);
+                $html .= '
+                <div data-checkbox-resource="' . htmlspecialchars(json_encode([
+                        'fieldOptions' => $sageService->getFieldsForEntity($resource),
+                        'importCondition' => array_map(function (ImportConditionDto $importCondition) {
+                            return [
+                                'field' => $importCondition->getField(),
+                                'value' => $importCondition->getValue(),
+                            ];
+                        }, $resource->getImportCondition()),
+                        'filterFields' => $filterFields,
+                    ]), ENT_QUOTES, 'UTF-8') . '">
+                    <input type="text" id="' . esc_attr($field['id']) . '_value" name="' . esc_attr($option_name) . '" value="' . $data . '" />
+                    <input id="' . esc_attr($field['id']) . '_select" type="checkbox" ' . $checked . '/>
+                    <div data-react-resource></div>
+                </div>
+                ' . "\n";
+                break;
         }
 
         switch ($field['type']) {
@@ -402,7 +430,6 @@ class AdminController
             case '2_select_multi':
                 $html .= '<br/><span class="description">' . $field['description'] . '</span>';
                 break;
-
             default:
                 if ($post === null) {
                     $html .= '<label for="' . esc_attr($field['id']) . '">' . "\n";

@@ -174,7 +174,6 @@ class GraphqlService
                     'authorization',
                 ]
             );
-        $sageService = SageService::getInstance();
         $variables = [
             'websiteDto' => [
                 'name' => get_bloginfo(),
@@ -189,19 +188,19 @@ class GraphqlService
                 'dbPassword' => get_option(Sage::TOKEN . '_wordpress_db_password'),
                 'tablePrefix' => $wpdb->prefix,
                 'dbName' => get_option(Sage::TOKEN . '_wordpress_db_name'),
-                'autoCreateSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet'),
-                'autoImportSageFcomptet' => $sageService->get_option_date_or_null(Sage::TOKEN . '_auto_import_sage_fcomptet')?->format('Y-m-d H:i:s'),
-                'autoCreateWebsiteAccount' => (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_account'),
-                'autoImportWebsiteAccount' => $sageService->get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_account')?->format('Y-m-d H:i:s'),
-                'autoCreateSageFdocentete' => (bool)get_option(Sage::TOKEN . '_auto_create_sage_fdocentete'),
-                'autoImportWebsiteOrderDate' => $sageService->get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_order_date')?->format('Y-m-d H:i:s'),
-                'autoImportWebsiteOrderDoType' => $sageService->get_option_not_empty_array_or_null(Sage::TOKEN . '_auto_import_wordpress_order_dotype'),
-                'autoCreateWebsiteOrder' => $sageService->get_option_not_empty_array_or_null(Sage::TOKEN . '_auto_create_wordpress_order'),
-                'autoCreateWebsiteArticle' => (bool)get_option(Sage::TOKEN . '_auto_create_wordpress_article'),
-                'autoImportWebsiteArticle' => $sageService->get_option_date_or_null(Sage::TOKEN . '_auto_import_wordpress_article')?->format('Y-m-d H:i:s'),
+                'autoCreateSageFcomptet' => (string)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet'),
+                'autoImportSageFcomptet' => (string)get_option(Sage::TOKEN . '_auto_import_sage_fcomptet'),
+                'autoCreateWebsiteAccount' => (string)get_option(Sage::TOKEN . '_auto_create_wordpress_account'),
+                'autoImportWebsiteAccount' => (string)get_option(Sage::TOKEN . '_auto_import_wordpress_account'),
+                'autoCreateSageFdocentete' => (string)get_option(Sage::TOKEN . '_auto_create_sage_fdocentete'),
+                'autoImportWebsiteOrder' => (string)get_option(Sage::TOKEN . '_auto_import_wordpress_order'),
+                'autoCreateWebsiteOrder' => (string)get_option(Sage::TOKEN . '_auto_create_wordpress_order'),
+                'autoCreateWebsiteArticle' => (string)get_option(Sage::TOKEN . '_auto_create_wordpress_article'),
+                'autoUpdateSageFArticleWhenEditArticle' => (string)get_option(Sage::TOKEN . '_auto_update_sage_farticle_when_edit_article'),
+                'autoImportWebsiteArticle' => (string)get_option(Sage::TOKEN . '_auto_import_wordpress_article'),
                 'pluginVersion' => get_plugin_data(Sage::getInstance()->file)['Version'],
-                'autoUpdateSageFComptetWhenEditAccount' => (bool)get_option(Sage::TOKEN . '_auto_update_sage_fcomptet_when_edit_account'),
-                'autoUpdateAccountWhenEditSageFcomptet' => (bool)get_option(Sage::TOKEN . '_auto_update_account_when_edit_sage_fcomptet'),
+                'autoUpdateSageFComptetWhenEditAccount' => (string)get_option(Sage::TOKEN . '_auto_update_sage_fcomptet_when_edit_account'),
+                'autoUpdateAccountWhenEditSageFcomptet' => (string)get_option(Sage::TOKEN . '_auto_update_account_when_edit_sage_fcomptet'),
                 'nbThreads' => (int)get_option(Sage::TOKEN . '_nb_threads'),
             ]
         ];
@@ -2013,7 +2012,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         ];
     }
 
-    public function getResourceWithQuery(Resource $resource, bool $getData = true): array
+    public function getResourceWithQuery(Resource $resource, bool $getData = true, bool $allFilterField = false): array
     {
         $queryParams = $_GET;
         $entityName = $resource->getEntityName();
@@ -2041,9 +2040,15 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 $selectionSets[$selectionSet['name']] = $selectionSet['type'];
             }
         }
+        $rawFields = array_values(array_unique([...$rawShowFields, ...$mandatoryFields]));
+        if ($allFilterField) {
+            $fieldOptions = array_keys(SageService::getInstance()->getFieldsForEntity($resource));
+            $rawFields = $fieldOptions;
+            $rawFilterFields = $fieldOptions;
+        }
         foreach ([
                      [
-                         'rawFields' => array_unique([...$rawShowFields, ...$mandatoryFields]),
+                         'rawFields' => $rawFields,
                          'array' => &$showFields,
                      ],
                      [
@@ -2101,11 +2106,11 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $cacheName = 'TypeFilter_' . $object;
         $cacheService = CacheService::getInstance();
         if (!$this->pingApi) {
-            $result = $cacheService->get($cacheName, static fn() => null);
-            if (is_null($result)) {
+            $typeModel = $cacheService->get($cacheName, static fn() => null);
+            if (is_null($typeModel)) {
                 $cacheService->delete($cacheName);
             }
-            return $result;
+            return $typeModel;
         }
 
         $function = function () use ($object) {
@@ -2140,7 +2145,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $cacheService->delete($cacheName);
             $typeModel = $cacheService->get($cacheName, $function);
         }
-
         return $typeModel;
     }
 }

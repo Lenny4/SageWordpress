@@ -272,6 +272,7 @@ export const ListSageEntityFilterComponent: React.FC<State> = ({
                                                                }) => {
   const [init, setInit] = React.useState<boolean>(false);
   const [filterCondition, setFilterCondition] = React.useState<string>("or");
+  // todo by default use $this->importCondition as init filter
   const [filters, setFilters] = React.useState<(FilterInput | undefined)[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
   const [optionsField] = React.useState<SubFilterOptionInput[]>(

@@ -37,54 +37,7 @@ class TwigHook
         $twig->addFunction(new TwigFunction('getTranslations', static fn(): array => SageTranslationUtils::getTranslations()));
         $twig->addFunction(new TwigFunction('get_locale', static fn(): string => substr(get_locale(), 0, 2)));
         $twig->addFunction(new TwigFunction('getAllFilterType', static function (): array {
-            $r = [];
-            foreach ([
-                         'StringOperationFilterInput',
-                         'IntOperationFilterInput',
-                         'ShortOperationFilterInput',
-                         'DecimalOperationFilterInput',
-                         'DateTimeOperationFilterInput',
-                         'UuidOperationFilterInput',
-                     ] as $f) {
-                switch ($f) {
-                    case 'StringOperationFilterInput':
-                        $r[$f] = [
-                            'contains',
-                            'endsWith',
-                            'eq',
-                            'in',
-                            'ncontains',
-                            'nendsWith',
-                            'neq',
-                            'nin',
-                            'nstartsWith',
-                            'startsWith',
-                        ];
-                        break;
-                    case 'IntOperationFilterInput':
-                    case 'ShortOperationFilterInput':
-                    case 'DecimalOperationFilterInput':
-                    case 'DateTimeOperationFilterInput':
-                    case 'UuidOperationFilterInput':
-                        $r[$f] = [
-                            'eq',
-                            'gt',
-                            'gte',
-                            'in',
-                            'lt',
-                            'lte',
-                            'neq',
-                            'ngt',
-                            'ngte',
-                            'nin',
-                            'nlt',
-                            'nlte',
-                        ];
-                        break;
-                }
-            }
-
-            return $r;
+            return SageService::getInstance()->getAllFilterType();
         }));
         $twig->addFunction(new TwigFunction('getPaginationRange', static fn(): array => Sage::$paginationRange));
         $twig->addFunction(new TwigFunction('get_site_url', static fn() => get_site_url()));
