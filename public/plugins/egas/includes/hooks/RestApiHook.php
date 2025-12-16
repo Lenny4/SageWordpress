@@ -55,7 +55,6 @@ class RestApiHook
             return $response;
         }, 10, 3);
         add_action('rest_api_init', function () {
-            $this->expose_all_user_meta_in_rest();
             register_rest_route(Sage::TOKEN . '/v1', '/search-entities/(?P<entityName>[A-Za-z0-9]+)', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
@@ -368,6 +367,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     return current_user_can('manage_options');
                 },
             ]);
+            $this->expose_all_user_meta_in_rest(); // must be call after all register_rest_route
         });
     }
 
