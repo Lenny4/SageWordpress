@@ -1,20 +1,24 @@
 <?php
 /**
  * Plugin Name: Egas
- * Version: 1.0.0
  * Plugin URI: https://github.com/Lenny4/SageWordpress
- * Description: A plugin to use Sage on your wordpress website.
+ * Description: A plugin to use Sage on your WordPress website.
+ * Version: 1.0.0
  * Author: Alexandre Beaujour
  * Author URI: https://lenny4.github.io/
+ *
  * Requires at least: 6.3
  * Tested up to: 6.3
- * Requires Plugins: woocommerce
  * Requires PHP: 8.2
+ * Requires Plugins: woocommerce
+ *
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Text Domain: egas
  * Domain Path: /lang/
- * @package WordPress
- * @author Alexandre Beaujour
+ *
+ * @package Egas
  */
 
 use App\Sage;
