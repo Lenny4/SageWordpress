@@ -412,7 +412,7 @@ class AdminController
                         'allFilterType' => $sageService->getAllFilterType(),
                         'filterFields' => $filterFields,
                     ]), ENT_QUOTES, 'UTF-8') . '">
-                    <input type="text" id="' . esc_attr($field['id']) . '" name="' . esc_attr($option_name) . '" value="' . esc_attr($option) . '" />
+                    <input type="text" class="hidden" id="' . esc_attr($field['id']) . '" name="' . esc_attr($option_name) . '" value="' . esc_attr($option) . '" />
                     <input id="' . esc_attr($field['id']) . '_select" type="checkbox" ' . $checked . '/>
                     <label for="' . esc_attr($field['id']) . '"><span class="description">' . $field['description'] . '</span></label>
                     <div data-react-resource></div>

@@ -691,7 +691,7 @@ const ResourceFilterComponent: React.FC<State> = ({
         newFilter.subFilter = oldFilter.subFilter;
       }
     } catch (e) {
-      console.error(e);
+      // console.error(e);
     }
     return newFilter;
   };
