@@ -111,6 +111,7 @@ class FComptetResource extends Resource
             new ImportConditionDto(
                 field: 'ctType',
                 value: TiersTypeEnum::TiersTypeClient->value,
+                condition: 'eq',
                 message: function ($fComptet) {
                     return __("Le compte n'est pas un compte client.", Sage::TOKEN);
                 }),

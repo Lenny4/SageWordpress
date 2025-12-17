@@ -82,6 +82,7 @@ class FDocenteteResource extends Resource
             new ImportConditionDto(
                 field: 'doDomaine',
                 value: DomaineTypeEnum::DomaineTypeVente->value,
+                condition: 'eq',
                 message: function ($fDocentete) {
                     return __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN);
                 }),

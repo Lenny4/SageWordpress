@@ -5,8 +5,6 @@ namespace App\services;
 use App\class\dto\ArgumentSelectionSetDto;
 use App\class\SageEntityMetadata;
 use App\controllers\AdminController;
-use App\enum\Sage\DomaineTypeEnum;
-use App\enum\Sage\TiersTypeEnum;
 use App\resources\FArticleResource;
 use App\resources\FComptetResource;
 use App\resources\Resource;
@@ -574,54 +572,19 @@ WHERE user_login LIKE %s
 
     public function getAllFilterType(): array
     {
-        $r = [];
-        foreach ([
-                     'StringOperationFilterInput',
-                     'IntOperationFilterInput',
-                     'ShortOperationFilterInput',
-                     'DecimalOperationFilterInput',
-                     'DateTimeOperationFilterInput',
-                     'UuidOperationFilterInput',
-                 ] as $f) {
-            switch ($f) {
-                case 'StringOperationFilterInput':
-                    $r[$f] = [
-                        'contains',
-                        'endsWith',
-                        'eq',
-                        'in',
-                        'ncontains',
-                        'nendsWith',
-                        'neq',
-                        'nin',
-                        'nstartsWith',
-                        'startsWith',
-                    ];
-                    break;
-                case 'IntOperationFilterInput':
-                case 'ShortOperationFilterInput':
-                case 'DecimalOperationFilterInput':
-                case 'DateTimeOperationFilterInput':
-                case 'UuidOperationFilterInput':
-                    $r[$f] = [
-                        'eq',
-                        'gt',
-                        'gte',
-                        'in',
-                        'lt',
-                        'lte',
-                        'neq',
-                        'ngt',
-                        'ngte',
-                        'nin',
-                        'nlt',
-                        'nlte',
-                    ];
-                    break;
+        $result = [];
+        $allFilterType = GraphqlService::getInstance()->getAllFilterType();
+        foreach ($allFilterType as $filterType) {
+            if ($filterType->kind !== 'INPUT_OBJECT') {
+                continue;
             }
+            $result[$filterType->name] = array_values(array_filter(array_map(function (stdClass $value) {
+                return $value->name;
+            }, $filterType->inputFields), function (string $item) {
+                return !in_array($item, ["and", "or"]);
+            }));
         }
-
-        return $r;
+        return $result;
     }
 
     public function createResource(
@@ -785,7 +748,7 @@ WHERE user_login LIKE %s
                                 </div>"];
     }
 
-    public function getFieldsForEntity(Resource $resource): array
+    public function getFieldsForEntity(Resource $resource, bool $withMetadata = true): array
     {
         $transDomain = $resource->getTransDomain();
         $typeModel = GraphqlService::getInstance()->getTypeModel($resource->getTypeModel());
@@ -806,12 +769,14 @@ WHERE user_login LIKE %s
         }
 
         // region custom meta fields
-        foreach ($resource->getMetadata()() as $metadata) {
-            if (!$metadata->getShowInOptions()) {
-                continue;
+        if ($withMetadata) {
+            foreach ($resource->getMetadata()() as $metadata) {
+                if (!$metadata->getShowInOptions()) {
+                    continue;
+                }
+                $fieldName = Sage::META_DATA_PREFIX . $metadata->getField();
+                $objectFields[$fieldName] = $trans[$transDomain][$fieldName];
             }
-            $fieldName = Sage::META_DATA_PREFIX . $metadata->getField();
-            $objectFields[$fieldName] = $trans[$transDomain][$fieldName];
         }
         // endregion
 

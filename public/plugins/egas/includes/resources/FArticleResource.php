@@ -100,6 +100,7 @@ class FArticleResource extends Resource
                     ArticleTypeEnum::ArticleTypeStandard->value,
                     ArticleTypeEnum::ArticleTypeGamme->value
                 ],
+                condition: 'in',
                 message: function ($fArticle) {
                     return __("Seuls les articles standard ou à gamme peuvent être importés.", Sage::TOKEN);
                 }
@@ -107,6 +108,7 @@ class FArticleResource extends Resource
             new ImportConditionDto(
                 field: 'arNomencl',
                 value: NomenclatureTypeEnum::NomenclatureTypeAucun->value,
+                condition: 'eq',
                 message: function ($fArticle) {
                     return __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", Sage::TOKEN);
                 }
@@ -114,6 +116,7 @@ class FArticleResource extends Resource
             new ImportConditionDto(
                 field: 'arPublie',
                 value: 1,
+                condition: 'eq',
                 message: function ($fArticle) {
                     return __("Seuls les articles publiés sur le site marchand peuvent être importés.", Sage::TOKEN);
                 }

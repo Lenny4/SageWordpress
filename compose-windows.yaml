@@ -5,7 +5,7 @@ services:
     environment:
       VERSION: "10"
       DISK_SIZE: "304G"
-      RAM_SIZE: "16G"
+      RAM_SIZE: "12G"
       CPU_CORES: "10"
       USERNAME: "alex"
       PASSWORD: "computer"

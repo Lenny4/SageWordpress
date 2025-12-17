@@ -8,12 +8,14 @@ class ImportConditionDto
 {
     private string $field;
     private array|string|bool|int $value;
+    private string $condition;
     private Closure $message;
 
-    public function __construct(string $field, array|string|bool|int $value, Closure $message)
+    public function __construct(string $field, array|string|bool|int $value, string $condition, Closure $message)
     {
         $this->field = $field;
         $this->value = $value;
+        $this->condition = $condition;
         $this->message = $message;
     }
 
@@ -36,6 +38,17 @@ class ImportConditionDto
     public function setValue(int|bool|array|string $value): ImportConditionDto
     {
         $this->value = $value;
+        return $this;
+    }
+
+    public function getCondition(): string
+    {
+        return $this->condition;
+    }
+
+    public function setCondition(string $condition): ImportConditionDto
+    {
+        $this->condition = $condition;
         return $this;
     }
 

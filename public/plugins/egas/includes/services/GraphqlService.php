@@ -388,6 +388,40 @@ class GraphqlService
         ];
     }
 
+    public function getAllFilterType(): array|null
+    {
+        $cacheName = 'FilterType';
+        $cacheService = CacheService::getInstance();
+        if (!$this->pingApi) {
+            $result = $cacheService->get($cacheName, static fn() => null);
+            if (is_null($result)) {
+                $cacheService->delete($cacheName);
+            }
+            return $result;
+        }
+
+        $function = function () {
+            $query = new Query('__schema');
+            $query->setSelectionSet([
+                (new Query('types'))->setSelectionSet([
+                    'kind',
+                    'name',
+                    (new Query('inputFields'))->setSelectionSet([
+                        'name',
+                    ]),
+                ]),
+            ]);
+            return $this->runQuery($query)?->data?->__schema?->types;
+        };
+        $typeModel = $cacheService->get($cacheName, $function);
+        if (empty($typeModel)) {
+            $cacheService->delete($cacheName);
+            $typeModel = $cacheService->get($cacheName, $function);
+        }
+
+        return $typeModel;
+    }
+
     public function getTypeModel(string $object): array|null
     {
         $cacheName = 'TypeModel_' . $object;
@@ -620,6 +654,7 @@ class GraphqlService
                         $inputType = $inputType['type'];
                     }
                     // region format fieldValue
+                    // todo should not be hard coded
                     if (in_array($inputType, [
                         'StringOperationFilterInput',
                         'DateTimeOperationFilterInput',
@@ -2012,7 +2047,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         ];
     }
 
-    public function getResourceWithQuery(Resource $resource, bool $getData = true, bool $allFilterField = false): array
+    public function getResourceWithQuery(Resource $resource, bool $getData = true, bool $allFilterField = false, bool $withMetadata = true): array
     {
         $queryParams = $_GET;
         $entityName = $resource->getEntityName();
@@ -2042,7 +2077,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         }
         $rawFields = array_values(array_unique([...$rawShowFields, ...$mandatoryFields]));
         if ($allFilterField) {
-            $fieldOptions = array_keys(SageService::getInstance()->getFieldsForEntity($resource));
+            $fieldOptions = array_keys(SageService::getInstance()->getFieldsForEntity($resource, $withMetadata));
             $rawFields = $fieldOptions;
             $rawFilterFields = $fieldOptions;
         }

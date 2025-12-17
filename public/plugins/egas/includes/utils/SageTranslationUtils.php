@@ -644,6 +644,8 @@ final class SageTranslationUtils
                 'asQteMini' => __("Quantité min", Sage::TOKEN),
                 'asQteMaxi' => __("Quantité max", Sage::TOKEN),
                 'addFilter' => __("Ajouter un filtre", Sage::TOKEN),
+                'removeFilter' => __("Supprimer le filtre", Sage::TOKEN),
+                'addSubFilter' => __("Ajouter un sous groupe de filtre", Sage::TOKEN),
                 'selectOption' => __("Sélectionnez une option", Sage::TOKEN),
                 'or' => __("ou", Sage::TOKEN),
                 'and' => __("et", Sage::TOKEN),
@@ -673,6 +675,7 @@ final class SageTranslationUtils
                 'addThisItem' => __("Ajouter cet élément.", Sage::TOKEN),
                 'modifySearchToFindMore' => __("Veuillez modifier votre recherche pour trouver d'autres résultats ...", Sage::TOKEN),
                 'noMoreResults' => __("Fin des résultats", Sage::TOKEN),
+                'maintainCtrlSelectMultiple' => __("Maintenez Ctrl ou Maj pour sélectionner plusieurs valeurs", Sage::TOKEN),
             ],
             'enum' => [
                 'syncWebsiteState' => [

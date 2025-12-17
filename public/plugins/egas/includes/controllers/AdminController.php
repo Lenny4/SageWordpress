@@ -392,9 +392,6 @@ class AdminController
                 if (!empty($data)) {
                     $checked = 'checked="checked"';
                 }
-                $allFilterType = $sageService->getAllFilterType();
-                $inputFields = GraphqlService::getInstance()->getTypeFilter($resource->getFilterType()) ?? [];
-                $filterFields = [];
                 [
                     $data2,
                     $showFields,
@@ -402,20 +399,22 @@ class AdminController
                     $hideFields,
                     $perPage,
                     $queryParams,
-                ] = GraphqlService::getInstance()->getResourceWithQuery($resource, getData: false, allFilterField: true);
+                ] = GraphqlService::getInstance()->getResourceWithQuery($resource, getData: false, allFilterField: true, withMetadata: false);
                 $html .= '
                 <div data-checkbox-resource="' . htmlspecialchars(json_encode([
-                        'fieldOptions' => $sageService->getFieldsForEntity($resource),
                         'importCondition' => array_map(function (ImportConditionDto $importCondition) {
                             return [
                                 'field' => $importCondition->getField(),
                                 'value' => $importCondition->getValue(),
+                                'condition' => $importCondition->getCondition(),
                             ];
                         }, $resource->getImportCondition()),
+                        'allFilterType' => $sageService->getAllFilterType(),
                         'filterFields' => $filterFields,
                     ]), ENT_QUOTES, 'UTF-8') . '">
-                    <input type="text" id="' . esc_attr($field['id']) . '_value" name="' . esc_attr($option_name) . '" value="' . $data . '" />
+                    <input type="text" id="' . esc_attr($field['id']) . '" name="' . esc_attr($option_name) . '" value="' . $data . '" />
                     <input id="' . esc_attr($field['id']) . '_select" type="checkbox" ' . $checked . '/>
+                    <label for="' . esc_attr($field['id']) . '"><span class="description">' . $field['description'] . '</span></label>
                     <div data-react-resource></div>
                 </div>
                 ' . "\n";
@@ -423,7 +422,8 @@ class AdminController
         }
 
         switch ($field['type']) {
-
+            case 'resource':
+                break;
             case 'checkbox_multi':
             case 'radio':
             case 'select_multi':

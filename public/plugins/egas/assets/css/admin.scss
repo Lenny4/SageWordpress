@@ -357,3 +357,8 @@ table {
   border-radius: 4px;
   font-family: monospace;
 }
+
+.resize-select {
+  resize: vertical;   /* allow vertical resize */
+  overflow: auto;     /* required for resize to work */
+}
