@@ -1,19 +1,21 @@
-import {createRoot} from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import React from "react";
-import {ListSageEntityFilterComponent} from "./ListSageEntityFilterComponent";
-import {ListSageEntityPagingComponent} from "./ListSageEntityPagingComponent";
-import {ListSageEntityTableComponent} from "./ListSageEntityTableComponent";
-import {FilterShowFieldInterface, FilterTypeInterface,} from "../../../interface/ListSageEntityInterface";
-import {BrowserRouter, useSearchParams} from "react-router-dom";
-import {TOKEN} from "../../../token";
+import { ListSageEntityPagingComponent } from "./ListSageEntityPagingComponent";
+import { ListSageEntityTableComponent } from "./ListSageEntityTableComponent";
+import { FilterShowFieldInterface } from "../../../interface/ListSageEntityInterface";
+import { BrowserRouter, useSearchParams } from "react-router-dom";
+import { TOKEN } from "../../../token";
+import {
+  ResourceFilterComponent,
+  ResourceFilterDataInterface,
+} from "../form/resource/ResourceFilterComponent";
 
 const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
 const wpnonce = $(`[data-${TOKEN}-nonce]`).attr(`data-${TOKEN}-nonce`);
 let realSearch = "";
 
 type State = {
-  filterTypes: FilterTypeInterface;
-  filterFields: FilterShowFieldInterface[];
+  resourceFilter: ResourceFilterDataInterface;
   showFields: FilterShowFieldInterface[];
   hideFields: string[];
   sageEntityName: string;
@@ -28,15 +30,14 @@ export interface ResultTableInterface {
 }
 
 export const ListSageEntityComponent: React.FC<State> = ({
-                                                           filterTypes,
-                                                           filterFields,
-                                                           showFields,
-                                                           hideFields,
-                                                           sageEntityName,
-                                                           mandatoryFields,
-                                                           paginationRange,
-                                                           perPage,
-                                                         }) => {
+  showFields,
+  hideFields,
+  sageEntityName,
+  mandatoryFields,
+  paginationRange,
+  perPage,
+  resourceFilter,
+}) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [result, setResult] = React.useState<ResultTableInterface | undefined>(
     undefined,
@@ -51,7 +52,7 @@ export const ListSageEntityComponent: React.FC<State> = ({
     setSearching(true);
     const response = await fetch(
       siteUrl +
-      `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search/sage-entity-menu/${sageEntityName}`)}&${stringParams}&_wpnonce=${wpnonce}`,
+        `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search/sage-entity-menu/${sageEntityName}`)}&${stringParams}&_wpnonce=${wpnonce}`,
     );
     if (response.ok) {
       if (realSearch === stringParams) {
@@ -71,18 +72,17 @@ export const ListSageEntityComponent: React.FC<State> = ({
   return (
     <>
       <div className="tablenav top">
-        <ListSageEntityFilterComponent
-          filterFields={filterFields}
-          filterTypes={filterTypes}
-          hideFields={hideFields}
-          showFields={showFields}
+        <ResourceFilterComponent
+          resourceFilter={resourceFilter}
+          withUrl={true}
+          allowEditImportCondition={true}
         />
         <ListSageEntityPagingComponent
           result={result}
           paginationRange={paginationRange}
           defaultPerPage={Number(perPage)}
         />
-        <br className="clear"/>
+        <br className="clear" />
       </div>
       <ListSageEntityTableComponent
         hideFields={hideFields}
@@ -104,15 +104,10 @@ doms.forEach((dom) => {
     <BrowserRouter>
       <ListSageEntityComponent
         sageEntityName={sageEntityName}
-        filterTypes={JSON.parse(
+        resourceFilter={JSON.parse(
           dom
-            .querySelector("[data-filtertypes]")
-            .getAttribute("data-filtertypes"),
-        )}
-        filterFields={JSON.parse(
-          dom
-            .querySelector("[data-filterfields]")
-            .getAttribute("data-filterfields"),
+            .querySelector("[data-resource-filter-query]")
+            .getAttribute("data-resource-filter-query"),
         )}
         showFields={JSON.parse(
           dom

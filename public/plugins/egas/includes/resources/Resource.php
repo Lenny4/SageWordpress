@@ -62,7 +62,6 @@ abstract class Resource
      * @var ImportConditionDto[]
      */
     protected array $importCondition;
-    private Closure $canImport;
     protected Closure $import;
     protected array $selectionSet;
     protected ?Closure $postUrl = null;
@@ -70,6 +69,7 @@ abstract class Resource
      * Can be use if the Sage entity has multiple column as id
      */
     protected ?Closure $getIdentifier = null;
+    private Closure $canImport;
 
     protected function __construct()
     {
@@ -88,6 +88,11 @@ abstract class Resource
             }
             return $r;
         };
+    }
+
+    public static function getDefaultResourceFilter(): array
+    {
+        return ['values' => []];
     }
 
     public static function supports(): bool

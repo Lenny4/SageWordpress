@@ -387,13 +387,12 @@ class AdminController
                 ]);
                 break;
             case 'resource':
-                $sageService = SageService::getInstance();
                 $checked = '';
                 if (!empty($data)) {
                     $checked = 'checked="checked"';
                 } else {
-                    if (array_key_exists('initValue', $field)) {
-                        $data = $field["initValue"];
+                    if (array_key_exists('initFilter', $field)) {
+                        $data = $field["initFilter"];
                     }
                 }
                 [
@@ -405,18 +404,8 @@ class AdminController
                     $queryParams,
                 ] = GraphqlService::getInstance()->getResourceWithQuery($resource, getData: false, allFilterField: true, withMetadata: false);
                 $html .= '
-                <div data-checkbox-resource="' . htmlspecialchars(json_encode([
-                        'importCondition' => array_map(function (ImportConditionDto $importCondition) {
-                            return [
-                                'field' => $importCondition->getField(),
-                                'value' => $importCondition->getValue(),
-                                'condition' => $importCondition->getCondition(),
-                            ];
-                        }, $resource->getImportCondition()),
-                        'allFilterType' => $sageService->getAllFilterType(),
-                        'filterFields' => $filterFields,
-                    ]), ENT_QUOTES, 'UTF-8') . '">
-                    <input type="text" class="hidden" id="' . esc_attr($field['id']) . '" name="' . esc_attr($option_name) . '" value="' . esc_attr($data) . '" />
+                <div data-resource-filter="' . htmlspecialchars(json_encode(self::getResourceFilter($resource, $filterFields)), ENT_QUOTES, 'UTF-8') . '">
+                    <input type="text" class="hidden" id="' . esc_attr($field['id']) . '" name="' . esc_attr($option_name) . '" value="" data-init-filter="' . esc_attr($data) . '" />
                     <input id="' . esc_attr($field['id']) . '_select" type="checkbox" ' . $checked . '/>
                     <label for="' . esc_attr($field['id']) . '"><span class="description">' . $field['description'] . '</span></label>
                     <div data-react-resource></div>
@@ -454,6 +443,21 @@ class AdminController
 
         echo $html;
         return '';
+    }
+
+    private static function getResourceFilter(Resource $resource, array $filterFields): array
+    {
+        return [
+            'importCondition' => array_map(function (ImportConditionDto $importCondition) {
+                return [
+                    'field' => $importCondition->getField(),
+                    'value' => $importCondition->getValue(),
+                    'condition' => $importCondition->getCondition(),
+                ];
+            }, $resource->getImportCondition()),
+            'allFilterType' => SageService::getInstance()->getAllFilterType(),
+            'filterFields' => $filterFields,
+        ];
     }
 
     public static function registerMenu(): void
@@ -565,7 +569,10 @@ class AdminController
                         ] = GraphqlService::getInstance()->getResourceWithQuery($resource, getData: false);
                         echo TwigService::getInstance()->render('sage/list.html.twig', [
                             'showFields' => $showFields,
-                            'filterFields' => $filterFields,
+                            'resourceFilter' => [
+                                ...self::getResourceFilter($resource, $filterFields),
+                                'initFilter' => $resource::getDefaultResourceFilter(),
+                            ],
                             'perPage' => $perPage,
                             'hideFields' => $hideFields,
                             'mandatoryFields' => $resource->getMandatoryFields(),

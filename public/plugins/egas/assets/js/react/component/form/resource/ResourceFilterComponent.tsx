@@ -24,7 +24,7 @@ interface FilterFieldInterface {
   values: string[] | Record<number, string> | null;
 }
 
-interface ResourceDataInterface {
+export interface ResourceFilterDataInterface {
   allFilterType: AllFilterTypeInterface;
   filterFields: FilterFieldInterface[];
   importCondition: {
@@ -32,6 +32,7 @@ interface ResourceDataInterface {
     value: (number | string)[] | string | number | null;
     condition: string;
   }[];
+  initFilter?: FilterInterface;
 }
 
 interface FilterValueInterface {
@@ -55,10 +56,11 @@ interface FilterInterface {
 }
 
 interface State {
-  data: ResourceDataInterface;
+  resourceFilter: ResourceFilterDataInterface;
   textInput?: HTMLInputElement;
   checkboxInput?: HTMLInputElement;
   withUrl?: boolean;
+  allowEditImportCondition?: boolean;
 }
 
 interface State2 {
@@ -399,6 +401,7 @@ const _ResourceFilterComponent = React.forwardRef(
 
     const removeFilterValue = (index: number) => {
       if (
+        setParentValues &&
         values.values.value.filter((x: FilterValueInterface) => x !== undefined)
           .length === 1
       ) {
@@ -497,7 +500,9 @@ const _ResourceFilterComponent = React.forwardRef(
 
     return (
       <>
-        <div style={{ display: "flex", alignItems: "stretch", marginTop: "1rem" }}>
+        <div
+          style={{ display: "flex", alignItems: "stretch", marginTop: "1rem" }}
+        >
           {values.subFilter.value && (
             <div
               style={{
@@ -556,36 +561,47 @@ const _ResourceFilterComponent = React.forwardRef(
                   ),
                 )}
                 <div style={{ textAlign: "center", marginBottom: "0.5rem" }}>
-                  <Tooltip
-                    title={translations.words.addFilter}
-                    arrow
-                    placement="top"
-                  >
-                    <span
-                      onClick={addFilterValue}
-                      className="dashicons dashicons-plus button"
-                      style={{
-                        paddingRight: "22px",
-                        marginLeft: "1rem",
-                      }}
-                    ></span>
-                  </Tooltip>
-                  {!values.subFilter.value && (
+                  {values.values.value.filter(
+                    (filterValue: FilterValueInterface) => filterValue,
+                  ).length > 0 ? (
                     <Tooltip
-                      title={translations.words.addSubFilter}
+                      title={translations.words.addFilter}
                       arrow
                       placement="top"
                     >
                       <span
-                        onClick={addFilter}
-                        className="dashicons dashicons-welcome-add-page button"
+                        onClick={addFilterValue}
+                        className="dashicons dashicons-plus button"
                         style={{
                           paddingRight: "22px",
                           marginLeft: "1rem",
                         }}
                       ></span>
                     </Tooltip>
+                  ) : (
+                    <button className="button-primary" onClick={addFilterValue}>
+                      {translations.words.addFilter}
+                    </button>
                   )}
+                  {!values.subFilter.value &&
+                    values.values.value.filter(
+                      (filterValue: FilterValueInterface) => filterValue,
+                    ).length > 0 && (
+                      <Tooltip
+                        title={translations.words.addSubFilter}
+                        arrow
+                        placement="top"
+                      >
+                        <span
+                          onClick={addFilter}
+                          className="dashicons dashicons-welcome-add-page button"
+                          style={{
+                            paddingRight: "22px",
+                            marginLeft: "1rem",
+                          }}
+                        ></span>
+                      </Tooltip>
+                    )}
                 </div>
               </div>
               {values.values.value &&
@@ -644,11 +660,12 @@ const _ResourceFilterComponent = React.forwardRef(
   },
 );
 
-const ResourceFilterComponent: React.FC<State> = ({
-  data,
+export const ResourceFilterComponent: React.FC<State> = ({
+  resourceFilter,
   textInput,
   checkboxInput,
   withUrl,
+  allowEditImportCondition,
 }) => {
   const [show, setShow] = React.useState<boolean>(
     checkboxInput?.checked ?? true,
@@ -659,44 +676,47 @@ const ResourceFilterComponent: React.FC<State> = ({
     }
     const newFilter: FilterInterface = {
       condition: "and",
-      allowCondition: false,
-      allowConditionValues: false,
-      values: data.importCondition.map((importCondition) => {
+      allowCondition: !!allowEditImportCondition,
+      allowConditionValues: !!allowEditImportCondition,
+      values: resourceFilter.importCondition.map((importCondition) => {
         return {
           field: importCondition.field,
           value: importCondition.value,
           condition: importCondition.condition,
-          deletable: false,
-          editable: false,
+          deletable: !!allowEditImportCondition,
+          editable: !!allowEditImportCondition,
           ref: React.createRef(),
         };
       }),
       ref: React.createRef(),
     };
+    let initFilter = resourceFilter.initFilter;
     if (textInput) {
       try {
-        const oldFilter: FilterInterface = JSON.parse(textInput.value);
-        for (const oldValue of oldFilter.values) {
-          const newValue = newFilter.values.find(
-            (v) =>
-              v.field === oldValue.field &&
-              v.condition === oldValue.condition &&
-              JSON.stringify(v.value) === JSON.stringify(oldValue.value),
-          );
-          if (!newValue) {
-            newFilter.values.push({
-              field: oldValue.field,
-              value: oldValue.value,
-              condition: oldValue.condition,
-              ref: React.createRef(),
-            });
-          }
-        }
-        if (oldFilter.subFilter) {
-          newFilter.subFilter = oldFilter.subFilter;
-        }
+        initFilter = JSON.parse($(textInput).attr("data-init-filter"));
       } catch (e) {
         // console.error(e);
+      }
+    }
+    if (initFilter) {
+      for (const oldValue of initFilter.values) {
+        const newValue = newFilter.values.find(
+          (v) =>
+            v.field === oldValue.field &&
+            v.condition === oldValue.condition &&
+            JSON.stringify(v.value) === JSON.stringify(oldValue.value),
+        );
+        if (!newValue) {
+          newFilter.values.push({
+            field: oldValue.field,
+            value: oldValue.value,
+            condition: oldValue.condition,
+            ref: React.createRef(),
+          });
+        }
+      }
+      if (initFilter.subFilter) {
+        newFilter.subFilter = initFilter.subFilter;
       }
     }
     return newFilter;
@@ -704,7 +724,9 @@ const ResourceFilterComponent: React.FC<State> = ({
   const [filter, setFilter] = React.useState<FilterInterface | null>(null);
 
   const dispatch = () => {
-    textInput.value = JSON.stringify(filter.ref.current.getValue());
+    if (textInput) {
+      textInput.value = JSON.stringify(filter.ref.current.getValue());
+    }
   };
 
   React.useEffect(() => {
@@ -723,7 +745,7 @@ const ResourceFilterComponent: React.FC<State> = ({
 
   React.useEffect(() => {
     setFilter(getDefaultFilter());
-  }, [data, show]);
+  }, [resourceFilter, show]);
 
   React.useEffect(() => {
     if (filter?.ref?.current) {
@@ -738,8 +760,8 @@ const ResourceFilterComponent: React.FC<State> = ({
           <_ResourceFilterComponent
             ref={filter.ref}
             filter={filter}
-            allFilterType={data.allFilterType}
-            filterFields={data.filterFields}
+            allFilterType={resourceFilter.allFilterType}
+            filterFields={resourceFilter.filterFields}
             depth={0}
             dispatch={dispatch}
           />
@@ -749,11 +771,11 @@ const ResourceFilterComponent: React.FC<State> = ({
   );
 };
 
-document.querySelectorAll("[data-checkbox-resource]").forEach((dom) => {
+document.querySelectorAll("[data-resource-filter]").forEach((dom) => {
   const root = createRoot(dom.querySelector("[data-react-resource]"));
   root.render(
     <ResourceFilterComponent
-      data={JSON.parse($(dom).attr("data-checkbox-resource"))}
+      resourceFilter={JSON.parse($(dom).attr("data-resource-filter"))}
       textInput={dom.querySelector("input[type='text']")}
       checkboxInput={dom.querySelector<HTMLInputElement>(
         "input[type='checkbox']",

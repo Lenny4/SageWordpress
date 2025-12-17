@@ -20,15 +20,6 @@ class FArticleResource extends Resource
     public const DEFAULT_SORT = 'arRef';
     public const FILTER_TYPE = 'FArticleFilterInput';
     public final const META_KEY = '_' . Sage::TOKEN . '_arRef';
-    public const DEFAULT_RESOURCE_FILTER = [
-        'values' => [
-            [
-                'field' => 'arPublie',
-                'condition' => 'eq',
-                'value' => '1'
-            ]
-        ]
-    ];
 
     private static ?FArticleResource $instance = null;
 
@@ -53,13 +44,14 @@ class FArticleResource extends Resource
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FARTICLES;
+        $initFilter = json_encode(self::getDefaultResourceFilter());
         $this->options = [
             [
                 'id' => 'auto_create_wordpress_article',
                 'label' => __('Créer automatiquement le produit Woocommerce', Sage::TOKEN),
                 'description' => __("Créer automatiquement le produit dans Woocommerce lorsqu'un article Sage est crée.", Sage::TOKEN),
                 'type' => 'resource',
-                'initValue' => json_encode(self::DEFAULT_RESOURCE_FILTER),
+                'initFilter' => $initFilter,
                 'default' => '',
             ],
             [
@@ -67,7 +59,7 @@ class FArticleResource extends Resource
                 'label' => __("Mettre à jour automatiquement l'article Sage lorsqu'un produit Woocommerce est modifié", Sage::TOKEN),
                 'description' => __("Lorsque les informations d’un produit Woocommerce sont modifiées, elles sont également mises à jour dans Sage si un produit y est lié.", Sage::TOKEN),
                 'type' => 'resource',
-                'initValue' => json_encode(self::DEFAULT_RESOURCE_FILTER),
+                'initFilter' => $initFilter,
                 'default' => '',
             ],
             [
@@ -75,7 +67,7 @@ class FArticleResource extends Resource
                 'label' => __('Importer automatiquement les anciens produits Sage', Sage::TOKEN),
                 'description' => __("Importe les produits Sage dans Woocommerce à compter de la date renseignée (date de création de l'article dans Sage). Laissez vide pour ne pas importer.", Sage::TOKEN),
                 'type' => 'resource',
-                'initValue' => json_encode(self::DEFAULT_RESOURCE_FILTER),
+                'initFilter' => $initFilter,
                 'default' => '',
             ],
             // todo ajouter une option pour considérer les catalogues comme des catégories
@@ -130,6 +122,19 @@ class FArticleResource extends Resource
             return $postId;
         };
         $this->selectionSet = GraphqlService::getInstance()->_getFArticleSelectionSet();
+    }
+
+    public static function getDefaultResourceFilter(): array
+    {
+        return [
+            'values' => [
+                [
+                    'field' => 'arPublie',
+                    'condition' => 'eq',
+                    'value' => '1'
+                ]
+            ]
+        ];
     }
 
     public static function getInstance(): self

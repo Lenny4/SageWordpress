@@ -5,10 +5,9 @@
   </h1>
   <hr class="wp-header-end">
   <div data-list-entity="{{ sageEntityName }}">
-    <div data-filtertypes="{{ getAllFilterType()|json_encode }}"></div>
+    <div data-resource-filter-query="{{ resourceFilter|json_encode }}"></div>
     <div data-paginationrange="{{ getPaginationRange()|json_encode }}"></div>
     <div data-mandatoryfields="{{ mandatoryFields|json_encode }}"></div>
-    <div data-filterfields="{{ filterFields|json_encode }}"></div>
     <div data-showfields="{{ showFields|json_encode }}"></div>
     <div data-hidefields="{{ hideFields|json_encode }}"></div>
     <div data-perpage="{{ perPage }}"></div>

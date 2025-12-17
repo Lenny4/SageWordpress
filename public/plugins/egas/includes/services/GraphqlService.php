@@ -2075,15 +2075,16 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 $selectionSets[$selectionSet['name']] = $selectionSet['type'];
             }
         }
-        $rawFields = array_values(array_unique([...$rawShowFields, ...$mandatoryFields]));
+        $rawShowFields = array_values(array_unique([...$rawShowFields, ...$mandatoryFields]));
+        $rawFilterFields = array_values(array_unique([...$rawFilterFields, ...$mandatoryFields]));
         if ($allFilterField) {
             $fieldOptions = array_keys(SageService::getInstance()->getFieldsForEntity($resource, $withMetadata));
-            $rawFields = $fieldOptions;
+            $rawShowFields = $fieldOptions;
             $rawFilterFields = $fieldOptions;
         }
         foreach ([
                      [
-                         'rawFields' => $rawFields,
+                         'rawFields' => $rawShowFields,
                          'array' => &$showFields,
                      ],
                      [
@@ -2111,7 +2112,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         }
 
         if (!isset($queryParams['per_page'])) {
-            $queryParams['per_page'] = get_option(Sage::TOKEN . '_' . $entityName . '_perPage');
+            $queryParams['per_page'] = $perPage;
             if ($queryParams['per_page'] === false) {
                 $queryParams['per_page'] = (string)Sage::$defaultPagination;
             }
