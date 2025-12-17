@@ -497,7 +497,7 @@ const _ResourceFilterComponent = React.forwardRef(
 
     return (
       <>
-        <div style={{ display: "flex", alignItems: "stretch" }}>
+        <div style={{ display: "flex", alignItems: "stretch", marginTop: "1rem" }}>
           {values.subFilter.value && (
             <div
               style={{
@@ -555,6 +555,38 @@ const _ResourceFilterComponent = React.forwardRef(
                     </React.Fragment>
                   ),
                 )}
+                <div style={{ textAlign: "center", marginBottom: "0.5rem" }}>
+                  <Tooltip
+                    title={translations.words.addFilter}
+                    arrow
+                    placement="top"
+                  >
+                    <span
+                      onClick={addFilterValue}
+                      className="dashicons dashicons-plus button"
+                      style={{
+                        paddingRight: "22px",
+                        marginLeft: "1rem",
+                      }}
+                    ></span>
+                  </Tooltip>
+                  {!values.subFilter.value && (
+                    <Tooltip
+                      title={translations.words.addSubFilter}
+                      arrow
+                      placement="top"
+                    >
+                      <span
+                        onClick={addFilter}
+                        className="dashicons dashicons-welcome-add-page button"
+                        style={{
+                          paddingRight: "22px",
+                          marginLeft: "1rem",
+                        }}
+                      ></span>
+                    </Tooltip>
+                  )}
+                </div>
               </div>
               {values.values.value &&
                 values.values.value.filter(
@@ -593,38 +625,6 @@ const _ResourceFilterComponent = React.forwardRef(
                     </select>
                   </div>
                 )}
-            </div>
-            <div style={{ textAlign: "center", marginBottom: "0.5rem" }}>
-              <Tooltip
-                title={translations.words.addFilter}
-                arrow
-                placement="top"
-              >
-                <span
-                  onClick={addFilterValue}
-                  className="dashicons dashicons-plus button"
-                  style={{
-                    paddingRight: "22px",
-                    marginLeft: "1rem",
-                  }}
-                ></span>
-              </Tooltip>
-              {!values.subFilter.value && (
-                <Tooltip
-                  title={translations.words.addSubFilter}
-                  arrow
-                  placement="top"
-                >
-                  <span
-                    onClick={addFilter}
-                    className="dashicons dashicons-welcome-add-page button"
-                    style={{
-                      paddingRight: "22px",
-                      marginLeft: "1rem",
-                    }}
-                  ></span>
-                </Tooltip>
-              )}
             </div>
             {values.subFilter.value && (
               <_ResourceFilterComponent

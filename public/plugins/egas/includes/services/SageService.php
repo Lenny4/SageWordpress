@@ -582,7 +582,10 @@ WHERE user_login LIKE %s
         $result = [];
         $allFilterType = GraphqlService::getInstance()->getAllFilterType();
         foreach ($allFilterType as $filterType) {
-            if ($filterType->kind !== 'INPUT_OBJECT') {
+            if (
+                $filterType->kind !== 'INPUT_OBJECT' ||
+                !str_contains($filterType->name, 'Operation')
+            ) {
                 continue;
             }
             $result[$filterType->name] = array_values(array_filter(array_map(function (stdClass $value) {
