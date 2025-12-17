@@ -146,15 +146,18 @@ const FilterInputComponent = React.forwardRef(
     }, [values.value.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useImperativeHandle(ref, () => ({
-      getValue() {
+      getValue(): FilterValueInterface | undefined {
         if (!values.field.value || !values.condition.value) {
           return undefined;
         }
-        return {
-          [values.field.value]: {
-            [values.condition.value]: values.value.value,
-          },
+        const result: FilterValueInterface = {
+          ...filterValue,
+          field: values.field.value,
+          condition: values.condition.value,
+          value: values.value.value,
         };
+        delete result.ref;
+        return result;
       },
     }));
 
@@ -466,43 +469,27 @@ const _ResourceFilterComponent = React.forwardRef(
     }, [values.conditionValues.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useImperativeHandle(ref, () => ({
-      getValue() {
-        const result = {
-          [values.condition.value]: [
-            {
-              [values.conditionValues.value]: values.values.value
-                .filter((filterValue: FilterValueInterface) => filterValue)
-                .map((filterValue: FilterValueInterface) => {
-                  return filterValue.ref.current.getValue();
-                })
-                .filter((x: any) => x),
-            },
-          ],
+      getValue(): FilterInterface {
+        const filterValues: FilterValueInterface[] = values.values.value
+          .filter((filterValue: FilterValueInterface) => filterValue)
+          .map((filterValue: FilterValueInterface) => {
+            return filterValue.ref.current.getValue();
+          })
+          .filter((x: any) => x);
+        if (filterValues.length === 0) {
+          return undefined;
+        }
+        const result: FilterInterface = {
+          ...filter,
+          condition: values.condition.value,
+          conditionValues: values.conditionValues.value,
+          values: filterValues,
+          subFilter: undefined,
         };
         if (values.subFilter.value) {
-          const conditionValues = values.subFilter.value.ref.current.getValue();
-          if (conditionValues) {
-            for (const and in conditionValues) {
-              for (const sub of conditionValues[and]) {
-                for (const or in sub) {
-                  if (sub[or].length === 0) {
-                    delete sub[or];
-                  }
-                }
-                conditionValues[and] = conditionValues[and].filter(
-                  (x: any) => Object.keys(x).length > 0,
-                );
-              }
-              if (conditionValues[and].length === 0) {
-                delete conditionValues[and];
-              }
-            }
-            result[values.condition.value].push(conditionValues);
-          }
+          result.subFilter = values.subFilter.value.ref.current.getValue();
         }
-        result[values.condition.value] = result[values.condition.value].filter(
-          (x) => Object.keys(x).length > 0,
-        );
+        delete result.ref;
         return result;
       },
     }));
@@ -684,11 +671,27 @@ const ResourceFilterComponent: React.FC<State> = ({
     };
     try {
       const oldFilter: FilterInterface = JSON.parse(textInput.value);
+      for (const oldValue of oldFilter.values) {
+        const newValue = newFilter.values.find(
+          (v) =>
+            v.field === oldValue.field &&
+            v.condition === oldValue.condition &&
+            JSON.stringify(v.value) === JSON.stringify(oldValue.value),
+        );
+        if (!newValue) {
+          newFilter.values.push({
+            field: oldValue.field,
+            value: oldValue.value,
+            condition: oldValue.condition,
+            ref: React.createRef(),
+          });
+        }
+      }
       if (oldFilter.subFilter) {
         newFilter.subFilter = oldFilter.subFilter;
       }
     } catch (e) {
-      // console.error(e);
+      console.error(e);
     }
     return newFilter;
   };
