@@ -39,8 +39,7 @@ class FComptetResource extends Resource
             Sage::META_DATA_PREFIX . '_postId',
         ];
         $this->mandatoryFields = [
-            'ctNum',
-            'ctType', // to show import in sage button or not
+            'ctNum', // [IsProjected(true)]
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FCOMPTETS;
@@ -50,28 +49,28 @@ class FComptetResource extends Resource
                 'label' => __('Créer automatiquement le client Sage', Sage::TOKEN),
                 'description' => __("Créer automatiquement un compte client dans Sage lorsqu'un compte Wordpress est crée.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off'
+                'default' => ''
             ],
             [
                 'id' => 'auto_import_sage_fcomptet',
                 'label' => __('Importer automatiquement les anciens clients Woocommerce', Sage::TOKEN),
                 'description' => __("Importe les comptes Woocommerce dans Sage à compter de la date renseignée (date de création du compte dans Woocommerce). Laissez vide pour ne pas importer.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off'
+                'default' => ''
             ],
             [
                 'id' => 'auto_create_wordpress_account',
                 'label' => __('Créer automatiquement le compte Wordpress', Sage::TOKEN),
                 'description' => __("Créer automatiquement un compte dans Wordpress lorsqu'un utilisateur Sage est crée.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off'
+                'default' => ''
             ],
             [
                 'id' => 'auto_import_wordpress_account',
                 'label' => __('Importer automatiquement les anciens clients Sage', Sage::TOKEN),
                 'description' => __("Importe les comptes Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage). Laissez vide pour ne pas importer.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off'
+                'default' => ''
             ],
             [
                 'id' => 'mail_auto_create_sage_fcomptet',
@@ -85,14 +84,14 @@ class FComptetResource extends Resource
                 'label' => __("Mettre à jour automatiquement un compte Sage lorsqu'un compte Wordpress est modifié", Sage::TOKEN),
                 'description' => __("Lorsque qu’un utilisateur WordPress met à jour ses informations, ou lorsqu’un administrateur modifie les informations d’un compte WordPress, celles-ci sont également mises à jour dans Sage si un compte y est lié.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off'
+                'default' => ''
             ],
             [
                 'id' => 'auto_update_account_when_edit_sage_fcomptet',
                 'label' => __("Mettre à jour automatiquement un compte Wordpress lorsqu'un compte Sage est modifié", Sage::TOKEN),
                 'description' => __("Lorsque les informations d’un compte Sage sont modifiées, elles sont également mises à jour dans WordPress si un compte y est lié.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off'
+                'default' => ''
             ],
         ];
         $this->metadata = static function (?stdClass $obj = null): array {
@@ -109,7 +108,7 @@ class FComptetResource extends Resource
         $this->metaColumnIdentifier = 'user_id';
         $this->importCondition = [
             new ImportConditionDto(
-                field: 'ctType',
+                field: 'ctType', // [IsProjected(true)]
                 value: TiersTypeEnum::TiersTypeClient->value,
                 condition: 'eq',
                 message: function ($fComptet) {

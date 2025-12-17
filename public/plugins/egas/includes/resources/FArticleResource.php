@@ -20,6 +20,15 @@ class FArticleResource extends Resource
     public const DEFAULT_SORT = 'arRef';
     public const FILTER_TYPE = 'FArticleFilterInput';
     public final const META_KEY = '_' . Sage::TOKEN . '_arRef';
+    public const DEFAULT_RESOURCE_FILTER = [
+        'values' => [
+            [
+                'field' => 'arPublie',
+                'condition' => 'eq',
+                'value' => '1'
+            ]
+        ]
+    ];
 
     private static ?FArticleResource $instance = null;
 
@@ -36,15 +45,11 @@ class FArticleResource extends Resource
             'arRef',
             'arDesign',
             'arType',
-            'arPublie',
             Sage::META_DATA_PREFIX . '_last_update',
             Sage::META_DATA_PREFIX . '_postId',
         ];
         $this->mandatoryFields = [
-            'arRef',
-            'arType', // to show import in sage button or not
-            'arNomencl', // to show import in sage button or not
-            'arPublie', // to show import in sage button or not
+            'arRef', // [IsProjected(true)]
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FARTICLES;
@@ -54,21 +59,24 @@ class FArticleResource extends Resource
                 'label' => __('Créer automatiquement le produit Woocommerce', Sage::TOKEN),
                 'description' => __("Créer automatiquement le produit dans Woocommerce lorsqu'un article Sage est crée.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off'
+                'initValue' => json_encode(self::DEFAULT_RESOURCE_FILTER),
+                'default' => '',
             ],
             [
                 'id' => 'auto_update_sage_farticle_when_edit_article',
                 'label' => __("Mettre à jour automatiquement l'article Sage lorsqu'un produit Woocommerce est modifié", Sage::TOKEN),
                 'description' => __("Lorsque les informations d’un produit Woocommerce sont modifiées, elles sont également mises à jour dans Sage si un produit y est lié.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off'
+                'initValue' => json_encode(self::DEFAULT_RESOURCE_FILTER),
+                'default' => '',
             ],
             [
                 'id' => 'auto_import_wordpress_article',
                 'label' => __('Importer automatiquement les anciens produits Sage', Sage::TOKEN),
                 'description' => __("Importe les produits Sage dans Woocommerce à compter de la date renseignée (date de création de l'article dans Sage). Laissez vide pour ne pas importer.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off',
+                'initValue' => json_encode(self::DEFAULT_RESOURCE_FILTER),
+                'default' => '',
             ],
             // todo ajouter une option pour considérer les catalogues comme des catégories
         ];
@@ -95,7 +103,7 @@ class FArticleResource extends Resource
         $this->metaColumnIdentifier = 'post_id';
         $this->importCondition = [
             new ImportConditionDto(
-                field: 'arType',
+                field: 'arType', // [IsProjected(true)]
                 value: [
                     ArticleTypeEnum::ArticleTypeStandard->value,
                     ArticleTypeEnum::ArticleTypeGamme->value
@@ -106,19 +114,11 @@ class FArticleResource extends Resource
                 }
             ),
             new ImportConditionDto(
-                field: 'arNomencl',
+                field: 'arNomencl', // [IsProjected(true)]
                 value: NomenclatureTypeEnum::NomenclatureTypeAucun->value,
                 condition: 'eq',
                 message: function ($fArticle) {
                     return __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", Sage::TOKEN);
-                }
-            ),
-            new ImportConditionDto(
-                field: 'arPublie',
-                value: 1,
-                condition: 'eq',
-                message: function ($fArticle) {
-                    return __("Seuls les articles publiés sur le site marchand peuvent être importés.", Sage::TOKEN);
                 }
             ),
         ];

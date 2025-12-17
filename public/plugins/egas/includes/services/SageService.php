@@ -118,7 +118,14 @@ WHERE user_login LIKE %s
                 }
                 $hookClass = 'App\\resources\\' . basename($file, '.php');
                 if (class_exists($hookClass) && $hookClass::supports()) {
-                    $resources[] = $hookClass::getInstance();
+                    /** @var Resource $resource */
+                    $resource = $hookClass::getInstance();
+                    $mandatoryFields = $resource->getMandatoryFields();
+                    foreach ($resource->getImportCondition() as $importCondition) {
+                        $mandatoryFields[] = $importCondition->getField();
+                    }
+                    $resource->setMandatoryFields($mandatoryFields);
+                    $resources[] = $resource;
                 }
             }
             $this->resources = $resources;

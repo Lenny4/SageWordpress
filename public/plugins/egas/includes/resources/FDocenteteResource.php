@@ -40,9 +40,8 @@ class FDocenteteResource extends Resource
             Sage::META_DATA_PREFIX . '_postId',
         ];
         $this->mandatoryFields = [
-            'doDomaine', // to show import in sage button or not
-            'doPiece',
-            'doType',
+            'doPiece', // [IsProjected(true)]
+            'doType', // [IsProjected(true)]
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FDOCENTETES;
@@ -52,21 +51,21 @@ class FDocenteteResource extends Resource
                 'label' => __('Créer automatiquement le document de vente Sage', Sage::TOKEN),
                 'description' => __("Créer automatiquement un document de vente dans Sage lorsqu'une commande Woocommerce est crée.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off'
+                'default' => ''
             ],
             [
                 'id' => 'auto_create_wordpress_order',
                 'label' => __('Créer automatiquement la commande Woocommerce', Sage::TOKEN),
                 'description' => __("Créer automatiquement une commande dans Woocommerce lorsqu'un document de vente Sage est crée pour les types de documents sélectionnés.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off'
+                'default' => ''
             ],
             [
                 'id' => 'auto_import_wordpress_order',
                 'label' => __('Importer automatiquement les anciens documents de vente Sage', Sage::TOKEN),
                 'description' => __("Importe les documents de vente Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage). Laissez vide pour ne pas importer.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => 'off'
+                'default' => ''
             ],
         ];
         $this->metadata = static function (?stdClass $obj = null): array {
@@ -80,7 +79,7 @@ class FDocenteteResource extends Resource
         $this->metaColumnIdentifier = 'order_id';
         $this->importCondition = [
             new ImportConditionDto(
-                field: 'doDomaine',
+                field: 'doDomaine', // [IsProjected(true)]
                 value: DomaineTypeEnum::DomaineTypeVente->value,
                 condition: 'eq',
                 message: function ($fDocentete) {

@@ -56,8 +56,9 @@ interface FilterInterface {
 
 interface State {
   data: ResourceDataInterface;
-  textInput: HTMLInputElement;
-  checkboxInput: HTMLInputElement;
+  textInput?: HTMLInputElement;
+  checkboxInput?: HTMLInputElement;
+  withUrl?: boolean;
 }
 
 interface State2 {
@@ -647,8 +648,11 @@ const ResourceFilterComponent: React.FC<State> = ({
   data,
   textInput,
   checkboxInput,
+  withUrl,
 }) => {
-  const [show, setShow] = React.useState<boolean>(checkboxInput.checked);
+  const [show, setShow] = React.useState<boolean>(
+    checkboxInput?.checked ?? true,
+  );
   const getDefaultFilter = () => {
     if (!show) {
       return null;
@@ -669,29 +673,31 @@ const ResourceFilterComponent: React.FC<State> = ({
       }),
       ref: React.createRef(),
     };
-    try {
-      const oldFilter: FilterInterface = JSON.parse(textInput.value);
-      for (const oldValue of oldFilter.values) {
-        const newValue = newFilter.values.find(
-          (v) =>
-            v.field === oldValue.field &&
-            v.condition === oldValue.condition &&
-            JSON.stringify(v.value) === JSON.stringify(oldValue.value),
-        );
-        if (!newValue) {
-          newFilter.values.push({
-            field: oldValue.field,
-            value: oldValue.value,
-            condition: oldValue.condition,
-            ref: React.createRef(),
-          });
+    if (textInput) {
+      try {
+        const oldFilter: FilterInterface = JSON.parse(textInput.value);
+        for (const oldValue of oldFilter.values) {
+          const newValue = newFilter.values.find(
+            (v) =>
+              v.field === oldValue.field &&
+              v.condition === oldValue.condition &&
+              JSON.stringify(v.value) === JSON.stringify(oldValue.value),
+          );
+          if (!newValue) {
+            newFilter.values.push({
+              field: oldValue.field,
+              value: oldValue.value,
+              condition: oldValue.condition,
+              ref: React.createRef(),
+            });
+          }
         }
+        if (oldFilter.subFilter) {
+          newFilter.subFilter = oldFilter.subFilter;
+        }
+      } catch (e) {
+        // console.error(e);
       }
-      if (oldFilter.subFilter) {
-        newFilter.subFilter = oldFilter.subFilter;
-      }
-    } catch (e) {
-      // console.error(e);
     }
     return newFilter;
   };
@@ -709,9 +715,9 @@ const ResourceFilterComponent: React.FC<State> = ({
         textInput.value = "";
       }
     };
-    checkboxInput.addEventListener("change", handleChange);
+    checkboxInput?.addEventListener("change", handleChange);
     return () => {
-      checkboxInput.removeEventListener("change", handleChange);
+      checkboxInput?.removeEventListener("change", handleChange);
     };
   }, []);
 
