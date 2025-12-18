@@ -8,9 +8,9 @@ import {
   InputInterface,
   OptionChangeInputInterface,
 } from "../interface/InputInterface";
-import React, {Dispatch, SetStateAction} from "react";
-import {TabInterface} from "../interface/TabInterface";
-import {TOKEN} from "../token";
+import React, { Dispatch, SetStateAction } from "react";
+import { TabInterface } from "../interface/TabInterface";
+import { TOKEN } from "../token";
 
 export function transformOptionsObject(
   obj: Record<string | number, string>,
@@ -45,7 +45,7 @@ export async function isValidGeneric(
   }
   if (hasError) {
     setValues((v) => {
-      const result = {...v};
+      const result = { ...v };
       for (const errorMessage of errorMessages) {
         result[errorMessage.fieldName].error = errorMessage.message;
       }
@@ -68,7 +68,7 @@ export const handleChangeInputGeneric = (
     }
     const result = {
       ...v,
-      [prop]: {...v[prop], value: newValue, error: ""},
+      [prop]: { ...v[prop], value: newValue, error: "" },
     };
     isValidGeneric(result, setValues);
     return result;
@@ -83,7 +83,7 @@ export const handleChangeSelectGeneric = (
   setValues((v) => {
     const result = {
       ...v,
-      [prop]: {...v[prop], value: event.target.value as string, error: ""},
+      [prop]: { ...v[prop], value: event.target.value as string, error: "" },
     };
     isValidGeneric(result, setValues);
     return result;
@@ -98,7 +98,7 @@ export const handleChangeCheckboxGeneric = (
   setValues((v) => {
     const result = {
       ...v,
-      [prop]: {...v[prop], value: event.target.checked, error: ""},
+      [prop]: { ...v[prop], value: event.target.checked, error: "" },
     };
     isValidGeneric(result, setValues);
     return result;
@@ -161,7 +161,7 @@ export const onSubmitForm = (
               const firstPart = str.substring(0, lastDashIndex);
               const lastDigit = str.substring(lastDashIndex + 1);
               window.dispatchEvent(
-                new CustomEvent(firstPart, {detail: lastDigit}),
+                new CustomEvent(firstPart, { detail: lastDigit }),
               );
             }
             setTimeout(() => {

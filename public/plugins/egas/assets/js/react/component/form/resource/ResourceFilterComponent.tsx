@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import { getTranslations } from "../../../../functions/translations";
 import { InputInterface } from "../../../../interface/InputInterface";
 import { Tooltip } from "@mui/material";
+import { BrowserRouter, useSearchParams } from "react-router-dom";
 
 let translations: any = getTranslations();
 
@@ -396,6 +397,9 @@ const _ResourceFilterComponent = React.forwardRef(
     const [oldSubFilter, setOldSubFilter] = React.useState<FormState>(
       values.subFilter.value,
     );
+    const [oldNbNoValues, setOldNbNoValues] = React.useState<FormState>(
+      values.values.value.filter((x: FilterValueInterface) => !x).length,
+    );
     const [initCondition, setInitCondition] = React.useState(false);
     const [initConditionValues, setInitConditionValues] = React.useState(false);
 
@@ -435,12 +439,11 @@ const _ResourceFilterComponent = React.forwardRef(
 
     const addFilter = () => {
       setValues((v) => {
-        const newFilter: FilterInterface = {
+        v.subFilter.value = {
           condition: "and",
           values: [getNewFilterValue()],
           ref: React.createRef(),
-        };
-        v.subFilter.value = newFilter;
+        } as FilterInterface;
         return { ...v };
       });
     };
@@ -455,6 +458,16 @@ const _ResourceFilterComponent = React.forwardRef(
       }
       setOldSubFilter(values.subFilter.value);
     }, [values.subFilter.value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    React.useEffect(() => {
+      const newNbNoValues = values.values.value.filter(
+        (x: FilterValueInterface) => !x,
+      ).length;
+      if (newNbNoValues > oldNbNoValues) {
+        dispatch();
+        setOldNbNoValues(newNbNoValues);
+      }
+    }, [values.values.value.filter((x: FilterValueInterface) => !x).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
     React.useEffect(() => {
       if (initCondition) {
@@ -722,10 +735,18 @@ export const ResourceFilterComponent: React.FC<State> = ({
     return newFilter;
   };
   const [filter, setFilter] = React.useState<FilterInterface | null>(null);
+  const [filterUrl, setFilterUrl] = React.useState<FilterInterface | null>(
+    null,
+  );
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const dispatch = () => {
+    const newFilter: FilterInterface = filter.ref.current.getValue();
     if (textInput) {
-      textInput.value = JSON.stringify(filter.ref.current.getValue());
+      textInput.value = JSON.stringify(newFilter);
+    }
+    if (withUrl) {
+      setFilterUrl(newFilter);
     }
   };
 
@@ -748,10 +769,25 @@ export const ResourceFilterComponent: React.FC<State> = ({
   }, [resourceFilter, show]);
 
   React.useEffect(() => {
-    if (filter?.ref?.current) {
+    if (filter?.ref) {
       dispatch();
     }
-  }, [filter?.ref?.current]);
+  }, [filter?.ref]);
+
+  React.useEffect(() => {
+    const timeoutTyping = setTimeout(() => {
+      setSearchParams((x) => {
+        const params = new URLSearchParams(x);
+        if (filterUrl) {
+          params.set("filter", JSON.stringify(filterUrl));
+        } else {
+          params.delete("filter");
+        }
+        return params;
+      });
+    }, 500);
+    return () => clearTimeout(timeoutTyping);
+  }, [filterUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -774,12 +810,14 @@ export const ResourceFilterComponent: React.FC<State> = ({
 document.querySelectorAll("[data-resource-filter]").forEach((dom) => {
   const root = createRoot(dom.querySelector("[data-react-resource]"));
   root.render(
-    <ResourceFilterComponent
-      resourceFilter={JSON.parse($(dom).attr("data-resource-filter"))}
-      textInput={dom.querySelector("input[type='text']")}
-      checkboxInput={dom.querySelector<HTMLInputElement>(
-        "input[type='checkbox']",
-      )}
-    />,
+    <BrowserRouter>
+      <ResourceFilterComponent
+        resourceFilter={JSON.parse($(dom).attr("data-resource-filter"))}
+        textInput={dom.querySelector("input[type='text']")}
+        checkboxInput={dom.querySelector<HTMLInputElement>(
+          "input[type='checkbox']",
+        )}
+      />
+    </BrowserRouter>,
   );
 });

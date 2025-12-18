@@ -1,12 +1,15 @@
 import * as React from "react";
-import {useImperativeHandle, useRef} from "react";
-import {IconButton, Tooltip} from "@mui/material";
+import { useImperativeHandle, useRef } from "react";
+import { IconButton, Tooltip } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
-import {getTranslations} from "../../../../../functions/translations";
-import {FormValidInterface, InputInterface,} from "../../../../../interface/InputInterface";
-import {handleChangeInputGeneric} from "../../../../../functions/form";
-import {stringValidator} from "../../../../../functions/validator";
-import {TOKEN} from "../../../../../token";
+import { getTranslations } from "../../../../../functions/translations";
+import {
+  FormValidInterface,
+  InputInterface,
+} from "../../../../../interface/InputInterface";
+import { handleChangeInputGeneric } from "../../../../../functions/form";
+import { stringValidator } from "../../../../../functions/validator";
+import { TOKEN } from "../../../../../token";
 
 const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
 const wpnonce = $(`[data-${TOKEN}-nonce]`).attr(`data-${TOKEN}-nonce`);
@@ -24,11 +27,11 @@ type FormState = {
 let currentArRef = "";
 
 export const ArRefInput = React.forwardRef(
-  ({isNew, defaultValue}: ArRefInputState, ref) => {
+  ({ isNew, defaultValue }: ArRefInputState, ref) => {
     const inputRef = useRef<any>(null);
     const getDefaultValue = (): FormState => {
       return {
-        arRef: {value: defaultValue ?? ""},
+        arRef: { value: defaultValue ?? "" },
       };
     };
     const [values, setValues] = React.useState<FormState>(getDefaultValue());
@@ -39,9 +42,9 @@ export const ArRefInput = React.forwardRef(
 
     const handleChange =
       (prop: keyof FormState) =>
-        (event: React.ChangeEvent<HTMLInputElement>) => {
-          handleChangeInputGeneric(event, prop, setValues);
-        };
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        handleChangeInputGeneric(event, prop, setValues);
+      };
 
     const searchValue = async () => {
       if (!isNew) {
@@ -54,12 +57,12 @@ export const ArRefInput = React.forwardRef(
       setLoading(true);
       const response = await fetch(
         siteUrl +
-        "/index.php?rest_route=" +
-        encodeURIComponent(
-          `/${TOKEN}/v1/farticles/` + values.arRef.value + "/available",
-        ) +
-        "&_wpnonce=" +
-        wpnonce,
+          "/index.php?rest_route=" +
+          encodeURIComponent(
+            `/${TOKEN}/v1/farticles/` + values.arRef.value + "/available",
+          ) +
+          "&_wpnonce=" +
+          wpnonce,
       );
       setLoading(false);
       if (response.ok) {
@@ -151,8 +154,8 @@ export const ArRefInput = React.forwardRef(
             <span>{translations["fArticles"]["arRef"]}</span>
           </Tooltip>
         </label>
-        <div style={{display: "flex", alignItems: "flex-start"}}>
-          <div style={{position: "relative", flex: 1}}>
+        <div style={{ display: "flex", alignItems: "flex-start" }}>
+          <div style={{ position: "relative", flex: 1 }}>
             <input
               id={`_${TOKEN}_arRef`}
               name={`_${TOKEN}_arRef`}
@@ -164,7 +167,7 @@ export const ArRefInput = React.forwardRef(
               value={values.arRef.value}
               readOnly={!isNew}
               onChange={handleChange("arRef")}
-              style={{width: "100%"}}
+              style={{ width: "100%" }}
               ref={inputRef}
             />
             {values.arRef.error && (
@@ -176,7 +179,7 @@ export const ArRefInput = React.forwardRef(
                   <svg
                     className="svg-spinner"
                     viewBox="0 0 50 50"
-                    style={{right: 0}}
+                    style={{ right: 0 }}
                   >
                     <circle
                       className="path"
@@ -208,12 +211,12 @@ export const ArRefInput = React.forwardRef(
           </div>
           {isNew && availableArRef !== "" && (
             <div
-              style={{marginLeft: 5, display: "flex", alignItems: "center"}}
+              style={{ marginLeft: 5, display: "flex", alignItems: "center" }}
             >
               <span className="h5">{availableArRef}</span>
               <Tooltip title={translations.sentences.availableArRef} arrow>
                 <IconButton>
-                  <InfoIcon fontSize="small"/>
+                  <InfoIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             </div>

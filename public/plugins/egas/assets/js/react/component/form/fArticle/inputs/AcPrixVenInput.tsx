@@ -1,12 +1,15 @@
 import * as React from "react";
-import {useImperativeHandle, useRef} from "react";
-import {IconButton, Tooltip} from "@mui/material";
+import { useImperativeHandle, useRef } from "react";
+import { IconButton, Tooltip } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
-import {getTranslations} from "../../../../../functions/translations";
-import {FormValidInterface, InputInterface,} from "../../../../../interface/InputInterface";
-import {handleChangeInputGeneric} from "../../../../../functions/form";
-import {TOKEN} from "../../../../../token";
-import {numberValidator} from "../../../../../functions/validator";
+import { getTranslations } from "../../../../../functions/translations";
+import {
+  FormValidInterface,
+  InputInterface,
+} from "../../../../../interface/InputInterface";
+import { handleChangeInputGeneric } from "../../../../../functions/form";
+import { TOKEN } from "../../../../../token";
+import { numberValidator } from "../../../../../functions/validator";
 
 let translations: any = getTranslations();
 
@@ -25,7 +28,7 @@ type FormState = {
 
 export const AcPrixVenInput = React.forwardRef(
   (
-    {defaultValue, acCategorie, acCoef, arPrixAch}: AcPrixVenInputState,
+    { defaultValue, acCategorie, acCoef, arPrixAch }: AcPrixVenInputState,
     ref,
   ) => {
     const inputRef = useRef<any>(null);
@@ -41,27 +44,27 @@ export const AcPrixVenInput = React.forwardRef(
     const getDefaultValue = (): FormState => {
       const v = defaultValue ?? 0;
       return {
-        acPrixVen: {value: v.toString()},
-        realAcPrixVen: {value: v.toString()},
-        valueLock: {value: v > 0},
+        acPrixVen: { value: v.toString() },
+        realAcPrixVen: { value: v.toString() },
+        valueLock: { value: v > 0 },
       };
     };
     const [values, setValues] = React.useState<FormState>(getDefaultValue());
 
     const handleChange =
       (prop: keyof FormState) =>
-        (event: React.ChangeEvent<HTMLInputElement>) => {
-          setValues((v) => {
-            return {
-              ...v,
-              valueLock: {
-                ...v.valueLock,
-                value: true,
-              },
-            };
-          });
-          handleChangeInputGeneric(event, prop, setValues);
-        };
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        setValues((v) => {
+          return {
+            ...v,
+            valueLock: {
+              ...v.valueLock,
+              value: true,
+            },
+          };
+        });
+        handleChangeInputGeneric(event, prop, setValues);
+      };
     const handleRealAcPrixVen = () => {
       setValues((v) => {
         return {
@@ -147,8 +150,8 @@ export const AcPrixVenInput = React.forwardRef(
             <span>{translations["fArticles"]["acPrixVen"]}</span>
           </Tooltip>
         </label>
-        <div style={{display: "flex", alignItems: "flex-start"}}>
-          <div style={{position: "relative", flex: 1}}>
+        <div style={{ display: "flex", alignItems: "flex-start" }}>
+          <div style={{ position: "relative", flex: 1 }}>
             <input
               id={`_${TOKEN}_fArtclients[` + acCategorie + "][acPrixVen]"}
               name={`_${TOKEN}_fArtclients[` + acCategorie + "][acPrixVen]"}
@@ -159,7 +162,7 @@ export const AcPrixVenInput = React.forwardRef(
               type={"number"}
               value={values.acPrixVen.value}
               onChange={handleChange("acPrixVen")}
-              style={{width: "100%"}}
+              style={{ width: "100%" }}
               ref={inputRef}
               onBlur={() => {
                 if (Number(values.acPrixVen.value) === 0) {
@@ -175,10 +178,10 @@ export const AcPrixVenInput = React.forwardRef(
           </div>
           {Number(values.acPrixVen.value) !== expectedAcPrixVen &&
             Number(values.acPrixVen.value) > 0 && (
-              <div style={{position: "relative", top: "-2px"}}>
+              <div style={{ position: "relative", top: "-2px" }}>
                 <Tooltip title={translations.sentences.acPrixVenInput} arrow>
                   <IconButton>
-                    <InfoIcon fontSize="small"/>
+                    <InfoIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
               </div>

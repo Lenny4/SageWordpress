@@ -1,9 +1,9 @@
 import React from "react";
-import {FilterShowFieldInterface} from "../../../interface/ListSageEntityInterface";
-import {getTranslations} from "../../../functions/translations";
-import {useSearchParams} from "react-router-dom";
-import {TOKEN} from "../../../token";
-import {Tooltip} from "@mui/material";
+import { FilterShowFieldInterface } from "../../../interface/ListSageEntityInterface";
+import { getTranslations } from "../../../functions/translations";
+import { useSearchParams } from "react-router-dom";
+import { TOKEN } from "../../../token";
+import { Tooltip } from "@mui/material";
 
 let translations: any = getTranslations();
 const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
@@ -34,9 +34,9 @@ type State3 = {
 };
 
 export const ListSageEntityTableHeaderComponent: React.FC<State2> = ({
-                                                                       showFields,
-                                                                       hideFields,
-                                                                     }) => {
+  showFields,
+  hideFields,
+}) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sort, setSort] = React.useState<any>();
 
@@ -64,7 +64,7 @@ export const ListSageEntityTableHeaderComponent: React.FC<State2> = ({
         >
           <span className="screen-reader-text">Select All.</span>
         </label>
-        <input id="cb-select-all-header" type="checkbox"/>
+        <input id="cb-select-all-header" type="checkbox" />
       </td>
       {showFields
         .filter((field) => !hideFields.includes(field.name))
@@ -105,7 +105,7 @@ export const ListSageEntityTableHeaderComponent: React.FC<State2> = ({
                             const params = new URLSearchParams(x);
                             params.set(
                               "sort",
-                              JSON.stringify({[field.name]: "desc"}),
+                              JSON.stringify({ [field.name]: "desc" }),
                             );
                             return params;
                           });
@@ -121,7 +121,7 @@ export const ListSageEntityTableHeaderComponent: React.FC<State2> = ({
                           const params = new URLSearchParams(x);
                           params.set(
                             "sort",
-                            JSON.stringify({[field.name]: "asc"}),
+                            JSON.stringify({ [field.name]: "asc" }),
                           );
                           return params;
                         });
@@ -160,9 +160,9 @@ export const ListSageEntityTableHeaderComponent: React.FC<State2> = ({
 };
 
 export const ListSageEntityTableActionComponent: React.FC<State3> = ({
-                                                                       row,
-                                                                       sageEntityName,
-                                                                     }) => {
+  row,
+  sageEntityName,
+}) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = React.useState<boolean>(false);
   const canImport = row[`_${TOKEN}_can_import`].length === 0;
@@ -182,12 +182,12 @@ export const ListSageEntityTableActionComponent: React.FC<State3> = ({
     setLoading(true);
     const response = await fetch(
       siteUrl +
-      "/index.php?rest_route=" +
-      encodeURIComponent(
-        `/${TOKEN}/v1/import/${sageEntityName}/${row[`_${TOKEN}_identifier`]}`,
-      ) +
-      "&_wpnonce=" +
-      wpnonce,
+        "/index.php?rest_route=" +
+        encodeURIComponent(
+          `/${TOKEN}/v1/import/${sageEntityName}/${row[`_${TOKEN}_identifier`]}`,
+        ) +
+        "&_wpnonce=" +
+        wpnonce,
     );
     setLoading(false);
     if (response.status === 200) {
@@ -249,106 +249,106 @@ export const ListSageEntityTableActionComponent: React.FC<State3> = ({
 };
 
 export const ListSageEntityTableComponent: React.FC<State> = ({
-                                                                showFields,
-                                                                hideFields,
-                                                                sageEntityName,
-                                                                mandatoryFields,
-                                                                result,
-                                                                searching,
-                                                              }) => {
+  showFields,
+  hideFields,
+  sageEntityName,
+  mandatoryFields,
+  result,
+  searching,
+}) => {
   const realShowFields = showFields.filter(
     (field) => !hideFields.includes(field.name),
   );
   return (
     <table className="wp-list-table widefat fixed striped table-view-list">
       <thead>
-      <ListSageEntityTableHeaderComponent
-        showFields={showFields}
-        hideFields={hideFields}
-      />
+        <ListSageEntityTableHeaderComponent
+          showFields={showFields}
+          hideFields={hideFields}
+        />
       </thead>
       <tbody>
-      {result?.items &&
-        result.items.length > 0 &&
-        result?.items.map((row) => {
-          const name = `row_${sageEntityName}_${row[`_${TOKEN}_identifier`]}`;
-          return (
-            <tr
-              id={name}
-              key={row[`_${TOKEN}_identifier`]}
-              style={{
-                ...(searching && {
-                  backgroundColor: "rgba(0,0,0,0.3)",
-                }),
-              }}
-            >
-              <th scope="row" className="check-column">
-                <label className="label-covers-full-cell" htmlFor={name}>
+        {result?.items &&
+          result.items.length > 0 &&
+          result?.items.map((row) => {
+            const name = `row_${sageEntityName}_${row[`_${TOKEN}_identifier`]}`;
+            return (
+              <tr
+                id={name}
+                key={row[`_${TOKEN}_identifier`]}
+                style={{
+                  ...(searching && {
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                  }),
+                }}
+              >
+                <th scope="row" className="check-column">
+                  <label className="label-covers-full-cell" htmlFor={name}>
                     <span className="screen-reader-text">
                       Select {row[`_${TOKEN}_identifier`]}
                     </span>
-                </label>
-                <input
-                  type="checkbox"
-                  name={`${sageEntityName}[]`}
-                  id={name}
-                  value={row[`_${TOKEN}_identifier`]}
-                />
-              </th>
-              {realShowFields.map((field, index) => {
-                let label = row[field.name.replace("metaData_", "_")];
-                if (field.values) {
-                  const i = row[field.name];
-                  label = `[${i}]: ${field.values[i]}`;
-                }
-                return (
-                  <td key={index} data-colname={field.name}>
-                    {label}
-                  </td>
-                );
-              })}
-              <td
-                data-colname="actions"
-                style={{
-                  textAlign: "right",
-                }}
-              >
-                <ListSageEntityTableActionComponent
-                  row={row}
-                  sageEntityName={sageEntityName}
-                />
-              </td>
-            </tr>
-          );
-        })}
-      {(!result?.items || result.items.length === 0) && (
-        <tr
-          style={{
-            ...(searching && {
-              backgroundColor: "rgba(0,0,0,0.3)",
-            }),
-          }}
-        >
-          <td
-            colSpan={realShowFields.length + 2}
+                  </label>
+                  <input
+                    type="checkbox"
+                    name={`${sageEntityName}[]`}
+                    id={name}
+                    value={row[`_${TOKEN}_identifier`]}
+                  />
+                </th>
+                {realShowFields.map((field, index) => {
+                  let label = row[field.name.replace("metaData_", "_")];
+                  if (field.values) {
+                    const i = row[field.name];
+                    label = `[${i}]: ${field.values[i]}`;
+                  }
+                  return (
+                    <td key={index} data-colname={field.name}>
+                      {label}
+                    </td>
+                  );
+                })}
+                <td
+                  data-colname="actions"
+                  style={{
+                    textAlign: "right",
+                  }}
+                >
+                  <ListSageEntityTableActionComponent
+                    row={row}
+                    sageEntityName={sageEntityName}
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        {(!result?.items || result.items.length === 0) && (
+          <tr
             style={{
-              textAlign: "center",
+              ...(searching && {
+                backgroundColor: "rgba(0,0,0,0.3)",
+              }),
             }}
           >
+            <td
+              colSpan={realShowFields.length + 2}
+              style={{
+                textAlign: "center",
+              }}
+            >
               <span className={"h5"}>
                 {!result?.items
                   ? translations.words.searching
                   : translations.words.noResult}
               </span>
-          </td>
-        </tr>
-      )}
+            </td>
+          </tr>
+        )}
       </tbody>
       <tfoot>
-      <ListSageEntityTableHeaderComponent
-        showFields={showFields}
-        hideFields={hideFields}
-      />
+        <ListSageEntityTableHeaderComponent
+          showFields={showFields}
+          hideFields={hideFields}
+        />
       </tfoot>
     </table>
   );

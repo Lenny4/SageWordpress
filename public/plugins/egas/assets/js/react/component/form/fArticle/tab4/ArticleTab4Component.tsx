@@ -1,13 +1,19 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, {useImperativeHandle} from "react";
+import React, { useImperativeHandle } from "react";
 import Grid from "@mui/material/Grid";
-import {ArticleOptionTraitementComponent} from "./ArticleOptionTraitementComponent";
-import {ArticleLogistiqueComponent} from "./ArticleLogistiqueComponent";
-import {ArticleDepotTraitementComponent} from "./ArticleDepotTraitementComponent";
-import {getTranslations} from "../../../../../functions/translations";
-import {FormInterface, FormValidInterface,} from "../../../../../interface/InputInterface";
-import {FormContentComponent} from "../../FormContentComponent";
-import {createFormContent, handleFormIsValid,} from "../../../../../functions/form";
+import { ArticleOptionTraitementComponent } from "./ArticleOptionTraitementComponent";
+import { ArticleLogistiqueComponent } from "./ArticleLogistiqueComponent";
+import { ArticleDepotTraitementComponent } from "./ArticleDepotTraitementComponent";
+import { getTranslations } from "../../../../../functions/translations";
+import {
+  FormInterface,
+  FormValidInterface,
+} from "../../../../../interface/InputInterface";
+import { FormContentComponent } from "../../FormContentComponent";
+import {
+  createFormContent,
+  handleFormIsValid,
+} from "../../../../../functions/form";
 
 let translations: any = getTranslations();
 
@@ -18,12 +24,12 @@ export const ArticleTab4Component = React.forwardRef((props, ref) => {
         props: {
           container: true,
           spacing: 1,
-          sx: {p: 1},
+          sx: { p: 1 },
         },
         children: [
           {
             props: {
-              size: {xs: 12},
+              size: { xs: 12 },
             },
             tabs: {
               id: "tab4-sub",
@@ -40,11 +46,11 @@ export const ArticleTab4Component = React.forwardRef((props, ref) => {
                   label: translations.words.deposit,
                   Component: ArticleDepotTraitementComponent,
                 },
-              ].map(({label, Component}) => {
+              ].map(({ label, Component }) => {
                 const ref = React.createRef();
                 return {
                   label,
-                  dom: <Component ref={ref}/>,
+                  dom: <Component ref={ref} />,
                   ref,
                 };
               }),
@@ -63,8 +69,8 @@ export const ArticleTab4Component = React.forwardRef((props, ref) => {
 
   return (
     <Grid container>
-      <Grid size={{xs: 12}}>
-        <FormContentComponent content={form.content} transPrefix="fArticles"/>
+      <Grid size={{ xs: 12 }}>
+        <FormContentComponent content={form.content} transPrefix="fArticles" />
       </Grid>
     </Grid>
   );

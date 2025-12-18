@@ -1,8 +1,8 @@
-import {HTMLInputTypeAttribute} from "react";
-import {TabInterface} from "./TabInterface";
-import {GridProps} from "@mui/material/Grid/Grid";
-import {TabsProps} from "@mui/material/Tabs/Tabs";
-import {ResultTableInterface} from "../react/component/list/ListSageEntityComponent";
+import { HTMLInputTypeAttribute } from "react";
+import { TabInterface } from "./TabInterface";
+import { GridProps } from "@mui/material/Grid/Grid";
+import { TabsProps } from "@mui/material/Tabs/Tabs";
+import { ResultTableInterface } from "../react/component/list/ListSageEntityComponent";
 
 export interface FormInterface {
   content: FormContentInterface;
@@ -29,10 +29,10 @@ export interface TableInterface {
   items:
     | TableLineItemInterface[]
     | ((
-    search: string,
-    page?: number,
-    cacheResponse?: ResultTableInterface,
-  ) => Promise<ResponseTableLineItemInterface>);
+        search: string,
+        page?: number,
+        cacheResponse?: ResultTableInterface,
+      ) => Promise<ResponseTableLineItemInterface>);
   fullWidth?: boolean;
   localStorageItemName?: string;
   add?: TableAddInterface;

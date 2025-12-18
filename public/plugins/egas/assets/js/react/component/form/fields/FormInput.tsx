@@ -1,10 +1,19 @@
 import * as React from "react";
-import {useImperativeHandle, useRef} from "react";
-import {Tooltip} from "@mui/material";
-import {FieldInterface, FormValidInterface,} from "../../../../interface/InputInterface";
-import {handleChangeInputGeneric, isValidGeneric,} from "../../../../functions/form";
-import {CannotBeChangeOnWebsiteComponent, FieldTooltipComponent,} from "./FormFieldComponent";
-import {TOKEN} from "../../../../token";
+import { useImperativeHandle, useRef } from "react";
+import { Tooltip } from "@mui/material";
+import {
+  FieldInterface,
+  FormValidInterface,
+} from "../../../../interface/InputInterface";
+import {
+  handleChangeInputGeneric,
+  isValidGeneric,
+} from "../../../../functions/form";
+import {
+  CannotBeChangeOnWebsiteComponent,
+  FieldTooltipComponent,
+} from "./FormFieldComponent";
+import { TOKEN } from "../../../../token";
 
 export const FormInput = React.forwardRef(
   (
@@ -74,8 +83,8 @@ export const FormInput = React.forwardRef(
             <span>{label}</span>
           </Tooltip>
         </label>
-        <div style={{display: "flex"}}>
-          <div style={{flex: 1}}>
+        <div style={{ display: "flex" }}>
+          <div style={{ flex: 1 }}>
             <input
               id={nameField}
               name={nameField}
@@ -83,14 +92,14 @@ export const FormInput = React.forwardRef(
               value={values[name].value}
               readOnly={readOnly || values[name].readOnly}
               onChange={handleChange}
-              style={{width: "100%"}}
+              style={{ width: "100%" }}
               ref={inputRef}
             />
           </div>
           <CannotBeChangeOnWebsiteComponent
             cannotBeChangeOnWebsite={cannotBeChangeOnWebsite}
           />
-          <FieldTooltipComponent tooltip={tooltip}/>
+          <FieldTooltipComponent tooltip={tooltip} />
         </div>
         {errorMessage && (
           <div className={`${TOKEN}_error_field`}>{errorMessage}</div>

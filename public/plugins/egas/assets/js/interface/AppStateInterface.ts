@@ -1,5 +1,5 @@
-import {SyncWebsiteStateEnum} from "../enum/SyncWebsiteStateEnum";
-import {TaskJobTypeEnum} from "../enum/TaskJobTypeEnum";
+import { SyncWebsiteStateEnum } from "../enum/SyncWebsiteStateEnum";
+import { TaskJobTypeEnum } from "../enum/TaskJobTypeEnum";
 
 export interface AppStateInterface {
   SyncWebsiteJob: SyncWebsiteJobInterface;

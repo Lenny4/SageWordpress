@@ -1,10 +1,19 @@
 import * as React from "react";
-import {useImperativeHandle, useRef} from "react";
-import {Tooltip} from "@mui/material";
-import {FieldInterface, FormValidInterface,} from "../../../../interface/InputInterface";
-import {handleChangeCheckboxGeneric, isValidGeneric,} from "../../../../functions/form";
-import {CannotBeChangeOnWebsiteComponent, FieldTooltipComponent,} from "./FormFieldComponent";
-import {TOKEN} from "../../../../token";
+import { useImperativeHandle, useRef } from "react";
+import { Tooltip } from "@mui/material";
+import {
+  FieldInterface,
+  FormValidInterface,
+} from "../../../../interface/InputInterface";
+import {
+  handleChangeCheckboxGeneric,
+  isValidGeneric,
+} from "../../../../functions/form";
+import {
+  CannotBeChangeOnWebsiteComponent,
+  FieldTooltipComponent,
+} from "./FormFieldComponent";
+import { TOKEN } from "../../../../token";
 
 export const FormCheckbox = React.forwardRef(
   (
@@ -92,11 +101,11 @@ export const FormCheckbox = React.forwardRef(
           </label>
         </div>
 
-        <div style={{display: "flex", alignItems: "center"}}>
+        <div style={{ display: "flex", alignItems: "center" }}>
           <CannotBeChangeOnWebsiteComponent
             cannotBeChangeOnWebsite={cannotBeChangeOnWebsite}
           />
-          <FieldTooltipComponent tooltip={tooltip}/>
+          <FieldTooltipComponent tooltip={tooltip} />
         </div>
         {errorMessage && (
           <div className={`${TOKEN}_error_field`}>{errorMessage}</div>

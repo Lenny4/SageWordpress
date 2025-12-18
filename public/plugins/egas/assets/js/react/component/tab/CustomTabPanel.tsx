@@ -1,5 +1,5 @@
 import * as React from "react";
-import {TOKEN} from "../../../token";
+import { TOKEN } from "../../../token";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -10,7 +10,7 @@ interface TabPanelProps {
 }
 
 export function CustomTabPanel(props: TabPanelProps) {
-  const {children, value, index, keepDom, id, ...other} = props;
+  const { children, value, index, keepDom, id, ...other } = props;
 
   return (
     <div

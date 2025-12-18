@@ -1,9 +1,12 @@
 import * as React from "react";
-import {useImperativeHandle, useRef} from "react";
-import {Tooltip} from "@mui/material";
-import {getTranslations} from "../../../../../functions/translations";
-import {FormValidInterface, TriggerFormContentChanged,} from "../../../../../interface/InputInterface";
-import {TOKEN} from "../../../../../token";
+import { useImperativeHandle, useRef } from "react";
+import { Tooltip } from "@mui/material";
+import { getTranslations } from "../../../../../functions/translations";
+import {
+  FormValidInterface,
+  TriggerFormContentChanged,
+} from "../../../../../interface/InputInterface";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
@@ -15,7 +18,7 @@ export type AsPrincipalInputState = {
 
 export const AsPrincipalInput = React.forwardRef(
   (
-    {selectedDeNo, deNo, onAsPrincipalChangedParent}: AsPrincipalInputState,
+    { selectedDeNo, deNo, onAsPrincipalChangedParent }: AsPrincipalInputState,
     ref,
   ) => {
     const inputRef = useRef<any>(null);
@@ -40,12 +43,12 @@ export const AsPrincipalInput = React.forwardRef(
     const checked = selectedDeNo.toString() === deNo.toString();
     return (
       <>
-        <label htmlFor={name} style={{display: "none"}}>
+        <label htmlFor={name} style={{ display: "none" }}>
           <Tooltip title={name} arrow placement="top">
             <span>{translations.words.supplierRef}</span>
           </Tooltip>
         </label>
-        <div style={{display: "flex", alignItems: "center"}}>
+        <div style={{ display: "flex", alignItems: "center" }}>
           <input
             type="hidden"
             id={name}

@@ -1,7 +1,7 @@
 import React from "react";
-import {ResultTableInterface} from "./ListSageEntityComponent";
-import {getTranslations} from "../../../functions/translations";
-import {useSearchParams} from "react-router-dom";
+import { ResultTableInterface } from "./ListSageEntityComponent";
+import { getTranslations } from "../../../functions/translations";
+import { useSearchParams } from "react-router-dom";
 
 let translations: any = getTranslations();
 
@@ -12,10 +12,10 @@ type State = {
 };
 
 export const ListSageEntityPagingComponent: React.FC<State> = ({
-                                                                 result,
-                                                                 paginationRange,
-                                                                 defaultPerPage,
-                                                               }) => {
+  result,
+  paginationRange,
+  defaultPerPage,
+}) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const getCurrentPage = () => {
     return Number(searchParams.get("paged") ?? 1);

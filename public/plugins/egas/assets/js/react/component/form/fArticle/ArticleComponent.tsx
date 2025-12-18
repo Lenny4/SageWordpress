@@ -1,15 +1,22 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import {createRoot} from "react-dom/client";
-import React, {useImperativeHandle} from "react";
+import { createRoot } from "react-dom/client";
+import React, { useImperativeHandle } from "react";
 import Box from "@mui/material/Box";
-import {ArticleTab1Component} from "./tab1/ArticleTab1Component";
-import {ArticleTab2Component} from "./tab2/ArticleTab2Component";
-import {ArticleTab4Component} from "./tab4/ArticleTab4Component";
-import {getTranslations} from "../../../../functions/translations";
-import {FormInterface, FormValidInterface,} from "../../../../interface/InputInterface";
-import {createFormContent, handleFormIsValid, onSubmitForm,} from "../../../../functions/form";
-import {FormContentComponent} from "../FormContentComponent";
-import {TOKEN} from "../../../../token";
+import { ArticleTab1Component } from "./tab1/ArticleTab1Component";
+import { ArticleTab2Component } from "./tab2/ArticleTab2Component";
+import { ArticleTab4Component } from "./tab4/ArticleTab4Component";
+import { getTranslations } from "../../../../functions/translations";
+import {
+  FormInterface,
+  FormValidInterface,
+} from "../../../../interface/InputInterface";
+import {
+  createFormContent,
+  handleFormIsValid,
+  onSubmitForm,
+} from "../../../../functions/form";
+import { FormContentComponent } from "../FormContentComponent";
+import { TOKEN } from "../../../../token";
 
 const containerSelector = `#${TOKEN}_product_data`;
 let translations: any = getTranslations();
@@ -25,12 +32,12 @@ export const ArticleComponent = React.forwardRef((props, ref) => {
         props: {
           container: true,
           spacing: 1,
-          sx: {p: 1},
+          sx: { p: 1 },
         },
         children: [
           {
             props: {
-              size: {xs: 12},
+              size: { xs: 12 },
             },
             tabs: {
               id: "main-article",
@@ -48,11 +55,11 @@ export const ArticleComponent = React.forwardRef((props, ref) => {
                   label: translations.words.settings,
                   Component: ArticleTab4Component,
                 },
-              ].map(({label, Component}) => {
+              ].map(({ label, Component }) => {
                 const ref = React.createRef();
                 return {
                   label,
-                  dom: <Component ref={ref}/>,
+                  dom: <Component ref={ref} />,
                   ref,
                 };
               }),
@@ -102,9 +109,9 @@ export const ArticleComponent = React.forwardRef((props, ref) => {
   }, []);
 
   return (
-    <Box sx={{width: "100%"}}>
+    <Box sx={{ width: "100%" }}>
       {isSageProductType && (
-        <FormContentComponent content={form.content} transPrefix="fArticles"/>
+        <FormContentComponent content={form.content} transPrefix="fArticles" />
       )}
     </Box>
   );
@@ -113,5 +120,5 @@ export const ArticleComponent = React.forwardRef((props, ref) => {
 const dom = document.querySelector(containerSelector);
 if (dom) {
   const root = createRoot(dom);
-  root.render(<ArticleComponent/>);
+  root.render(<ArticleComponent />);
 }

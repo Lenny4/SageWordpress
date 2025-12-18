@@ -1,17 +1,27 @@
 // https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page
-import React, {useImperativeHandle} from "react";
-import {getTranslations} from "../../../../../functions/translations";
-import {MetadataInterface} from "../../../../../interface/WordpressInterface";
-import {getSageMetadata} from "../../../../../functions/getMetadata";
-import {FormInterface, FormValidInterface,} from "../../../../../interface/InputInterface";
-import {DividerText} from "../../../DividerText";
-import {createFormContent, handleFormIsValid, transformOptionsObject,} from "../../../../../functions/form";
-import {FormContentComponent} from "../../FormContentComponent";
-import {FormSelect} from "../../fields/FormSelect";
-import {FormInput} from "../../fields/FormInput";
-import {PPreferenceInterface} from "../../../../../interface/PPreferenceInterface";
-import {numberValidator, stringValidator,} from "../../../../../functions/validator";
-import {TOKEN} from "../../../../../token";
+import React, { useImperativeHandle } from "react";
+import { getTranslations } from "../../../../../functions/translations";
+import { MetadataInterface } from "../../../../../interface/WordpressInterface";
+import { getSageMetadata } from "../../../../../functions/getMetadata";
+import {
+  FormInterface,
+  FormValidInterface,
+} from "../../../../../interface/InputInterface";
+import { DividerText } from "../../../DividerText";
+import {
+  createFormContent,
+  handleFormIsValid,
+  transformOptionsObject,
+} from "../../../../../functions/form";
+import { FormContentComponent } from "../../FormContentComponent";
+import { FormSelect } from "../../fields/FormSelect";
+import { FormInput } from "../../fields/FormInput";
+import { PPreferenceInterface } from "../../../../../interface/PPreferenceInterface";
+import {
+  numberValidator,
+  stringValidator,
+} from "../../../../../functions/validator";
+import { TOKEN } from "../../../../../token";
 
 let translations: any = getTranslations();
 
@@ -31,12 +41,12 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
         props: {
           container: true,
           spacing: 1,
-          sx: {p: 1},
+          sx: { p: 1 },
         },
         children: [
           {
             props: {
-              size: {xs: 12},
+              size: { xs: 12 },
             },
             Dom: (
               <DividerText
@@ -127,6 +137,6 @@ export const ArticleLogistiqueComponent = React.forwardRef((props, ref) => {
   }));
 
   return (
-    <FormContentComponent content={form.content} transPrefix="fArticles"/>
+    <FormContentComponent content={form.content} transPrefix="fArticles" />
   );
 });
