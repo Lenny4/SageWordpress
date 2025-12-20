@@ -580,7 +580,7 @@ WHERE user_login LIKE %s
     public function getAllFilterType(): array
     {
         $result = [];
-        $allFilterType = GraphqlService::getInstance()->getAllFilterType();
+        $allFilterType = GraphqlService::getInstance()->getAllFilterType() ?? [];
         foreach ($allFilterType as $filterType) {
             if (
                 $filterType->kind !== 'INPUT_OBJECT' ||

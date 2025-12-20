@@ -609,6 +609,32 @@ class GraphqlService
         return $entities;
     }
 
+    public function filterToGraphQlWhere(array $filter): stdClass
+    {
+        $conditionValues = $filter["condition"];
+        if (array_key_exists('conditionValues', $filter)) {
+            $conditionValues = $filter["conditionValues"];
+        }
+        $result = new stdClass();
+        $values = new stdClass();
+        $values->{$conditionValues} = array_map(function (array $value) {
+            if (array_key_exists('rawValue', $value)) {
+                return $value["rawValue"];
+            }
+            return [$value["field"] => [$value["condition"] => $value["value"]]];
+        }, $filter["values"]);
+        $result->{$filter["condition"]} = [
+            $values
+        ];
+        if (!empty($filter["subFilter"])) {
+            $result->{$filter["condition"]} = [
+                ...$result->{$filter["condition"]},
+                $this->filterToGraphQlWhere($filter["subFilter"])
+            ];
+        }
+        return $result;
+    }
+
     public function searchEntities(
         string  $entityName,
         array   $queryParams,
@@ -638,44 +664,10 @@ class GraphqlService
         $function = function () use ($entityName, $queryParams, $selectionSets, $getError) {
             $nbPerPage = (int)($queryParams["per_page"] ?? Sage::$defaultPagination);
             $page = (int)($queryParams["paged"] ?? 1);
-            $where = [];
-            if (array_key_exists('filter_field', $queryParams)) {
-                $primaryFields = array_filter($selectionSets, static function (array|ArgumentSelectionSetDto $field): bool {
-                    if ($field instanceof ArgumentSelectionSetDto) {
-                        return array_key_exists('name', $field->getSelectionSet());
-                    }
-                    return array_key_exists('name', $field);
-                });
-                foreach ($queryParams["filter_field"] as $index => $field) {
-                    $fieldValue = $queryParams["filter_value"][$index];
-                    $fieldType = $queryParams["filter_type"][$index];
-                    $inputType = current(array_filter($primaryFields, static fn(array $f): bool => $f['name'] === $field));
-                    if ($inputType !== false) {
-                        $inputType = $inputType['type'];
-                    }
-                    // region format fieldValue
-                    // todo should not be hard coded
-                    if (in_array($inputType, [
-                        'StringOperationFilterInput',
-                        'DateTimeOperationFilterInput',
-                        'UuidOperationFilterInput',
-                    ])) {
-                        $fieldValue = '"' . $fieldValue . '"';
-                    }
-                    if (in_array($fieldType, ['in', 'nin'])) {
-                        if (str_starts_with($field, '"') && str_ends_with($field, '"')) {
-                            $fieldValue = str_replace(',', '","', $fieldValue);
-                        }
-                        $fieldValue = '[' . $fieldValue . ']';
-                    }
-                    // endregion
-                    if ($fieldType === "object") {
-                        // https://stackoverflow.com/a/66316611/6824121
-                        $where[] = preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($fieldValue, JSON_THROW_ON_ERROR));
-                    } else if ($fieldValue !== '') {
-                        $where[] = '{ ' . $field . ': { ' . $fieldType . ': ' . $fieldValue . ' } }';
-                    }
-                }
+            $where = null;
+            if (array_key_exists('filter', $queryParams)) {
+                $filter = json_decode(urldecode($queryParams['filter']), true);
+                $where = $this->filterToGraphQlWhere($filter);
             }
 
             $order = null;
@@ -692,10 +684,8 @@ class GraphqlService
                 $arguments['order'] = new RawObject($order);
             }
 
-            if ($where !== []) {
-                $arguments['where'] = new RawObject($this->buildGraphQLWhereClause(
-                    $this->getGraphQLWhereClause($where, $queryParams["where_condition"] ?? null)[0]
-                ));
+            if (!is_null($where)) {
+                $arguments['where'] = new RawObject(preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($where, JSON_THROW_ON_ERROR)));
             }
 
             $query = (new Query($entityName))
@@ -757,62 +747,6 @@ class GraphqlService
         return [null, $defaultSortValue];
     }
 
-    private function buildGraphQLWhereClause(array $filter): string
-    {
-        if (!isset($filter['condition'], $filter['values']) || !is_array($filter['values'])) {
-            return '';
-        }
-
-        $logicalOperator = strtolower($filter['condition']) === 'or' ? 'or' : 'and';
-
-        $conditions = array_map(function ($value) {
-            if (is_array($value)) {
-                return $this->buildGraphQLWhereClause($value);
-            }
-
-            if (is_string($value)) {
-                return $value;
-            }
-            return '';
-        }, $filter['values']);
-
-        // Filter out empty conditions
-        $conditions = array_filter($conditions, fn($c) => !empty($c));
-
-        return '{ ' . $logicalOperator . ': [' . implode(', ', $conditions) . '] }';
-    }
-
-    private function getGraphQLWhereClause(array $where, array|string|null $whereCondition, &$result = []): array
-    {
-        if (is_null($whereCondition)) {
-            $whereCondition = 'or';
-        }
-        if (is_string($whereCondition)) {
-            if ($whereCondition === 'and' || $whereCondition === 'or') {
-                $whereCondition = [
-                    $whereCondition . 'Fields' => [
-                        'fields' => array_keys($where)
-                    ],
-                ];
-            } else {
-                $whereCondition = json_decode(stripslashes($whereCondition), true, 512, JSON_THROW_ON_ERROR);
-            }
-        }
-        if (array_key_exists('fields', $whereCondition)) {
-            foreach ($whereCondition['fields'] as $fieldIndex) {
-                $result[] = $where[$fieldIndex];
-            }
-        }
-        foreach (['or', 'and'] as $c) {
-            if (array_key_exists($c . 'Fields', $whereCondition)) {
-                $values = [];
-                $result[] = ['condition' => $c, 'values' => &$values];
-                $this->getGraphQLWhereClause($where, $whereCondition[$c . 'Fields'], $values);
-            }
-        }
-        return $result;
-    }
-
     private function addKeysToCollection(array &$items, array $selectionSets, ?string $arrayKey = null): void
     {
         $result = [];
@@ -853,15 +787,17 @@ class GraphqlService
         $entityName = PExpeditionResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter_field" => [
-                "eIntitule"
-            ],
-            "filter_type" => [
-                "neq"
-            ],
-            "filter_value" => [
-                ''
-            ],
+
+            "filter" => urlencode(json_encode([
+                'condition' => 'and',
+                'values' => [
+                    [
+                        'field' => 'eIntitule',
+                        'condition' => 'neq',
+                        'value' => '',
+                    ]
+                ],
+            ])),
             "sort" => '{"cbIndice": "asc"}',
             "paged" => "1",
             "per_page" => "50"
@@ -1128,15 +1064,16 @@ class GraphqlService
         $entityName = PUniteResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter_field" => [
-                "uIntitule"
-            ],
-            "filter_type" => [
-                "neq"
-            ],
-            "filter_value" => [
-                ''
-            ],
+            "filter" => urlencode(json_encode([
+                'condition' => 'and',
+                'values' => [
+                    [
+                        'field' => 'uIntitule',
+                        'condition' => 'neq',
+                        'value' => '',
+                    ]
+                ],
+            ])),
             "sort" => '{"cbIndice": "asc"}',
             "paged" => "1",
             "per_page" => "50"
@@ -1178,9 +1115,6 @@ class GraphqlService
         $entityName = FDepotResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter_field" => [],
-            "filter_type" => [],
-            "filter_value" => [],
             "sort" => '{"deNo": "asc"}',
             "paged" => "1",
             "per_page" => "50"
@@ -1224,19 +1158,20 @@ class GraphqlService
         $entityName = FFamilleResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter_field" => [
-                "faType"
-            ],
-            "filter_type" => [
-                "eq"
-            ],
-            "filter_value" => [
-                // enum FamilleType
-                // 0 -> Centralisatrice
-                // 1 -> Détail
-                // 2 -> Total
-                "0"
-            ],
+            "filter" => urlencode(json_encode([
+                'condition' => 'and',
+                'values' => [
+                    [
+                        'field' => 'faType',
+                        'condition' => 'eq',
+                        // enum FamilleType
+                        // 0 -> Centralisatrice
+                        // 1 -> Détail
+                        // 2 -> Total
+                        'value' => 0,
+                    ]
+                ],
+            ])),
             "sort" => '{"faCodeFamille": "asc"}',
             "paged" => "1",
             "per_page" => "100"
@@ -1274,15 +1209,16 @@ class GraphqlService
         $fArticle = $this->searchEntities(
             FArticleResource::ENTITY_NAME,
             [
-                "filter_field" => [
-                    "arRef"
-                ],
-                "filter_type" => [
-                    "eq"
-                ],
-                "filter_value" => [
-                    $arRef
-                ],
+                "filter" => urlencode(json_encode([
+                    'condition' => 'and',
+                    'values' => [
+                        [
+                            'field' => 'arRef',
+                            'condition' => 'eq',
+                            'value' => $arRef,
+                        ]
+                    ],
+                ])),
                 "paged" => "1",
                 "per_page" => "1"
             ],
@@ -1327,43 +1263,54 @@ class GraphqlService
         bool   $single = false,
     ): array|stdClass|null|false|string
     {
+        $filter = [
+            "filter" => [
+                'condition' => 'and',
+                'values' => [],
+            ]
+        ];
         if ($extended) {
-            $filterField = ["extendedDoPieceDoType"];
-            $filterType = ["object"];
-            $filterValue = [
-                "doPiece" => ["eq" => $doPiece],
+            $filter["filter"]["values"][] = ['rawValue' => ['extendedDoPieceDoType' => ["doPiece" => ["eq" => $doPiece]]]];
+            if (!empty($doTypes)) {
+                $filter["filter"]["values"][] = [
+                    'field' => 'doType',
+                    'condition' => 'in',
+                    'value' => $doTypes,
+                ];
+            }
+        } else {
+            $filter["filter"]["values"][] = [
+                'field' => 'doPiece',
+                'condition' => 'eq',
+                'value' => $doPiece,
             ];
             if (!empty($doTypes)) {
-                $filterValue['doType'] = ["in" => $doTypes];
-            }
-            $filterValue = [$filterValue];
-        } else {
-            $filterField = ["doPiece"];
-            $filterType = ["eq"];
-            $filterValue = [$doPiece];
-            if (!empty($doTypes)) {
-                $filterField[] = "doType";
-                $filterType[] = "in";
-                $filterValue[] = implode(',', $doTypes);
+                $filter["filter"]["values"][] = [
+                    'field' => 'doType',
+                    'condition' => 'in',
+                    'value' => $doTypes,
+                ];
             }
             if ($doDomaine !== null) {
-                $filterField[] = "doDomaine";
-                $filterType[] = "eq";
-                $filterValue[] = $doDomaine;
+                $filter["filter"]["values"][] = [
+                    'field' => 'doDomaine',
+                    'condition' => 'eq',
+                    'value' => $doDomaine,
+                ];
             }
             if ($doProvenance !== null) {
-                $filterField[] = "doProvenance";
-                $filterType[] = "eq";
-                $filterValue[] = $doProvenance;
+                $filter["filter"]["values"][] = [
+                    'field' => 'doProvenance',
+                    'condition' => 'eq',
+                    'value' => $doProvenance,
+                ];
             }
         }
+        $filter['filter'] = urlencode(json_encode($filter['filter']));
         $fDocentetes = $this->searchEntities(
             FDocenteteResource::ENTITY_NAME,
             [
-                "filter_field" => $filterField,
-                "filter_type" => $filterType,
-                "filter_value" => $filterValue,
-                'where_condition' => 'and',
+                ...$filter,
                 "paged" => "1",
                 "per_page" => $single ? "1" : "20"
             ],
@@ -1581,15 +1528,16 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $fComptet = $this->searchEntities(
             FComptetResource::ENTITY_NAME,
             [
-                "filter_field" => [
-                    "ctNum"
-                ],
-                "filter_type" => [
-                    "eq"
-                ],
-                "filter_value" => [
-                    $ctNum
-                ],
+                "filter" => urlencode(json_encode([
+                    'condition' => 'and',
+                    'values' => [
+                        [
+                            'field' => 'ctNum',
+                            'condition' => 'eq',
+                            'value' => $ctNum,
+                        ]
+                    ],
+                ])),
                 "paged" => "1",
                 "per_page" => "1"
             ],
@@ -1616,15 +1564,16 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $entityName = PCattarifResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter_field" => [
-                "ctIntitule"
-            ],
-            "filter_type" => [
-                "neq"
-            ],
-            "filter_value" => [
-                ''
-            ],
+            "filter" => urlencode(json_encode([
+                'condition' => 'and',
+                'values' => [
+                    [
+                        'field' => 'ctIntitule',
+                        'condition' => 'neq',
+                        'value' => '',
+                    ]
+                ],
+            ])),
             "sort" => '{"cbIndice": "asc"}',
             "paged" => "1",
             "per_page" => "100"
@@ -1668,9 +1617,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $entityName = FGlossaireResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter_field" => [],
-            "filter_type" => [],
-            "filter_value" => [],
             "sort" => '{"glNo": "asc"}',
             "paged" => "1",
             "per_page" => "100"
@@ -1702,9 +1648,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $entityName = FCatalogueResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter_field" => [],
-            "filter_type" => [],
-            "filter_value" => [],
             "sort" => '{"clNo": "asc"}',
             "paged" => "1",
             "per_page" => "100"
@@ -1750,9 +1693,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $entityName = CbSyslibreResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter_field" => [],
-            "filter_type" => [],
-            "filter_value" => [],
             "sort" => '{"cbPos": "asc"}',
             "paged" => "1",
             "per_page" => "100"
@@ -1867,9 +1807,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $entityName = PCatcomptaResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter_field" => [],
-            "filter_type" => [],
-            "filter_value" => [],
             "sort" => '{"cbMarq": "asc"}',
             "paged" => "1",
             "per_page" => "1"

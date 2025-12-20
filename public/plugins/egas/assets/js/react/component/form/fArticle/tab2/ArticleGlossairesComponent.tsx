@@ -22,8 +22,8 @@ import {
 import { FormInput } from "../../fields/FormInput";
 import { TOKEN } from "../../../../../token";
 import { ResultTableInterface } from "../../../list/ListSageEntityComponent";
-import { ConditionFilterInterface } from "../../../../../interface/FilterInterface";
 import { GlossaireDomaineTypeEnum } from "../../../../../enum/GlossaireDomaineTypeEnum";
+import { FilterInterface } from "../../resource/ResourceFilterComponent";
 
 let translations: any = getTranslations();
 const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
@@ -139,30 +139,37 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                         response: cacheResponse,
                       };
                     }
-                    const whereCondition: ConditionFilterInterface = {
-                      andFields: {
-                        orFields: {
-                          fields: [0, 1],
-                        },
-                        fields: [2],
-                      },
-                    };
                     const params = new URLSearchParams({
-                      "filter_field[0]": "glText",
-                      "filter_type[0]": "contains",
-                      "filter_value[0]": search,
-
-                      "filter_field[1]": "glIntitule",
-                      "filter_type[1]": "contains",
-                      "filter_value[1]": search,
-
-                      "filter_field[2]": "glDomaine",
-                      "filter_type[2]": "eq",
-                      "filter_value[2]":
-                        GlossaireDomaineTypeEnum.GlossaireDomaineTypeArticle.toString(),
-
+                      filter: encodeURIComponent(
+                        JSON.stringify({
+                          condition: "and",
+                          conditionValues: "or",
+                          values: [
+                            {
+                              field: "glText",
+                              condition: "contains",
+                              value: search,
+                            },
+                            {
+                              field: "glIntitule",
+                              condition: "contains",
+                              value: search,
+                            },
+                          ],
+                          subFilter: {
+                            condition: "and",
+                            values: [
+                              {
+                                field: "glDomaine",
+                                condition: "eq",
+                                value:
+                                  GlossaireDomaineTypeEnum.GlossaireDomaineTypeArticle.toString(),
+                              },
+                            ],
+                          },
+                        } as FilterInterface),
+                      ),
                       paged: page.toString(),
-                      where_condition: JSON.stringify(whereCondition),
                       per_page: "100",
                     });
                     const response = await fetch(

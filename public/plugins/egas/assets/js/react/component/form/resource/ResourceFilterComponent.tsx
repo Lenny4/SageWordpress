@@ -45,7 +45,7 @@ interface FilterValueInterface {
   ref: RefObject<any>;
 }
 
-interface FilterInterface {
+export interface FilterInterface {
   condition: "and" | "or";
   conditionValues?: "and" | "or";
   allowCondition?: boolean;
@@ -230,7 +230,7 @@ const FilterInputComponent = React.forwardRef(
             <option value="" disabled={true}>
               {translations.words.selectOption}
             </option>
-            {filterType.values.map((option) => {
+            {(filterType.values ?? []).map((option) => {
               return (
                 <option
                   key={option}
@@ -779,7 +779,7 @@ export const ResourceFilterComponent: React.FC<State> = ({
       setSearchParams((x) => {
         const params = new URLSearchParams(x);
         if (filterUrl) {
-          params.set("filter", JSON.stringify(filterUrl));
+          params.set("filter", encodeURIComponent(JSON.stringify(filterUrl)));
         } else {
           params.delete("filter");
         }

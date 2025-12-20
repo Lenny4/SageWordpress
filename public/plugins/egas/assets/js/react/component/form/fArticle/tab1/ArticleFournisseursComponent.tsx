@@ -28,6 +28,7 @@ import {
 import { TOKEN } from "../../../../../token";
 import { FComptetInterface } from "../../../../../interface/FComptetInterface";
 import { ResultTableInterface } from "../../../list/ListSageEntityComponent";
+import { FilterInterface } from "../../resource/ResourceFilterComponent";
 
 let translations: any = getTranslations();
 const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);
@@ -228,16 +229,24 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       };
                     }
                     const params = new URLSearchParams({
-                      "filter_field[0]": "ctType",
-                      "filter_type[0]": "eq",
-                      "filter_value[0]": "1",
-
-                      "filter_field[1]": "ctNum",
-                      "filter_type[1]": "contains",
-                      "filter_value[1]": search,
-
+                      filter: encodeURIComponent(
+                        JSON.stringify({
+                          condition: "and",
+                          values: [
+                            {
+                              field: "ctType",
+                              condition: "eq",
+                              value: 1
+                            },
+                            {
+                              field: "ctNum",
+                              condition: "contains",
+                              value: search,
+                            },
+                          ],
+                        } as FilterInterface),
+                      ),
                       paged: page.toString(),
-                      where_condition: "and",
                       per_page: "100",
                     });
                     const response = await fetch(

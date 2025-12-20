@@ -630,7 +630,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
             return $taxe->slug === Sage::TOKEN;
         }));
         if ($taxe === false) {
-            WC_Tax::create_tax_class(__('Sage', Sage::TOKEN), Sage::TOKEN);
+            WC_Tax::create_tax_class(__('Egas', Sage::TOKEN), Sage::TOKEN);
             $taxes = WC_Tax::get_tax_rate_classes();
             $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
                 return $taxe->slug === Sage::TOKEN;

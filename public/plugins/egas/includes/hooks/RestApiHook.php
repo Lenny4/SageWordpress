@@ -135,7 +135,7 @@ class RestApiHook
                     [$message, $order] = $woocommerceService->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
-                        'html' => WoocommerceController::getMetaboxSage($order, ignorePingApi: true, message: $message),
+                        'html' => WoocommerceController::getMetaboxFDocentete($order, ignorePingApi: true, message: $message),
                     ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
@@ -173,7 +173,7 @@ class RestApiHook
                     }
                     $order = new Order($request['orderId']);
                     return new WP_REST_Response([
-                        'html' => WoocommerceController::getMetaboxSage(
+                        'html' => WoocommerceController::getMetaboxFDocentete(
                             $order,
                             ignorePingApi: true,
                             message: $message,
@@ -250,7 +250,7 @@ class RestApiHook
                     $order = WoocommerceService::getInstance()->desynchronizeOrder($order);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
-                        'html' => WoocommerceController::getMetaboxSage($order, ignorePingApi: true)
+                        'html' => WoocommerceController::getMetaboxFDocentete($order, ignorePingApi: true)
                     ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
@@ -267,7 +267,7 @@ class RestApiHook
                     $order = WoocommerceService::getInstance()->linkOrderFDocentete($order, $doPiece, $doType, true);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
-                        'html' => WoocommerceController::getMetaboxSage($order, ignorePingApi: true)
+                        'html' => WoocommerceController::getMetaboxFDocentete($order, ignorePingApi: true)
                     ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {

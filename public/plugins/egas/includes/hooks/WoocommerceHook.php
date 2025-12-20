@@ -29,9 +29,9 @@ class WoocommerceHook
         add_action('add_meta_boxes_' . $screenId, static function (WC_Order $order) use ($screenId): void { // woocommerce/src/Internal/Admin/Orders/Edit.php: do_action( 'add_meta_boxes_' . $this->screen_id, $this->order );
             add_meta_box(
                 'woocommerce-order-' . Sage::TOKEN . '-main',
-                __('Sage', Sage::TOKEN),
+                __('Egas', Sage::TOKEN),
                 static function () use ($order) {
-                    echo WoocommerceController::getMetaboxSage($order);
+                    echo WoocommerceController::getMetaboxFDocentete($order);
                 },
                 $screenId,
                 'normal',
@@ -69,9 +69,9 @@ class WoocommerceHook
         add_filter('product_type_selector', static function (array $types): array {
             $arRef = SageService::getInstance()->getArRef(get_the_ID());
             if (!empty($arRef)) {
-                return [Sage::TOKEN => __('Sage', Sage::TOKEN)];
+                return [Sage::TOKEN => __('Egas', Sage::TOKEN)];
             }
-            return array_merge([Sage::TOKEN => __('Sage', Sage::TOKEN)], $types);
+            return array_merge([Sage::TOKEN => __('Egas', Sage::TOKEN)], $types);
         });
 
         add_action('add_meta_boxes', static function (string $screen, mixed $obj): void { // remove [Product type | virtual | downloadable] add product arRef
@@ -96,7 +96,7 @@ class WoocommerceHook
             }
 
             $tabs[Sage::TOKEN] = [
-                'label' => __('Sage', Sage::TOKEN),
+                'label' => __('Egas', Sage::TOKEN),
                 'target' => Sage::TARGET_PANEL,
                 'class' => ['show_if_' . Sage::TOKEN],
                 'priority' => 0,
@@ -224,8 +224,8 @@ class WoocommerceHook
                         [
                             $i,
                             $pExpedition->slug,
-                            '[' . __('Sage', Sage::TOKEN) . '] ' . $pExpedition->eIntitule,
-                            '<span style="font-weight: bold">[' . __('Sage', Sage::TOKEN) . ']</span> ' . $pExpedition->eIntitule,
+                            '[' . __('Egas', Sage::TOKEN) . '] ' . $pExpedition->eIntitule,
+                            '<span style="font-weight: bold">[' . __('Egas', Sage::TOKEN) . ']</span> ' . $pExpedition->eIntitule,
                         ],
                         $skeletonShippingMethod[0]
                     );
@@ -300,7 +300,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             foreach ($metaDatas as $metaData) {
                 $data = $metaData->get_data();
                 if ($data["key"] === FArticleResource::META_KEY) {
-                    echo __('Sage ref', Sage::TOKEN) . ': ' . $data["value"];
+                    echo __('Egas ref', Sage::TOKEN) . ': ' . $data["value"];
                     break;
                 }
             }
@@ -309,7 +309,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
 
         // region add column to product list
         add_filter('manage_edit-product_columns', function (array $columns) { // https://stackoverflow.com/a/44702012/6824121
-            $columns[Sage::TOKEN] = __('Sage', Sage::TOKEN); // todo change css class
+            $columns[Sage::TOKEN] = __('Egas', Sage::TOKEN); // todo change css class
             return $columns;
         }, 10, 1);
 

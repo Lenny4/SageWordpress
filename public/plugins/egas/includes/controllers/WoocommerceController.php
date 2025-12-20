@@ -19,7 +19,7 @@ class WoocommerceController
 {
     public static function addColumn(array $columns): array
     {
-        $columns[Sage::TOKEN] = __('Sage', Sage::TOKEN);
+        $columns[Sage::TOKEN] = __('Egas', Sage::TOKEN);
         return $columns;
     }
 
@@ -38,7 +38,7 @@ class WoocommerceController
             . $identifier["doPiece"];
     }
 
-    public static function getMetaboxSage(WC_Order $order, bool $ignorePingApi = false, string $message = '')
+    public static function getMetaboxFDocentete(WC_Order $order, bool $ignorePingApi = false, string $message = '')
     {
         $woocommerceService = WoocommerceService::getInstance();
         $graphqlService = GraphqlService::getInstance();
