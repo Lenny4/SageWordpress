@@ -10,7 +10,7 @@ use App\services\WoocommerceService;
 use App\utils\FDocenteteUtils;
 use App\utils\PCatComptaUtils;
 use App\utils\SageTranslationUtils;
-use PHPHtmlParser\Dom;
+use Symfony\Component\DomCrawler\Crawler;
 use WC_Meta_Box_Order_Data;
 use WC_Order;
 use WP_Post;
@@ -19,7 +19,7 @@ class WoocommerceController
 {
     public static function addColumn(array $columns): array
     {
-        $columns[Sage::TOKEN] = __('Egas', Sage::TOKEN);
+        $columns[Sage::TOKEN] = __('Sage', Sage::TOKEN);
         return $columns;
     }
 
@@ -104,18 +104,16 @@ class WoocommerceController
         add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $wpPost) use ($arRef, $callback): void {
             ob_start();
             $callback($wpPost);
-            // todo https://www.php.net/manual/en/class.dom-htmldocument.php
-            $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
-            $dom->loadStr(ob_get_clean());
-
-            $a = $dom->find('span.product-data-wrapper')[0];
-            $content = $a->innerHtml();
+            $html = ob_get_clean();
+            $crawler = new Crawler($html);
+            $a = $crawler->filter('span.product-data-wrapper')->first();
+            $content = $a->outerHtml();
             $hasArRef = !empty($arRef);
             $labelArRef = '';
             if ($hasArRef) {
                 $labelArRef = ': <span style="display: initial" class="h4">' . $arRef . '</span>';
             }
-            $content = str_replace($content, $labelArRef . $content, $dom);
+            $content = str_replace($content, $labelArRef . $content, $html);
             if ($hasArRef || str_contains($wpPost->post_status, 'draft')) {
                 $content = str_replace(
                     ["selected='selected'", "option value=" . Sage::TOKEN],
@@ -150,20 +148,19 @@ class WoocommerceController
         } else {
             $callback($order);
         }
-        // todo https://www.php.net/manual/en/class.dom-htmldocument.php
-        $dom = new Dom(); // https://github.com/paquettg/php-html-parser?tab=readme-ov-file#modifying-the-dom
-        $dom->loadStr(ob_get_clean());
+        $html = ob_get_clean();
+        $crawler = new Crawler($html);
         $fDocenteteIdentifier = WoocommerceService::getInstance()->getFDocenteteIdentifierFromOrder($order);
         $translations = SageTranslationUtils::getTranslations();
         if (!empty($fDocenteteIdentifier)) {
-            $a = $dom->find('.woocommerce-order-data__heading')[0];
-            $title = $a->innerHtml();
-            return str_replace($title, $title . '['
+            $a = $crawler->filter('.woocommerce-order-data__heading')->first();
+            $title = $a->innerText();
+            return str_replace($title, $title . ' ['
                 . $translations["fDocentetes"]["doType"]["values"][$fDocenteteIdentifier["doType"]]
                 . ': n° '
                 . $fDocenteteIdentifier["doPiece"]
-                . ']', $dom);
+                . ']', $html);
         }
-        return $dom;
+        return $html;
     }
 }

@@ -91,6 +91,7 @@ $(() => {
       const data = await response.json();
       const blockInside = $(blockDom).find(".inside");
       setContentHtml(blockInside, data.html);
+      $(`[name="${TOKEN}-fdocentete-dopiece"]`).prop("disabled", false);
     } else {
       // todo toastr
     }
