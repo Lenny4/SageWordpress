@@ -666,7 +666,10 @@ class GraphqlService
             $page = (int)($queryParams["paged"] ?? 1);
             $where = null;
             if (array_key_exists('filter', $queryParams)) {
-                $filter = json_decode(urldecode($queryParams['filter']), true);
+                $filter = $queryParams['filter'];
+                if (is_string($filter)) {
+                    $filter = json_decode(urldecode($filter), true);
+                }
                 $where = $this->filterToGraphQlWhere($filter);
             }
 
@@ -788,7 +791,7 @@ class GraphqlService
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
 
-            "filter" => urlencode(json_encode([
+            "filter" => [
                 'condition' => 'and',
                 'values' => [
                     [
@@ -797,7 +800,7 @@ class GraphqlService
                         'value' => '',
                     ]
                 ],
-            ])),
+            ],
             "sort" => '{"cbIndice": "asc"}',
             "paged" => "1",
             "per_page" => "50"
@@ -1064,7 +1067,7 @@ class GraphqlService
         $entityName = PUniteResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter" => urlencode(json_encode([
+            "filter" => [
                 'condition' => 'and',
                 'values' => [
                     [
@@ -1073,7 +1076,7 @@ class GraphqlService
                         'value' => '',
                     ]
                 ],
-            ])),
+            ],
             "sort" => '{"cbIndice": "asc"}',
             "paged" => "1",
             "per_page" => "50"
@@ -1158,7 +1161,7 @@ class GraphqlService
         $entityName = FFamilleResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter" => urlencode(json_encode([
+            "filter" => [
                 'condition' => 'and',
                 'values' => [
                     [
@@ -1171,7 +1174,7 @@ class GraphqlService
                         'value' => 0,
                     ]
                 ],
-            ])),
+            ],
             "sort" => '{"faCodeFamille": "asc"}',
             "paged" => "1",
             "per_page" => "100"
@@ -1209,7 +1212,7 @@ class GraphqlService
         $fArticle = $this->searchEntities(
             FArticleResource::ENTITY_NAME,
             [
-                "filter" => urlencode(json_encode([
+                "filter" => [
                     'condition' => 'and',
                     'values' => [
                         [
@@ -1218,7 +1221,7 @@ class GraphqlService
                             'value' => $arRef,
                         ]
                     ],
-                ])),
+                ],
                 "paged" => "1",
                 "per_page" => "1"
             ],
@@ -1306,7 +1309,6 @@ class GraphqlService
                 ];
             }
         }
-        $filter['filter'] = urlencode(json_encode($filter['filter']));
         $fDocentetes = $this->searchEntities(
             FDocenteteResource::ENTITY_NAME,
             [
@@ -1528,7 +1530,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $fComptet = $this->searchEntities(
             FComptetResource::ENTITY_NAME,
             [
-                "filter" => urlencode(json_encode([
+                "filter" => [
                     'condition' => 'and',
                     'values' => [
                         [
@@ -1537,7 +1539,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                             'value' => $ctNum,
                         ]
                     ],
-                ])),
+                ],
                 "paged" => "1",
                 "per_page" => "1"
             ],
@@ -1564,7 +1566,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $entityName = PCattarifResource::ENTITY_NAME;
         $cacheName = $useCache ? Sage::TOKEN . '_' . $entityName : null;
         $queryParams = [
-            "filter" => urlencode(json_encode([
+            "filter" => [
                 'condition' => 'and',
                 'values' => [
                     [
@@ -1573,7 +1575,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                         'value' => '',
                     ]
                 ],
-            ])),
+            ],
             "sort" => '{"cbIndice": "asc"}',
             "paged" => "1",
             "per_page" => "100"
