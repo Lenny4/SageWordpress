@@ -80,32 +80,23 @@ class WordpressService
     public function addWebsiteSageApi(bool $force = false): bool|string
     {
         // woocommerce/includes/admin/class-wc-admin-meta-boxes.php:134 add_meta_box( 'woocommerce-product-data
-        $optionFormSubmitted =
+        $formSubmitted =
             array_key_exists('settings-updated', $_GET) &&
             array_key_exists('page', $_GET) &&
             $_GET["settings-updated"] === 'true' &&
             $_GET["page"] === Sage::TOKEN . '_settings';
-        if (!($force || ($optionFormSubmitted && current_user_can('manage_options')))) {
-            return false;
-        }
-
-        $applicationPasswordOption = Sage::TOKEN . '_application-passwords';
-        $userApplicationPassword = get_option($applicationPasswordOption, null);
-        $user_id = get_current_user_id();
-        $optionHasPassword = false;
-        if (!is_null($userApplicationPassword)) {
-            $passwords = WP_Application_Passwords::get_user_application_passwords($userApplicationPassword);
-            $optionHasPassword = current(array_filter($passwords, static fn(array $password): bool => $password['name'] === $applicationPasswordOption)) !== false;
-        }
-
         if (
-            !$optionHasPassword ||
+            (
+                !$force &&
+                !($formSubmitted && current_user_can('manage_options'))
+            ) ||
             !$this->isApiAuthenticated()
         ) {
-            $newPassword = $this->createApplicationPassword($user_id, $applicationPasswordOption);
-            return $this->createUpdateWebsite($user_id, $newPassword);
+            return false;
         }
-        return false;
+        $userId = get_current_user_id();
+        $password = $this->getCreateApplicationPassword($userId);
+        return $this->createUpdateWebsite($userId, $password);
     }
 
     private function isApiAuthenticated(): bool
@@ -116,28 +107,30 @@ class WordpressService
 
     /**
      * https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password
-     * todo create TU to check if this work with every wordpress version
      */
-    private function createApplicationPassword(string $user_id, string $applicationPasswordOption): string
+    private function getCreateApplicationPassword(string $userId): string
     {
-        $passwords = WP_Application_Passwords::get_user_application_passwords($user_id);
-        $currentPassword = current(array_filter($passwords, static fn(array $password): bool => $password['name'] === $applicationPasswordOption));
-        if ($currentPassword !== false) {
-            WP_Application_Passwords::delete_application_password($user_id, $currentPassword["uuid"]);
+        $optionName = Sage::TOKEN . '_application-passwords';
+        $password = get_option($optionName, null);
+        $passwords = WP_Application_Passwords::get_user_application_passwords($userId);
+        $currentPassword = current(array_filter($passwords, static fn(array $password): bool => $password['name'] === $optionName));
+        if (empty($password) || $currentPassword === false) {
+            if ($currentPassword !== false) {
+                WP_Application_Passwords::delete_application_password($userId, $optionName);
+            }
+            $newApplicationPassword = WP_Application_Passwords::create_new_application_password($userId, [
+                'name' => $optionName
+            ]);
+            $password = $newApplicationPassword[0];
+            update_option($optionName, $password);
         }
-
-        $newApplicationPassword = WP_Application_Passwords::create_new_application_password($user_id, [
-            'name' => $applicationPasswordOption
-        ]);
-        $newPassword = $newApplicationPassword[0];
-        update_option($applicationPasswordOption, $user_id);
-        return $newPassword;
+        return $password;
     }
 
-    private function createUpdateWebsite(string $user_id, string $password): bool|string
+    private function createUpdateWebsite(string $userId, string $password): bool|string
     {
         $graphqlService = GraphqlService::getInstance();
-        $user = get_user_by('id', $user_id);
+        $user = get_user_by('id', $userId);
         $stdClass = $graphqlService->createUpdateWebsite(
             username: $user->data->user_login,
             password: $password,

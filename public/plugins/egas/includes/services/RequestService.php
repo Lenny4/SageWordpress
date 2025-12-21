@@ -51,7 +51,8 @@ class RequestService
             CURLOPT_MAXREDIRS => 10,
             CURLOPT_TIMEOUT => 30,
             CURLOPT_FOLLOWLOCATION => true,
-//            CURLOPT_SSL_VERIFYPEER => !WP_DEBUG,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'GET',
             CURLOPT_HTTPHEADER => [
@@ -60,6 +61,11 @@ class RequestService
             ]]);
 
         $response = curl_exec($curlHandle);
+        if ($response === false) {
+            $errorCode = curl_errno($curlHandle);
+            $errorMsg = curl_error($curlHandle);
+            $response = $errorCode . " " . $errorMsg;
+        }
 
         curl_close($curlHandle);
         return $response;

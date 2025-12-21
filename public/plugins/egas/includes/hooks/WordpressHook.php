@@ -35,8 +35,15 @@ class WordpressHook
                 return;
             }
             $wordpressService = WordpressService::getInstance();
-            $wordpressService->addWebsiteSageApi();
+            $resultAddWebsiteSageApi = $wordpressService->addWebsiteSageApi();
             echo TwigService::getInstance()->render('data.html.twig');
+            if (is_string($resultAddWebsiteSageApi)) {
+                AdminController::adminNotices("
+<div class='error'>
+    <p>" . $resultAddWebsiteSageApi . "</p>
+</div>
+");
+            }
             AdminController::adminNotices(
                 "<div id='" . Sage::TOKEN . "_appstate' class='notice notice-info is-dismissible hidden'>
                         <div class='content'></div>

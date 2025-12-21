@@ -623,14 +623,13 @@ class GraphqlService
             }
             return [$value["field"] => [$value["condition"] => $value["value"]]];
         }, $filter["values"]);
-        $result->{$filter["condition"]} = [
-            $values
-        ];
         if (!empty($filter["subFilter"])) {
             $result->{$filter["condition"]} = [
-                ...$result->{$filter["condition"]},
+                $values,
                 $this->filterToGraphQlWhere($filter["subFilter"])
             ];
+        } else {
+            $result = $values;
         }
         return $result;
     }
