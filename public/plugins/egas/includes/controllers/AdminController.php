@@ -469,8 +469,8 @@ class AdminController
                 [
                     'location' => 'menu',
                     // Possible settings: options, menu, submenu.
-                    'page_title' => __('Sage', Sage::TOKEN),
-                    'menu_title' => __('Sage', Sage::TOKEN),
+                    'page_title' => __('Egas', Sage::TOKEN),
+                    'menu_title' => __('Egas', Sage::TOKEN),
                     'capability' => 'manage_options',
                     'menu_slug' => Sage::TOKEN . '_settings',
                     'function' => null,
@@ -490,7 +490,7 @@ class AdminController
                         // Build page HTML.
                         $html = TwigService::getInstance()->render('base.html.twig');
                         $html .= '<div class="wrap" id="' . Sage::TOKEN . '_settings">' . "\n";
-                        $html .= '<h2>' . __('Sage', Sage::TOKEN) . '</h2>' . "\n";
+                        $html .= '<h2>' . __('Egas', Sage::TOKEN) . '</h2>' . "\n";
 
                         $tab = '';
                         if (isset($_GET['tab']) && $_GET['tab']) {
