@@ -303,10 +303,27 @@ export const ListSageEntityTableComponent: React.FC<State> = ({
                     } else {
                       label = translations.words.no;
                     }
-                  }
-                  if (field.values) {
+                  } else if (field.values) {
                     const i = row[field.name];
                     label = `[${i}]: ${field.values[i]}`;
+                  } else {
+                    try {
+                      const date = new Date(label);
+                      if (
+                        date instanceof Date &&
+                        !isNaN(date.getTime()) &&
+                        date > new Date(1980, 0, 1) // sage was created in 1981
+                      ) {
+                        label = new Intl.DateTimeFormat(undefined, {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          // timeZone: "Etc/UTC",
+                        }).format(date);
+                      }
+                    } catch (e) {
+                      // nothing
+                    }
                   }
                   return (
                     <td key={index} data-colname={field.name}>

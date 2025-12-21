@@ -161,8 +161,7 @@ const FilterInputComponent = React.forwardRef(
         if (
           !values.field.value ||
           !values.condition.value ||
-          (filterType.key === "DateTimeOperationFilterInput" &&
-            values.value.value === "")
+          values.value.value === ""
         ) {
           return undefined;
         }
