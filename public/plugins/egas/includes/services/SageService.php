@@ -819,27 +819,6 @@ WHERE user_login LIKE %s
         return $sageEntityMetadatas;
     }
 
-    public function get_option_date_or_null(string $option, bool $default_value = false): ?DateTime
-    {
-        $dateString = get_option($option, $default_value);
-        if (($date = DateTime::createFromFormat('Y-m-d', $dateString)) !== false) {
-            return new DateTime($date->format('Y-m-d 00:00:00'));
-        }
-        if (($date = DateTime::createFromFormat('Y-m-d H:i:s', $dateString)) !== false) {
-            return $date;
-        }
-        return null;
-    }
-
-    public function get_option_not_empty_array_or_null(string $option, bool $default_value = null): ?array
-    {
-        $arrayString = get_option($option, $default_value);
-        if (empty($arrayString)) {
-            return null;
-        }
-        return $arrayString;
-    }
-
     public function populateMetaDatas(?array $data, array $fields, Resource $resource): array|null
     {
         if (empty($data)) {

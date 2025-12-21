@@ -63,7 +63,7 @@ class FDocenteteResource extends Resource
             [
                 'id' => 'auto_import_wordpress_order',
                 'label' => __('Importer automatiquement les anciens documents de vente Sage', Sage::TOKEN),
-                'description' => __("Importe les documents de vente Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage). Laissez vide pour ne pas importer.", Sage::TOKEN),
+                'description' => __("Importe les documents de vente Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage).", Sage::TOKEN),
                 'type' => 'resource',
                 'default' => ''
             ],

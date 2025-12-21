@@ -44,14 +44,15 @@ class FArticleResource extends Resource
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FARTICLES;
-        $initFilter = json_encode(self::getDefaultResourceFilter());
+        $initFilter = self::getDefaultResourceFilter();
+        $initFilterJson = json_encode($initFilter);
         $this->options = [
             [
                 'id' => 'auto_create_wordpress_article',
                 'label' => __('Créer automatiquement le produit Woocommerce', Sage::TOKEN),
                 'description' => __("Créer automatiquement le produit dans Woocommerce lorsqu'un article Sage est crée.", Sage::TOKEN),
                 'type' => 'resource',
-                'initFilter' => $initFilter,
+                'initFilter' => $initFilterJson,
                 'default' => '',
             ],
             [
@@ -59,15 +60,24 @@ class FArticleResource extends Resource
                 'label' => __("Mettre à jour automatiquement l'article Sage lorsqu'un produit Woocommerce est modifié", Sage::TOKEN),
                 'description' => __("Lorsque les informations d’un produit Woocommerce sont modifiées, elles sont également mises à jour dans Sage si un produit y est lié.", Sage::TOKEN),
                 'type' => 'resource',
-                'initFilter' => $initFilter,
+                'initFilter' => $initFilterJson,
                 'default' => '',
             ],
             [
                 'id' => 'auto_import_wordpress_article',
                 'label' => __('Importer automatiquement les anciens produits Sage', Sage::TOKEN),
-                'description' => __("Importe les produits Sage dans Woocommerce à compter de la date renseignée (date de création de l'article dans Sage). Laissez vide pour ne pas importer.", Sage::TOKEN),
+                'description' => __("Importe les produits Sage dans Woocommerce à compter de la date renseignée (date de création de l'article dans Sage).", Sage::TOKEN),
                 'type' => 'resource',
-                'initFilter' => $initFilter,
+                'initFilter' => json_encode([
+                    'values' => [
+                        ...$initFilter['values'],
+                        [
+                            'field' => 'cbCreation',
+                            'condition' => 'gte',
+                            'value' => '2000-01-01'
+                        ]
+                    ]
+                ]),
                 'default' => '',
             ],
             // todo ajouter une option pour considérer les catalogues comme des catégories

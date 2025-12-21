@@ -13,10 +13,15 @@ export interface SyncWebsiteJobInterface {
   TaskJobSyncWebsiteJobs: TaskJobSyncWebsiteJobInterface[] | null;
 }
 
+export interface TaskJobJobInterface {
+  Description: string;
+  TaskJobType: TaskJobTypeEnum;
+}
+
 export interface TaskJobSyncWebsiteJobInterface {
   NbTaskDone: number;
   NewNbTasks: number | null;
-  TaskJobType: TaskJobTypeEnum;
+  TaskJob: TaskJobJobInterface;
   TaskJobDoneSpeed: number | null;
   RemainingTime: number | null;
 }

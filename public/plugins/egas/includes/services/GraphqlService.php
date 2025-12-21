@@ -188,23 +188,32 @@ class GraphqlService
                 'dbPassword' => get_option(Sage::TOKEN . '_wordpress_db_password'),
                 'tablePrefix' => $wpdb->prefix,
                 'dbName' => get_option(Sage::TOKEN . '_wordpress_db_name'),
-                'autoCreateSageFcomptet' => (string)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet'),
-                'autoImportSageFcomptet' => (string)get_option(Sage::TOKEN . '_auto_import_sage_fcomptet'),
-                'autoCreateWebsiteAccount' => (string)get_option(Sage::TOKEN . '_auto_create_wordpress_account'),
-                'autoImportWebsiteAccount' => (string)get_option(Sage::TOKEN . '_auto_import_wordpress_account'),
-                'autoCreateSageFdocentete' => (string)get_option(Sage::TOKEN . '_auto_create_sage_fdocentete'),
-                'autoImportWebsiteOrder' => (string)get_option(Sage::TOKEN . '_auto_import_wordpress_order'),
-                'autoCreateWebsiteOrder' => (string)get_option(Sage::TOKEN . '_auto_create_wordpress_order'),
-                'autoCreateWebsiteArticle' => (string)get_option(Sage::TOKEN . '_auto_create_wordpress_article'),
-                'autoUpdateSageFArticleWhenEditArticle' => (string)get_option(Sage::TOKEN . '_auto_update_sage_farticle_when_edit_article'),
-                'autoImportWebsiteArticle' => (string)get_option(Sage::TOKEN . '_auto_import_wordpress_article'),
                 'pluginVersion' => get_plugin_data(Sage::getInstance()->file)['Version'],
-                'autoUpdateSageFComptetWhenEditAccount' => (string)get_option(Sage::TOKEN . '_auto_update_sage_fcomptet_when_edit_account'),
-                'autoUpdateAccountWhenEditSageFcomptet' => (string)get_option(Sage::TOKEN . '_auto_update_account_when_edit_sage_fcomptet'),
-                'nbThreads' => (int)get_option(Sage::TOKEN . '_nb_threads'),
+                'autoCreateSageFcomptet' => $this->getOptionResource(Sage::TOKEN . '_auto_create_sage_fcomptet'),
+                'autoImportSageFcomptet' => $this->getOptionResource(Sage::TOKEN . '_auto_import_sage_fcomptet'),
+                'autoCreateWebsiteAccount' => $this->getOptionResource(Sage::TOKEN . '_auto_create_wordpress_account'),
+                'autoImportWebsiteAccount' => $this->getOptionResource(Sage::TOKEN . '_auto_import_wordpress_account'),
+                'autoCreateSageFdocentete' => $this->getOptionResource(Sage::TOKEN . '_auto_create_sage_fdocentete'),
+                'autoImportWebsiteOrder' => $this->getOptionResource(Sage::TOKEN . '_auto_import_wordpress_order'),
+                'autoCreateWebsiteOrder' => $this->getOptionResource(Sage::TOKEN . '_auto_create_wordpress_order'),
+                'autoCreateWebsiteArticle' => $this->getOptionResource(Sage::TOKEN . '_auto_create_wordpress_article'),
+                'autoUpdateSageFArticleWhenEditArticle' => $this->getOptionResource(Sage::TOKEN . '_auto_update_sage_farticle_when_edit_article'),
+                'autoImportWebsiteArticle' => $this->getOptionResource(Sage::TOKEN . '_auto_import_wordpress_article'),
+                'autoUpdateSageFComptetWhenEditAccount' => $this->getOptionResource(Sage::TOKEN . '_auto_update_sage_fcomptet_when_edit_account'),
+                'autoUpdateAccountWhenEditSageFcomptet' => $this->getOptionResource(Sage::TOKEN . '_auto_update_account_when_edit_sage_fcomptet'),
+                'nbThreads' => (int)get_option(Sage::TOKEN . '_nb_threads', null),
             ]
         ];
         return $this->runQuery($mutation, $getError, $variables);
+    }
+
+    private function getOptionResource(string $key): ?string
+    {
+        $value = (string) get_option($key, '');
+        if ($value === '') {
+            return null;
+        }
+        return json_encode($this->filterToGraphQlWhere(json_decode($value, true)));
     }
 
     public static function getInstance(): self

@@ -86,16 +86,15 @@ class WordpressService
             $_GET["settings-updated"] === 'true' &&
             $_GET["page"] === Sage::TOKEN . '_settings';
         if (
-            (
-                !$force &&
-                !($formSubmitted && current_user_can('manage_options'))
-            ) ||
-            !$this->isApiAuthenticated()
+            !$force && (
+                !($formSubmitted && current_user_can('manage_options')) ||
+                !$this->isApiAuthenticated()
+            )
         ) {
             return false;
         }
         $userId = get_current_user_id();
-        $password = $this->getCreateApplicationPassword($userId);
+        $password = $this->getCreateApplicationPassword($userId, $force);
         return $this->createUpdateWebsite($userId, $password);
     }
 
@@ -108,13 +107,13 @@ class WordpressService
     /**
      * https://developer.wordpress.org/rest-api/reference/application-passwords/#create-a-application-password
      */
-    private function getCreateApplicationPassword(string $userId): string
+    private function getCreateApplicationPassword(string $userId, bool $force = false): string
     {
         $optionName = Sage::TOKEN . '_application-passwords';
         $password = get_option($optionName, null);
         $passwords = WP_Application_Passwords::get_user_application_passwords($userId);
         $currentPassword = current(array_filter($passwords, static fn(array $password): bool => $password['name'] === $optionName));
-        if (empty($password) || $currentPassword === false) {
+        if ($force || empty($password) || $currentPassword === false) {
             if ($currentPassword !== false) {
                 WP_Application_Passwords::delete_application_password($userId, $optionName);
             }

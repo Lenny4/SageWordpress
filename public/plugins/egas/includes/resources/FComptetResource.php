@@ -54,7 +54,7 @@ class FComptetResource extends Resource
             [
                 'id' => 'auto_import_sage_fcomptet',
                 'label' => __('Importer automatiquement les anciens clients Woocommerce', Sage::TOKEN),
-                'description' => __("Importe les comptes Woocommerce dans Sage à compter de la date renseignée (date de création du compte dans Woocommerce). Laissez vide pour ne pas importer.", Sage::TOKEN),
+                'description' => __("Importe les comptes Woocommerce dans Sage à compter de la date renseignée (date de création du compte dans Woocommerce).", Sage::TOKEN),
                 'type' => 'resource',
                 'default' => ''
             ],
@@ -68,7 +68,7 @@ class FComptetResource extends Resource
             [
                 'id' => 'auto_import_wordpress_account',
                 'label' => __('Importer automatiquement les anciens clients Sage', Sage::TOKEN),
-                'description' => __("Importe les comptes Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage). Laissez vide pour ne pas importer.", Sage::TOKEN),
+                'description' => __("Importe les comptes Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage).", Sage::TOKEN),
                 'type' => 'resource',
                 'default' => ''
             ],
