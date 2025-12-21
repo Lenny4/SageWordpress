@@ -285,7 +285,7 @@ class WordpressService
         }
         if (!empty($arRef)) {
             update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
-            GraphqlService::getInstance()->updateFArticleFromWebsite($arRef);
+            GraphqlService::getInstance()->createUpdateFArticleFromWebsite($arRef);
             // no need because it's done directly by Sage Api
             // update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', null);
         }

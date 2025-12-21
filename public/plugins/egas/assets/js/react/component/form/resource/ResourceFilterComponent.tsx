@@ -680,6 +680,7 @@ export const ResourceFilterComponent: React.FC<State> = ({
   withUrl,
   allowEditImportCondition,
 }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [show, setShow] = React.useState<boolean>(
     checkboxInput?.checked ?? true,
   );
@@ -704,6 +705,16 @@ export const ResourceFilterComponent: React.FC<State> = ({
       ref: React.createRef(),
     };
     let initFilter = resourceFilter.initFilter;
+    if (withUrl) {
+      const filterParam = searchParams.get("filter");
+      if (filterParam) {
+        try {
+          initFilter = JSON.parse(decodeURIComponent(filterParam));
+        } catch (e) {
+          // console.error(e);
+        }
+      }
+    }
     if (textInput) {
       try {
         initFilter = JSON.parse($(textInput).attr("data-init-filter"));
@@ -738,7 +749,6 @@ export const ResourceFilterComponent: React.FC<State> = ({
   const [filterUrl, setFilterUrl] = React.useState<FilterInterface | null>(
     null,
   );
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const dispatch = () => {
     const newFilter: FilterInterface = filter.ref.current.getValue();

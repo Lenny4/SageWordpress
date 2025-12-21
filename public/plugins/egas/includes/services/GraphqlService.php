@@ -1859,7 +1859,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $result;
     }
 
-    public function updateFComptetFromWebsite(
+    public function createUpdateFComptetFromWebsite(
         string $ctNum,
         bool   $getError = false,
     ): StdClass|null|string
@@ -1868,7 +1868,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             'ctNum' => $ctNum,
             'websiteId' => (int)get_option(Sage::TOKEN . '_website_id'),
         ];
-        $mutation = (new Mutation('updateFComptetFromWebsite'))
+        $mutation = (new Mutation('createUpdateFComptetFromWebsite'))
             ->setVariables([new Variable('updateFComptetFromWebsiteDto', 'UpdateFComptetFromWebsiteDtoInput', true)])
             ->setArguments(['updateFComptetFromWebsiteDto' => '$updateFComptetFromWebsiteDto'])
             ->setSelectionSet($this->formatSelectionSet($this->_getFComptetSelectionSet()));
@@ -1876,7 +1876,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $result = $this->runQuery($mutation, $getError, $variables);
 
         if (!is_null($result) && !is_string($result)) {
-            return $result->data->updateFComptetFromWebsite;
+            return $result->data->createUpdateFComptetFromWebsite;
         }
         return $result;
     }
@@ -1921,7 +1921,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
     }
 
     // todo enlever un maximum de mutation et utiliser _updateApi
-    public function updateFArticleFromWebsite(
+    public function createUpdateFArticleFromWebsite(
         string $arRef,
         bool   $getError = false,
     ): StdClass|null|string
@@ -1930,7 +1930,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             'arRef' => $arRef,
             'websiteId' => (int)get_option(Sage::TOKEN . '_website_id'),
         ];
-        $mutation = (new Mutation('updateFArticleFromWebsite'))
+        $mutation = (new Mutation('createUpdateFArticleFromWebsite'))
             ->setVariables([new Variable('updateFArticleFromWebsiteDto', 'UpdateFArticleFromWebsiteDtoInput', true)])
             ->setArguments(['updateFArticleFromWebsiteDto' => '$updateFArticleFromWebsiteDto'])
             ->setSelectionSet($this->formatSelectionSet($this->_getFArticleSelectionSet()));
@@ -1938,7 +1938,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $result = $this->runQuery($mutation, $getError, $variables);
 
         if (!is_null($result) && !is_string($result)) {
-            return $result->data->updateFArticleFromWebsite;
+            return $result->data->createUpdateFArticleFromWebsite;
         }
         return $result;
     }

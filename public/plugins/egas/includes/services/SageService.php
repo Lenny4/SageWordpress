@@ -735,7 +735,7 @@ WHERE user_login LIKE %s
             }
         } else {
             if (!$newFComptet) { // no need update fComptet as sageGraphQl->createUpdateFComptet already update fComptet
-                $fComptet = GraphqlService::getInstance()->updateFComptetFromWebsite(
+                $fComptet = GraphqlService::getInstance()->createUpdateFComptetFromWebsite(
                     ctNum: $ctNum,
                     getError: true,
                 );

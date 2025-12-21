@@ -599,6 +599,8 @@ final class SageTranslationUtils
                 'nlt' => __("Pas moins que", Sage::TOKEN),
                 'nlte' => __("Pas inférieur ou égal", Sage::TOKEN),
                 'eq' => __("Égal", Sage::TOKEN),
+                'yes' => __("Oui", Sage::TOKEN),
+                'no' => __("Non", Sage::TOKEN),
                 'in' => __("Dedans", Sage::TOKEN),
                 'neq' => __("Pas égal", Sage::TOKEN),
                 'nin' => __("Pas dedans", Sage::TOKEN),

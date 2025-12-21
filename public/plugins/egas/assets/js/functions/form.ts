@@ -9,8 +9,8 @@ import {
   OptionChangeInputInterface,
 } from "../interface/InputInterface";
 import React, { Dispatch, SetStateAction } from "react";
-import { TabInterface } from "../interface/TabInterface";
 import { TOKEN } from "../token";
+import { TabInterface } from "../interface/TabInterface";
 
 export function transformOptionsObject(
   obj: Record<string | number, string>,
@@ -176,7 +176,8 @@ export const onSubmitForm = (
         isValidForm = true;
         $(formSelector).trigger("submit");
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error(e);
         if (onError) {
           onError();
         }

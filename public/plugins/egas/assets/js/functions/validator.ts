@@ -13,7 +13,7 @@ export const stringValidator = async ({
   canHaveSpace?: boolean;
   isReference?: boolean;
 }): Promise<string> => {
-  value = (value ?? "").replace(/\s\s+/g, " ").trim();
+  value = (value ?? "").toString().replace(/\s\s+/g, " ").trim();
   const isEmpty = value.length === 0;
   if (canBeEmpty === false && isEmpty) {
     return "Ce champ ne peut pas être vide.";

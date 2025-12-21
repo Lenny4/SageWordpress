@@ -131,7 +131,7 @@ class FArticleResource extends Resource
                 [
                     'field' => 'arPublie',
                     'condition' => 'eq',
-                    'value' => '1'
+                    'value' => true
                 ]
             ]
         ];

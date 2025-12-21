@@ -297,6 +297,13 @@ export const ListSageEntityTableComponent: React.FC<State> = ({
                 </th>
                 {realShowFields.map((field, index) => {
                   let label = row[field.name.replace("metaData_", "_")];
+                  if (typeof label === "boolean") {
+                    if (label) {
+                      label = translations.words.yes;
+                    } else {
+                      label = translations.words.no;
+                    }
+                  }
                   if (field.values) {
                     const i = row[field.name];
                     label = `[${i}]: ${field.values[i]}`;
