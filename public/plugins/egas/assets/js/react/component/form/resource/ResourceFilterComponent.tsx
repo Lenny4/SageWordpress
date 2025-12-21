@@ -16,6 +16,7 @@ interface AllFilterTypeInterface {
   ShortOperationFilterInput: string[];
   StringOperationFilterInput: string[];
   UuidOperationFilterInput: string[];
+  BooleanOperationFilterInput: string[];
 }
 
 interface FilterFieldInterface {
@@ -142,6 +143,12 @@ const FilterInputComponent = React.forwardRef(
     const [values, setValues] = React.useState<FormState2>(getDefaultValue());
 
     React.useEffect(() => {
+      if (init && filterType.key === "DateTimeOperationFilterInput") {
+        dispatch();
+      }
+    }, [values.condition.value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    React.useEffect(() => {
       if (init) {
         dispatch();
       } else {
@@ -151,7 +158,12 @@ const FilterInputComponent = React.forwardRef(
 
     useImperativeHandle(ref, () => ({
       getValue(): FilterValueInterface | undefined {
-        if (!values.field.value || !values.condition.value) {
+        if (
+          !values.field.value ||
+          !values.condition.value ||
+          (filterType.key === "DateTimeOperationFilterInput" &&
+            values.value.value === "")
+        ) {
           return undefined;
         }
         const result: FilterValueInterface = {
@@ -222,7 +234,9 @@ const FilterInputComponent = React.forwardRef(
             onChange={(e) => {
               setValues((v) => {
                 v.condition.value = e.target.value;
-                v.value.value = "";
+                if (filterType.key !== "DateTimeOperationFilterInput") {
+                  v.value.value = "";
+                }
                 return { ...v };
               });
             }}
@@ -308,9 +322,57 @@ const FilterInputComponent = React.forwardRef(
                 })}
               </select>
             </Tooltip>
+          ) : filterType.key === "BooleanOperationFilterInput" ? (
+            <>
+              <select
+                value={
+                  values.value.value
+                    ? "1"
+                    : values.value.value === false
+                      ? "0"
+                      : ""
+                }
+                onChange={(e) => {
+                  setValues((v) => {
+                    if (filterValue.editable === false) {
+                      return v;
+                    }
+                    v.value.value = e.target.value === "1";
+                    return { ...v };
+                  });
+                }}
+              >
+                <option value="" disabled={true}>
+                  {translations.words.selectOption}
+                </option>
+                <option
+                  value={"1"}
+                  disabled={
+                    filterValue.editable === false &&
+                    (values.value.value ? 1 : 0) !== 1
+                  }
+                >
+                  {translations.words.yes}
+                </option>
+                <option
+                  value={"0"}
+                  disabled={
+                    filterValue.editable === false &&
+                    (values.value.value ? 1 : 0) !== 0
+                  }
+                >
+                  {translations.words.no}
+                </option>
+              </select>
+            </>
           ) : (
             <input
               value={values.value.value}
+              type={
+                filterType.key === "DateTimeOperationFilterInput"
+                  ? "date"
+                  : "text"
+              }
               readOnly={filterValue.editable === false}
               onChange={(e) => {
                 setValues((v) => {
