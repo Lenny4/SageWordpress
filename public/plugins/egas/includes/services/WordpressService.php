@@ -276,6 +276,7 @@ class WordpressService
             }
         }
         if (!empty($arRef)) {
+            // todo vérifier que l'option est coché
             update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
             GraphqlService::getInstance()->createUpdateFArticleFromWebsite($arRef);
             // no need because it's done directly by Sage Api
@@ -292,7 +293,7 @@ class WordpressService
     public function saveCustomerUserMetaFields(int $userId, bool $new): void
     {
         $nbUpdatedMeta = 0;
-        $autoCreateSageFcomptet = (bool)get_option(Sage::TOKEN . '_auto_create_sage_fcomptet');
+        $sageCreateNewFcomptet = (bool)get_option(Sage::TOKEN . '_sage_create_new_fcomptet');
         $ctNum = null;
         $newFComptet = false;
         foreach ($_POST as $key => $value) {
@@ -302,7 +303,7 @@ class WordpressService
                     if ($value === 'new') {
                         $newFComptet = true;
                     } else if ($value === 'none') {
-                        $autoCreateSageFcomptet = false;
+                        $sageCreateNewFcomptet = false;
                     }
                 }
                 if ($key === FComptetResource::META_KEY) {
@@ -313,19 +314,10 @@ class WordpressService
                 update_user_meta($userId, $key, $value);
             }
         }
-        if (!$autoCreateSageFcomptet || ($nbUpdatedMeta === 0 && !$new)) {
+        if (!$sageCreateNewFcomptet || ($nbUpdatedMeta === 0 && !$new)) {
             return;
         }
         update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
-        [$createdOrUpdatedUserId, $message] = SageService::getInstance()->updateUserOrFComptet($ctNum, $userId, newFComptet: $newFComptet);
-        if ($newFComptet && is_null($createdOrUpdatedUserId)) {
-            $this->deleteSageMetadataForUser($userId);
-        }
-        if ($message) {
-            $redirect = add_query_arg(Sage::TOKEN . '_message', urlencode($message), wp_get_referer());
-            wp_redirect($redirect);
-            exit;
-        }
     }
 
     public function deleteSageMetadataForUser(int $userId): void

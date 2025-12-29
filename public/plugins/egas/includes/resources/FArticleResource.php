@@ -48,25 +48,38 @@ class FArticleResource extends Resource
         $initFilterJson = json_encode($initFilter);
         $this->options = [
             [
-                'id' => 'auto_create_wordpress_article',
-                'label' => __('Créer automatiquement le produit Woocommerce', Sage::TOKEN),
-                'description' => __("Créer automatiquement le produit dans Woocommerce lorsqu'un article Sage est crée.", Sage::TOKEN),
+                'id' => 'sage_create_new_farticle',
+                'label' => __("Créer l'article dans Sage.", Sage::TOKEN),
+                'description' => __("Créer l'article dans Sage lorsqu'un nouveau produit Woocommerce est crée.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+            [
+                'id' => 'sage_create_old_farticle',
+                'label' => __("Importe les anciens produits.", Sage::TOKEN),
+                'description' => __("Importe les anciens produits Woocommerce dans Sage.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+            [
+                'id' => 'sage_update_farticle',
+                'label' => __("Met à jour l’article Sage.", Sage::TOKEN),
+                'description' => __("Met à jour l’article Sage lorsque le produit WooCommerce qui lui est lié est modifié.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+            [
+                'id' => 'website_create_new_product',
+                'label' => __("Créer le produit dans Woocommerce.", Sage::TOKEN),
+                'description' => __("Créer le produit dans Woocommerce lorsqu'un nouvel article Sage est crée.", Sage::TOKEN),
                 'type' => 'resource',
                 'initFilter' => $initFilterJson,
                 'default' => '',
             ],
             [
-                'id' => 'auto_update_sage_farticle_when_edit_article',
-                'label' => __("Mettre à jour automatiquement l'article Sage lorsqu'un produit Woocommerce est modifié", Sage::TOKEN),
-                'description' => __("Lorsque les informations d’un produit Woocommerce sont modifiées, elles sont également mises à jour dans Sage si un produit y est lié.", Sage::TOKEN),
-                'type' => 'resource',
-                'initFilter' => $initFilterJson,
-                'default' => '',
-            ],
-            [
-                'id' => 'auto_import_wordpress_article',
-                'label' => __('Importer automatiquement les anciens produits Sage', Sage::TOKEN),
-                'description' => __("Importe les produits Sage dans Woocommerce à compter de la date renseignée (date de création de l'article dans Sage).", Sage::TOKEN),
+                'id' => 'website_create_old_product',
+                'label' => __("Importe les anciens articles.", Sage::TOKEN),
+                'description' => __("Importe les anciens articles Sage dans Woocommerce.", Sage::TOKEN),
                 'type' => 'resource',
                 'initFilter' => json_encode([
                     'values' => [
@@ -79,6 +92,13 @@ class FArticleResource extends Resource
                     ]
                 ]),
                 'default' => '',
+            ],
+            [
+                'id' => 'website_update_product',
+                'label' => __("Met à jour le produit Woocommerce.", Sage::TOKEN),
+                'description' => __("Met à jour le produit Woocommerce lorsque l'article Sage qui lui est lié est modifié.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
             ],
             // todo ajouter une option pour considérer les catalogues comme des catégories
         ];
@@ -107,6 +127,7 @@ class FArticleResource extends Resource
             new ImportConditionDto(
                 field: 'arType', // [IsProjected(true)]
                 value: [
+                    // todo mettre que les articles standard
                     ArticleTypeEnum::ArticleTypeStandard->value,
                     ArticleTypeEnum::ArticleTypeGamme->value
                 ],

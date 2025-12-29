@@ -685,18 +685,26 @@ final class SageTranslationUtils
                     1 => __("[Egas] Synchronisation en cours ...", Sage::TOKEN), // DoTasks
                 ],
                 'taskJobType' => [
-                    0 => __('Créer automatiquement les clients Sage', Sage::TOKEN), // AutoCreateSageFcomptet => auto_create_sage_fcomptet
-                    1 => __('Importer automatiquement les anciens clients Woocommerce', Sage::TOKEN), // AutoImportSageFcomptet => auto_import_sage_fcomptet
-                    2 => __('Créer automatiquement les comptes Wordpress', Sage::TOKEN), // AutoCreateWebsiteAccount => auto_create_wordpress_account
-                    3 => __('Importer automatiquement les anciens clients Sage', Sage::TOKEN), // AutoImportWebsiteAccount => auto_import_wordpress_account
-                    4 => __('Créer automatiquement les documents de vente Sage', Sage::TOKEN), // AutoCreateSageFdocentete => auto_create_sage_fdocentete
-                    5 => __('Créer automatiquement les commandes Woocommerce', Sage::TOKEN), // AutoCreateWebsiteOrder => auto_create_wordpress_order
-                    6 => __('Créer automatiquement les produits Woocommerce', Sage::TOKEN), // AutoCreateWebsiteArticle => auto_create_wordpress_article
-                    7 => __('Importer automatiquement les anciens produits Sage', Sage::TOKEN), // AutoImportWebsiteArticle => auto_import_wordpress_article
-                    8 => __('Importer automatiquement les anciens documents de vente Sage', Sage::TOKEN), // AutoImportWebsiteOrder => auto_import_wordpress_order
-                    9 => __("Mettre à jour automatiquement le compte Sage lorsqu'un compte Wordpress est modifié", Sage::TOKEN), // AutoUpdateSageFComptetWhenEditAccount => auto_update_sage_fcomptet_when_edit_account
-                    10 => __("Mettre à jour automatiquement le compte Wordpress lorsqu'un compte Sage est modifié", Sage::TOKEN), // AutoUpdateAccountWhenEditSageFcomptet => auto_update_account_when_edit_sage_fcomptet
-                    11 => __("Mettre à jour automatiquement l'article Sage lorsqu'un produit Woocommerce est modifié", Sage::TOKEN), // AutoUpdateSageFArticleWhenEditArticle => cette option n'existe pas elle est toujours vrai
+                    0 => __('Créer automatiquement les clients Sage', Sage::TOKEN), // SageCreateNewFComptet => sage_create_new_fcomptet
+                    1 => __('Importer automatiquement les anciens clients Woocommerce', Sage::TOKEN), // SageCreateOldFComptet => sage_create_old_fcomptet
+                    2 => __('Créer automatiquement les comptes Wordpress', Sage::TOKEN), // SageUpdateFComptet => sage_update_fcomptet
+                    3 => __('Importer automatiquement les anciens clients Sage', Sage::TOKEN), // WebsiteCreateNewUser => website_create_new_user
+                    4 => __('Créer automatiquement les documents de vente Sage', Sage::TOKEN), // WebsiteCreateOldUser => website_create_old_user
+                    5 => __('Créer automatiquement les commandes Woocommerce', Sage::TOKEN), // WebsiteUpdateUser => website_update_user
+
+                    10 => __('Créer automatiquement les produits Woocommerce', Sage::TOKEN), // SageCreateNewFArticle => sage_create_new_farticle
+                    11 => __('Importer automatiquement les anciens produits Sage', Sage::TOKEN), // SageCreateOldFArticle => sage_create_old_farticle
+                    12 => __('Importer automatiquement les anciens documents de vente Sage', Sage::TOKEN), // SageUpdateFArticle => sage_update_farticle
+                    13 => __("Mettre à jour automatiquement le compte Sage lorsqu'un compte Wordpress est modifié", Sage::TOKEN), // WebsiteCreateNewProduct => website_create_new_product
+                    14 => __("Mettre à jour automatiquement le compte Wordpress lorsqu'un compte Sage est modifié", Sage::TOKEN), // WebsiteCreateOldProduct => website_create_old_product
+                    15 => __("Mettre à jour automatiquement l'article Sage lorsqu'un produit Woocommerce est modifié", Sage::TOKEN), // WebsiteUpdateProduct => website_update_product
+
+                    20 => __('Créer automatiquement les produits Woocommerce', Sage::TOKEN), // SageCreateNewFDocentete => sage_create_new_fdocentete
+                    21 => __('Importer automatiquement les anciens produits Sage', Sage::TOKEN), // SageCreateOldFDocentete => sage_create_old_fdocentete
+                    22 => __('Importer automatiquement les anciens documents de vente Sage', Sage::TOKEN), // SageUpdateFDocentete => sage_update_fdocentete
+                    23 => __("Mettre à jour automatiquement le compte Sage lorsqu'un compte Wordpress est modifié", Sage::TOKEN), // WebsiteCreateNewOrder => website_create_new_order
+                    24 => __("Mettre à jour automatiquement le compte Wordpress lorsqu'un compte Sage est modifié", Sage::TOKEN), // WebsiteCreateOldOrder => website_create_old_order
+                    25 => __("Mettre à jour automatiquement l'article Sage lorsqu'un produit Woocommerce est modifié", Sage::TOKEN), // WebsiteUpdateOrder => website_update_order
                 ]
             ]
         ];

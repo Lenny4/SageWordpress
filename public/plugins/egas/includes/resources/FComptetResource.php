@@ -45,53 +45,53 @@ class FComptetResource extends Resource
         $this->transDomain = SageTranslationUtils::TRANS_FCOMPTETS;
         $this->options = [
             [
-                'id' => 'auto_create_sage_fcomptet',
-                'label' => __('Créer automatiquement le client Sage', Sage::TOKEN),
-                'description' => __("Créer automatiquement un compte client dans Sage lorsqu'un compte Wordpress est crée.", Sage::TOKEN),
-                'type' => 'resource',
-                'default' => ''
+                'id' => 'sage_create_new_fcomptet',
+                'label' => __("Créer le compte dans Sage.", Sage::TOKEN),
+                'description' => __("Créer le compte dans Sage lorsqu'un nouveau utilisateur Wordpress est crée.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
             ],
             [
-                'id' => 'auto_import_sage_fcomptet',
-                'label' => __('Importer automatiquement les anciens clients Woocommerce', Sage::TOKEN),
-                'description' => __("Importe les comptes Woocommerce dans Sage à compter de la date renseignée (date de création du compte dans Woocommerce).", Sage::TOKEN),
-                'type' => 'resource',
-                'default' => ''
+                'id' => 'sage_create_old_fcomptet',
+                'label' => __("Importe les anciens utilisateurs.", Sage::TOKEN),
+                'description' => __("Importe les anciens utilisateurs Woocommerce dans Sage.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
             ],
             [
-                'id' => 'auto_create_wordpress_account',
-                'label' => __('Créer automatiquement le compte Wordpress', Sage::TOKEN),
-                'description' => __("Créer automatiquement un compte dans Wordpress lorsqu'un utilisateur Sage est crée.", Sage::TOKEN),
-                'type' => 'resource',
-                'default' => ''
+                'id' => 'sage_update_fcomptet',
+                'label' => __("Met à jour le compte Sage.", Sage::TOKEN),
+                'description' => __("Met à jour le compte Sage lorsque l'utilisateur WooCommerce qui lui est lié est modifié.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
             ],
             [
-                'id' => 'auto_import_wordpress_account',
-                'label' => __('Importer automatiquement les anciens clients Sage', Sage::TOKEN),
-                'description' => __("Importe les comptes Sage dans Woocommerce à compter de la date renseignée (date de création du compte dans Sage).", Sage::TOKEN),
+                'id' => 'website_create_new_user',
+                'label' => __("Créer l'utilisateur dans Woocommerce.", Sage::TOKEN),
+                'description' => __("Créer l'utilisateur dans Woocommerce lorsqu'un nouveau compte Sage est crée.", Sage::TOKEN),
                 'type' => 'resource',
-                'default' => ''
+                'default' => '',
             ],
             [
-                'id' => 'mail_auto_create_sage_fcomptet',
+                'id' => 'website_create_old_user',
+                'label' => __("Importe les anciens comptes Sage.", Sage::TOKEN),
+                'description' => __("Importe les anciens comptes Sage dans Woocommerce.", Sage::TOKEN),
+                'type' => 'resource',
+                'default' => '',
+            ],
+            [
+                'id' => 'website_update_user',
+                'label' => __("Met à jour l'utilisateur Woocommerce.", Sage::TOKEN),
+                'description' => __("Met à jour l'utilisateur Woocommerce lorsque le compte Sage qui lui est lié est modifié.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+            [
+                'id' => 'mail_website_create_new_user',
                 'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', Sage::TOKEN),
                 'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", Sage::TOKEN),
                 'type' => 'checkbox',
-                'default' => 'off'
-            ],
-            [
-                'id' => 'auto_update_sage_fcomptet_when_edit_account',
-                'label' => __("Mettre à jour automatiquement un compte Sage lorsqu'un compte Wordpress est modifié", Sage::TOKEN),
-                'description' => __("Lorsque qu’un utilisateur WordPress met à jour ses informations, ou lorsqu’un administrateur modifie les informations d’un compte WordPress, celles-ci sont également mises à jour dans Sage si un compte y est lié.", Sage::TOKEN),
-                'type' => 'resource',
-                'default' => ''
-            ],
-            [
-                'id' => 'auto_update_account_when_edit_sage_fcomptet',
-                'label' => __("Mettre à jour automatiquement un compte Wordpress lorsqu'un compte Sage est modifié", Sage::TOKEN),
-                'description' => __("Lorsque les informations d’un compte Sage sont modifiées, elles sont également mises à jour dans WordPress si un compte y est lié.", Sage::TOKEN),
-                'type' => 'resource',
-                'default' => ''
+                'default' => 'off',
             ],
         ];
         $this->metadata = static function (?stdClass $obj = null): array {
