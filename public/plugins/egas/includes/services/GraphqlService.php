@@ -142,6 +142,7 @@ class GraphqlService
         bool   $getError = false,
     ): StdClass|null|string
     {
+        // todo si l'update du site ne marche pas il faut le renvoyer dès que pingApi fonctionne
         global $wpdb;
         $hasError = false;
         $wordpressHostUrl = parse_url((string)get_option(Sage::TOKEN . '_wordpress_host_url'));
@@ -1932,29 +1933,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 }
             }
         }
-    }
-
-    // todo enlever un maximum de mutation et utiliser _updateApi
-    public function createUpdateFArticleFromWebsite(
-        string $arRef,
-        bool   $getError = false,
-    ): StdClass|null|string
-    {
-        $arguments = [
-            'arRef' => $arRef,
-            'websiteId' => (int)get_option(Sage::TOKEN . '_website_id'),
-        ];
-        $mutation = (new Mutation('createUpdateFArticleFromWebsite'))
-            ->setVariables([new Variable('updateFArticleFromWebsiteDto', 'UpdateFArticleFromWebsiteDtoInput', true)])
-            ->setArguments(['updateFArticleFromWebsiteDto' => '$updateFArticleFromWebsiteDto'])
-            ->setSelectionSet($this->formatSelectionSet($this->_getFArticleSelectionSet()));
-        $variables = ['updateFArticleFromWebsiteDto' => $arguments];
-        $result = $this->runQuery($mutation, $getError, $variables);
-
-        if (!is_null($result) && !is_string($result)) {
-            return $result->data->createUpdateFArticleFromWebsite;
-        }
-        return $result;
     }
 
     public function getPPreference(

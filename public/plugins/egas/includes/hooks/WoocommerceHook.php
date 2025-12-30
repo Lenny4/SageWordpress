@@ -116,13 +116,14 @@ class WoocommerceHook
                 'old' => $oldMetaData,
                 'new' => $oldMetaData,
             ];
-            $responseError = null;
+            $messages = [];
             $updateApi = $product->get_meta('_' . Sage::TOKEN . '_updateApi'); // returns "" if not exists in bdd
             $graphqlService = GraphqlService::getInstance();
             $fArticle = $graphqlService->getFArticle($arRef);
             if (!empty($arRef) && empty($updateApi)) {
                 [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage($arRef, ignoreCanImport: true, fArticle: $fArticle);
-                if (is_null($responseError)) {
+                $messages = [$responseError, $message];
+                if (!is_null($response)) {
                     $product->read_meta_data(true);
                     $meta['new'] = $product->get_meta_data();
                     foreach ($meta as $key => $value) {
@@ -173,8 +174,8 @@ class WoocommerceHook
                 'fDepots' => $graphqlService->getFDepots(),
                 'fPays' => $graphqlService->getFPays(),
                 'pPreference' => $graphqlService->getPPreference(),
+                'messages' => $messages,
                 'panelId' => Sage::TARGET_PANEL,
-                'responseError' => $responseError,
                 'metaChanges' => $meta['changes'],
                 'productMeta' => $meta['new'],
                 'updateApi' => $updateApi,

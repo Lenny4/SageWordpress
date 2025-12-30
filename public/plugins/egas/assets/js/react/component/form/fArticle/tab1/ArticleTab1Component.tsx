@@ -102,6 +102,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 options: transformOptionsObject(
                   translations.fArticles.arType.values,
                 ).map((v) => {
+                  // todo prendre l'info dans $this->importCondition
                   return {
                     ...v,
                     disabled: !["0", "1"].includes(v.value),
@@ -157,6 +158,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
               {
                 name: "arNomencl",
                 DomField: FormSelect,
+                // todo prendre l'info dans $this->importCondition
                 readOnly: true, // pour l'instant
                 tooltip: translations.sentences.arNomencl,
                 options: transformOptionsObject(

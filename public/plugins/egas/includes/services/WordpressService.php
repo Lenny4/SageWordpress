@@ -266,21 +266,19 @@ class WordpressService
             return;
         }
         $arRef = null;
+        $new = false;
         $flatternPost = PathUtils::flatternPostSageData($_POST);
         foreach ($flatternPost as $key => $value) {
             if (str_starts_with($key, '_' . Sage::TOKEN)) {
                 if ($key === FArticleResource::META_KEY) {
                     $arRef = $value;
+                    $new = !empty(get_post_meta($postId, $key, true));
                 }
                 update_post_meta($postId, $key, $value);
             }
         }
-        if (!empty($arRef)) {
-            // todo vérifier que l'option est coché
+        if (!$new && !empty($arRef) && get_option(Sage::TOKEN . '_sage_create_new_farticle')) {
             update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
-            GraphqlService::getInstance()->createUpdateFArticleFromWebsite($arRef);
-            // no need because it's done directly by Sage Api
-            // update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', null);
         }
     }
 
@@ -294,30 +292,22 @@ class WordpressService
     {
         $nbUpdatedMeta = 0;
         $sageCreateNewFcomptet = (bool)get_option(Sage::TOKEN . '_sage_create_new_fcomptet');
-        $ctNum = null;
-        $newFComptet = false;
         foreach ($_POST as $key => $value) {
             if (str_starts_with($key, '_' . Sage::TOKEN)) {
                 $value = trim(preg_replace('/\s\s+/', ' ', $value));
                 if ($key === '_' . Sage::TOKEN . '_creationType') {
-                    if ($value === 'new') {
-                        $newFComptet = true;
-                    } else if ($value === 'none') {
-                        $sageCreateNewFcomptet = false;
-                    }
+                    $sageCreateNewFcomptet = $value !== 'none';
                 }
                 if ($key === FComptetResource::META_KEY) {
                     $value = strtoupper($value);
-                    $ctNum = $value;
                 }
                 $nbUpdatedMeta++;
                 update_user_meta($userId, $key, $value);
             }
         }
-        if (!$sageCreateNewFcomptet || ($nbUpdatedMeta === 0 && !$new)) {
-            return;
+        if ($sageCreateNewFcomptet && $nbUpdatedMeta > 0 && !$new) {
+            update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
         }
-        update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
     }
 
     public function deleteSageMetadataForUser(int $userId): void

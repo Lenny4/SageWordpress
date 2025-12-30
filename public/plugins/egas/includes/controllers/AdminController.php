@@ -168,6 +168,7 @@ class AdminController
                 $fieldOptions = $sageService->getFieldsForEntity($resource);
                 $defaultFields = $resource->getDefaultFields();
                 $options = [
+                    // todo ajouter un champs qui indique à partir de quelle resource on considère que ça fait partie des nouveaux et des anciens
                     [
                         'id' => $resource->getEntityName() . '_show_fields',
                         'label' => __('Champs à montrer', Sage::TOKEN),
@@ -175,6 +176,7 @@ class AdminController
                         'type' => '2_select_multi',
                         'options' => $fieldOptions,
                         'default' => $defaultFields,
+                        // todo ajouter un paramètre pour dire si il faut affichier sur la liste ou option
                     ],
                     [
                         'id' => $resource->getEntityName() . '_perPage',
@@ -655,10 +657,12 @@ class AdminController
         return false;
     }
 
-    public static function adminNotices($message): void
+    public static function adminNotices(?string $message): void
     {
         add_action('admin_notices', static function () use ($message): void {
-            echo $message;
+            if (!empty($message)) {
+                echo $message;
+            }
         });
     }
 

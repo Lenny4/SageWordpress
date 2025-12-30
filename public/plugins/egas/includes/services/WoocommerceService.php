@@ -380,7 +380,7 @@ class WoocommerceService
         if (is_null($fArticle)) {
             return [null, null, "<div class='error'>
                         " . __("L'article n'a pas pu être importé", Sage::TOKEN) . "
-                                </div>"];
+                                </div>", 0];
         }
         if (!$ignoreCanImport) {
             $resource = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME);
@@ -388,7 +388,7 @@ class WoocommerceService
             if (!empty($canImportFArticle)) {
                 return [null, null, "<div class='error'>
                         " . implode(' ', $canImportFArticle) . "
-                                </div>"];
+                                </div>", 0];
             }
         }
         $articlePostId = $this->getWooCommerceIdArticle($arRef);

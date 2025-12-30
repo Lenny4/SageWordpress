@@ -1,7 +1,7 @@
 {% set TOKEN = getToken() %}
-{% if responseError is not null %}
-  {{ responseError }}
-{% endif %}
+{% for message in messages %}
+  {{ message | raw }}
+{% endfor %}
 {% if hasChanges %}
   <div class="notice notice-info is-dismissible">
     {% for action in changeTypes %}

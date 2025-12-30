@@ -22,6 +22,7 @@ class RestApiHook
 {
     public function __construct()
     {
+        // todo supprimer tout les ignore pingApi
         // add meta_data for .line_items for request https://localhost/?rest_route=/wc/v2/orders/1996
         add_filter('woocommerce_rest_prepare_shop_order_object', function ($response, $order, $request) {
             $data = $response->get_data();

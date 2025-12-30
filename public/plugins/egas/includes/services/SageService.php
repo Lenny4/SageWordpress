@@ -724,6 +724,7 @@ WHERE user_login LIKE %s
                                 <pre>" . $userId->get_error_message() . "</pre>
                                 </div>"];
         }
+        // todo quoi faire ici ?
         $updateApi = empty(get_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', true));
         if ($updateApi) {
             $wpUser = new WP_User($userId);
