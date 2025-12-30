@@ -21,7 +21,7 @@ class InstallPluginHook
             // https://developer.wordpress.org/reference/hooks/upgrader_process_complete/#parameters
             if (
                 array_key_exists('plugins', $hook_extra) &&
-                in_array(Sage::TOKEN . '/' . Sage::TOKEN . '.php', $hook_extra['plugins'], true) // todo replace TOKEN by folder and file name
+                in_array(Sage::TOKEN . '/' . Sage::TOKEN . '.php', $hook_extra['plugins'], true)
             ) {
                 WordpressService::getInstance()->install();
             }

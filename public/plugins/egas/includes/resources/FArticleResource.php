@@ -127,9 +127,7 @@ class FArticleResource extends Resource
             new ImportConditionDto(
                 field: 'arType', // [IsProjected(true)]
                 value: [
-                    // todo mettre que les articles standard
                     ArticleTypeEnum::ArticleTypeStandard->value,
-                    ArticleTypeEnum::ArticleTypeGamme->value
                 ],
                 condition: 'in',
                 message: function ($fArticle) {

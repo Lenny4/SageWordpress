@@ -25,7 +25,6 @@ class FComptetResource extends Resource
         parent::__construct();
         global $wpdb;
         $this->title = __("Clients", Sage::TOKEN);
-        // todo afficher les clients Sage qui partagent le même email et expliqués qu'il ne seront pas dupliqués sur le site
         $this->description = __("Gestion des clients.", Sage::TOKEN);
         $this->entityName = self::ENTITY_NAME;
         $this->typeModel = self::TYPE_MODEL;
