@@ -68,7 +68,6 @@ class RestApiHook
                         $entityName,
                         $_GET,
                         $graphqlService->{$selectionSet}(),
-                        ignorePingApi: true,
                     );
                     if (isset($result->data->{$entityName})) {
                         return new WP_REST_Response($result->data->{$entityName}, Response::HTTP_OK);
@@ -96,8 +95,7 @@ class RestApiHook
                     if (isset($data["data"][$resourceName])) {
                         return new WP_REST_Response($data["data"][$resourceName], Response::HTTP_OK);
                     }
-                    // todo return error message
-                    return new WP_REST_Response(null, Response::HTTP_INTERNAL_SERVER_ERROR);
+                    return new WP_REST_Response($data, Response::HTTP_SERVICE_UNAVAILABLE);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can('manage_options');
@@ -126,7 +124,6 @@ class RestApiHook
                         doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
                         doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
                         getError: true,
-                        ignorePingApi: true,
                         getFDoclignes: true,
                         getExpedition: true,
                         addWordpressProductId: true,
@@ -138,7 +135,7 @@ class RestApiHook
                     [$message, $order] = $woocommerceService->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
-                        'html' => WoocommerceController::getMetaboxFDocentete($order, ignorePingApi: true, message: $message),
+                        'html' => WoocommerceController::getMetaboxFDocentete($order, message: $message),
                     ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
@@ -156,7 +153,6 @@ class RestApiHook
                     }
                     [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage(
                         $arRef,
-                        ignorePingApi: true,
                         headers: $headers,
                     );
                     if ($request->get_param('json') === '1') {
@@ -178,7 +174,6 @@ class RestApiHook
                     return new WP_REST_Response([
                         'html' => WoocommerceController::getMetaboxFDocentete(
                             $order,
-                            ignorePingApi: true,
                             message: $message,
                         )
                     ], $response['response']['code']);
@@ -223,7 +218,6 @@ class RestApiHook
                         doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
                         doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
                         getError: true,
-                        ignorePingApi: true,
                         getWordpressIds: true,
                         extended: $extended,
                     );
@@ -253,7 +247,7 @@ class RestApiHook
                     $order = WoocommerceService::getInstance()->desynchronizeOrder($order);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
-                        'html' => WoocommerceController::getMetaboxFDocentete($order, ignorePingApi: true)
+                        'html' => WoocommerceController::getMetaboxFDocentete($order)
                     ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
@@ -267,10 +261,10 @@ class RestApiHook
                     $body = json_decode($request->get_body(), false);
                     $doPiece = $body->{Sage::TOKEN . "-fdocentete-dopiece"};
                     $doType = (int)$body->{Sage::TOKEN . "-fdocentete-dotype"};
-                    $order = WoocommerceService::getInstance()->linkOrderFDocentete($order, $doPiece, $doType, true);
+                    $order = WoocommerceService::getInstance()->linkOrderFDocentete($order, $doPiece, $doType);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
-                        'html' => WoocommerceController::getMetaboxFDocentete($order, ignorePingApi: true)
+                        'html' => WoocommerceController::getMetaboxFDocentete($order)
                     ], Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
@@ -338,7 +332,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
                     $ctNum = $request['ctNum'];
-                    $fComptet = GraphqlService::getInstance()->getFComptet($ctNum, ignorePingApi: true);
+                    $fComptet = GraphqlService::getInstance()->getFComptet($ctNum);
                     $user = get_users([
                         'meta_key' => FComptetResource::META_KEY,
                         'meta_value' => strtoupper($ctNum)

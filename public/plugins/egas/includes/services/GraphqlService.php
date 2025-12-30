@@ -45,7 +45,7 @@ class GraphqlService
 {
     private static ?GraphqlService $instance = null;
     private ?Client $client = null;
-    private bool $pingApi = false;
+    private ?bool $pingApi = null;
     private ?string $apiVersion = null;
     private ?array $pExpeditions = null;
     private ?array $fFamilles = null;
@@ -70,6 +70,13 @@ class GraphqlService
 
     private function ping(): void
     {
+        if (!is_null($this->pingApi)) {
+            return;
+        }
+        $this->pingApi = false;
+        if (current_user_can('read')) { // Minimum capability required to access /wp-admin
+            return;
+        }
         $hostUrl = get_option(Sage::TOKEN . '_api_host_url');
         $message = null;
         if (!is_string($hostUrl) || ($hostUrl === '' || $hostUrl === '0')) {
@@ -83,7 +90,6 @@ class GraphqlService
     <p>" . $message . "</p>
 </div>
 ");
-            $this->pingApi = false;
             return;
         }
 
@@ -214,21 +220,46 @@ class GraphqlService
         return $this->runQuery($mutation, $getError, $variables);
     }
 
-    private function getOptionResource(string $key): ?string
-    {
-        $value = (string) get_option($key, '');
-        if ($value === '') {
-            return null;
-        }
-        return json_encode($this->filterToGraphQlWhere(json_decode($value, true)));
-    }
-
     public static function getInstance(): self
     {
         if (self::$instance === null) {
             self::$instance = new self();
         }
         return self::$instance;
+    }
+
+    private function getOptionResource(string $key): ?string
+    {
+        $value = (string)get_option($key, '');
+        if ($value === '') {
+            return null;
+        }
+        return json_encode($this->filterToGraphQlWhere(json_decode($value, true)));
+    }
+
+    public function filterToGraphQlWhere(array $filter): stdClass
+    {
+        $conditionValues = $filter["condition"];
+        if (array_key_exists('conditionValues', $filter)) {
+            $conditionValues = $filter["conditionValues"];
+        }
+        $result = new stdClass();
+        $values = new stdClass();
+        $values->{$conditionValues} = array_map(function (array $value) {
+            if (array_key_exists('rawValue', $value)) {
+                return $value["rawValue"];
+            }
+            return [$value["field"] => [$value["condition"] => $value["value"]]];
+        }, $filter["values"]);
+        if (!empty($filter["subFilter"])) {
+            $result->{$filter["condition"]} = [
+                $values,
+                $this->filterToGraphQlWhere($filter["subFilter"])
+            ];
+        } else {
+            $result = $values;
+        }
+        return $result;
     }
 
     private function runQuery(
@@ -238,6 +269,12 @@ class GraphqlService
     ): array|object|null|string
     {
         $client = $this->getClient();
+        if (is_null($this->pingApi)) {
+            $this->ping();
+        }
+        if ($this->pingApi === false) {
+            return null;
+        }
         try {
             return $client->runQuery($gql, variables: $variables)?->getResults();
         } catch (Throwable $throwable) {
@@ -495,7 +532,6 @@ class GraphqlService
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): stdClass|null|string
     {
         if (!is_null($this->pDossier) && $getFromSage !== true) {
@@ -516,7 +552,6 @@ class GraphqlService
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi,
         );
         if (is_array($pDossier) && count($pDossier) === 1) {
             $pDossier = $pDossier[0];
@@ -542,7 +577,6 @@ class GraphqlService
         array   $queryParams,
         array   $selectionSets,
         bool    $getError,
-        bool    $ignorePingApi,
         bool    $allPages = false,
         ?string $arrayKey = null,
     ): array|null|string
@@ -572,7 +606,6 @@ class GraphqlService
                         $selectionSets,
                         $cacheName . '_' . $queryParams["paged"],
                         $getError,
-                        $ignorePingApi,
                         $getFromSage,
                         $arrayKey,
                     );
@@ -602,7 +635,6 @@ class GraphqlService
                     $selectionSets,
                     $cacheName,
                     $getError,
-                    $ignorePingApi,
                     $getFromSage,
                     $arrayKey
                 );
@@ -625,38 +657,12 @@ class GraphqlService
         return $entities;
     }
 
-    public function filterToGraphQlWhere(array $filter): stdClass
-    {
-        $conditionValues = $filter["condition"];
-        if (array_key_exists('conditionValues', $filter)) {
-            $conditionValues = $filter["conditionValues"];
-        }
-        $result = new stdClass();
-        $values = new stdClass();
-        $values->{$conditionValues} = array_map(function (array $value) {
-            if (array_key_exists('rawValue', $value)) {
-                return $value["rawValue"];
-            }
-            return [$value["field"] => [$value["condition"] => $value["value"]]];
-        }, $filter["values"]);
-        if (!empty($filter["subFilter"])) {
-            $result->{$filter["condition"]} = [
-                $values,
-                $this->filterToGraphQlWhere($filter["subFilter"])
-            ];
-        } else {
-            $result = $values;
-        }
-        return $result;
-    }
-
     public function searchEntities(
         string  $entityName,
         array   $queryParams,
         array   $selectionSets,
         ?string $cacheName = null,
         bool    $getError = false,
-        bool    $ignorePingApi = false,
         bool    $getFromSage = true,
         ?string $arrayKey = null,
     ): StdClass|null|string
@@ -664,16 +670,14 @@ class GraphqlService
         if (!is_null($cacheName)) {
             $cacheName = 'SearchEntities_' . $cacheName;
         }
-        if (!$this->pingApi && !$ignorePingApi) {
-            if (!is_null($cacheName)) {
-                $cacheService ??= CacheService::getInstance();
-                $result = $cacheService->get($cacheName, static fn() => null);
-                if (is_null($result)) {
-                    $cacheService->delete($cacheName);
-                }
+        if (!is_null($cacheName)) {
+            $cacheService ??= CacheService::getInstance();
+            $result = $cacheService->get($cacheName, static fn() => null);
+            if (is_null($result)) {
+                $cacheService->delete($cacheName);
+            } else {
                 return $result;
             }
-            return null;
         }
 
         $function = function () use ($entityName, $queryParams, $selectionSets, $getError) {
@@ -796,7 +800,6 @@ class GraphqlService
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->pExpeditions) && $getFromSage !== true) {
@@ -828,7 +831,6 @@ class GraphqlService
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi,
         );
         if (is_array($pExpeditions)) {
             foreach ($pExpeditions as $pExpedition) {
@@ -1072,7 +1074,6 @@ class GraphqlService
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->pUnites) && $getFromSage !== true) {
@@ -1104,7 +1105,6 @@ class GraphqlService
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi,
         );
         return $this->pUnites;
     }
@@ -1123,7 +1123,6 @@ class GraphqlService
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->fDepots) && $getFromSage !== true) {
@@ -1145,7 +1144,6 @@ class GraphqlService
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi,
         );
         return $this->fDepots;
     }
@@ -1166,7 +1164,6 @@ class GraphqlService
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->fFamilles) && $getFromSage !== true) {
@@ -1202,7 +1199,6 @@ class GraphqlService
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi,
             allPages: true,
         );
         return $this->fFamilles;
@@ -1220,7 +1216,6 @@ class GraphqlService
 
     public function getFArticle(
         string $arRef,
-        bool   $ignorePingApi = false,
         bool   $checkIfExists = false,
     ): StdClass|null
     {
@@ -1241,7 +1236,6 @@ class GraphqlService
                 "per_page" => "1"
             ],
             $this->_getFArticleSelectionSet(checkIfExists: $checkIfExists),
-            ignorePingApi: $ignorePingApi,
         );
         if (is_null($fArticle) || $fArticle->data->fArticles->totalCount !== 1) {
             return null;
@@ -1268,7 +1262,6 @@ class GraphqlService
         ?int   $doDomaine = null,
         ?int   $doProvenance = null,
         bool   $getError = false,
-        bool   $ignorePingApi = false,
         bool   $getWordpressIds = false,
         bool   $getFDoclignes = false,
         bool   $getExpedition = false,
@@ -1339,7 +1332,6 @@ class GraphqlService
                 getLotSerie: $getLotSerie,
             ),
             getError: $getError,
-            ignorePingApi: $ignorePingApi,
         );
         if (is_null($fDocentetes) || is_string($fDocentetes)) {
             return $fDocentetes;
@@ -1540,7 +1532,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $fDoclignes;
     }
 
-    public function getFComptet(string $ctNum, bool $ignorePingApi = false): StdClass|null
+    public function getFComptet(string $ctNum): StdClass|null
     {
         $fComptet = $this->searchEntities(
             FComptetResource::ENTITY_NAME,
@@ -1559,7 +1551,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 "per_page" => "1"
             ],
             $this->_getFComptetSelectionSet(),
-            ignorePingApi: $ignorePingApi,
         );
         if (is_null($fComptet) || $fComptet->data->fComptets->totalCount !== 1) {
             return null;
@@ -1572,7 +1563,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->pCattarifs) && $getFromSage !== true) {
@@ -1603,7 +1593,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi,
             arrayKey: 'cbIndice',
         );
         return $this->pCattarifs;
@@ -1625,7 +1614,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->fGlossaires) && $getFromSage !== true) {
@@ -1646,7 +1634,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi,
             allPages: true,
         );
         return $this->fGlossaires;
@@ -1656,7 +1643,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->fCatalogues) && $getFromSage !== true) {
@@ -1677,7 +1663,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi,
             allPages: true,
         );
         return $this->fCatalogues;
@@ -1701,7 +1686,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->cbSysLibres) && $getFromSage !== true) {
@@ -1722,7 +1706,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi,
             allPages: true,
         );
         return $this->cbSysLibres;
@@ -1746,7 +1729,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->fPays) && $getFromSage !== true) {
@@ -1766,7 +1748,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi
         );
         return $this->fPays;
     }
@@ -1785,7 +1766,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->fTaxes) && $getFromSage !== true) {
@@ -1805,7 +1785,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi,
             allPages: true,
         );
         return $this->fTaxes;
@@ -1815,7 +1794,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): array|null|string
     {
         if (!is_null($this->pCatComptas) && $getFromSage !== true) {
@@ -1836,7 +1814,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi
         );
         if (!is_null($pCatComptas) && !is_string($pCatComptas)) {
             $result = [];
@@ -1939,7 +1916,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         bool  $useCache = true,
         ?bool $getFromSage = null,
         bool  $getError = false,
-        bool  $ignorePingApi = false
     ): stdClass|null|string
     {
         if (!is_null($this->pPreference) && $getFromSage !== true) {
@@ -1960,7 +1936,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $queryParams,
             $selectionSets,
             $getError,
-            $ignorePingApi,
         );
         if (is_array($pPreference) && count($pPreference) === 1) {
             $pPreference = $pPreference[0];
@@ -2051,7 +2026,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
 
         $data = [];
         if ($getData) {
-            $data = json_decode(json_encode($this->searchEntities($entityName, $queryParams, $showFields, ignorePingApi: true)
+            $data = json_decode(json_encode($this->searchEntities($entityName, $queryParams, $showFields)
                 , JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
             $data = SageService::getInstance()->populateMetaDatas($data, $showFields, $resource);
         }

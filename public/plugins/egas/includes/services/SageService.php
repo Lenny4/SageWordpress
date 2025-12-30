@@ -14,7 +14,6 @@ use App\utils\OrderUtils;
 use App\utils\PathUtils;
 use App\utils\RoundUtils;
 use App\utils\SageTranslationUtils;
-use DateTime;
 use StdClass;
 use Symfony\Component\HttpFoundation\Response;
 use WC_Order;
@@ -89,58 +88,6 @@ WHERE user_login LIKE %s
         return $ctNum;
     }
 
-    public function getResource(string $entityName): Resource|null
-    {
-        $resources = $this->getResources();
-        foreach ($resources as $resource) {
-            if ($resource->getEntityName() == $entityName) {
-                return $resource;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * @return Resource[]
-     */
-    public function getResources(): array
-    {
-        if (is_null($this->resources)) {
-            /** @var Resource[] $resources */
-            $resources = [];
-            $files = glob(__DIR__ . '/../resources' . '/*.php');
-            foreach ($files as $file) {
-                if (
-                    str_ends_with($file, '/Resource.php') ||
-                    str_ends_with($file, '/ImportConditionDto.php')
-                ) {
-                    continue;
-                }
-                $hookClass = 'App\\resources\\' . basename($file, '.php');
-                if (class_exists($hookClass) && $hookClass::supports()) {
-                    /** @var Resource $resource */
-                    $resource = $hookClass::getInstance();
-                    $mandatoryFields = $resource->getMandatoryFields();
-                    foreach ($resource->getImportCondition() as $importCondition) {
-                        $mandatoryFields[] = $importCondition->getField();
-                    }
-                    $resource->setMandatoryFields($mandatoryFields);
-                    $resources[] = $resource;
-                }
-            }
-            $this->resources = $resources;
-        }
-        return $this->resources;
-    }
-
-    public static function getInstance(): self
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
-
     public function getFDoclignes(array|null|string $fDocentetes): array
     {
         if (!is_array($fDocentetes)) {
@@ -185,6 +132,14 @@ WHERE user_login LIKE %s
             });
         }
         return array_values($extendedFDocentetes)[0];
+    }
+
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
     }
 
     public function getTasksSynchronizeOrder_Products(WC_Order $order, array $fDoclignes): array
@@ -646,7 +601,6 @@ WHERE user_login LIKE %s
         ?string              $ctNum,
         ?int                 $shouldBeUserId = null,
         stdClass|string|null $fComptet = null,
-        bool                 $ignorePingApi = false,
         bool                 $newFComptet = false,
     ): array
     {
@@ -657,7 +611,7 @@ WHERE user_login LIKE %s
         }
         if (is_null($fComptet) && !is_null($ctNum)) {
             $ctNum = str_replace(' ', '', strtoupper($ctNum));
-            $fComptet = GraphqlService::getInstance()->getFComptet($ctNum, ignorePingApi: $ignorePingApi);
+            $fComptet = GraphqlService::getInstance()->getFComptet($ctNum);
         }
         if ($newFComptet) {
             if (!is_null($fComptet)) {
@@ -757,6 +711,50 @@ WHERE user_login LIKE %s
         return [$userId, "<div class='notice notice-success is-dismissible'>
                         " . __('L\'utilisateur a été créé', Sage::TOKEN) . $url . "
                                 </div>"];
+    }
+
+    public function getResource(string $entityName): Resource|null
+    {
+        $resources = $this->getResources();
+        foreach ($resources as $resource) {
+            if ($resource->getEntityName() == $entityName) {
+                return $resource;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @return Resource[]
+     */
+    public function getResources(): array
+    {
+        if (is_null($this->resources)) {
+            /** @var Resource[] $resources */
+            $resources = [];
+            $files = glob(__DIR__ . '/../resources' . '/*.php');
+            foreach ($files as $file) {
+                if (
+                    str_ends_with($file, '/Resource.php') ||
+                    str_ends_with($file, '/ImportConditionDto.php')
+                ) {
+                    continue;
+                }
+                $hookClass = 'App\\resources\\' . basename($file, '.php');
+                if (class_exists($hookClass) && $hookClass::supports()) {
+                    /** @var Resource $resource */
+                    $resource = $hookClass::getInstance();
+                    $mandatoryFields = $resource->getMandatoryFields();
+                    foreach ($resource->getImportCondition() as $importCondition) {
+                        $mandatoryFields[] = $importCondition->getField();
+                    }
+                    $resource->setMandatoryFields($mandatoryFields);
+                    $resources[] = $resource;
+                }
+            }
+            $this->resources = $resources;
+        }
+        return $this->resources;
     }
 
     public function getFieldsForEntity(Resource $resource, bool $withMetadata = true): array

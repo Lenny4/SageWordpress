@@ -61,7 +61,7 @@ class WoocommerceService
         $sageService = SageService::getInstance();
         $fComptetAddress = $sageService->createAddressWithFComptet($fComptet);
         $address = [];
-        $fPays = GraphqlService::getInstance()->getFPays(false, ignorePingApi: true);
+        $fPays = GraphqlService::getInstance()->getFPays(false);
         foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
             $thisAdress = current(array_filter($fComptet->fLivraisons, static function (StdClass $fLivraison) use ($addressType, $fComptetAddress) {
                 if ($addressType === OrderUtils::BILLING_ADDRESS_TYPE) {
@@ -144,12 +144,11 @@ class WoocommerceService
                 $order,
                 $_POST[Sage::TOKEN . '-fdocentete-dopiece'],
                 (int)$_POST[Sage::TOKEN . '-fdocentete-dotype'],
-                true,
             );
         }
     }
 
-    public function linkOrderFDocentete(WC_Order $order, string $doPiece, int $doType, bool $ignorePingApi, array $headers = []): WC_Order
+    public function linkOrderFDocentete(WC_Order $order, string $doPiece, int $doType, array $headers = []): WC_Order
     {
         $graphqlService = GraphqlService::getInstance();
         $fDocentete = $graphqlService->getFDocentetes(
@@ -157,7 +156,6 @@ class WoocommerceService
             [$doType],
             doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
             doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
-            ignorePingApi: $ignorePingApi,
             single: true
         );
         if ($fDocentete instanceof stdClass) {
@@ -172,7 +170,6 @@ class WoocommerceService
                 doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
                 doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
                 getError: true,
-                ignorePingApi: true,
                 getFDoclignes: true,
                 getExpedition: true,
                 addWordpressProductId: true,
@@ -281,7 +278,6 @@ class WoocommerceService
                         if (is_null($syncChange["new"]->postId)) {
                             [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage(
                                 $syncChange["new"]->arRef,
-                                ignorePingApi: true,
                                 headers: $headers,
                                 ignoreCanImport: true,
                             );
@@ -366,14 +362,13 @@ class WoocommerceService
 
     public function importFArticleFromSage(
         string        $arRef,
-        bool          $ignorePingApi =
-        false, array  $headers = [],
+        array         $headers = [],
         bool          $ignoreCanImport = false,
         stdClass|null $fArticle = null,
     ): array
     {
         if (is_null($fArticle)) {
-            $fArticle = GraphqlService::getInstance()->getFArticle($arRef, ignorePingApi: $ignorePingApi);
+            $fArticle = GraphqlService::getInstance()->getFArticle($arRef);
         }
         if (is_null($fArticle)) {
             return [null, null, "<div class='error'>
@@ -502,7 +497,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $message = '';
         $qty = wc_stock_amount($quantity);
         if (is_null($new->postId)) {
-            [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage($new->arRef, ignorePingApi: true);
+            [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage($new->arRef);
             if ($response["response"]["code"] !== 201) {
                 return $message2;
             }
@@ -860,7 +855,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $message = '';
         $userId = $new->userId;
         if (is_null($userId)) {
-            [$userId, $message] = SageService::getInstance()->updateUserOrFComptet($new->ctNum, ignorePingApi: true);
+            [$userId, $message] = SageService::getInstance()->updateUserOrFComptet($new->ctNum);
             if (!is_numeric($userId)) {
                 return $message;
             }
@@ -875,7 +870,6 @@ WHERE {$wpdb->posts}.post_type = 'product'
             doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
             doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
             getError: true,
-            ignorePingApi: true,
             getFDoclignes: true,
             getExpedition: true,
             addWordpressProductId: true,
@@ -1081,14 +1075,13 @@ WHERE {$wpdb->posts}.post_type = 'product'
     public function importFDocenteteFromSage(string $doPiece, string $doType, array $headers = []): array
     {
         $order = new WC_Order();
-        $order = $this->linkOrderFDocentete($order, $doPiece, $doType, true, headers: $headers);
+        $order = $this->linkOrderFDocentete($order, $doPiece, $doType, headers: $headers);
         $extendedFDocentetes = GraphqlService::getInstance()->getFDocentetes(
             $doPiece,
             [(int)$doType],
             doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
             doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
             getError: true,
-            ignorePingApi: true,
             getFDoclignes: true,
             getExpedition: true,
             addWordpressProductId: true,

@@ -40,7 +40,7 @@ class WoocommerceController
             . $identifier["doPiece"];
     }
 
-    public static function getMetaboxFDocentete(WC_Order $order, bool $ignorePingApi = false, string $message = '')
+    public static function getMetaboxFDocentete(WC_Order $order, string $message = '')
     {
         $woocommerceService = WoocommerceService::getInstance();
         $graphqlService = GraphqlService::getInstance();
@@ -55,7 +55,6 @@ class WoocommerceController
                 doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
                 doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
                 getError: true,
-                ignorePingApi: $ignorePingApi,
                 getFDoclignes: true,
                 getExpedition: true,
                 addWordpressProductId: true,

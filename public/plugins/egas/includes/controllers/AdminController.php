@@ -659,11 +659,13 @@ class AdminController
 
     public static function adminNotices(?string $message): void
     {
-        add_action('admin_notices', static function () use ($message): void {
-            if (!empty($message)) {
-                echo $message;
-            }
-        });
+        if (is_admin()) {
+            add_action('admin_notices', static function () use ($message): void {
+                if (!empty($message)) {
+                    echo $message;
+                }
+            });
+        }
     }
 
     public static function getWrongOptions(): string|null

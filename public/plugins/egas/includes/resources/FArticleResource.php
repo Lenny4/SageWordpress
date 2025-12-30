@@ -146,7 +146,6 @@ class FArticleResource extends Resource
         $this->import = static function (string $identifier) {
             [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage(
                 $identifier,
-                ignorePingApi: true,
             );
             return $postId;
         };

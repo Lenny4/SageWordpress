@@ -115,7 +115,7 @@ class FComptetResource extends Resource
                 }),
         ];
         $this->import = static function (string $identifier) {
-            [$userId, $message] = SageService::getInstance()->updateUserOrFComptet($identifier, ignorePingApi: true);
+            [$userId, $message] = SageService::getInstance()->updateUserOrFComptet($identifier);
             return $userId;
         };
         $this->selectionSet = GraphqlService::getInstance()->_getFComptetSelectionSet();
