@@ -2,6 +2,7 @@
 
 namespace App\utils;
 
+use App\enum\Sage\DocumentTypeEnum;
 use App\Sage;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
@@ -11,36 +12,21 @@ if (!defined('ABSPATH')) {
 
 final class FDocenteteUtils
 {
-    // todo replace by DomaineTypeEnum
-    public const DO_TYPE_DEVIS = 0;
-    public const DO_TYPE_COMMANDE = 1;
-    public const DO_TYPE_PREPA_LIVRAISON = 2;
-    public const DO_TYPE_LIVRAISON = 3;
-    public const DO_TYPE_REPRISE = 4;
-    public const DO_TYPE_AVOIR = 5;
-    public const DO_TYPE_FACTURE = 6;
-    public const DO_TYPE_FACTURE_CPTA = 7;
-    public const DO_TYPE_FACTURE_ARCHIVE = 8;
-
-    public const DO_DOMAINE_VENTE = 0;
-
-    public const DO_PROVENANCE_NORMAL = 0;
-
     // basically all doTypes which are saved in history or facture
     public const DO_TYPE_MAPPABLE = [
-        self::DO_TYPE_DEVIS,
-        self::DO_TYPE_COMMANDE,
-        self::DO_TYPE_PREPA_LIVRAISON,
-        self::DO_TYPE_LIVRAISON,
-        self::DO_TYPE_FACTURE,
-        self::DO_TYPE_FACTURE_CPTA,
+        DocumentTypeEnum::DocumentTypeVenteDevis->value,
+        DocumentTypeEnum::DocumentTypeVenteCommande->value,
+        DocumentTypeEnum::DocumentTypeVentePrepaLivraison->value,
+        DocumentTypeEnum::DocumentTypeVenteLivraison->value,
+        DocumentTypeEnum::DocumentTypeVenteFacture->value,
+        DocumentTypeEnum::DocumentTypeVenteFactureCpta->value,
     ];
 
     public const FDOCLIGNE_MAPPING_DO_TYPE = [
-        self::DO_TYPE_DEVIS => 'De',
-        self::DO_TYPE_COMMANDE => 'Bc',
-        self::DO_TYPE_PREPA_LIVRAISON => 'Pl',
-        self::DO_TYPE_LIVRAISON => 'Bl',
+        DocumentTypeEnum::DocumentTypeVenteDevis->value => 'De',
+        DocumentTypeEnum::DocumentTypeVenteCommande->value => 'Bc',
+        DocumentTypeEnum::DocumentTypeVentePrepaLivraison->value => 'Pl',
+        DocumentTypeEnum::DocumentTypeVenteLivraison->value => 'Bl',
     ];
 
     public const ALL_TAXES = [1, 2, 3];

@@ -2,6 +2,8 @@
 
 namespace App\controllers;
 
+use App\enum\Sage\DocumentProvenanceTypeEnum;
+use App\enum\Sage\DomaineTypeEnum;
 use App\Sage;
 use App\services\GraphqlService;
 use App\services\SageService;
@@ -50,8 +52,8 @@ class WoocommerceController
             $extendedFDocentetes = $graphqlService->getFDocentetes(
                 $fDocenteteIdentifier["doPiece"],
                 [$fDocenteteIdentifier["doType"]],
-                doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
-                doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
+                doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
+                doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
                 getError: true,
                 ignorePingApi: $ignorePingApi,
                 getFDoclignes: true,

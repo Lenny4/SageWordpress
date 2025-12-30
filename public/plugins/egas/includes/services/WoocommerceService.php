@@ -3,20 +3,18 @@
 namespace App\services;
 
 use App\controllers\AdminController;
-use App\enum\Sage\ArticleTypeEnum;
 use App\enum\Sage\DocumentFraisTypeEnum;
+use App\enum\Sage\DocumentProvenanceTypeEnum;
+use App\enum\Sage\DomaineTypeEnum;
 use App\enum\Sage\ETypeCalculEnum;
-use App\enum\Sage\NomenclatureTypeEnum;
 use App\enum\Sage\TaxeTauxType;
 use App\resources\FArticleResource;
 use App\resources\FComptetResource;
 use App\resources\FDocenteteResource;
 use App\resources\Resource;
 use App\Sage;
-use App\utils\FDocenteteUtils;
 use App\utils\OrderUtils;
 use App\utils\TaxeUtils;
-use DateTime;
 use stdClass;
 use WC_Cart;
 use WC_Meta_Data;
@@ -157,8 +155,8 @@ class WoocommerceService
         $fDocentete = $graphqlService->getFDocentetes(
             $doPiece,
             [$doType],
-            doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
-            doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
+            doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
+            doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
             ignorePingApi: $ignorePingApi,
             single: true
         );
@@ -171,8 +169,8 @@ class WoocommerceService
             $extendedFDocentetes = $graphqlService->getFDocentetes(
                 $doPiece,
                 [$doType],
-                doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
-                doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
+                doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
+                doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
                 getError: true,
                 ignorePingApi: true,
                 getFDoclignes: true,
@@ -874,8 +872,8 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $extendedFDocentetes = GraphqlService::getInstance()->getFDocentetes(
             $fDocenteteIdentifier["doPiece"],
             [$fDocenteteIdentifier["doType"]],
-            doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
-            doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
+            doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
+            doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
             getError: true,
             ignorePingApi: true,
             getFDoclignes: true,
@@ -1087,8 +1085,8 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $extendedFDocentetes = GraphqlService::getInstance()->getFDocentetes(
             $doPiece,
             [(int)$doType],
-            doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
-            doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
+            doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
+            doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
             getError: true,
             ignorePingApi: true,
             getFDoclignes: true,

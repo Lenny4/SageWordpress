@@ -3,6 +3,8 @@
 namespace App\hooks;
 
 use App\controllers\WoocommerceController;
+use App\enum\Sage\DocumentProvenanceTypeEnum;
+use App\enum\Sage\DomaineTypeEnum;
 use App\resources\FComptetResource;
 use App\Sage;
 use App\services\GraphqlService;
@@ -121,8 +123,8 @@ class RestApiHook
                     $extendedFDocentetes = GraphqlService::getInstance()->getFDocentetes(
                         $fDocenteteIdentifier["doPiece"],
                         [$fDocenteteIdentifier["doType"]],
-                        doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
-                        doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
+                        doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
+                        doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
                         getError: true,
                         ignorePingApi: true,
                         getFDoclignes: true,
@@ -218,8 +220,8 @@ class RestApiHook
                     $fDocentetes = GraphqlService::getInstance()->getFDocentetes(
                         strtoupper(trim($request['doPiece'])),
                         doTypes: FDocenteteUtils::DO_TYPE_MAPPABLE,
-                        doDomaine: FDocenteteUtils::DO_DOMAINE_VENTE,
-                        doProvenance: FDocenteteUtils::DO_PROVENANCE_NORMAL,
+                        doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
+                        doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
                         getError: true,
                         ignorePingApi: true,
                         getWordpressIds: true,
