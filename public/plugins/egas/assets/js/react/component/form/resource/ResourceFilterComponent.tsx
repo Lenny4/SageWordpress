@@ -63,6 +63,7 @@ interface State {
   checkboxInput?: HTMLInputElement;
   withUrl?: boolean;
   allowEditImportCondition?: boolean;
+  onDispatch?: () => void;
 }
 
 interface State2 {
@@ -740,6 +741,7 @@ export const ResourceFilterComponent: React.FC<State> = ({
   checkboxInput,
   withUrl,
   allowEditImportCondition,
+  onDispatch,
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [show, setShow] = React.useState<boolean>(
@@ -749,7 +751,8 @@ export const ResourceFilterComponent: React.FC<State> = ({
     if (!show) {
       return null;
     }
-    const newFilter: FilterInterface = {
+    const refFilterForm = React.createRef();
+    let newFilter: FilterInterface = {
       condition: "and",
       allowCondition: !!allowEditImportCondition,
       allowConditionValues: !!allowEditImportCondition,
@@ -763,14 +766,16 @@ export const ResourceFilterComponent: React.FC<State> = ({
           ref: React.createRef(),
         };
       }),
-      ref: React.createRef(),
+      ref: refFilterForm,
     };
     let initFilter = resourceFilter.initFilter;
     if (withUrl) {
       const filterParam = searchParams.get("filter");
       if (filterParam) {
         try {
-          initFilter = JSON.parse(decodeURIComponent(filterParam));
+          newFilter = JSON.parse(decodeURIComponent(filterParam));
+          newFilter.ref = refFilterForm;
+          initFilter = undefined;
         } catch (e) {
           // console.error(e);
         }
@@ -853,6 +858,11 @@ export const ResourceFilterComponent: React.FC<State> = ({
           params.set("filter", encodeURIComponent(JSON.stringify(filterUrl)));
         } else {
           params.delete("filter");
+        }
+        if (onDispatch) {
+          setTimeout(() => {
+            onDispatch();
+          }, 1);
         }
         return params;
       });

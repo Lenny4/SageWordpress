@@ -309,7 +309,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
 
         // region add column to product list
         add_filter('manage_edit-product_columns', function (array $columns) { // https://stackoverflow.com/a/44702012/6824121
-            $columns[Sage::TOKEN] = __('Egas', Sage::TOKEN); // todo change css class
+            $columns[Sage::TOKEN] = __('Egas', Sage::TOKEN);
             return $columns;
         }, 10, 1);
 

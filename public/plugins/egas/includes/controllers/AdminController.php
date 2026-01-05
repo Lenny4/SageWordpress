@@ -176,15 +176,6 @@ class AdminController
                         'type' => '2_select_multi',
                         'options' => $fieldOptions,
                         'default' => $defaultFields,
-                        // todo ajouter un paramètre pour dire si il faut affichier sur la liste ou option
-                    ],
-                    [
-                        'id' => $resource->getEntityName() . '_perPage',
-                        'label' => __('Nombre d\'élément par défaut par page', Sage::TOKEN),
-                        'description' => __('Veuillez sélectionner le nombre de lignes à afficher sur le tableau.', Sage::TOKEN),
-                        'type' => 'select',
-                        'options' => array_combine(Sage::$paginationRange, Sage::$paginationRange),
-                        'default' => (string)Sage::$defaultPagination
                     ],
                     [
                         'id' => $resource->getEntityName() . '_filter_fields',
@@ -197,6 +188,14 @@ class AdminController
                         'default' => array_filter($defaultFields, static function (string $v) {
                             return !str_starts_with($v, Sage::PREFIX_META_DATA);
                         }),
+                    ],
+                    [
+                        'id' => $resource->getEntityName() . '_perPage',
+                        'label' => __('Nombre d\'élément par défaut par page', Sage::TOKEN),
+                        'description' => __('Veuillez sélectionner le nombre de lignes à afficher sur le tableau.', Sage::TOKEN),
+                        'type' => 'select',
+                        'options' => array_combine(Sage::$paginationRange, Sage::$paginationRange),
+                        'default' => (string)Sage::$defaultPagination,
                     ],
                     ...$resource->getOptions(),
                 ];
@@ -488,7 +487,6 @@ class AdminController
                     'capability' => 'manage_options',
                     'menu_slug' => Sage::TOKEN . '_settings',
                     'function' => function (): void {
-                        // todo use twig
                         // Build page HTML.
                         $html = TwigService::getInstance()->render('base.html.twig');
                         $html .= '<div class="wrap" id="' . Sage::TOKEN . '_settings">' . "\n";
@@ -709,7 +707,6 @@ class AdminController
             $fieldsForm = '';
             $optionNames = [];
             foreach ($changes as $sageExpectedOption) {
-                // todo use twig
                 $optionValue = $sageExpectedOption->getOptionValue();
                 $result .= "<div>" . __('Le plugin Sage a besoin de modifier l\'option', Sage::TOKEN) . " <code>" .
                     $sageExpectedOption->getTrans() . "</code> " . __('pour lui donner la valeur', Sage::TOKEN) . " <code>" .

@@ -11,7 +11,6 @@ import { getTranslations } from "./functions/translations";
 import { basePlacements } from "@popperjs/core/lib/enums";
 import { TOKEN } from "./token"; // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 
-// todo intégrer: https://github.com/woocommerce/woocommerce/pull/55508
 // todo refacto pour utiliser davantage de React (comme par exemple toute la partie sur la gestion des filtres)
 $(() => {
   const siteUrl = $(`[data-${TOKEN}-site-url]`).attr(`data-${TOKEN}-site-url`);

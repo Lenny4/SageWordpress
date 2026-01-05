@@ -148,7 +148,6 @@ class GraphqlService
         bool   $getError = false,
     ): StdClass|null|string
     {
-        // todo si l'update du site ne marche pas il faut le renvoyer dès que pingApi fonctionne
         global $wpdb;
         $hasError = false;
         $wordpressHostUrl = parse_url((string)get_option(Sage::TOKEN . '_wordpress_host_url'));

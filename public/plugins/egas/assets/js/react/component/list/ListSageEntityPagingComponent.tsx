@@ -20,9 +20,7 @@ export const ListSageEntityPagingComponent: React.FC<State> = ({
   const getCurrentPage = () => {
     return Number(searchParams.get("paged") ?? 1);
   };
-  const currentPage = getCurrentPage();
-  const [page, setPage] = React.useState<string>(currentPage.toString());
-  const [perPage, setPerPage] = React.useState<string>(() => {
+  const getPerPage = () => {
     let result = Number(
       searchParams.get("per_page") ?? defaultPerPage,
     ).toString();
@@ -30,43 +28,15 @@ export const ListSageEntityPagingComponent: React.FC<State> = ({
       result = paginationRange[0].toString();
     }
     return result;
-  });
+  };
+  const currentPage = getCurrentPage();
+  const page = currentPage.toString();
+  const perPage = getPerPage().toString();
 
   const totalCount = Number(result?.totalCount ?? 0);
   const maxPage = Math.ceil(totalCount / Number(perPage));
   const canGoBack = Number(currentPage) !== 1;
   const canGoNext = Number(currentPage) !== Number(maxPage);
-
-  React.useEffect(() => {
-    if (Number(page) > maxPage) {
-      setPage(maxPage.toString());
-      return;
-    }
-    const timeoutTyping = setTimeout(() => {
-      setSearchParams((x) => {
-        const params = new URLSearchParams(x);
-        let p = Number(page);
-        if (p < 1) {
-          p = 1;
-        }
-        params.set("paged", p.toString());
-        return params;
-      });
-    }, 500);
-    return () => clearTimeout(timeoutTyping);
-  }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  React.useEffect(() => {
-    setSearchParams((x) => {
-      const params = new URLSearchParams(x);
-      params.set("per_page", Number(perPage).toString());
-      return params;
-    });
-  }, [perPage]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  React.useEffect(() => {
-    setPage(getCurrentPage().toString());
-  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div
@@ -121,7 +91,12 @@ export const ListSageEntityPagingComponent: React.FC<State> = ({
             name="paged"
             value={page}
             onChange={(e) => {
-              setPage(e.target.value);
+              e.preventDefault();
+              setSearchParams((x) => {
+                const params = new URLSearchParams(x);
+                params.set("paged", e.target.value);
+                return params;
+              });
             }}
             size={4}
             aria-describedby="table-paging"
@@ -174,7 +149,12 @@ export const ListSageEntityPagingComponent: React.FC<State> = ({
         id="per_page"
         value={perPage}
         onChange={(e) => {
-          setPerPage(e.target.value);
+          e.preventDefault();
+          setSearchParams((x) => {
+            const params = new URLSearchParams(x);
+            params.set("per_page", e.target.value.toString());
+            return params;
+          });
         }}
       >
         {paginationRange.map((r) => {

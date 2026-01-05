@@ -39,20 +39,28 @@ export const ListSageEntityComponent: React.FC<State> = ({
   resourceFilter,
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [init, setInit] = React.useState<boolean>(false);
   const [result, setResult] = React.useState<ResultTableInterface | undefined>(
     undefined,
   );
   const [searching, setSearching] = React.useState<boolean>(false);
 
   const search = async () => {
+    if (!init) {
+      return;
+    }
     const params = new URLSearchParams(searchParams);
     params.delete("page");
-    const stringParams = params.toString();
+    let stringParams = params.toString();
+    if (stringParams !== "") {
+      stringParams = "&" + stringParams;
+    }
     realSearch = stringParams;
     setSearching(true);
+    console.log(init, stringParams);
     const response = await fetch(
       siteUrl +
-        `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search/sage-entity-menu/${sageEntityName}`)}&${stringParams}&_wpnonce=${wpnonce}`,
+        `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search/sage-entity-menu/${sageEntityName}`)}${stringParams}&_wpnonce=${wpnonce}`,
     );
     if (response.ok) {
       if (realSearch === stringParams) {
@@ -67,7 +75,7 @@ export const ListSageEntityComponent: React.FC<State> = ({
 
   React.useEffect(() => {
     search();
-  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchParams, init]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -76,6 +84,9 @@ export const ListSageEntityComponent: React.FC<State> = ({
           resourceFilter={resourceFilter}
           withUrl={true}
           allowEditImportCondition={true}
+          onDispatch={() => {
+            setInit(true);
+          }}
         />
         <ListSageEntityPagingComponent
           result={result}
