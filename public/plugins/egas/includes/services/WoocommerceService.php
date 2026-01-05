@@ -40,7 +40,7 @@ class WoocommerceService
     {
     }
 
-    public function convertSageUserToWoocommerce(
+    public function convertFComptetToUser(
         StdClass $fComptet,
         ?int     $userId = null,
     ): array|string
@@ -56,7 +56,6 @@ class WoocommerceService
                 return [null, "<div class='notice notice-error is-dismissible'>" . __('This email address [' . $email . '] is already registered for user id: ' . $mailExistsUserId . '.', 'woocommerce') . "</div>", null];
             }
             $userId = $mailExistsUserId;
-            SageService::getInstance()->updateUserOrFComptet($ctNum, $userId, $fComptet);
         }
         $sageService = SageService::getInstance();
         $fComptetAddress = $sageService->createAddressWithFComptet($fComptet);
@@ -855,7 +854,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $message = '';
         $userId = $new->userId;
         if (is_null($userId)) {
-            [$userId, $message] = SageService::getInstance()->updateUserOrFComptet($new->ctNum);
+            [$userId, $message] = SageService::getInstance()->importFComptetFromSage($new->ctNum);
             if (!is_numeric($userId)) {
                 return $message;
             }

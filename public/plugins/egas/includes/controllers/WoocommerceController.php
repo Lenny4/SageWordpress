@@ -151,16 +151,48 @@ class WoocommerceController
         }
         $html = ob_get_clean();
         $crawler = new Crawler($html);
+        $dom = $crawler->getNode(0)->ownerDocument;
         $fDocenteteIdentifier = WoocommerceService::getInstance()->getFDocenteteIdentifierFromOrder($order);
         $translations = SageTranslationUtils::getTranslations();
         if (!empty($fDocenteteIdentifier)) {
-            $a = $crawler->filter('.woocommerce-order-data__heading')->first();
-            $title = $a->innerText();
-            return str_replace($title, $title . ' ['
-                . $translations["fDocentetes"]["doType"]["values"][$fDocenteteIdentifier["doType"]]
-                . ': n° '
-                . $fDocenteteIdentifier["doPiece"]
-                . ']', $html);
+            // region add Sage document info in the header
+            $heading = $crawler->filter('.woocommerce-order-data__heading')->first();
+            $headingNode = $heading->getNode(0);
+            $newTitle =
+                trim($heading->text()) .
+                ' [' .
+                $translations['fDocentetes']['doType']['values'][$fDocenteteIdentifier['doType']] .
+                ': n° ' .
+                $fDocenteteIdentifier['doPiece'] .
+                ']';
+            $headingNode->nodeValue = $newTitle;
+            // endregion
+
+            // region disable change customer when fDocentete linked
+            $select = $crawler->filter('select#customer_user')->first();
+            $selectNode = $select->getNode(0);
+            // Remove select2-hidden-accessible
+            $classes = explode(' ', $selectNode->getAttribute('class'));
+            $classes = array_filter($classes, fn($c) => $c !== 'wc-customer-search');
+            $selectNode->setAttribute('class', implode(' ', $classes));
+            // Hide the select
+            $selectNode->setAttribute('style', 'display:none;');
+            // Get selected option
+            $selectedOption = $select->filter('option[selected]')->count()
+                ? $select->filter('option[selected]')
+                : $select->filter('option')->first();
+            $selectedOptionText = trim($selectedOption->text());
+            $selectedOptionText = html_entity_decode($selectedOptionText, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $userId = $selectedOption->attr('value');
+            // Create a link to the user profile
+            $dom = $selectNode->ownerDocument;
+            $link = $dom->createElement('a', $selectedOptionText);
+            $link->setAttribute('href', admin_url('user-edit.php?user_id=' . $userId));
+            $link->setAttribute('class', 'customer-user-link');
+            // Insert link after select
+            $selectNode->parentNode->insertBefore($link, $selectNode->nextSibling);
+            // endregion
+            return $dom->saveHTML();
         }
         return $html;
     }

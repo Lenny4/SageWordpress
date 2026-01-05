@@ -74,7 +74,7 @@ class GraphqlService
             return;
         }
         $this->pingApi = false;
-        if (current_user_can('read')) { // Minimum capability required to access /wp-admin
+        if (!current_user_can('read')) { // Minimum capability required to access /wp-admin
             return;
         }
         $hostUrl = get_option(Sage::TOKEN . '_api_host_url');
@@ -313,50 +313,6 @@ class GraphqlService
         }
 
         return $this->client;
-    }
-
-    public function createUpdateFComptet(
-        int     $userId,
-        ?string $ctNum = null,
-        bool    $new = false,
-        bool    $getError = false,
-    ): StdClass|null|string
-    {
-        $autoGenerateCtNum = is_null($ctNum);
-        $user = get_user_by('id', $userId);
-        $userMetaWordpress = get_user_meta($userId);
-        $ctEmail = $user->user_email;
-        $ctIntitule = '';
-        if (isset($userMetaWordpress['first_name'][0])) {
-            $ctIntitule = trim($userMetaWordpress['first_name'][0]);
-        }
-        if (isset($userMetaWordpress['last_name'][0])) {
-            $ctIntitule = trim($userMetaWordpress['first_name'][0]);
-        }
-        if ($ctIntitule === '') {
-            $ctIntitule = $user->data->user_login;
-        }
-        $arguments = [
-            'ctIntitule' => $ctIntitule,
-            'ctEmail' => $ctEmail,
-            'new' => $new,
-            'websiteId' => get_option(Sage::TOKEN . '_website_id'),
-            'autoGenerateCtNum' => $autoGenerateCtNum,
-        ];
-        if (!is_null($ctNum)) {
-            $arguments['ctNum'] = $ctNum;
-        }
-        $mutation = (new Mutation('createUpdateFComptet'))
-            ->setVariables([new Variable('createUpdateFComptetDto', 'CreateFComptetDtoInput', true)])
-            ->setArguments(['createUpdateFComptetDto' => '$createUpdateFComptetDto'])
-            ->setSelectionSet($this->formatSelectionSet($this->_getFComptetSelectionSet()));
-        $variables = ['createUpdateFComptetDto' => $arguments];
-        $result = $this->runQuery($mutation, $getError, $variables);
-
-        if (!is_null($result) && !is_string($result)) {
-            return $result->data->createUpdateFComptet;
-        }
-        return $result;
     }
 
     private function formatSelectionSet(array $selectionSets): array
@@ -1847,28 +1803,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                     }, range(1, PCatComptaUtils::NB_TIERS_TYPE)),
                 ]),
             ];
-        }
-        return $result;
-    }
-
-    public function createUpdateFComptetFromWebsite(
-        string $ctNum,
-        bool   $getError = false,
-    ): StdClass|null|string
-    {
-        $arguments = [
-            'ctNum' => $ctNum,
-            'websiteId' => (int)get_option(Sage::TOKEN . '_website_id'),
-        ];
-        $mutation = (new Mutation('createUpdateFComptetFromWebsite'))
-            ->setVariables([new Variable('updateFComptetFromWebsiteDto', 'UpdateFComptetFromWebsiteDtoInput', true)])
-            ->setArguments(['updateFComptetFromWebsiteDto' => '$updateFComptetFromWebsiteDto'])
-            ->setSelectionSet($this->formatSelectionSet($this->_getFComptetSelectionSet()));
-        $variables = ['updateFComptetFromWebsiteDto' => $arguments];
-        $result = $this->runQuery($mutation, $getError, $variables);
-
-        if (!is_null($result) && !is_string($result)) {
-            return $result->data->createUpdateFComptetFromWebsite;
         }
         return $result;
     }

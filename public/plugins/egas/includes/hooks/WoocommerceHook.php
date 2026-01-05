@@ -58,7 +58,6 @@ class WoocommerceHook
             if (!str_starts_with($wcShippingRate->get_method_id(), Sage::TOKEN . '-')) {
                 return $label;
             }
-            // todo vérifier que c'est bon
             $remove = '[Egas] ';
             if (str_starts_with($label, $remove)) {
                 $label = substr($label, strlen($remove));

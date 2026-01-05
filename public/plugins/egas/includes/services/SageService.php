@@ -315,9 +315,6 @@ WHERE user_login LIKE %s
                 'changes' => [OrderUtils::ADD_SHIPPING_ACTION],
             ];
         }
-
-        // todo faire un cron qui regarde si une commande a été modifié dans Sage mais pas dans wordpress -> mettre à jour la commande wordpress
-
         return [$shippingChanges, $taxeCodes];
     }
 
@@ -416,7 +413,7 @@ WHERE user_login LIKE %s
     {
         $userChanges = [];
         $userMetaWordpress = get_user_meta($userId);
-        [$userId, $userFromSage, $metadata] = WoocommerceService::getInstance()->convertSageUserToWoocommerce($fComptet, userId: $userId);
+        [$userId, $userFromSage, $metadata] = WoocommerceService::getInstance()->convertFComptetToUser($fComptet, userId: $userId);
         if (!($userFromSage instanceof WP_User)) {
             return $userChanges;
         }
@@ -597,80 +594,41 @@ WHERE user_login LIKE %s
      * If fComptet is more up to date than user -> update user in wordpress
      * If user is more up to date than fComptet -> update fComptet in sage
      */
-    public function updateUserOrFComptet(
+    public function importFComptetFromSage(
         ?string              $ctNum,
-        ?int                 $shouldBeUserId = null,
         stdClass|string|null $fComptet = null,
-        bool                 $newFComptet = false,
     ): array
     {
-        if (is_null($ctNum) && !$newFComptet) {
+        if (is_null($ctNum)) {
             return [null, "<div class='error'>
                     " . __("Vous devez spécifier le numéro de compte Sage", Sage::TOKEN) . "
                             </div>"];
         }
-        if (is_null($fComptet) && !is_null($ctNum)) {
-            $ctNum = str_replace(' ', '', strtoupper($ctNum));
-            $fComptet = GraphqlService::getInstance()->getFComptet($ctNum);
-        }
-        if ($newFComptet) {
-            if (!is_null($fComptet)) {
-                return [null, "<div class='error'>
-                    " . __("Vous essayez de créer compte Sage qui existe déjà (" . $ctNum . ")", Sage::TOKEN) . "
-                            </div>"];
-            }
-            if (is_null($shouldBeUserId)) {
-                return [null, "<div class='error'>
-                    " . __("Vous devez spécifier l'id compte Wordpress", Sage::TOKEN) . "
-                            </div>"];
-            }
-            $fComptet = GraphqlService::getInstance()->createUpdateFComptet(
-                userId: $shouldBeUserId,
-                ctNum: $ctNum,
-                new: true,
-                getError: true,
-            );
-            if (is_string($fComptet)) {
-                return [null, "<div class='notice notice-error is-dismissible'>" . $fComptet . "</div>"];
-            }
-        }
+        $fComptet ??= GraphqlService::getInstance()->getFComptet($ctNum);
         if (is_null($fComptet)) {
-            $word = 'importé';
-            if ($newFComptet) {
-                $word = 'crée';
-            }
             return [null, "<div class='error'>
-                    " . __("Le compte Sage n'a pas pu être " . $word, Sage::TOKEN) . "
+                    " . __("Le compte Sage n'a pas pu être importé", Sage::TOKEN) . "
                             </div>"];
         }
         $resource = SageService::getInstance()->getResource(FComptetResource::ENTITY_NAME);
         $canImportFComptet = $resource->getCanImport()($fComptet);
         if (!empty($canImportFComptet)) {
-            return [null, null, "<div class='error'>
+            return [null, "<div class='error'>
                         " . implode(' ', $canImportFComptet) . "
                                 </div>"];
         }
         $ctNum = $fComptet->ctNum;
         $userId = WordpressService::getInstance()->getUserIdWithCtNum($ctNum);
-        if (!is_null($shouldBeUserId)) {
-            if (is_null($userId)) {
-                $userId = $shouldBeUserId;
-            } else if ($userId !== $shouldBeUserId) {
-                return [null, "<div class='error'>
-                        " . __("Ce numéro de compte Sage est déjà assigné à un utilisateur Wordpress", Sage::TOKEN) . "
-                                </div>"];
-            }
-        }
-        [$userId, $userFromSage, $metadata] = WoocommerceService::getInstance()->convertSageUserToWoocommerce(
+        [$userId, $wpUser, $metadata] = WoocommerceService::getInstance()->convertFComptetToUser(
             $fComptet,
             $userId,
         );
-        if (is_string($userFromSage)) {
-            return [null, $userFromSage];
+        if (is_string($wpUser)) {
+            return [null, $wpUser];
         }
         $newUser = is_null($userId);
         if ($newUser) {
-            $userId = wp_create_user($userFromSage->user_login, $userFromSage->user_pass, $userFromSage->user_email);
+            $userId = wp_create_user($wpUser->user_login, $wpUser->user_pass, $wpUser->user_email);
         }
         if ($userId instanceof WP_Error) {
             return [null, "<div class='notice notice-error is-dismissible'>
@@ -678,30 +636,11 @@ WHERE user_login LIKE %s
                                 <pre>" . $userId->get_error_message() . "</pre>
                                 </div>"];
         }
-        // todo quoi faire ici ?
-        $updateApi = empty(get_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', true));
-        if ($updateApi) {
-            $wpUser = new WP_User($userId);
-            if ($wpUser->user_login !== $userFromSage->user_login) {
-                wp_update_user($userFromSage);
-            }
-            foreach ($metadata as $key => $value) {
-                update_user_meta($userId, $key, $value);
-            }
-        } else {
-            if (!$newFComptet) { // no need update fComptet as sageGraphQl->createUpdateFComptet already update fComptet
-                $fComptet = GraphqlService::getInstance()->createUpdateFComptetFromWebsite(
-                    ctNum: $ctNum,
-                    getError: true,
-                );
-                if (is_string($fComptet)) {
-                    return [null, $fComptet];
-                }
-            }
-            // no need because it's done directly by Sage Api
-            // update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', null);
+        $wpUser = new WP_User($userId);
+        wp_update_user($wpUser);
+        foreach ($metadata as $key => $value) {
+            update_user_meta($userId, $key, $value);
         }
-
         $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "user-edit.php?user_id=" . $userId . "'>" . __("Voir l'utilisateur", Sage::TOKEN) . "</a></span></strong>";
         if (!$newUser) {
             return [$userId, "<div class='notice notice-success is-dismissible'>
