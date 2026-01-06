@@ -11,7 +11,6 @@ use App\services\SageService;
 use App\services\WoocommerceService;
 use App\utils\SageTranslationUtils;
 use DateTime;
-use Exception;
 use stdClass;
 
 class FArticleResource extends Resource
@@ -45,16 +44,19 @@ class FArticleResource extends Resource
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FARTICLES;
-        $initFilter = self::getDefaultResourceFilter();
-        $initFilterJson = json_encode($initFilter);
-        $this->options = [
-            [
-                'id' => 'sage_create_new_farticle',
-                'label' => __("Créer l'article dans Sage.", Sage::TOKEN),
-                'description' => __("Créer l'article dans Sage lorsqu'un nouveau produit Woocommerce est crée.", Sage::TOKEN),
-                'type' => 'checkbox',
-                'default' => 'off',
-            ],
+        $this->options = function (): array {
+            // todo
+//            $websiteApi = SageService::getInstance()->getWebsiteOption();
+            $initFilter = self::getDefaultResourceFilter();
+            $initFilterJson = json_encode($initFilter);
+            return [
+                [
+                    'id' => 'sage_create_new_farticle',
+                    'label' => __("Créer l'article dans Sage.", Sage::TOKEN),
+                    'description' => __("Créer l'article dans Sage lorsqu'un nouveau produit Woocommerce est crée.", Sage::TOKEN),
+                    'type' => 'checkbox',
+                    'default' => 'off',
+                ],
 //            [
 //                'id' => 'sage_create_old_farticle',
 //                'label' => __("Importe les anciens produits.", Sage::TOKEN),
@@ -62,47 +64,48 @@ class FArticleResource extends Resource
 //                'type' => 'checkbox',
 //                'default' => 'off',
 //            ],
-            [
-                'id' => 'sage_update_farticle',
-                'label' => __("Met à jour l’article Sage.", Sage::TOKEN),
-                'description' => __("Met à jour l’article Sage lorsque le produit WooCommerce qui lui est lié est modifié.", Sage::TOKEN),
-                'type' => 'checkbox',
-                'default' => 'off',
-            ],
-            [
-                'id' => 'website_create_new_product',
-                'label' => __("Créer le produit dans Woocommerce.", Sage::TOKEN),
-                'description' => __("Créer le produit dans Woocommerce lorsqu'un nouvel article Sage est crée.", Sage::TOKEN),
-                'type' => 'resource',
-                'initFilter' => $initFilterJson,
-                'default' => '',
-            ],
-            [
-                'id' => 'website_create_old_product',
-                'label' => __("Importe les anciens articles.", Sage::TOKEN),
-                'description' => __("Importe les anciens articles Sage dans Woocommerce.", Sage::TOKEN),
-                'type' => 'resource',
-                'initFilter' => json_encode([
-                    'values' => [
-                        ...$initFilter['values'],
-                        [
-                            'field' => 'cbCreation',
-                            'condition' => 'gte',
-                            'value' => '2000-01-01'
+                [
+                    'id' => 'sage_update_farticle',
+                    'label' => __("Met à jour l’article Sage.", Sage::TOKEN),
+                    'description' => __("Met à jour l’article Sage lorsque le produit WooCommerce qui lui est lié est modifié.", Sage::TOKEN),
+                    'type' => 'checkbox',
+                    'default' => 'off',
+                ],
+                [
+                    'id' => 'website_create_new_product',
+                    'label' => __("Créer le produit dans Woocommerce.", Sage::TOKEN),
+                    'description' => __("Créer le produit dans Woocommerce lorsqu'un nouvel article Sage est crée.", Sage::TOKEN),
+                    'type' => 'resource',
+                    'initFilter' => $initFilterJson,
+                    'default' => '',
+                ],
+                [
+                    'id' => 'website_create_old_product',
+                    'label' => __("Importe les anciens articles.", Sage::TOKEN),
+                    'description' => __("Importe les anciens articles Sage dans Woocommerce.", Sage::TOKEN),
+                    'type' => 'resource',
+                    'initFilter' => json_encode([
+                        'values' => [
+                            ...$initFilter['values'],
+                            [
+                                'field' => 'cbCreation',
+                                'condition' => 'gte',
+                                'value' => '2000-01-01'
+                            ]
                         ]
-                    ]
-                ]),
-                'default' => '',
-            ],
-            [
-                'id' => 'website_update_product',
-                'label' => __("Met à jour le produit Woocommerce.", Sage::TOKEN),
-                'description' => __("Met à jour le produit Woocommerce lorsque l'article Sage qui lui est lié est modifié.", Sage::TOKEN),
-                'type' => 'checkbox',
-                'default' => 'off',
-            ],
-            // todo ajouter une option pour considérer les catalogues comme des catégories
-        ];
+                    ]),
+                    'default' => '',
+                ],
+                [
+                    'id' => 'website_update_product',
+                    'label' => __("Met à jour le produit Woocommerce.", Sage::TOKEN),
+                    'description' => __("Met à jour le produit Woocommerce lorsque l'article Sage qui lui est lié est modifié.", Sage::TOKEN),
+                    'type' => 'checkbox',
+                    'default' => 'off',
+                ],
+                // todo ajouter une option pour considérer les catalogues comme des catégories
+            ];
+        };
         $this->metadata = static function (?stdClass $obj = null): array {
             $result = [
                 new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {

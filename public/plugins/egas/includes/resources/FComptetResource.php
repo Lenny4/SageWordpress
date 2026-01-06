@@ -42,57 +42,59 @@ class FComptetResource extends Resource
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FCOMPTETS;
-        $this->options = [
-            [
-                'id' => 'sage_create_new_fcomptet',
-                'label' => __("Créer le compte dans Sage.", Sage::TOKEN),
-                'description' => __("Créer le compte dans Sage lorsqu'un nouveau utilisateur Wordpress est crée.", Sage::TOKEN),
-                'type' => 'checkbox',
-                'default' => 'off',
-            ],
-            [
-                'id' => 'sage_create_old_fcomptet',
-                'label' => __("Importe les anciens utilisateurs.", Sage::TOKEN),
-                'description' => __("Importe les anciens utilisateurs Woocommerce dans Sage.", Sage::TOKEN),
-                'type' => 'checkbox',
-                'default' => 'off',
-            ],
-            [
-                'id' => 'sage_update_fcomptet',
-                'label' => __("Met à jour le compte Sage.", Sage::TOKEN),
-                'description' => __("Met à jour le compte Sage lorsque l'utilisateur WooCommerce qui lui est lié est modifié.", Sage::TOKEN),
-                'type' => 'checkbox',
-                'default' => 'off',
-            ],
-            [
-                'id' => 'website_create_new_user',
-                'label' => __("Créer l'utilisateur dans Woocommerce.", Sage::TOKEN),
-                'description' => __("Créer l'utilisateur dans Woocommerce lorsqu'un nouveau compte Sage est crée.", Sage::TOKEN),
-                'type' => 'resource',
-                'default' => '',
-            ],
-            [
-                'id' => 'website_create_old_user',
-                'label' => __("Importe les anciens comptes Sage.", Sage::TOKEN),
-                'description' => __("Importe les anciens comptes Sage dans Woocommerce.", Sage::TOKEN),
-                'type' => 'resource',
-                'default' => '',
-            ],
-            [
-                'id' => 'website_update_user',
-                'label' => __("Met à jour l'utilisateur Woocommerce.", Sage::TOKEN),
-                'description' => __("Met à jour l'utilisateur Woocommerce lorsque le compte Sage qui lui est lié est modifié.", Sage::TOKEN),
-                'type' => 'checkbox',
-                'default' => 'off',
-            ],
-            [
-                'id' => 'mail_website_create_new_user',
-                'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', Sage::TOKEN),
-                'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", Sage::TOKEN),
-                'type' => 'checkbox',
-                'default' => 'off',
-            ],
-        ];
+        $this->options = function (): array {
+            return [
+                [
+                    'id' => 'sage_create_new_fcomptet',
+                    'label' => __("Créer le compte dans Sage.", Sage::TOKEN),
+                    'description' => __("Créer le compte dans Sage lorsqu'un nouveau utilisateur Wordpress est crée.", Sage::TOKEN),
+                    'type' => 'checkbox',
+                    'default' => 'off',
+                ],
+                [
+                    'id' => 'sage_create_old_fcomptet',
+                    'label' => __("Importe les anciens utilisateurs.", Sage::TOKEN),
+                    'description' => __("Importe les anciens utilisateurs Woocommerce dans Sage.", Sage::TOKEN),
+                    'type' => 'checkbox',
+                    'default' => 'off',
+                ],
+                [
+                    'id' => 'sage_update_fcomptet',
+                    'label' => __("Met à jour le compte Sage.", Sage::TOKEN),
+                    'description' => __("Met à jour le compte Sage lorsque l'utilisateur WooCommerce qui lui est lié est modifié.", Sage::TOKEN),
+                    'type' => 'checkbox',
+                    'default' => 'off',
+                ],
+                [
+                    'id' => 'website_create_new_user',
+                    'label' => __("Créer l'utilisateur dans Woocommerce.", Sage::TOKEN),
+                    'description' => __("Créer l'utilisateur dans Woocommerce lorsqu'un nouveau compte Sage est crée.", Sage::TOKEN),
+                    'type' => 'resource',
+                    'default' => '',
+                ],
+                [
+                    'id' => 'website_create_old_user',
+                    'label' => __("Importe les anciens comptes Sage.", Sage::TOKEN),
+                    'description' => __("Importe les anciens comptes Sage dans Woocommerce.", Sage::TOKEN),
+                    'type' => 'resource',
+                    'default' => '',
+                ],
+                [
+                    'id' => 'website_update_user',
+                    'label' => __("Met à jour l'utilisateur Woocommerce.", Sage::TOKEN),
+                    'description' => __("Met à jour l'utilisateur Woocommerce lorsque le compte Sage qui lui est lié est modifié.", Sage::TOKEN),
+                    'type' => 'checkbox',
+                    'default' => 'off',
+                ],
+                [
+                    'id' => 'mail_website_create_new_user',
+                    'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', Sage::TOKEN),
+                    'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", Sage::TOKEN),
+                    'type' => 'checkbox',
+                    'default' => 'off',
+                ],
+            ];
+        };
         $this->metadata = static function (?stdClass $obj = null): array {
             $result = [
                 new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {

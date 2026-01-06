@@ -196,9 +196,11 @@ class AdminController
                         'options' => array_combine(Sage::$paginationRange, Sage::$paginationRange),
                         'default' => (string)Sage::$defaultPagination,
                     ],
-                    ...$resource->getOptions(),
+                    ...$resource->getOptions()(),
                 ];
-                $resource->setOptions($options);
+                $resource->setOptions(function () use ($options) {
+                    return $options;
+                });
                 $settings[$resource->getEntityName()] = [
                     'title' => __($resource->getTitle(), Sage::TOKEN),
                     'description' => $resource->getDescription(),
@@ -496,7 +498,6 @@ class AdminController
                             $tab .= $_GET['tab'];
                         }
 
-                        SageService::getInstance()->updateWebsiteOptionData();
                         $settings = self::getSettings();
                         // Show page tabs.
                         if (1 < count($settings)) {

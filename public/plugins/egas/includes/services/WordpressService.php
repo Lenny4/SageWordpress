@@ -65,7 +65,7 @@ class WordpressService
     {
         $optionNames = [];
         foreach (SageService::getInstance()->getResources() as $resource) {
-            foreach ($resource->getOptions() as $option) {
+            foreach ($resource->getOptions()() as $option) {
                 $optionNames[Sage::TOKEN . '_' . $option['id']] = $option['default'];
             }
         }

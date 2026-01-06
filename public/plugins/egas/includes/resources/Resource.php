@@ -41,7 +41,7 @@ abstract class Resource
     /**
      * Further options to show besides "Fields to show" and "Default per page"
      */
-    protected array $options;
+    protected Closure $options;
     /**
      * Callback which transform data of Sage entity to the metadata
      */
@@ -199,12 +199,12 @@ abstract class Resource
         return $this;
     }
 
-    public function getOptions(): array
+    public function getOptions(): Closure
     {
         return $this->options;
     }
 
-    public function setOptions(array $options): Resource
+    public function setOptions(Closure $options): Resource
     {
         $this->options = $options;
         return $this;

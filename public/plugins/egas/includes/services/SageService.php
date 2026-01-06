@@ -14,6 +14,7 @@ use App\utils\OrderUtils;
 use App\utils\PathUtils;
 use App\utils\RoundUtils;
 use App\utils\SageTranslationUtils;
+use Exception;
 use StdClass;
 use Symfony\Component\HttpFoundation\Response;
 use WC_Order;
@@ -30,6 +31,7 @@ class SageService
 {
     private static ?SageService $instance = null;
     public ?array $resources = null;
+    public ?stdClass $websiteApiOption = null;
 
     public function createAddressWithFComptet(StdClass $fComptet): StdClass
     {
@@ -836,13 +838,35 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         return $data;
     }
 
-    public function updateWebsiteOptionData(): void
+    public function getWebsiteOption(): stdClass|null
+    {
+        if (is_null($this->websiteApiOption)) {
+            $this->websiteApiOption = $this->updateWebsiteOptionData();
+        }
+        if (is_null($this->websiteApiOption)) {
+            $this->websiteApiOption = get_option(Sage::TOKEN . '_website_api', null);
+            if (!empty($this->websiteApiOption)) {
+                try {
+                    $this->websiteApiOption = json_decode($this->websiteApiOption, false);
+                } catch (Exception $e) {
+                    // nothing
+                }
+            }
+        }
+        return $this->websiteApiOption;
+    }
+
+    /**
+     * @deprecated
+     */
+    private function updateWebsiteOptionData(): stdClass|null
     {
         $id = get_option(Sage::TOKEN . '_website_id', null);
         if (empty($id)) {
-            return;
+            return null;
         }
         $website = GraphqlService::getInstance()->getWebsite($id);
         update_option(Sage::TOKEN . '_website_api', json_encode($website));
+        return $website;
     }
 }
