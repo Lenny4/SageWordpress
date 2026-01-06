@@ -11,6 +11,7 @@ use App\services\SageService;
 use App\services\WoocommerceService;
 use App\utils\SageTranslationUtils;
 use DateTime;
+use Exception;
 use stdClass;
 
 class FArticleResource extends Resource
@@ -54,13 +55,13 @@ class FArticleResource extends Resource
                 'type' => 'checkbox',
                 'default' => 'off',
             ],
-            [
-                'id' => 'sage_create_old_farticle',
-                'label' => __("Importe les anciens produits.", Sage::TOKEN),
-                'description' => __("Importe les anciens produits Woocommerce dans Sage.", Sage::TOKEN),
-                'type' => 'checkbox',
-                'default' => 'off',
-            ],
+//            [
+//                'id' => 'sage_create_old_farticle',
+//                'label' => __("Importe les anciens produits.", Sage::TOKEN),
+//                'description' => __("Importe les anciens produits Woocommerce dans Sage.", Sage::TOKEN),
+//                'type' => 'checkbox',
+//                'default' => 'off',
+//            ],
             [
                 'id' => 'sage_update_farticle',
                 'label' => __("Met à jour l’article Sage.", Sage::TOKEN),

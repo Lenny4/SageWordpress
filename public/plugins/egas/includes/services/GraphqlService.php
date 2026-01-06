@@ -22,6 +22,7 @@ use App\resources\PExpeditionResource;
 use App\resources\PPreferenceResource;
 use App\resources\PUniteResource;
 use App\resources\Resource;
+use App\resources\WebsiteResource;
 use App\Sage;
 use App\utils\FDocenteteUtils;
 use App\utils\PCatComptaUtils;
@@ -94,7 +95,8 @@ class GraphqlService
         }
 
         $curlHandle = curl_init();
-        $sslVerification = (bool)get_option(Sage::TOKEN . '_activate_https_verification_graphql');
+        $sslVerification =
+            filter_var(get_option(Sage::TOKEN . '_activate_https_verification_graphql', false), FILTER_VALIDATE_BOOLEAN);
         $data = [
             CURLOPT_URL => $hostUrl . '/healthz',
             CURLOPT_RETURNTRANSFER => true,
@@ -188,7 +190,7 @@ class GraphqlService
                 'type' => strtoupper(WebsiteEnum::Wordpress->name),
                 'host' => $wordpressHostUrl["host"],
                 'protocol' => $wordpressHostUrl["scheme"],
-                'forceSsl' => (bool)get_option(Sage::TOKEN . '_activate_https_verification_wordpress'),
+                'forceSsl' => filter_var(get_option(Sage::TOKEN . '_activate_https_verification_wordpress', false), FILTER_VALIDATE_BOOLEAN),
                 'dbHost' => get_option(Sage::TOKEN . '_wordpress_db_host'),
                 'dbUsername' => get_option(Sage::TOKEN . '_wordpress_db_username'),
                 'dbPassword' => get_option(Sage::TOKEN . '_wordpress_db_password'),
@@ -196,24 +198,24 @@ class GraphqlService
                 'dbName' => get_option(Sage::TOKEN . '_wordpress_db_name'),
                 'pluginVersion' => get_plugin_data(Sage::getInstance()->file)['Version'],
                 'nbThreads' => (int)get_option(Sage::TOKEN . '_nb_threads', null),
-                'sageCreateNewFComptet' => (bool)get_option(Sage::TOKEN . '_sage_create_new_fcomptet'),
-                'sageCreateOldFComptet' => (bool)get_option(Sage::TOKEN . '_sage_create_old_fcomptet'),
-                'sageUpdateFComptet' => (bool)get_option(Sage::TOKEN . '_sage_update_fcomptet'),
+                'sageCreateNewFComptet' => filter_var(get_option(Sage::TOKEN . '_sage_create_new_fcomptet', false), FILTER_VALIDATE_BOOLEAN),
+                'sageCreateOldFComptet' => filter_var(get_option(Sage::TOKEN . '_sage_create_old_fcomptet', false), FILTER_VALIDATE_BOOLEAN),
+                'sageUpdateFComptet' => filter_var(get_option(Sage::TOKEN . '_sage_update_fcomptet', false), FILTER_VALIDATE_BOOLEAN),
                 'websiteCreateNewUser' => $this->getOptionResource(Sage::TOKEN . '_website_create_new_user'),
                 'websiteCreateOldUser' => $this->getOptionResource(Sage::TOKEN . '_website_create_old_user'),
-                'websiteUpdateUser' => (bool)get_option(Sage::TOKEN . '_website_update_user'),
-                'sageCreateNewFArticle' => (bool)get_option(Sage::TOKEN . '_sage_create_new_farticle'),
-                'sageCreateOldFArticle' => (bool)get_option(Sage::TOKEN . '_sage_create_old_farticle'),
-                'sageUpdateFArticle' => (bool)get_option(Sage::TOKEN . '_sage_update_farticle'),
+                'websiteUpdateUser' => filter_var(get_option(Sage::TOKEN . '_website_update_user', false), FILTER_VALIDATE_BOOLEAN),
+                'sageCreateNewFArticle' => filter_var(get_option(Sage::TOKEN . '_sage_create_new_farticle', false), FILTER_VALIDATE_BOOLEAN),
+                'sageCreateOldFArticle' => filter_var(get_option(Sage::TOKEN . '_sage_create_old_farticle', false), FILTER_VALIDATE_BOOLEAN),
+                'sageUpdateFArticle' => filter_var(get_option(Sage::TOKEN . '_sage_update_farticle', false), FILTER_VALIDATE_BOOLEAN),
                 'websiteCreateNewProduct' => $this->getOptionResource(Sage::TOKEN . '_website_create_new_product'),
                 'websiteCreateOldProduct' => $this->getOptionResource(Sage::TOKEN . '_website_create_old_product'),
-                'websiteUpdateProduct' => (bool)get_option(Sage::TOKEN . '_website_update_product'),
-                'sageCreateNewFDocentete' => (bool)get_option(Sage::TOKEN . '_sage_create_new_fdocentete'),
-                'sageCreateOldFDocentete' => (bool)get_option(Sage::TOKEN . '_sage_create_old_fdocentete'),
-                'sageUpdateFDocentete' => (bool)get_option(Sage::TOKEN . '_sage_update_fdocentete'),
+                'websiteUpdateProduct' => filter_var(get_option(Sage::TOKEN . '_website_update_product', false), FILTER_VALIDATE_BOOLEAN),
+                'sageCreateNewFDocentete' => filter_var(get_option(Sage::TOKEN . '_sage_create_new_fdocentete', false), FILTER_VALIDATE_BOOLEAN),
+                'sageCreateOldFDocentete' => filter_var(get_option(Sage::TOKEN . '_sage_create_old_fdocentete', false), FILTER_VALIDATE_BOOLEAN),
+                'sageUpdateFDocentete' => filter_var(get_option(Sage::TOKEN . '_sage_update_fdocentete', false), FILTER_VALIDATE_BOOLEAN),
                 'websiteCreateNewOrder' => $this->getOptionResource(Sage::TOKEN . '_website_create_new_order'),
                 'websiteCreateOldOrder' => $this->getOptionResource(Sage::TOKEN . '_website_create_old_order'),
-                'websiteUpdateOrder' => (bool)get_option(Sage::TOKEN . '_website_update_order'),
+                'websiteUpdateOrder' => filter_var(get_option(Sage::TOKEN . '_website_update_order', false), FILTER_VALIDATE_BOOLEAN),
             ]
         ];
         return $this->runQuery($mutation, $getError, $variables);
@@ -280,17 +282,21 @@ class GraphqlService
             // todo store logs
             $message = $throwable->getMessage();
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                $message = json_encode([
+                $array = [
                     'message' => $message,
                     'stackTrace' => $throwable->getTraceAsString(),
-                ], JSON_THROW_ON_ERROR);
+                ];
+                if (method_exists($throwable, 'getErrorDetails')) {
+                    $array["errorDetails"] = $throwable->getErrorDetails();
+                }
+                $message = json_encode($array, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             }
             if ($getError) {
                 return $message;
             }
             AdminController::adminNotices("
 <div class='error'>
-    <p>" . $message . "</p>
+    <pre>" . $message . "</pre>
 </div>
 ");
         }
@@ -305,95 +311,13 @@ class GraphqlService
                 get_option(Sage::TOKEN . '_api_host_url') . '/graphql',
                 ['Api-Key' => get_option(Sage::TOKEN . '_api_key')],
                 [
-                    'verify' => (bool)get_option(Sage::TOKEN . '_activate_https_verification_graphql'),
+                    'verify' => filter_var(get_option(Sage::TOKEN . '_activate_https_verification_graphql', false), FILTER_VALIDATE_BOOLEAN),
                     'timeout' => 10, // vendor/guzzlehttp/guzzle/src/Handler/CurlFactory.php
                 ]
             );
         }
 
         return $this->client;
-    }
-
-    private function formatSelectionSet(array $selectionSets): array
-    {
-        $result = [];
-        foreach ($selectionSets as $key => $value) {
-            if (is_numeric($key)) {
-                if (!str_starts_with($value['name'], Sage::PREFIX_META_DATA)) {
-                    $result[] = $value['name'];
-                }
-            } else {
-                $query = (new Query($key));
-                if ($value instanceof ArgumentSelectionSetDto) {
-                    $result[] = $query
-                        ->setArguments($value->getArguments())
-                        ->setSelectionSet($this->formatSelectionSet($value->getSelectionSet()));
-                } else {
-                    $result[] = $query->setSelectionSet($this->formatSelectionSet($value));
-                }
-            }
-        }
-        return $result;
-    }
-
-    public function _getFComptetSelectionSet(): array
-    {
-        return [
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
-                'ctNum',
-                'ctIntitule',
-                'ctEmail',
-                'ctContact',
-                'ctAdresse',
-                'ctComplement',
-                'ctVille',
-                'ctCodePostal',
-                'ctPays',
-                'ctPaysCode',
-                'ctTelephone',
-                'ctCodeRegion',
-                'nCatTarif',
-                'nCatCompta',
-            ]),
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
-                'ctType',
-            ]),
-            'fLivraisons' => new ArgumentSelectionSetDto($this->_getFLivraisonSelectionSet(), 'liNo'),
-        ];
-    }
-
-    private function _formatOperationFilterInput(string $type, array $fields): array
-    {
-        return array_map(static function (string $field) use ($type) {
-            return [
-                "name" => $field,
-                "type" => $type,
-            ];
-        }, $fields);
-    }
-
-    public function _getFLivraisonSelectionSet(): array
-    {
-        return [
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
-                'liNo',
-            ]),
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
-                'liIntitule',
-                'liAdresse',
-                'liComplement',
-                'liCodePostal',
-                'liPrincipal',
-                'liVille',
-                'liPays',
-                'liPaysCode',
-                'liContact',
-                'liTelephone',
-                'liEmail',
-                'liAdresseFact',
-                'liCodeRegion',
-            ]),
-        ];
     }
 
     public function getAllFilterType(): array|null
@@ -523,6 +447,16 @@ class GraphqlService
                 ...$this->_formatOperationFilterInput("StringOperationFilterInput", ['dCodeIso']),
             ],
         ];
+    }
+
+    private function _formatOperationFilterInput(string $type, array $fields): array
+    {
+        return array_map(static function (string $field) use ($type) {
+            return [
+                "name" => $field,
+                "type" => $type,
+            ];
+        }, $fields);
     }
 
     private function getEntitiesAndSaveInOption(
@@ -722,6 +656,28 @@ class GraphqlService
         }
 
         return [null, $defaultSortValue];
+    }
+
+    private function formatSelectionSet(array $selectionSets): array
+    {
+        $result = [];
+        foreach ($selectionSets as $key => $value) {
+            if (is_numeric($key)) {
+                if (!str_starts_with($value['name'], Sage::PREFIX_META_DATA)) {
+                    $result[] = $value['name'];
+                }
+            } else {
+                $query = (new Query($key));
+                if ($value instanceof ArgumentSelectionSetDto) {
+                    $result[] = $query
+                        ->setArguments($value->getArguments())
+                        ->setSelectionSet($this->formatSelectionSet($value->getSelectionSet()));
+                } else {
+                    $result[] = $query->setSelectionSet($this->formatSelectionSet($value));
+                }
+            }
+        }
+        return $result;
     }
 
     private function addKeysToCollection(array &$items, array $selectionSets, ?string $arrayKey = null): void
@@ -1431,6 +1387,56 @@ WHERE meta_key = %s
         return $r;
     }
 
+    public function _getFComptetSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'ctNum',
+                'ctIntitule',
+                'ctEmail',
+                'ctContact',
+                'ctAdresse',
+                'ctComplement',
+                'ctVille',
+                'ctCodePostal',
+                'ctPays',
+                'ctPaysCode',
+                'ctTelephone',
+                'ctCodeRegion',
+                'nCatTarif',
+                'nCatCompta',
+            ]),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'ctType',
+            ]),
+            'fLivraisons' => new ArgumentSelectionSetDto($this->_getFLivraisonSelectionSet(), 'liNo'),
+        ];
+    }
+
+    public function _getFLivraisonSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'liNo',
+            ]),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'liIntitule',
+                'liAdresse',
+                'liComplement',
+                'liCodePostal',
+                'liPrincipal',
+                'liVille',
+                'liPays',
+                'liPaysCode',
+                'liContact',
+                'liTelephone',
+                'liEmail',
+                'liAdresseFact',
+                'liCodeRegion',
+            ]),
+        ];
+    }
+
     private function addWordpressUserId(array $fDocentetes): array
     {
         global $wpdb;
@@ -1512,6 +1518,50 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         }
 
         return $fComptet->data->fComptets->items[0];
+    }
+
+    public function getWebsite(int $id): StdClass|null
+    {
+        $website = $this->searchEntities(
+            WebsiteResource::ENTITY_NAME,
+            [
+                "filter" => [
+                    'condition' => 'and',
+                    'values' => [
+                        [
+                            'field' => 'id',
+                            'condition' => 'eq',
+                            'value' => $id,
+                        ]
+                    ],
+                ],
+                "paged" => "1",
+                "per_page" => "1"
+            ],
+            $this->_getWebsiteSelectionSet(),
+        );
+        if (is_null($website) || $website->data->websites->totalCount !== 1) {
+            return null;
+        }
+
+        return $website->data->websites->items[0];
+    }
+
+    public function _getWebsiteSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'idNewOrder',
+                'idNewProduct',
+                'idNewUser',
+            ]),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'id',
+                'cbMarqNewFArticle',
+                'cbMarqNewFDocentete',
+                'cbMarqNewFComptet',
+            ]),
+        ];
     }
 
     public function getPCattarifs(

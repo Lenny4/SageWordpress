@@ -835,4 +835,14 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         }
         return $data;
     }
+
+    public function updateWebsiteOptionData(): void
+    {
+        $id = get_option(Sage::TOKEN . '_website_id', null);
+        if (empty($id)) {
+            return;
+        }
+        $website = GraphqlService::getInstance()->getWebsite($id);
+        update_option(Sage::TOKEN . '_website_api', json_encode($website));
+    }
 }

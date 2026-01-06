@@ -119,7 +119,7 @@ class WoocommerceHook
             $updateApi = $product->get_meta('_' . Sage::TOKEN . '_updateApi'); // returns "" if not exists in bdd
             $graphqlService = GraphqlService::getInstance();
             $fArticle = $graphqlService->getFArticle($arRef);
-            if (!empty($arRef) && empty($updateApi)) {
+            if (!empty($arRef) && empty($updateApi) && filter_var(get_option(Sage::TOKEN . '_website_update_product', false), FILTER_VALIDATE_BOOLEAN)) {
                 [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage($arRef, ignoreCanImport: true, fArticle: $fArticle);
                 $messages = [$responseError, $message];
                 if (!is_null($response)) {

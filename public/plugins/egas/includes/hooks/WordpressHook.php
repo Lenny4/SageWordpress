@@ -40,7 +40,7 @@ class WordpressHook
             if (is_string($resultAddWebsiteSageApi)) {
                 AdminController::adminNotices("
 <div class='error'>
-    <p>" . $resultAddWebsiteSageApi . "</p>
+    <pre>" . $resultAddWebsiteSageApi . "</pre>
 </div>
 ");
             }
@@ -163,7 +163,7 @@ WHERE meta_key = %s
             bool            $creating
         ): void {
             if ($creating) {
-                if (get_option(Sage::TOKEN . '_auto_send_mail_import_' . Sage::TOKEN . '_fcomptet')) {
+                if (filter_var(get_option(Sage::TOKEN . '_mail_website_create_new_user', false), FILTER_VALIDATE_BOOLEAN)) {
                     // Accepts only 'user', 'admin' , 'both' or default '' as $notify.
                     wp_send_new_user_notifications($user->ID, 'user');
                 }

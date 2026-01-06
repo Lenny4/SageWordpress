@@ -87,8 +87,7 @@ class WordpressService
             $_GET["page"] === Sage::TOKEN . '_settings';
         if (
             !$force && (
-                !($formSubmitted && current_user_can('manage_options')) ||
-                !$this->isApiAuthenticated()
+            !($formSubmitted && current_user_can('manage_options'))
             )
         ) {
             return false;
@@ -96,12 +95,6 @@ class WordpressService
         $userId = get_current_user_id();
         $password = $this->getCreateApplicationPassword($userId, $force);
         return $this->createUpdateWebsite($userId, $password);
-    }
-
-    private function isApiAuthenticated(): bool
-    {
-        $response = RequestService::getInstance()->apiRequest('/Website/' . $_SERVER['HTTP_HOST'] . '/authorization');
-        return $response === 'true';
     }
 
     /**
@@ -277,7 +270,7 @@ class WordpressService
                 update_post_meta($postId, $key, $value);
             }
         }
-        if (!$new && !empty($arRef) && get_option(Sage::TOKEN . '_sage_create_new_farticle')) {
+        if (!$new && !empty($arRef) && filter_var(get_option(Sage::TOKEN . '_sage_create_new_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
             update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
         }
     }
@@ -291,7 +284,7 @@ class WordpressService
     public function saveCustomerUserMetaFields(int $userId, bool $new): void
     {
         $nbUpdatedMeta = 0;
-        $sageCreateNewFcomptet = (bool)get_option(Sage::TOKEN . '_sage_create_new_fcomptet');
+        $sageCreateNewFcomptet = filter_var(get_option(Sage::TOKEN . '_sage_create_new_fcomptet', false), FILTER_VALIDATE_BOOLEAN);
         foreach ($_POST as $key => $value) {
             if (str_starts_with($key, '_' . Sage::TOKEN)) {
                 $value = trim(preg_replace('/\s\s+/', ' ', $value));
@@ -370,5 +363,11 @@ WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
                                 AND meta_value = %s)
   AND {$wpdb->postmeta}.meta_key LIKE '_" . Sage::TOKEN . "_%'
         ", [$key, $value]));
+    }
+
+    private function isApiAuthenticated(): bool
+    {
+        $response = RequestService::getInstance()->apiRequest('/Website/' . $_SERVER['HTTP_HOST'] . '/authorization');
+        return $response === 'true';
     }
 }

@@ -80,7 +80,7 @@ class AdminController
             $settings = [
                 'api' => [
                     'title' => __('Api', Sage::TOKEN),
-                    'description' => __('These are fairly standard form input fields.', Sage::TOKEN),
+                    'description' => __('', Sage::TOKEN),
                     'fields' => [
                         [
                             'id' => 'api_key',
@@ -168,7 +168,6 @@ class AdminController
                 $fieldOptions = $sageService->getFieldsForEntity($resource);
                 $defaultFields = $resource->getDefaultFields();
                 $options = [
-                    // todo ajouter un champs qui indique à partir de quelle resource on considère que ça fait partie des nouveaux et des anciens
                     [
                         'id' => $resource->getEntityName() . '_show_fields',
                         'label' => __('Champs à montrer', Sage::TOKEN),
@@ -497,6 +496,7 @@ class AdminController
                             $tab .= $_GET['tab'];
                         }
 
+                        SageService::getInstance()->updateWebsiteOptionData();
                         $settings = self::getSettings();
                         // Show page tabs.
                         if (1 < count($settings)) {

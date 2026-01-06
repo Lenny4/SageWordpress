@@ -4,7 +4,6 @@ namespace App\resources;
 
 use App\class\SageEntityMetadata;
 use App\enum\Sage\DomaineTypeEnum;
-use App\enum\Sage\TiersTypeEnum;
 use App\Sage;
 use App\services\GraphqlService;
 use App\services\SageService;
@@ -53,13 +52,13 @@ class FDocenteteResource extends Resource
                 'type' => 'checkbox',
                 'default' => 'off',
             ],
-            [
-                'id' => 'sage_create_old_fdocentete',
-                'label' => __('Importe les anciennes commandes.', Sage::TOKEN),
-                'description' => __("Importe les anciennes commandes Woocommerce dans Sage.", Sage::TOKEN),
-                'type' => 'checkbox',
-                'default' => 'off',
-            ],
+//            [
+//                'id' => 'sage_create_old_fdocentete',
+//                'label' => __('Importe les anciennes commandes.', Sage::TOKEN),
+//                'description' => __("Importe les anciennes commandes Woocommerce dans Sage.", Sage::TOKEN),
+//                'type' => 'checkbox',
+//                'default' => 'off',
+//            ],
             [
                 'id' => 'sage_update_fdocentete',
                 'label' => __("Met à jour le document de vente Sage.", Sage::TOKEN),

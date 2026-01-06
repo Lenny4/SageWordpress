@@ -17,7 +17,8 @@
         "symfony/string": "^7.1",
         "symfony/translation-contracts": "^3.5",
         "swaggest/json-diff": "^3.12",
-        "symfony/dom-crawler": "^7.4"
+        "symfony/dom-crawler": "^7.4",
+        "symfony/css-selector": "^7.4"
     },
     "autoload": {
         "psr-4": {

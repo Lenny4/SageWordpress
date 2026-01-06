@@ -685,26 +685,26 @@ final class SageTranslationUtils
                     1 => __("[Egas] Synchronisation en cours ...", Sage::TOKEN), // DoTasks
                 ],
                 'taskJobType' => [
-                    0 => __('Créer automatiquement les clients Sage', Sage::TOKEN), // SageCreateNewFComptet => sage_create_new_fcomptet
-                    1 => __('Importer automatiquement les anciens clients Woocommerce', Sage::TOKEN), // SageCreateOldFComptet => sage_create_old_fcomptet
-                    2 => __('Créer automatiquement les comptes Wordpress', Sage::TOKEN), // SageUpdateFComptet => sage_update_fcomptet
-                    3 => __('Importer automatiquement les anciens clients Sage', Sage::TOKEN), // WebsiteCreateNewUser => website_create_new_user
-                    4 => __('Créer automatiquement les documents de vente Sage', Sage::TOKEN), // WebsiteCreateOldUser => website_create_old_user
-                    5 => __('Créer automatiquement les commandes Woocommerce', Sage::TOKEN), // WebsiteUpdateUser => website_update_user
+                    0 => __("Créer le compte dans Sage lorsqu'un nouveau utilisateur Wordpress est crée.", Sage::TOKEN), // SageCreateNewFComptet => sage_create_new_fcomptet
+                    1 => __('Importe les anciens utilisateurs Woocommerce dans Sage.', Sage::TOKEN), // SageCreateOldFComptet => sage_create_old_fcomptet
+                    2 => __("Met à jour le compte Sage lorsque l'utilisateur WooCommerce qui lui est lié est modifié.", Sage::TOKEN), // SageUpdateFComptet => sage_update_fcomptet
+                    3 => __("Créer l'utilisateur dans Woocommerce lorsqu'un nouveau compte Sage est crée.", Sage::TOKEN), // WebsiteCreateNewUser => website_create_new_user
+                    4 => __('Importe les anciens comptes Sage dans Woocommerce.', Sage::TOKEN), // WebsiteCreateOldUser => website_create_old_user
+                    5 => __("Met à jour l'utilisateur Woocommerce lorsque le compte Sage qui lui est lié est modifié.", Sage::TOKEN), // WebsiteUpdateUser => website_update_user
 
-                    10 => __('Créer automatiquement les produits Woocommerce', Sage::TOKEN), // SageCreateNewFArticle => sage_create_new_farticle
-                    11 => __('Importer automatiquement les anciens produits Sage', Sage::TOKEN), // SageCreateOldFArticle => sage_create_old_farticle
-                    12 => __('Importer automatiquement les anciens documents de vente Sage', Sage::TOKEN), // SageUpdateFArticle => sage_update_farticle
-                    13 => __("Mettre à jour automatiquement le compte Sage lorsqu'un compte Wordpress est modifié", Sage::TOKEN), // WebsiteCreateNewProduct => website_create_new_product
-                    14 => __("Mettre à jour automatiquement le compte Wordpress lorsqu'un compte Sage est modifié", Sage::TOKEN), // WebsiteCreateOldProduct => website_create_old_product
-                    15 => __("Mettre à jour automatiquement l'article Sage lorsqu'un produit Woocommerce est modifié", Sage::TOKEN), // WebsiteUpdateProduct => website_update_product
+                    10 => __("Créer l'article dans Sage lorsqu'un nouveau produit Woocommerce est crée.", Sage::TOKEN), // SageCreateNewFArticle => sage_create_new_farticle
+                    11 => __('Importe les anciens produits Woocommerce dans Sage.', Sage::TOKEN), // SageCreateOldFArticle => sage_create_old_farticle
+                    12 => __('Met à jour l’article Sage lorsque le produit WooCommerce qui lui est lié est modifié.', Sage::TOKEN), // SageUpdateFArticle => sage_update_farticle
+                    13 => __("Créer le produit dans Woocommerce lorsqu'un nouvel article Sage est crée.", Sage::TOKEN), // WebsiteCreateNewProduct => website_create_new_product
+                    14 => __("Importe les anciens articles Sage dans Woocommerce.", Sage::TOKEN), // WebsiteCreateOldProduct => website_create_old_product
+                    15 => __("Met à jour le produit Woocommerce lorsque l'article Sage qui lui est lié est modifié.", Sage::TOKEN), // WebsiteUpdateProduct => website_update_product
 
-                    20 => __('Créer automatiquement les produits Woocommerce', Sage::TOKEN), // SageCreateNewFDocentete => sage_create_new_fdocentete
-                    21 => __('Importer automatiquement les anciens produits Sage', Sage::TOKEN), // SageCreateOldFDocentete => sage_create_old_fdocentete
-                    22 => __('Importer automatiquement les anciens documents de vente Sage', Sage::TOKEN), // SageUpdateFDocentete => sage_update_fdocentete
-                    23 => __("Mettre à jour automatiquement le compte Sage lorsqu'un compte Wordpress est modifié", Sage::TOKEN), // WebsiteCreateNewOrder => website_create_new_order
-                    24 => __("Mettre à jour automatiquement le compte Wordpress lorsqu'un compte Sage est modifié", Sage::TOKEN), // WebsiteCreateOldOrder => website_create_old_order
-                    25 => __("Mettre à jour automatiquement l'article Sage lorsqu'un produit Woocommerce est modifié", Sage::TOKEN), // WebsiteUpdateOrder => website_update_order
+                    20 => __("Créer le document de vente dans Sage lorsqu'une nouveaulle commande Wordpress est crée.", Sage::TOKEN), // SageCreateNewFDocentete => sage_create_new_fdocentete
+                    21 => __('Importe les anciennes commandes Woocommerce dans Sage.', Sage::TOKEN), // SageCreateOldFDocentete => sage_create_old_fdocentete
+                    22 => __('Met à jour le document de vente Sage lorsque la commande WooCommerce qui lui est lié est modifiée.', Sage::TOKEN), // SageUpdateFDocentete => sage_update_fdocentete
+                    23 => __("Créer la commande dans Woocommerce lorsqu'un nouveau document de vente Sage est crée.", Sage::TOKEN), // WebsiteCreateNewOrder => website_create_new_order
+                    24 => __("Importe les anciens documents de vente Sage dans WooCommerce.", Sage::TOKEN), // WebsiteCreateOldOrder => website_create_old_order
+                    25 => __("Met à jour la commande Woocommerce lorsque le document de vente Sage qui lui est lié est modifié.", Sage::TOKEN), // WebsiteUpdateOrder => website_update_order
                 ]
             ]
         ];

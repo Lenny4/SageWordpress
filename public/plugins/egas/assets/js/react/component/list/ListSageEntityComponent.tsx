@@ -57,7 +57,6 @@ export const ListSageEntityComponent: React.FC<State> = ({
     }
     realSearch = stringParams;
     setSearching(true);
-    console.log(init, stringParams);
     const response = await fetch(
       siteUrl +
         `/index.php?rest_route=${encodeURIComponent(`/${TOKEN}/v1/search/sage-entity-menu/${sageEntityName}`)}${stringParams}&_wpnonce=${wpnonce}`,

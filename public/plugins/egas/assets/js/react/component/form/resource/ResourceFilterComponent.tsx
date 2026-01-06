@@ -427,6 +427,7 @@ const _ResourceFilterComponent = React.forwardRef(
     ref,
   ) => {
     const getDefaultValue = (): FormState => {
+      const availableFields = filterFields.map(f => f.name);
       return {
         condition: {
           value: filter.condition,
@@ -438,12 +439,16 @@ const _ResourceFilterComponent = React.forwardRef(
         },
         values: {
           value: [
-            ...(filter.values?.map((value) => {
-              return {
-                ...value,
-                ref: React.createRef(),
-              };
-            }) ?? []),
+            ...(filter.values
+              ?.filter((filterValue) =>
+                availableFields.includes(filterValue.field),
+              )
+              ?.map((filterValue) => {
+                return {
+                  ...filterValue,
+                  ref: React.createRef(),
+                };
+              }) ?? []),
           ],
           error: "",
         },
