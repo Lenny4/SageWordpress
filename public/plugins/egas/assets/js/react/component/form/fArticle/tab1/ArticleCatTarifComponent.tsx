@@ -24,11 +24,13 @@ import {
 import { FormInput } from "../../fields/FormInput";
 import { numberValidator } from "../../../../../functions/validator";
 import { TOKEN } from "../../../../../token";
+import { AcCoefInput } from "../inputs/AcCoef";
 
 let translations: any = getTranslations();
 
 type State = {
   arPrixAch: number | string;
+  arCoef: number | string;
 };
 
 const articleMeta: MetadataInterface[] = JSON.parse(
@@ -40,7 +42,7 @@ const pCattarifs: any[] = JSON.parse(
 );
 
 export const ArticleCatTarifComponent = React.forwardRef(
-  ({ arPrixAch }: State, ref) => {
+  ({ arPrixAch, arCoef }: State, ref) => {
     const prefix = "fArtclients";
     const [fArtclients] = React.useState<FArticleClientInterface[]>(() => {
       const result: FArticleClientInterface[] = getListObjectSageMetadata(
@@ -66,10 +68,14 @@ export const ArticleCatTarifComponent = React.forwardRef(
       return result;
     });
 
+    const getRealAcCoef = (acCoef: number | string) => {
+      return acCoef.toString() === "0" ? Number(arCoef) : acCoef;
+    };
+
     const [acCoefs, setACCoefs] = React.useState<any>(() => {
       const result: any = {};
       for (const fArtclient of fArtclients) {
-        result[fArtclient.acCategorie] = fArtclient.acCoef;
+        result[fArtclient.acCategorie] = getRealAcCoef(fArtclient.acCoef);
       }
       return result;
     });
@@ -78,7 +84,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
       setACCoefs((x: any) => {
         return {
           ...x,
-          [acCategorie]: newValue,
+          [acCategorie]: getRealAcCoef(Number(newValue)),
         };
       });
     };
@@ -114,30 +120,23 @@ export const ArticleCatTarifComponent = React.forwardRef(
                         ),
                       },
                       {
-                        field: {
-                          name:
-                            prefix + "[" + fArtclient.acCategorie + "][acCoef]",
-                          DomField: FormInput,
-                          type: "number",
-                          hideLabel: true,
-                          triggerFormContentChanged: onAcCoefChanged,
-                          initValues: {
-                            value: getSageMetadata(
+                        Dom: (
+                          <AcCoefInput
+                            defaultValue={getSageMetadata(
                               prefix +
                                 "[" +
                                 fArtclient.acCategorie +
                                 "].acCoef",
                               articleMeta,
-                              fArtclient.acCoef,
-                            ),
-                            validator: {
-                              functionName: numberValidator,
-                              params: {
-                                canBeEmpty: true,
-                              },
-                            },
-                          },
-                        },
+                              getRealAcCoef(fArtclient.acCoef),
+                              true,
+                            )}
+                            arCoef={arCoef}
+                            triggerFormContentChanged={onAcCoefChanged}
+                            acCategorie={fArtclient.acCategorie}
+                            ref={React.createRef()}
+                          />
+                        ),
                       },
                       {
                         Dom: (

@@ -136,6 +136,7 @@ export const onSubmitForm = (
   isValidForm: boolean,
   onStart?: () => void,
   onError?: () => void,
+  onSuccess?: () => void,
 ): void => {
   $(formSelector).on("submit", (e) => {
     if (onStart) {
@@ -174,6 +175,9 @@ export const onSubmitForm = (
           return;
         }
         isValidForm = true;
+        if (onSuccess) {
+          onSuccess();
+        }
         $(formSelector).trigger("submit");
       })
       .catch((e) => {

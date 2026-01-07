@@ -6,10 +6,26 @@ interface MetadataInterface {
   value: string;
 }
 
+const isValidNumber = (t: string | number) => {
+  return typeof t === "number" && !Number.isNaN(t);
+};
+
+const _useDefaultIfZero = (
+  v1: string | number,
+  v2: string | number,
+  useDefaultIfZero: boolean,
+) => {
+  if (isValidNumber(v1) && useDefaultIfZero && Number(v1) === 0) {
+    return v2;
+  }
+  return v1 ?? v2;
+};
+
 export const getSageMetadata = (
   key: string,
   object: MetadataInterface[] | null,
   defaultValue: any = "",
+  useDefaultIfZero: boolean = false,
 ) => {
   if (object == null) {
     return null;
@@ -17,11 +33,15 @@ export const getSageMetadata = (
   let value = object.find((o) => o.key === `_${TOKEN}_` + key);
   if (value) {
     try {
-      return JSON.parse(value.value) ?? defaultValue;
+      return _useDefaultIfZero(
+        JSON.parse(value.value),
+        defaultValue,
+        useDefaultIfZero,
+      );
     } catch (e) {
       // nothing
     }
-    return value.value ?? defaultValue;
+    return _useDefaultIfZero(value.value, defaultValue, useDefaultIfZero);
   }
   return defaultValue ?? null;
 };

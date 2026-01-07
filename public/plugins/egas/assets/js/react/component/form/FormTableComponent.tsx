@@ -123,7 +123,9 @@ export const FormTableComponent = React.forwardRef(
               };
             });
           })
-          .catch(() => {
+          .catch((e) => {
+            console.error(e);
+            // todo toastr
             setItems([]);
             setSearchText((x) => {
               return {

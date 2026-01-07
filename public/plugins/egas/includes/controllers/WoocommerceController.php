@@ -70,8 +70,6 @@ class WoocommerceController
             $tasksSynchronizeOrder = $woocommerceService->getTasksSynchronizeOrder($order, $extendedFDocentetes);
         }
         // original WC_Meta_Box_Order_Data::output
-        $pCattarifs = $graphqlService->getPCattarifs();
-        $pCatComptas = $graphqlService->getPCatComptas();
         return TwigService::getInstance()->render('woocommerce/metaBoxes/main.html.twig', [
             'message' => $message,
             'doPieceIdentifier' => $fDocenteteIdentifier ? $fDocenteteIdentifier["doPiece"] : null,
@@ -82,8 +80,8 @@ class WoocommerceController
             'currency' => get_woocommerce_currency(),
             'fdocligneMappingDoType' => FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE,
             'tasksSynchronizeOrder' => $tasksSynchronizeOrder,
-            'pCattarifs' => $pCattarifs,
-            'pCatComptas' => $pCatComptas[PCatComptaUtils::TIERS_TYPE_VEN],
+            'pCattarifs' => $graphqlService->getPCattarifs(),
+            'pCatComptas' => $graphqlService->getPCatComptas()[PCatComptaUtils::TIERS_TYPE_VEN],
         ]);
     }
 

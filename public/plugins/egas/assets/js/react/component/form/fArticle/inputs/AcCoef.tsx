@@ -1,0 +1,164 @@
+import * as React from "react";
+import { useImperativeHandle, useRef } from "react";
+import { Tooltip } from "@mui/material";
+import { getTranslations } from "../../../../../functions/translations";
+import {
+  FormValidInterface,
+  InputInterface,
+  TriggerFormContentChanged,
+} from "../../../../../interface/InputInterface";
+import { handleChangeInputGeneric } from "../../../../../functions/form";
+import { TOKEN } from "../../../../../token";
+import { numberValidator } from "../../../../../functions/validator";
+
+let translations: any = getTranslations();
+
+export type AcCoefInputState = {
+  defaultValue: number;
+  arCoef: number | string;
+  acCategorie: number | string;
+  triggerFormContentChanged?: TriggerFormContentChanged;
+};
+
+type FormState = {
+  acCoef: InputInterface;
+  realAcCoef: InputInterface;
+  valueLock: InputInterface;
+};
+
+export const AcCoefInput = React.forwardRef(
+  (
+    {
+      defaultValue,
+      arCoef,
+      acCategorie,
+      triggerFormContentChanged,
+    }: AcCoefInputState,
+    ref,
+  ) => {
+    const inputRef = useRef<any>(null);
+    arCoef = Number(arCoef);
+
+    const getDefaultValue = (): FormState => {
+      const v = defaultValue ?? 0;
+      return {
+        acCoef: { value: v.toString() },
+        realAcCoef: { value: v.toString() },
+        valueLock: { value: v > 0 },
+      };
+    };
+    const [values, setValues] = React.useState<FormState>(getDefaultValue());
+
+    const handleChange =
+      (prop: keyof FormState) =>
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        setValues((v) => {
+          return {
+            ...v,
+            valueLock: {
+              ...v.valueLock,
+              value: true,
+            },
+          };
+        });
+        handleChangeInputGeneric(event, prop, setValues);
+      };
+
+    const handleRealAcCoef = () => {
+      setValues((v) => {
+        return {
+          ...v,
+          realAcCoef: {
+            ...v.realAcCoef,
+            value:
+              v.valueLock.value && arCoef !== Number(v.acCoef.value)
+                ? Number(v.acCoef.value)
+                : "0",
+          },
+        };
+      });
+    };
+
+    const isValid = async () => {
+      const error = await numberValidator({
+        value: values.acCoef.value,
+        canBeEmpty: true,
+      });
+      setValues((v) => {
+        return {
+          ...v,
+          acCoef: {
+            ...v.acCoef,
+            error: error,
+          },
+        };
+      });
+      return error === "";
+    };
+
+    useImperativeHandle(ref, () => ({
+      async isValid(): Promise<FormValidInterface> {
+        const valid = await isValid();
+        return {
+          valid: valid,
+          details: [
+            {
+              valid: valid,
+              ref: ref,
+              dRef: inputRef,
+            },
+          ],
+        };
+      },
+    }));
+
+    React.useEffect(() => {
+      isValid();
+    }, [values.acCoef.value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    React.useEffect(() => {
+      handleRealAcCoef();
+    }, [values.acCoef.value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    React.useEffect(() => {
+      if (triggerFormContentChanged) {
+        triggerFormContentChanged(
+          `_${TOKEN}_fArtclients[${acCategorie}][acCoef]`,
+          values.realAcCoef.value,
+        );
+      }
+    }, [values.realAcCoef.value]);
+
+    return (
+      <>
+        <label htmlFor={`_${TOKEN}_acCoef`}>
+          <Tooltip title={"acCoef"} arrow placement="top">
+            <span>{translations["fArticles"]["acCoef"]}</span>
+          </Tooltip>
+        </label>
+        <div style={{ display: "flex", alignItems: "flex-start" }}>
+          <div style={{ position: "relative", flex: 1 }}>
+            <input
+              id={`_${TOKEN}_fArtclients[${acCategorie}][acCoef]`}
+              name={`_${TOKEN}_fArtclients[${acCategorie}][acCoef]`}
+              type={"hidden"}
+              value={values.realAcCoef.value}
+            />
+            <input
+              type={"number"}
+              value={values.acCoef.value}
+              onChange={handleChange("acCoef")}
+              style={{ width: "100%" }}
+              ref={inputRef}
+            />
+            {values.acCoef.error && (
+              <div className={`${TOKEN}_error_field`}>
+                {values.acCoef.error}
+              </div>
+            )}
+          </div>
+        </div>
+      </>
+    );
+  },
+);

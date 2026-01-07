@@ -331,7 +331,7 @@ export const ArticleTab1Component = React.forwardRef((props, ref) => {
                 {
                   label: translations.words.nCatTarif,
                   Component: ArticleCatTarifComponent,
-                  props: { arPrixAch: arPrixAch },
+                  props: { arPrixAch: arPrixAch, arCoef: arCoef },
                 },
                 {
                   label: translations.words.suppliers,

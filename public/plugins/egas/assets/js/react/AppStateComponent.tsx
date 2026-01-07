@@ -102,7 +102,7 @@ const SyncWebsiteJobComponent: React.FC<State> = React.memo(
   ({ SyncWebsiteJob }) => {
     let label = "done";
     if (
-      SyncWebsiteJob.TaskJobSyncWebsiteJobs.find((taskJobSyncWebsiteJob) => {
+      SyncWebsiteJob.TaskJobSyncWebsiteJobs?.find((taskJobSyncWebsiteJob) => {
         return (
           taskJobSyncWebsiteJob.NbTaskDone < taskJobSyncWebsiteJob.NewNbTasks
         );

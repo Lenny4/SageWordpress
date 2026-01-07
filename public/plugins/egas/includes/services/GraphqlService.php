@@ -677,8 +677,12 @@ class GraphqlService
             } else {
                 $query = (new Query($key));
                 if ($value instanceof ArgumentSelectionSetDto) {
+                    $arguments = $value->getArguments();
+                    if (!array_key_exists('order', $arguments)) {
+                        $arguments["order"] = new RawObject('{ ' . $value->getKey() . ': ASC }');
+                    }
                     $result[] = $query
-                        ->setArguments($value->getArguments())
+                        ->setArguments($arguments)
                         ->setSelectionSet($this->formatSelectionSet($value->getSelectionSet()));
                 } else {
                     $result[] = $query->setSelectionSet($this->formatSelectionSet($value));

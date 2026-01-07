@@ -259,13 +259,10 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                         items: responseToData(data),
                         response: data,
                       };
-                    } else {
-                      // todo toast r
                     }
-                    return {
-                      items: null,
-                      response: null,
-                    };
+                    return Promise.reject(
+                      new Error(`${response.status} ${response.statusText}`),
+                    );
                   },
                 },
               },

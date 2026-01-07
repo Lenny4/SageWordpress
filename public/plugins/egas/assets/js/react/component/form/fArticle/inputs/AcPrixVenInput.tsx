@@ -74,7 +74,7 @@ export const AcPrixVenInput = React.forwardRef(
             value:
               v.valueLock.value &&
               expectedAcPrixVen !== Number(v.acPrixVen.value)
-                ? v.acPrixVen.value
+                ? Number(v.acPrixVen.value)
                 : "0",
           },
         };
@@ -102,6 +102,7 @@ export const AcPrixVenInput = React.forwardRef(
     const isValid = async () => {
       const error = await numberValidator({
         value: values.acPrixVen.value,
+        canBeEmpty: true,
       });
       setValues((v) => {
         return {
@@ -153,8 +154,8 @@ export const AcPrixVenInput = React.forwardRef(
         <div style={{ display: "flex", alignItems: "flex-start" }}>
           <div style={{ position: "relative", flex: 1 }}>
             <input
-              id={`_${TOKEN}_fArtclients[` + acCategorie + "][acPrixVen]"}
-              name={`_${TOKEN}_fArtclients[` + acCategorie + "][acPrixVen]"}
+              id={`_${TOKEN}_fArtclients[${acCategorie}][acPrixVen]`}
+              name={`_${TOKEN}_fArtclients[${acCategorie}][acPrixVen]`}
               type={"hidden"}
               value={values.realAcPrixVen.value}
             />

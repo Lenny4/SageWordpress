@@ -70,7 +70,7 @@ export const ArPrixVenInput = React.forwardRef(
             value:
               v.valueLock.value &&
               expectedArPrixVen !== Number(v.arPrixVen.value)
-                ? v.arPrixVen.value
+                ? Number(v.arPrixVen.value)
                 : "0",
           },
         };

@@ -668,7 +668,7 @@ final class SageTranslationUtils
                 'errorWebsocket' => __("Wordpress n'arrive pas à se connecter à l'API Sage.", Sage::TOKEN),
                 'availableArRef' => __("Votre article sera créé avec cette référence. Vous pouvez la modifier à l’aide du champ prévu à cet effet.", Sage::TOKEN),
                 'availableArRefError' => __("Nous n'avons pas trouvé de référence disponible pour cet article.", Sage::TOKEN),
-                'acPrixVenInput' => __("Le prix de vente ne correspond pas au résultat du prix d'achat multiplié par le coefficient.", Sage::TOKEN),
+                'acPrixVenInput' => __("Le prix de vente ne correspond pas au résultat obtenu par l’application du coefficient au prix d’achat. Cette observation n’appelle aucune action particulière de votre part et est portée à votre connaissance à titre purement informatif.", Sage::TOKEN),
                 'cannotBeChangeOnWebsite' => __("Ce champ ne peut pas être modifié depuis le site internet. Vous pouvez le modifier directement dans Sage.", Sage::TOKEN),
                 'arNomencl' => __("Le site internet sait uniquement gérer des article qui ont pour nomenclature \"Aucun\".", Sage::TOKEN),
                 'arType' => __("Le site internet sait uniquement gérer des article qui ont pour type \"Standard\".", Sage::TOKEN),
