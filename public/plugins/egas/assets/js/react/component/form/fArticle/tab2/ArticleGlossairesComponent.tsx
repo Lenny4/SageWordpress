@@ -122,11 +122,10 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                             identifier: fGlossaire.glNo.toString(),
                             lines: [
                               {
-                                Dom: (
-                                  <>
-                                    {fGlossaire.glIntitule} {fGlossaire.glText}
-                                  </>
-                                ),
+                                Dom: <span><strong>{fGlossaire.glIntitule}</strong></span>,
+                              },
+                              {
+                                Dom: <span>{fGlossaire.glText}</span>,
                               },
                             ],
                           };
@@ -209,7 +208,7 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                       },
                     },
                     {
-                      Dom: <span>{fGlossaire.glIntitule}</span>,
+                      Dom: <span><strong>{fGlossaire.glIntitule}</strong></span>,
                     },
                     {
                       Dom: (
