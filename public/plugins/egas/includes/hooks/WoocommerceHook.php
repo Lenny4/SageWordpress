@@ -120,7 +120,7 @@ class WoocommerceHook
             $graphqlService = GraphqlService::getInstance();
             $fArticle = $graphqlService->getFArticle($arRef);
             if (!empty($arRef) && empty($updateApi) && filter_var(get_option(Sage::TOKEN . '_website_update_product', false), FILTER_VALIDATE_BOOLEAN)) {
-                [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage($arRef, ignoreCanImport: true, fArticle: $fArticle);
+                [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage($arRef, ignoreCanImport: true, fArticle: $fArticle, showSuccessMessage: false);
                 $messages = [$responseError, $message];
                 if (!is_null($response)) {
                     $product->read_meta_data(true);

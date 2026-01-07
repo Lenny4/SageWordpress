@@ -681,8 +681,14 @@ final class SageTranslationUtils
             ],
             'enum' => [
                 'syncWebsiteState' => [
-                    0 => __("[Egas] Création des tâches de synchronisation en cours ...", Sage::TOKEN), // CreateTasks
-                    1 => __("[Egas] Synchronisation en cours ...", Sage::TOKEN), // DoTasks
+                    0 => [
+                        'running' => __("[Egas] Création des tâches de synchronisation en cours ...", Sage::TOKEN),
+                        'done' => __("[Egas] Création des tâches de synchronisation terminé !", Sage::TOKEN),
+                    ], // CreateTasks
+                    1 => [
+                        'running' => __("[Egas] Synchronisation en cours ...", Sage::TOKEN),
+                        'done' => __("[Egas] Synchronisation terminé !", Sage::TOKEN),
+                    ], // DoTasks
                 ],
                 'taskJobType' => [
                     0 => __("Créer le compte dans Sage lorsqu'un nouveau utilisateur Wordpress est crée.", Sage::TOKEN), // SageCreateNewFComptet => sage_create_new_fcomptet

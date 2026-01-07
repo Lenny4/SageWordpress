@@ -364,6 +364,7 @@ class WoocommerceService
         array         $headers = [],
         bool          $ignoreCanImport = false,
         stdClass|null $fArticle = null,
+        bool          $showSuccessMessage = true,
     ): array
     {
         if (is_null($fArticle)) {
@@ -388,6 +389,7 @@ class WoocommerceService
         $article = $this->convertSageArticleToWoocommerce($fArticle, SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME));
         $dismissNotice = "<button type='button' class='notice-dismiss " . Sage::TOKEN . "-notice-dismiss'><span class='screen-reader-text'>" . __('Dismiss this notice.') . "</span></button>";
         $urlArticle = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "post.php?post=%id%&action=edit'>" . __("Voir l'article", Sage::TOKEN) . "</a></span></strong>";
+        $message = '';
         if ($isCreation) {
             // cannot create an article without request
             // ========================================
@@ -410,10 +412,12 @@ class WoocommerceService
                 $body = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR);
                 $urlArticle = str_replace('%id%', $body->id, $urlArticle);
                 $postId = $body->id;
-                $message = "<div class='notice notice-success is-dismissible'>
+                if ($showSuccessMessage) {
+                    $message = "<div class='notice notice-success is-dismissible'>
                     <p>" . __('Article créé: ' . $body->name, Sage::TOKEN) . "</p>" . $urlArticle . "
                     $dismissNotice
                             </div>";
+                }
             } else {
                 $message = $response["body"];
             }
@@ -442,10 +446,12 @@ class WoocommerceService
             $responseError = null;
             $urlArticle = str_replace('%id%', $articlePostId, $urlArticle);
             $postId = $articlePostId;
-            $message = "<div class='notice notice-success is-dismissible'>
+            if ($showSuccessMessage) {
+                $message = "<div class='notice notice-success is-dismissible'>
                     <p>" . __('Article mis à jour: ' . $article["name"], Sage::TOKEN) . "</p>" . $urlArticle . "
                     $dismissNotice
                             </div>";
+            }
         }
         return [$response, $responseError, $message, $postId];
     }

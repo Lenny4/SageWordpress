@@ -26,8 +26,8 @@ const stringAuthorization = $(`[data-${TOKEN}-authorization]`).attr(
 );
 const language = $(`[data-${TOKEN}-language]`).attr(`data-${TOKEN}-language`);
 
-const containerSelector = `#${TOKEN}_appstate`;
-const joinApiContainerSelector = `#${TOKEN}_join_api`;
+const appStateSelector = `#${TOKEN}_appstate`;
+const cantReachApiSelector = `#${TOKEN}_join_api`;
 
 let translations: any = getTranslations();
 
@@ -100,13 +100,27 @@ const TaskJobSyncWebsiteJobComponent: React.FC<State2> = React.memo(
 
 const SyncWebsiteJobComponent: React.FC<State> = React.memo(
   ({ SyncWebsiteJob }) => {
+    let label = "done";
+    if (
+      SyncWebsiteJob.TaskJobSyncWebsiteJobs.find((taskJobSyncWebsiteJob) => {
+        return (
+          taskJobSyncWebsiteJob.NbTaskDone < taskJobSyncWebsiteJob.NewNbTasks
+        );
+      })
+    ) {
+      label = "running";
+    }
     return (
       <>
         {SyncWebsiteJob.Show && (
           <div>
             <p>
               <span className="h5">
-                {translations.enum.syncWebsiteState[SyncWebsiteJob.State]}
+                {
+                  translations.enum.syncWebsiteState[SyncWebsiteJob.State][
+                    label
+                  ]
+                }
               </span>
               <br />
               <span>
@@ -212,7 +226,7 @@ const AppStateComponent = () => {
 
       ws.onopen = () => {
         console.log(`ws.onopen`);
-        $(joinApiContainerSelector).addClass("hidden");
+        $(cantReachApiSelector).addClass("hidden");
         clearTimeout(connectionTimeout);
         ws.send(
           JSON.stringify({
@@ -245,8 +259,8 @@ const AppStateComponent = () => {
               }
             } else {
               // ping worked
-              if ($(containerSelector).hasClass("notice-error")) {
-                $(containerSelector).addClass("hidden");
+              if ($(appStateSelector).hasClass("notice-error")) {
+                $(appStateSelector).addClass("hidden");
                 setErrorWebsocket(null);
               }
             }
@@ -285,13 +299,13 @@ const AppStateComponent = () => {
         clearTimeout(connectionTimeout);
         let newHasErrorWebsocketAuthorization = evt.code === 1008;
         if (
-          $(joinApiContainerSelector).length === 0 ||
-          $(joinApiContainerSelector).is(":hidden") ||
+          $(cantReachApiSelector).length === 0 ||
+          $(cantReachApiSelector).is(":hidden") ||
           newHasErrorWebsocketAuthorization
         ) {
-          $(containerSelector).removeClass("hidden");
-          $(containerSelector).removeClass("notice-info");
-          $(containerSelector).addClass("notice-error");
+          $(appStateSelector).removeClass("hidden");
+          $(appStateSelector).removeClass("notice-info");
+          $(appStateSelector).addClass("notice-error");
           setErrorWebsocket(evt.reason);
           setHasErrorWebsocketAuthorization(newHasErrorWebsocketAuthorization);
         }
@@ -333,12 +347,12 @@ const AppStateComponent = () => {
 
   React.useEffect(() => {
     if (appState) {
-      if (appState.SyncWebsiteJob !== null) {
-        $(containerSelector).removeClass("notice-error");
-        $(containerSelector).addClass("notice-info");
-        $(containerSelector).removeClass("hidden");
+      if (appState.SyncWebsiteJob?.Show) {
+        $(appStateSelector).removeClass("notice-error");
+        $(appStateSelector).addClass("notice-info");
+        $(appStateSelector).removeClass("hidden");
       } else {
-        $(containerSelector).addClass("hidden");
+        $(appStateSelector).addClass("hidden");
       }
     }
   }, [appState]);
@@ -387,7 +401,5 @@ const AppStateComponent = () => {
 };
 
 // Render your React component instead
-const root = createRoot(
-  document.querySelector(containerSelector + " .content"),
-);
+const root = createRoot(document.querySelector(appStateSelector + " .content"));
 root.render(<AppStateComponent />);
