@@ -47,7 +47,9 @@ const TaskJobSyncWebsiteJobComponent: React.FC<State2> = React.memo(
           <span style={{ fontWeight: "bold" }}>
             {translations.enum.taskJobType[
               TaskJobSyncWebsiteJob.TaskJob.TaskJobType
-            ] ?? TaskJobSyncWebsiteJob.TaskJob.Description ?? ""}
+            ] ??
+              TaskJobSyncWebsiteJob.TaskJob.Description ??
+              ""}
           </span>
           {TaskJobSyncWebsiteJob.TaskJobDoneSpeed !== null && (
             <>
@@ -283,6 +285,7 @@ const AppStateComponent = () => {
         clearTimeout(connectionTimeout);
         let newHasErrorWebsocketAuthorization = evt.code === 1008;
         if (
+          $(joinApiContainerSelector).length === 0 ||
           $(joinApiContainerSelector).is(":hidden") ||
           newHasErrorWebsocketAuthorization
         ) {

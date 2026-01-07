@@ -85,3 +85,10 @@ add_action('admin_head', function () {
 //            );
         });
 ```
+
+
+Outils pour se faire connaitre
+
+https://ahrefs.com/
+https://www.apollo.io/
+https://useartemis.co/

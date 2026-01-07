@@ -141,7 +141,7 @@ class RestApiHook
                     return current_user_can('manage_options');
                 },
             ]);
-            // todo supprimer ? utiliser seulement /import/(?P<entityName>[A-Za-z0-9]+)/(?P<identifier>.+)
+            // todo supprimer ? utiliser seulement /import/(?P<entityName>[A-Za-z0-9]+)/(?P<identifier>.+) voir du côté de l'api Uri.EscapeDataString("/" + DbToken + "/v1/import si c'est possible
             register_rest_route(Sage::TOKEN . '/v1', '/farticles/(?P<arRef>([^&]*))/import', args: [ // https://stackoverflow.com/a/10126995/6824121
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
@@ -158,6 +158,12 @@ class RestApiHook
                         if ($response instanceof WP_Error) {
                             $body = json_encode($response->get_error_messages());
                             $code = $response->get_error_code();
+                        } else if (is_null($response)) {
+                            // todo test
+                            return new WP_REST_Response(json_encode([
+                                'responseError' => $responseError,
+                                'message' => $message,
+                            ]), 500);
                         } else {
                             $body = $response["body"];
                             $code = $response['response']['code'];
