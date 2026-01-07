@@ -675,6 +675,7 @@ final class SageTranslationUtils
                 'deleteItem' => __("Supprimer cet élément.", Sage::TOKEN),
                 'addItem' => __("Ajouter un élément.", Sage::TOKEN),
                 'addThisItem' => __("Ajouter cet élément.", Sage::TOKEN),
+                'addThisItemDisabled' => __("Cet élément est déjà dans la liste.", Sage::TOKEN),
                 'modifySearchToFindMore' => __("Veuillez modifier votre recherche pour trouver d'autres résultats ...", Sage::TOKEN),
                 'noMoreResults' => __("Fin des résultats", Sage::TOKEN),
                 'maintainCtrlSelectMultiple' => __("Maintenez Ctrl ou Maj pour sélectionner plusieurs valeurs", Sage::TOKEN),

@@ -25,6 +25,7 @@ type State = {
   transPrefix: string | undefined;
   handleCloseParent?: Function;
   parentAddTable?: boolean;
+  parentItems?: TableLineItemInterface[];
 };
 
 interface SearchInterface {
@@ -35,7 +36,16 @@ interface SearchInterface {
 }
 
 export const FormTableComponent = React.forwardRef(
-  ({ table, transPrefix, handleCloseParent, parentAddTable }: State, ref) => {
+  (
+    {
+      table,
+      transPrefix,
+      handleCloseParent,
+      parentAddTable,
+      parentItems,
+    }: State,
+    ref,
+  ) => {
     const padding = 15;
 
     const [open, setOpen] = React.useState(false);
@@ -175,6 +185,9 @@ export const FormTableComponent = React.forwardRef(
       setItems(getItems());
     }, [table.items]);
 
+    const parentIdentifiers: string[] | undefined = parentItems?.map(
+      (i) => i.identifier,
+    );
     return (
       <>
         {table.add && (
@@ -201,6 +214,7 @@ export const FormTableComponent = React.forwardRef(
                 handleCloseParent={handleClose}
                 parentAddTable={true}
                 ref={childTableRef}
+                parentItems={items}
               />
             </DialogContent>
           </Dialog>
@@ -259,60 +273,80 @@ export const FormTableComponent = React.forwardRef(
                 }
                 return true;
               })
-              .map((item) => (
-                <tr key={item.identifier}>
-                  {table.removeItem && (
-                    <td>
-                      <Tooltip
-                        title={translations.sentences.deleteItem}
-                        arrow
-                        placement="left"
-                      >
-                        <IconButton
-                          onClick={() => {
-                            thisOnSelectRemove(item);
+              .map((item) => {
+                const disabled = parentIdentifiers?.includes(item.identifier);
+                return (
+                  <tr key={item.identifier}>
+                    {table.removeItem && (
+                      <td>
+                        <Tooltip
+                          title={translations.sentences.deleteItem}
+                          arrow
+                          placement="left"
+                        >
+                          <IconButton
+                            onClick={() => {
+                              thisOnSelectRemove(item);
+                            }}
+                          >
+                            <RemoveIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </td>
+                    )}
+                    {table.addItem && (
+                      <td>
+                        <Tooltip
+                          title={
+                            disabled
+                              ? translations.sentences.addThisItemDisabled
+                              : translations.sentences.addThisItem
+                          }
+                          slotProps={{
+                            popper: {
+                              sx: {
+                                zIndex: 10000, // Dialog probably 9999
+                              },
+                            },
+                          }}
+                          arrow
+                          placement="left"
+                        >
+                          {/*we wrap with a span to allow tooltip to trigger even if IconButton is disabled*/}
+                          <span>
+                            <IconButton
+                              disabled={disabled}
+                              onClick={() => thisOnSelectAdd(item)}
+                            >
+                              <AddIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </td>
+                    )}
+                    {item.lines.map((cell, indexCell) => {
+                      const Dom = cell.Dom;
+                      return (
+                        <td
+                          key={indexCell}
+                          style={{
+                            paddingLeft: indexCell === 0 ? 0 : padding,
                           }}
                         >
-                          <RemoveIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </td>
-                  )}
-                  {table.addItem && (
-                    <td>
-                      <Tooltip
-                        title={translations.sentences.addThisItem}
-                        arrow
-                        placement="left"
-                      >
-                        <IconButton onClick={() => thisOnSelectAdd(item)}>
-                          <AddIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </td>
-                  )}
-                  {item.lines.map((cell, indexCell) => {
-                    const Dom = cell.Dom;
-                    return (
-                      <td
-                        key={indexCell}
-                        style={{
-                          paddingLeft: indexCell === 0 ? 0 : padding,
-                        }}
-                      >
-                        {Dom}
-                        {cell.field && (
-                          <FormFieldComponent
-                            key={indexCell}
-                            field={cell.field}
-                            transPrefix={transPrefix}
-                          />
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
+                          {Dom}
+                          {cell.field && (
+                            <FormFieldComponent
+                              key={indexCell}
+                              field={cell.field}
+                              transPrefix={transPrefix}
+                            />
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
             {searchText.searching && (
               <tr>
                 <td
