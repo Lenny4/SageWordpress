@@ -21,6 +21,7 @@ class CacheService
             self::$instance = new self();
             self::$instance->cache = new FilesystemAdapter(defaultLifetime: self::CACHE_LIFETIME);
         }
+//        self::$instance->cache->clear();
         return self::$instance;
     }
 

@@ -612,6 +612,9 @@ class GraphqlService
         };
         if (is_null($cacheName)) {
             $results = $function();
+            if (isset($results->data->{$entityName}->items)) {
+                $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets, $arrayKey);
+            }
         } else {
             $cacheService ??= CacheService::getInstance();
             if ($getFromSage) {
@@ -620,13 +623,18 @@ class GraphqlService
             $results = $cacheService->get($cacheName, $function);
             if (empty($results) || is_string($results)) { // if $results is string it means it's an error
                 $cacheService->delete($cacheName);
-                $results = $cacheService->get($cacheName, $function);
+                $results = $function();
+                if (isset($results->data->{$entityName}->items)) {
+                    $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets, $arrayKey);
+                }
+                $results = $cacheService->get($cacheName, $results);
+            } else {
+                if (isset($results->data->{$entityName}->items)) {
+                    $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets, $arrayKey);
+                }
             }
         }
 
-        if (isset($results->data->{$entityName}->items)) {
-            $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets, $arrayKey);
-        }
         return $results;
     }
 
