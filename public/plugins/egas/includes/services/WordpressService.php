@@ -259,18 +259,18 @@ class WordpressService
             return;
         }
         $arRef = null;
-        $new = false;
-        $flatternPost = PathUtils::flatternPostSageData($_POST);
-        foreach ($flatternPost as $key => $value) {
+        $isNew = false;
+        $flatPost = PathUtils::flatternPostSageData($_POST);
+        foreach ($flatPost as $key => $value) {
             if (str_starts_with($key, '_' . Sage::TOKEN)) {
                 if ($key === FArticleResource::META_KEY) {
                     $arRef = $value;
-                    $new = !empty(get_post_meta($postId, $key, true));
+                    $isNew = empty(get_post_meta($postId, $key, true));
                 }
                 update_post_meta($postId, $key, $value);
             }
         }
-        if (!$new && !empty($arRef) && filter_var(get_option(Sage::TOKEN . '_sage_create_new_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
+        if (!$isNew && !empty($arRef) && filter_var(get_option(Sage::TOKEN . '_sage_update_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
             update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
         }
     }
@@ -281,15 +281,15 @@ class WordpressService
         return OrderUtil::custom_orders_table_usage_is_enabled() ? wc_get_page_screen_id('shop-order') : 'shop_order';
     }
 
-    public function saveCustomerUserMetaFields(int $userId, bool $new): void
+    public function saveCustomerUserMetaFields(int $userId, bool $isNew): void
     {
         $nbUpdatedMeta = 0;
-        $sageCreateNewFcomptet = filter_var(get_option(Sage::TOKEN . '_sage_create_new_fcomptet', false), FILTER_VALIDATE_BOOLEAN);
+        $sageUpdateFcomptet = null;
         foreach ($_POST as $key => $value) {
             if (str_starts_with($key, '_' . Sage::TOKEN)) {
                 $value = trim(preg_replace('/\s\s+/', ' ', $value));
                 if ($key === '_' . Sage::TOKEN . '_creationType') {
-                    $sageCreateNewFcomptet = $value !== 'none';
+                    $sageUpdateFcomptet = $value !== 'none';
                 }
                 if ($key === FComptetResource::META_KEY) {
                     $value = strtoupper($value);
@@ -298,8 +298,13 @@ class WordpressService
                 update_user_meta($userId, $key, $value);
             }
         }
-        if ($sageCreateNewFcomptet && $nbUpdatedMeta > 0 && !$new) {
-            update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
+        if ($nbUpdatedMeta > 0 && !$isNew) {
+            if (is_null($sageUpdateFcomptet)) {
+                $sageUpdateFcomptet = filter_var(get_option(Sage::TOKEN . '_sage_update_fcomptet', false), FILTER_VALIDATE_BOOLEAN);
+            }
+            if ($sageUpdateFcomptet) {
+                update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
+            }
         }
     }
 

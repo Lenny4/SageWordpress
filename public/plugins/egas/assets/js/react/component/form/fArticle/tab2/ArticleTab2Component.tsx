@@ -86,7 +86,6 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                     functionName: stringValidator,
                     params: {
                       maxLength: 69,
-                      isReference: true,
                     },
                   },
                 },
@@ -107,7 +106,6 @@ export const ArticleTab2Component = React.forwardRef((props, ref) => {
                     functionName: stringValidator,
                     params: {
                       maxLength: 69,
-                      isReference: true,
                     },
                   },
                 },
