@@ -110,14 +110,15 @@ export const ArticleCatTarifComponent = React.forwardRef(
                   translations.words.discount,
                 ],
                 items: fArtclients.map((fArtclient): TableLineItemInterface => {
+                  const pCattarif = pCattarifs.find(
+                    (p) => p.cbIndice.toString() === fArtclient.acCategorie.toString(),
+                  );
                   return {
                     item: fArtclient,
                     identifier: fArtclient.acCategorie.toString(),
                     lines: [
                       {
-                        Dom: (
-                          <>{pCattarifs[fArtclient.acCategorie]?.ctIntitule}</>
-                        ),
+                        Dom: <>{pCattarif?.ctIntitule}</>,
                       },
                       {
                         Dom: (
