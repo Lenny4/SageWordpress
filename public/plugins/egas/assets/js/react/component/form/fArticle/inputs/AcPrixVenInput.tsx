@@ -148,7 +148,7 @@ export const AcPrixVenInput = React.forwardRef(
 
     return (
       <>
-        <label htmlFor={`_${TOKEN}_acPrixVen`}>
+        <label htmlFor={`_${TOKEN}_fArtclients[${acCategorie}][acPrixVen]`}>
           <Tooltip title={"acPrixVen"} arrow placement="top">
             <span>{translations["fArticles"]["acPrixVen"]}</span>
           </Tooltip>

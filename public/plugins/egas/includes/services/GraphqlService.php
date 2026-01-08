@@ -627,7 +627,9 @@ class GraphqlService
                 if (isset($results->data->{$entityName}->items)) {
                     $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets, $arrayKey);
                 }
-                $results = $cacheService->get($cacheName, $results);
+                if (!empty($results)) {
+                    $results = $cacheService->get($cacheName, $results);
+                }
             } else {
                 if (isset($results->data->{$entityName}->items)) {
                     $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets, $arrayKey);

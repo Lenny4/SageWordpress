@@ -157,7 +157,7 @@ export const AcCoefInput = React.forwardRef(
 
     return (
       <>
-        <label htmlFor={`_${TOKEN}_acCoef`}>
+        <label htmlFor={`_${TOKEN}_fArtclients[${acCategorie}][acCoef]`}>
           <Tooltip title={"acCoef"} arrow placement="top">
             <span>{translations["fArticles"]["acCoef"]}</span>
           </Tooltip>
