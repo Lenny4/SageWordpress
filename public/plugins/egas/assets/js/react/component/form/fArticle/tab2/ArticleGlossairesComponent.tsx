@@ -198,7 +198,7 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                   lines: [
                     {
                       field: {
-                        name: prefix + "[" + fGlossaire.glNo + "][glNo]",
+                        name: `${prefix}[${fGlossaire.glNo}].glNo`,
                         DomField: FormInput,
                         type: "hidden",
                         hideLabel: true,
@@ -208,7 +208,11 @@ export const ArticleGlossairesComponent = React.forwardRef((props, ref) => {
                       },
                     },
                     {
-                      Dom: <span><strong>{fGlossaire.glIntitule}</strong></span>,
+                      Dom: (
+                        <span>
+                          <strong>{fGlossaire.glIntitule}</strong>
+                        </span>
+                      ),
                     },
                     {
                       Dom: (

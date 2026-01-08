@@ -151,7 +151,7 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                     lines: [
                       {
                         field: {
-                          name: prefix + "[" + fDepot.deNo + "][deNo]",
+                          name: `${prefix}[${fDepot.deNo}].deNo`,
                           DomField: FormInput,
                           type: "hidden",
                           hideLabel: true,
@@ -176,13 +176,13 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                       ...["asQteMini", "asQteMaxi"].map((f) => {
                         return {
                           field: {
-                            name: prefix + "[" + fDepot.deNo + "][" + f + "]",
+                            name: `${prefix}[${fDepot.deNo}][${f}]`,
                             DomField: FormInput,
                             type: "number",
                             hideLabel: true,
                             initValues: {
                               value: getSageMetadata(
-                                prefix + "[" + fDepot.deNo + "]." + f,
+                                `${prefix}[${fDepot.deNo}][${f}]`,
                                 articleMeta,
                                 // @ts-ignore
                                 fArtstock[f],

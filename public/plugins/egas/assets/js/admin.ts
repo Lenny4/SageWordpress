@@ -451,7 +451,7 @@ $(() => {
         if (defaultFilter.value) {
           for (const [k, values] of Object.entries(defaultFilter.value)) {
             for (const [i, v] of Object.entries(values)) {
-              url.searchParams.append(k + "[" + i + "]", v);
+              url.searchParams.append(`${k}[${i}]`, v);
             }
           }
         }

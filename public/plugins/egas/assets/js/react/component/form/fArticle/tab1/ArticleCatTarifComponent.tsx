@@ -126,10 +126,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
                         Dom: (
                           <AcCoefInput
                             defaultValue={getSageMetadata(
-                              prefix +
-                                "[" +
-                                fArtclient.acCategorie +
-                                "].acCoef",
+                              `${prefix}[${fArtclient.acCategorie}].acCoef`,
                               articleMeta,
                               getRealAcCoef(fArtclient.acCoef),
                               true,
@@ -145,10 +142,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
                         Dom: (
                           <AcPrixVenInput
                             defaultValue={getSageMetadata(
-                              prefix +
-                                "[" +
-                                fArtclient.acCategorie +
-                                "].acPrixVen",
+                              `${prefix}[${fArtclient.acCategorie}].acPrixVen`,
                               articleMeta,
                               fArtclient.acPrixVen,
                             )}
@@ -160,21 +154,15 @@ export const ArticleCatTarifComponent = React.forwardRef(
                         ),
                       },
                       {
+                        // afficher un message comme quoi on peut pas modifier Remise
                         field: {
-                          name:
-                            prefix +
-                            "[" +
-                            fArtclient.acCategorie +
-                            "][acRemise]",
+                          name: `${prefix}[${fArtclient.acCategorie}][acRemise]`,
                           DomField: FormInput,
                           type: "number",
                           hideLabel: true,
                           initValues: {
                             value: getSageMetadata(
-                              prefix +
-                                "[" +
-                                fArtclient.acCategorie +
-                                "].acRemise",
+                              `${prefix}[${fArtclient.acCategorie}].acRemise`,
                               articleMeta,
                               fArtclient.acRemise,
                             ),
