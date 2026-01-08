@@ -37,9 +37,9 @@ const articleMeta: MetadataInterface[] = JSON.parse(
   $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 
-const pCattarifs: any[] = JSON.parse(
+const pCattarifs: any[] = Object.values(JSON.parse(
   $(`[data-${TOKEN}-pcattarifs]`).attr(`data-${TOKEN}-pcattarifs`) ?? "[]",
-);
+));
 
 export const ArticleCatTarifComponent = React.forwardRef(
   ({ arPrixAch, arCoef }: State, ref) => {
@@ -50,7 +50,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
         articleMeta,
         "acCategorie",
       );
-      for (const pCattarif of Object.values(pCattarifs)) {
+      for (const pCattarif of pCattarifs) {
         if (
           result.find(
             (x) => x.acCategorie.toString() === pCattarif.cbIndice.toString(),
@@ -111,7 +111,9 @@ export const ArticleCatTarifComponent = React.forwardRef(
                 ],
                 items: fArtclients.map((fArtclient): TableLineItemInterface => {
                   const pCattarif = pCattarifs.find(
-                    (p) => p.cbIndice.toString() === fArtclient.acCategorie.toString(),
+                    (p) =>
+                      p.cbIndice.toString() ===
+                      fArtclient.acCategorie.toString(),
                   );
                   return {
                     item: fArtclient,

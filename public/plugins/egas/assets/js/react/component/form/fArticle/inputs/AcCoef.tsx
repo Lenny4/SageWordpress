@@ -96,6 +96,22 @@ export const AcCoefInput = React.forwardRef(
       return error === "";
     };
 
+    const resetAcCoef = () => {
+      setValues((v) => {
+        return {
+          ...v,
+          acCoef: {
+            ...v.acCoef,
+            value: arCoef,
+          },
+          valueLock: {
+            ...v.valueLock,
+            value: false,
+          },
+        };
+      });
+    };
+
     useImperativeHandle(ref, () => ({
       async isValid(): Promise<FormValidInterface> {
         const valid = await isValid();
@@ -150,6 +166,11 @@ export const AcCoefInput = React.forwardRef(
               onChange={handleChange("acCoef")}
               style={{ width: "100%" }}
               ref={inputRef}
+              onBlur={() => {
+                if (Number(values.acCoef.value) === 0) {
+                  resetAcCoef();
+                }
+              }}
             />
             {values.acCoef.error && (
               <div className={`${TOKEN}_error_field`}>
