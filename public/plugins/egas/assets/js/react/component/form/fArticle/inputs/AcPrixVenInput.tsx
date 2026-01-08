@@ -37,16 +37,24 @@ export const AcPrixVenInput = React.forwardRef(
     const getExpectedAcPrixVen = () => {
       return Number((acCoef * arPrixAch).toFixed(2));
     };
-    const [expectedAcPrixVen, setExpectedAcPrixVen] = React.useState(
-      getExpectedAcPrixVen(),
-    );
+    const getRealAcPrixVen = (v?: number | string) => {
+      if (!v) {
+        v = values.acPrixVen.value;
+      }
+      if (Number(v) === getExpectedAcPrixVen()) {
+        return 0;
+      }
+      return v;
+    };
 
     const getDefaultValue = (): FormState => {
       const v = defaultValue ?? 0;
+      const expectedAcPrixVen = getExpectedAcPrixVen();
+      const acPrixVen = Number(v) === 0 ? expectedAcPrixVen : Number(v);
       return {
-        acPrixVen: { value: v.toString() },
+        acPrixVen: { value: acPrixVen },
         realAcPrixVen: { value: v.toString() },
-        valueLock: { value: v > 0 },
+        valueLock: { value: acPrixVen > 0 && acPrixVen !== expectedAcPrixVen },
       };
     };
     const [values, setValues] = React.useState<FormState>(getDefaultValue());
@@ -54,41 +62,28 @@ export const AcPrixVenInput = React.forwardRef(
     const handleChange =
       (prop: keyof FormState) =>
       (event: React.ChangeEvent<HTMLInputElement>) => {
-        setValues((v) => {
-          return {
-            ...v,
-            valueLock: {
-              ...v.valueLock,
-              value: true,
-            },
-          };
-        });
+        if (prop === "acPrixVen") {
+          let newValue = Number(event.target.value);
+          setValues((v) => {
+            return {
+              ...v,
+              valueLock: {
+                ...v.valueLock,
+                value: newValue > 0 && newValue !== v.realAcPrixVen.value,
+              },
+            };
+          });
+        }
         handleChangeInputGeneric(event, prop, setValues);
       };
-    const handleRealAcPrixVen = () => {
-      setValues((v) => {
-        return {
-          ...v,
-          realAcPrixVen: {
-            ...v.realAcPrixVen,
-            value:
-              v.valueLock.value &&
-              expectedAcPrixVen !== Number(v.acPrixVen.value)
-                ? Number(v.acPrixVen.value)
-                : "0",
-          },
-        };
-      });
-    };
 
     const resetAcPrixVen = () => {
-      const newValue = getExpectedAcPrixVen();
       setValues((v) => {
         return {
           ...v,
           acPrixVen: {
             ...v.acPrixVen,
-            value: newValue.toString(),
+            value: getExpectedAcPrixVen(),
           },
           valueLock: {
             ...v.valueLock,
@@ -96,7 +91,6 @@ export const AcPrixVenInput = React.forwardRef(
           },
         };
       });
-      setExpectedAcPrixVen(newValue);
     };
 
     const isValid = async () => {
@@ -133,15 +127,23 @@ export const AcPrixVenInput = React.forwardRef(
     }));
 
     React.useEffect(() => {
-      isValid();
+      isValid().finally(() => {
+        setValues((v) => {
+          return {
+            ...v,
+            realAcPrixVen: {
+              ...v.realAcPrixVen,
+              value: getRealAcPrixVen(v.acPrixVen.value),
+            },
+          };
+        });
+      });
     }, [values.acPrixVen.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     React.useEffect(() => {
-      handleRealAcPrixVen();
-    }, [expectedAcPrixVen, values.acPrixVen.value]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    React.useEffect(() => {
-      resetAcPrixVen();
+      if (!values.valueLock.value) {
+        resetAcPrixVen();
+      }
     }, [acCoef, arPrixAch]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
@@ -177,7 +179,7 @@ export const AcPrixVenInput = React.forwardRef(
               </div>
             )}
           </div>
-          {Number(values.acPrixVen.value) !== expectedAcPrixVen &&
+          {Number(values.acPrixVen.value) !== getExpectedAcPrixVen() &&
             Number(values.acPrixVen.value) > 0 && (
               <div style={{ position: "relative", top: "-2px" }}>
                 <Tooltip title={translations.sentences.acPrixVenInput} arrow>

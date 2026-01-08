@@ -144,10 +144,10 @@ export const AcCoefInput = React.forwardRef(
       if (triggerFormContentChanged) {
         triggerFormContentChanged(
           `_${TOKEN}_fArtclients[${acCategorie}][acCoef]`,
-          values.realAcCoef.value,
+          values.acCoef.value,
         );
       }
-    }, [values.realAcCoef.value]);
+    }, [values.acCoef.value]);
 
     React.useEffect(() => {
       if (!values.valueLock.value) {
