@@ -117,13 +117,13 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       },
                       {
                         field: {
-                          name: `${prefix}[${fArtclient.ctNum}].afPrixAch`,
+                          name: `${prefix}[${fArtclient.ctNum}][afPrixAch]`,
                           DomField: FormInput,
                           type: "number",
                           hideLabel: true,
                           initValues: {
                             value: getSageMetadata(
-                              `${prefix}[${fArtclient.ctNum}].afPrixAch`,
+                              `${prefix}[${fArtclient.ctNum}][afPrixAch]`,
                               articleMeta,
                               fArtclient.afPrixAch,
                             ),
