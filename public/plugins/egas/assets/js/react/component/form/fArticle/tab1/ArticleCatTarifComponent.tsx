@@ -206,7 +206,7 @@ export const ArticleCatTarifComponent = React.forwardRef(
 
     React.useEffect(() => {
       setForm(getForm());
-    }, [acCoefs, arPrixAch]);
+    }, [arCoef, acCoefs, arPrixAch]);
 
     return (
       <>

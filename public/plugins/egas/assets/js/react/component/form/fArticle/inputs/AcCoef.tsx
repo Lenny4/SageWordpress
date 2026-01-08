@@ -41,10 +41,11 @@ export const AcCoefInput = React.forwardRef(
 
     const getDefaultValue = (): FormState => {
       const v = defaultValue ?? 0;
+      const acCoef = Number(v) === 0 ? arCoef : Number(v);
       return {
-        acCoef: { value: v.toString() },
+        acCoef: { value: acCoef },
         realAcCoef: { value: v.toString() },
-        valueLock: { value: v > 0 },
+        valueLock: { value: acCoef > 0 && acCoef !== arCoef },
       };
     };
     const [values, setValues] = React.useState<FormState>(getDefaultValue());
@@ -52,15 +53,18 @@ export const AcCoefInput = React.forwardRef(
     const handleChange =
       (prop: keyof FormState) =>
       (event: React.ChangeEvent<HTMLInputElement>) => {
-        setValues((v) => {
-          return {
-            ...v,
-            valueLock: {
-              ...v.valueLock,
-              value: true,
-            },
-          };
-        });
+        if (prop === "acCoef") {
+          setValues((v) => {
+            const newValue = Number(event.target.value);
+            return {
+              ...v,
+              valueLock: {
+                ...v.valueLock,
+                value: newValue > 0 && newValue !== arCoef,
+              },
+            };
+          });
+        }
         handleChangeInputGeneric(event, prop, setValues);
       };
 
@@ -144,6 +148,12 @@ export const AcCoefInput = React.forwardRef(
         );
       }
     }, [values.realAcCoef.value]);
+
+    React.useEffect(() => {
+      if (!values.valueLock.value) {
+        resetAcCoef();
+      }
+    }, [arCoef]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
       <>
