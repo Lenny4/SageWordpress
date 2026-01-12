@@ -7,6 +7,7 @@ import { FArticleClientInterface } from "../../../../../interface/FArticleInterf
 import {
   getListObjectSageMetadata,
   getSageMetadata,
+  toBoolean,
 } from "../../../../../functions/getMetadata";
 import {
   FormInterface,
@@ -21,10 +22,9 @@ import {
   getKeyFromName,
   handleFormIsValid,
 } from "../../../../../functions/form";
-import { FormInput } from "../../fields/FormInput";
-import { numberValidator } from "../../../../../functions/validator";
 import { TOKEN } from "../../../../../token";
 import { AcCoefInput } from "../inputs/AcCoef";
+import { AcRemiseInput } from "../inputs/AcRemiseInput";
 
 let translations: any = getTranslations();
 
@@ -37,9 +37,11 @@ const articleMeta: MetadataInterface[] = JSON.parse(
   $(`[data-${TOKEN}-product]`).attr(`data-${TOKEN}-product`) ?? "[]",
 );
 
-const pCattarifs: any[] = Object.values(JSON.parse(
-  $(`[data-${TOKEN}-pcattarifs]`).attr(`data-${TOKEN}-pcattarifs`) ?? "[]",
-));
+const pCattarifs: any[] = Object.values(
+  JSON.parse(
+    $(`[data-${TOKEN}-pcattarifs]`).attr(`data-${TOKEN}-pcattarifs`) ?? "[]",
+  ),
+);
 
 export const ArticleCatTarifComponent = React.forwardRef(
   ({ arPrixAch, arCoef }: State, ref) => {
@@ -50,6 +52,9 @@ export const ArticleCatTarifComponent = React.forwardRef(
         articleMeta,
         "acCategorie",
       );
+      for (const fArticleClient of result) {
+        fArticleClient.acTypeRem = toBoolean(fArticleClient.acTypeRem);
+      }
       for (const pCattarif of pCattarifs) {
         if (
           result.find(
@@ -61,6 +66,8 @@ export const ArticleCatTarifComponent = React.forwardRef(
             acCoef: 1,
             acPrixVen: 0,
             acRemise: 0,
+            acTypeRem: false,
+            acQteMont: 0, // remise simple
           });
         }
       }
@@ -154,26 +161,19 @@ export const ArticleCatTarifComponent = React.forwardRef(
                         ),
                       },
                       {
-                        // afficher un message comme quoi on peut pas modifier Remise
-                        field: {
-                          name: `${prefix}[${fArtclient.acCategorie}][acRemise]`,
-                          DomField: FormInput,
-                          type: "number",
-                          hideLabel: true,
-                          initValues: {
-                            value: getSageMetadata(
+                        Dom: (
+                          <AcRemiseInput
+                            defaultValue={getSageMetadata(
                               `${prefix}[${fArtclient.acCategorie}].acRemise`,
                               articleMeta,
                               fArtclient.acRemise,
-                            ),
-                            validator: {
-                              functionName: numberValidator,
-                              params: {
-                                canBeEmpty: true,
-                              },
-                            },
-                          },
-                        },
+                            )}
+                            acCategorie={fArtclient.acCategorie}
+                            acTypeRem={fArtclient.acTypeRem}
+                            acQteMont={fArtclient.acQteMont}
+                            ref={React.createRef()}
+                          />
+                        ),
                       },
                     ],
                   };

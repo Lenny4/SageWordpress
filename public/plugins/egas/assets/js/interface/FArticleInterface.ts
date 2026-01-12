@@ -5,6 +5,8 @@ export interface FArticleClientInterface {
   acPrixTtc?: number;
   ctNum?: string;
   acRemise: number;
+  acTypeRem: boolean;
+  acQteMont: number;
 }
 
 export interface PCattarifInterface {

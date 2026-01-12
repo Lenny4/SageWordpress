@@ -10,6 +10,23 @@ const isValidNumber = (t: string | number) => {
   return typeof t === "number" && !Number.isNaN(t);
 };
 
+export const toBoolean = (
+  v: string | number | null | undefined | boolean,
+): boolean => {
+  if (v === null || v === undefined) return false;
+
+  if (typeof v === "boolean") return v;
+
+  if (typeof v === "number") return v !== 0;
+
+  if (typeof v === "string") {
+    const value = v.trim().toLowerCase();
+    return value === "true" || value === "1" || value === "yes";
+  }
+
+  return false;
+};
+
 const _useDefaultIfZero = (
   v1: string | number,
   v2: string | number,

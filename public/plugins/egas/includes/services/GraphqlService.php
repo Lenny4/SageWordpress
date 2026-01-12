@@ -869,6 +869,8 @@ class GraphqlService
                 'acCoef',
                 'acPrixTtc',
                 'acRemise',
+                'acTypeRem',
+                'acQteMont',
             ]),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'ctNum',

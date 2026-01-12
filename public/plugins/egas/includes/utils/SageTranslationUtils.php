@@ -17,6 +17,8 @@ final class SageTranslationUtils
 
     public const TRANS_FARTICLES = 'fArticles';
 
+    public const TRANS_FARTCLIENTS = 'fArtclients';
+
     public static function getTranslations(): array
     {
         return [
@@ -583,6 +585,18 @@ final class SageTranslationUtils
                 Sage::META_DATA_PREFIX . '_arUniteVen' => __("Unité de vente", Sage::TOKEN),
                 Sage::META_DATA_PREFIX . '_canEditArSuiviStock' => __("Peut modifier le mode de suivi", Sage::TOKEN),
             ],
+            self::TRANS_FARTCLIENTS => [
+                "acTypeRem" => __("Hors remise", Sage::TOKEN),
+                "acQteMont" => [
+                    'label' => __("Remise", Sage::TOKEN),
+                    'values' => [
+                        '0' => __("Simple", Sage::TOKEN),
+                        '1' => __("Quantité", Sage::TOKEN),
+                        '2' => __("Montant", Sage::TOKEN),
+                        '3' => __("Prix net", Sage::TOKEN),
+                    ],
+                ],
+            ],
             'words' => [
                 'contains' => __("Contient", Sage::TOKEN),
                 'endsWith' => __("Se termine par", Sage::TOKEN),
@@ -669,6 +683,7 @@ final class SageTranslationUtils
                 'availableArRef' => __("Votre article sera créé avec cette référence. Vous pouvez la modifier à l’aide du champ prévu à cet effet.", Sage::TOKEN),
                 'availableArRefError' => __("Nous n'avons pas trouvé de référence disponible pour cet article.", Sage::TOKEN),
                 'acPrixVenInput' => __("Le prix de vente ne correspond pas au résultat obtenu par l’application du coefficient au prix d’achat. Cette observation n’appelle aucune action particulière de votre part et est portée à votre connaissance à titre purement informatif.", Sage::TOKEN),
+                'acRemiseInput' => __("La modification des remises depuis le site est possible uniquement lorsqu’il s’agit de remises simples. Pour toute autre modification de remise, veuillez effectuer l’opération directement dans Sage.", Sage::TOKEN),
                 'cannotBeChangeOnWebsite' => __("Ce champ ne peut pas être modifié depuis le site internet. Vous pouvez le modifier directement dans Sage.", Sage::TOKEN),
                 'arNomencl' => __("Le site internet sait uniquement gérer des article qui ont pour nomenclature \"Aucun\".", Sage::TOKEN),
                 'arType' => __("Le site internet sait uniquement gérer des article qui ont pour type \"Standard\".", Sage::TOKEN),
