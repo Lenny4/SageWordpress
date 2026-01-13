@@ -151,7 +151,7 @@ export const ArticleDepotTraitementComponent = React.forwardRef(
                     lines: [
                       {
                         field: {
-                          name: `${prefix}[${fDepot.deNo}].deNo`,
+                          name: `${prefix}[${fDepot.deNo}][deNo]`,
                           DomField: FormInput,
                           type: "hidden",
                           hideLabel: true,

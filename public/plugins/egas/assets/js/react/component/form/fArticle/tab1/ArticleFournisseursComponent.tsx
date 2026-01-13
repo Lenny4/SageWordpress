@@ -81,7 +81,16 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                     identifier: fArtclient.ctNum,
                     lines: [
                       {
-                        Dom: <>{fArtclient.ctNum}</>,
+                        Dom: (
+                          <>
+                            <input
+                              type="hidden"
+                              name={`_${TOKEN}_${prefix}[${fArtclient.ctNum}][ctNum]`}
+                              value={fArtclient.ctNum}
+                            />
+                            {fArtclient.ctNum}
+                          </>
+                        ),
                       },
                       {
                         Dom: (
@@ -95,13 +104,13 @@ export const ArticleFournisseursComponent = React.forwardRef((props, ref) => {
                       },
                       {
                         field: {
-                          name: `${prefix}[${fArtclient.ctNum}].afRefFourniss`,
+                          name: `${prefix}[${fArtclient.ctNum}][afRefFourniss]`,
                           DomField: FormInput,
                           autoUppercase: true,
                           hideLabel: true,
                           initValues: {
                             value: getSageMetadata(
-                              `${prefix}[${fArtclient.ctNum}].afRefFourniss`,
+                              `${prefix}[${fArtclient.ctNum}][afRefFourniss]`,
                               articleMeta,
                               fArtclient.afRefFourniss,
                             ),

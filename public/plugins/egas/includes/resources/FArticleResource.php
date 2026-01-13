@@ -110,17 +110,17 @@ class FArticleResource extends Resource
             $result = [
                 new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {
                     return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
-                }),
+                }, custom: true),
                 new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) {
                     return json_encode(WoocommerceService::getInstance()->getMaxPrice($fArticle->prices), JSON_THROW_ON_ERROR);
-                }),
+                }, custom: true),
                 new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
                     return (new DateTime())->format('Y-m-d H:i:s');
-                }, showInOptions: true),
-                new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
+                }, showInOptions: true, custom: true),
+                new SageEntityMetadata(field: '_postId', value: null, showInOptions: true, custom: true),
                 new SageEntityMetadata(field: '_canEditArSuiviStock', value: static function (StdClass $fArticle) {
                     return $fArticle->canEditArSuiviStock;
-                }),
+                }, custom: true),
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFArticleSelectionSet(), $result, $obj);
         };

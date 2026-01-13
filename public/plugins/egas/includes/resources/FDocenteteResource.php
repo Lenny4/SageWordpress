@@ -92,7 +92,7 @@ class FDocenteteResource extends Resource
         };
         $this->metadata = static function (?stdClass $obj = null): array {
             $result = [
-                new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
+                new SageEntityMetadata(field: '_postId', value: null, showInOptions: true, custom: true),
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFDocenteteSelectionSet(), $result, $obj);
         };

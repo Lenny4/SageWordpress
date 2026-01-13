@@ -99,8 +99,8 @@ class FComptetResource extends Resource
             $result = [
                 new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {
                     return (new DateTime())->format('Y-m-d H:i:s');
-                }, showInOptions: true),
-                new SageEntityMetadata(field: '_postId', value: null, showInOptions: true),
+                }, showInOptions: true, custom: true),
+                new SageEntityMetadata(field: '_postId', value: null, showInOptions: true, custom: true),
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFComptetSelectionSet(), $result, $obj);
         };

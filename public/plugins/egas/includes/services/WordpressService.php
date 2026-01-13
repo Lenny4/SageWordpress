@@ -2,6 +2,7 @@
 
 namespace App\services;
 
+use App\class\SageEntityMetadata;
 use App\controllers\AdminController;
 use App\resources\FArticleResource;
 use App\resources\FComptetResource;
@@ -261,17 +262,38 @@ class WordpressService
         $arRef = null;
         $isNew = false;
         $flatPost = PathUtils::flatternPostSageData($_POST);
-        foreach ($flatPost as $key => $value) {
-            if (str_starts_with($key, '_' . Sage::TOKEN)) {
-                if ($key === FArticleResource::META_KEY) {
-                    $arRef = $value;
-                    $isNew = empty(get_post_meta($postId, $key, true));
-                }
-                update_post_meta($postId, $key, $value);
-            }
+        if (array_key_exists(FArticleResource::META_KEY, $flatPost)) {
+            $arRef = $flatPost[FArticleResource::META_KEY];
+            $isNew = empty(get_post_meta($postId, FArticleResource::META_KEY, true));
         }
-        if (!$isNew && !empty($arRef) && filter_var(get_option(Sage::TOKEN . '_sage_update_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
-            update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
+        if (!empty($arRef)) {
+            $resource = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME);
+            $metadataToKeep = [
+                FArticleResource::META_KEY,
+                ...array_map(function (SageEntityMetadata $metadata) {
+                    return '_' . Sage::TOKEN . $metadata->getField();
+                }, array_filter($resource->getMetadata()(), function (SageEntityMetadata $metadata) {
+                    return $metadata->isCustom();
+                })),
+            ];
+            $meta = get_post_meta($postId);
+            foreach ($meta as $key => $values) {
+                if (
+                    !array_key_exists($key, $flatPost) &&
+                    str_starts_with($key, '_' . Sage::TOKEN) &&
+                    !in_array($key, $metadataToKeep)
+                ) {
+                    delete_post_meta($postId, $key);
+                }
+            }
+            foreach ($flatPost as $key => $value) {
+                if (str_starts_with($key, '_' . Sage::TOKEN)) {
+                    update_post_meta($postId, $key, $value);
+                }
+            }
+            if (!$isNew && filter_var(get_option(Sage::TOKEN . '_sage_update_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
+                update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
+            }
         }
     }
 

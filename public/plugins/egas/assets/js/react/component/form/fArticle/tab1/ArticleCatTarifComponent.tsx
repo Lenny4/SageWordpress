@@ -127,13 +127,22 @@ export const ArticleCatTarifComponent = React.forwardRef(
                     identifier: fArtclient.acCategorie.toString(),
                     lines: [
                       {
-                        Dom: <>{pCattarif?.ctIntitule}</>,
+                        Dom: (
+                          <>
+                            <input
+                              type="hidden"
+                              name={`_${TOKEN}_${prefix}[${fArtclient.acCategorie}][acCategorie]`}
+                              value={fArtclient.acCategorie}
+                            />
+                            {pCattarif?.ctIntitule}
+                          </>
+                        ),
                       },
                       {
                         Dom: (
                           <AcCoefInput
                             defaultValue={getSageMetadata(
-                              `${prefix}[${fArtclient.acCategorie}].acCoef`,
+                              `${prefix}[${fArtclient.acCategorie}][acCoef]`,
                               articleMeta,
                               getRealAcCoef(fArtclient.acCoef),
                               true,
@@ -147,32 +156,51 @@ export const ArticleCatTarifComponent = React.forwardRef(
                       },
                       {
                         Dom: (
-                          <AcPrixVenInput
-                            defaultValue={getSageMetadata(
-                              `${prefix}[${fArtclient.acCategorie}].acPrixVen`,
-                              articleMeta,
-                              fArtclient.acPrixVen,
-                            )}
-                            arPrixAch={arPrixAch}
-                            acCoef={acCoefs[fArtclient.acCategorie]}
-                            acCategorie={fArtclient.acCategorie}
-                            ref={React.createRef()}
-                          />
+                          <>
+                            <input
+                              type="hidden"
+                              name={`_${TOKEN}_${prefix}[${fArtclient.acCategorie}][acPrixTtc]`}
+                              value={fArtclient.acPrixTtc}
+                            />
+                            <AcPrixVenInput
+                              defaultValue={getSageMetadata(
+                                `${prefix}[${fArtclient.acCategorie}][acPrixVen]`,
+                                articleMeta,
+                                fArtclient.acPrixVen,
+                              )}
+                              arPrixAch={arPrixAch}
+                              acCoef={acCoefs[fArtclient.acCategorie]}
+                              acCategorie={fArtclient.acCategorie}
+                              ref={React.createRef()}
+                            />
+                          </>
                         ),
                       },
                       {
                         Dom: (
-                          <AcRemiseInput
-                            defaultValue={getSageMetadata(
-                              `${prefix}[${fArtclient.acCategorie}].acRemise`,
-                              articleMeta,
-                              fArtclient.acRemise,
-                            )}
-                            acCategorie={fArtclient.acCategorie}
-                            acTypeRem={fArtclient.acTypeRem}
-                            acQteMont={fArtclient.acQteMont}
-                            ref={React.createRef()}
-                          />
+                          <>
+                            <input
+                              type="hidden"
+                              name={`_${TOKEN}_${prefix}[${fArtclient.acCategorie}][acTypeRem]`}
+                              value={fArtclient.acTypeRem ? 1 : 0}
+                            />
+                            <input
+                              type="hidden"
+                              name={`_${TOKEN}_${prefix}[${fArtclient.acCategorie}][acQteMont]`}
+                              value={fArtclient.acQteMont}
+                            />
+                            <AcRemiseInput
+                              defaultValue={getSageMetadata(
+                                `${prefix}[${fArtclient.acCategorie}][acRemise]`,
+                                articleMeta,
+                                fArtclient.acRemise,
+                              )}
+                              acCategorie={fArtclient.acCategorie}
+                              acTypeRem={fArtclient.acTypeRem}
+                              acQteMont={fArtclient.acQteMont}
+                              ref={React.createRef()}
+                            />
+                          </>
                         ),
                       },
                     ],

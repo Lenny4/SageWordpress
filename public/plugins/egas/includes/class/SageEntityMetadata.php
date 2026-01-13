@@ -11,6 +11,7 @@ final class SageEntityMetadata
         private string $field,
         private        $value,
         private bool   $showInOptions = false,
+        private bool   $custom = false, // les valeurs customs ne sont pas supprimés dans function onSavePost
     )
     {
     }
@@ -45,6 +46,17 @@ final class SageEntityMetadata
     public function setShowInOptions(bool $showInOptions): self
     {
         $this->showInOptions = $showInOptions;
+        return $this;
+    }
+
+    public function isCustom(): bool
+    {
+        return $this->custom;
+    }
+
+    public function setCustom(bool $custom): SageEntityMetadata
+    {
+        $this->custom = $custom;
         return $this;
     }
 }
