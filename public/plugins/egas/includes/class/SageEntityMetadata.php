@@ -2,16 +2,17 @@
 
 namespace App\class;
 
+use Closure;
+
 final class SageEntityMetadata
 {
     /**
      * @param callable $function
      */
     public function __construct(
-        private string $field,
-        private        $value,
-        private bool   $showInOptions = false,
-        private bool   $custom = false, // les valeurs customs ne sont pas supprimés dans function onSavePost
+        private string   $field,
+        private ?Closure $value = null,
+        private bool     $showInOptions = false,
     )
     {
     }
@@ -27,12 +28,12 @@ final class SageEntityMetadata
         return $this;
     }
 
-    public function getValue()
+    public function getValue(): ?Closure
     {
         return $this->value;
     }
 
-    public function setValue($value): self
+    public function setValue(?Closure $value): self
     {
         $this->value = $value;
         return $this;
@@ -46,17 +47,6 @@ final class SageEntityMetadata
     public function setShowInOptions(bool $showInOptions): self
     {
         $this->showInOptions = $showInOptions;
-        return $this;
-    }
-
-    public function isCustom(): bool
-    {
-        return $this->custom;
-    }
-
-    public function setCustom(bool $custom): SageEntityMetadata
-    {
-        $this->custom = $custom;
         return $this;
     }
 }

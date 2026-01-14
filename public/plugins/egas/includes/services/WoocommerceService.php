@@ -17,7 +17,6 @@ use App\utils\OrderUtils;
 use App\utils\TaxeUtils;
 use stdClass;
 use WC_Cart;
-use WC_Meta_Data;
 use WC_Order;
 use WC_Order_Item_Shipping;
 use WC_Order_Item_Tax;
@@ -386,7 +385,7 @@ class WoocommerceService
         }
         $articlePostId = $this->getWooCommerceIdArticle($arRef);
         $isCreation = is_null($articlePostId);
-        $article = $this->convertSageArticleToWoocommerce($fArticle, SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME));
+        $article = $this->convertSageArticleToWoocommerce($fArticle, SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME), $articlePostId);
         $dismissNotice = "<button type='button' class='notice-dismiss " . Sage::TOKEN . "-notice-dismiss'><span class='screen-reader-text'>" . __('Dismiss this notice.') . "</span></button>";
         $urlArticle = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "post.php?post=%id%&action=edit'>" . __("Voir l'article", Sage::TOKEN) . "</a></span></strong>";
         $message = '';
@@ -422,19 +421,16 @@ class WoocommerceService
                 $message = $response["body"];
             }
         } else {
-            $product = wc_get_product($articlePostId);
-            $product->read_meta_data(true);
-            $oldMetadata = $product->get_meta_data();
+            $oldMetadata = SageService::getInstance()->get_post_meta_single($articlePostId);
             $allMetadataNames = array_map(static fn(array $meta) => $meta['key'], $article["meta_data"]);
-            foreach ($oldMetadata as $old) {
-                if (!in_array($old->key, $allMetadataNames, true)) {
-                    $product->delete_meta_data($old->key);
+            foreach ($oldMetadata as $key => $value) {
+                if (!in_array($key, $allMetadataNames, true)) {
+                    delete_post_meta($articlePostId, $key);
                 }
             }
             foreach ($article["meta_data"] as $meta) {
-                $product->update_meta_data($meta['key'], $meta['value']);
+                update_post_meta($articlePostId, $meta['key'], $meta['value']);
             }
-            $product->save();
             $response = [
                 'body' => [
                     'id' => $articlePostId,
@@ -475,7 +471,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return null;
     }
 
-    public function convertSageArticleToWoocommerce(StdClass $fArticle, Resource $resource): array
+    public function convertSageArticleToWoocommerce(StdClass $fArticle, Resource $resource, ?int $postId): array
     {
         $result = [
             'name' => $fArticle->arDesign,
@@ -483,16 +479,22 @@ WHERE {$wpdb->posts}.post_type = 'product'
         ];
         foreach ($resource->getMetadata()($fArticle) as $metadata) {
             $value = $metadata->getValue();
+            $optionName = '_' . Sage::TOKEN . $metadata->getField();
             if (!is_null($value)) {
                 $v = $value($fArticle);
                 if (is_bool($v)) {
                     $v = (int)$v;
                 }
-                $result['meta_data'][] = [
-                    'key' => '_' . Sage::TOKEN . $metadata->getField(),
-                    'value' => $v,
-                ];
+            } else {
+                $v = get_post_meta($postId, $optionName, true);
+                if (empty($v)) {
+                    continue;
+                }
             }
+            $result['meta_data'][] = [
+                'key' => $optionName,
+                'value' => $v,
+            ];
         }
         return $result;
     }
@@ -899,15 +901,11 @@ WHERE {$wpdb->posts}.post_type = 'product'
 
     public function getFDocenteteIdentifierFromOrder(WC_Order $order): array|null
     {
-        $fDocenteteIdentifier = null;
-        foreach ($order->get_meta_data() as $meta) {
-            $data = $meta->get_data();
-            if ($data['key'] === FDocenteteResource::META_KEY) {
-                $fDocenteteIdentifier = json_decode($data['value'], true, 512, JSON_THROW_ON_ERROR);
-                break;
-            }
+        $result = SageService::getInstance()->get_post_meta_single($order->get_id(), FDocenteteResource::META_KEY, true);
+        if (!empty($result)) {
+            return json_decode($result, true, 512, JSON_THROW_ON_ERROR);
         }
-        return $fDocenteteIdentifier;
+        return null;
     }
 
     private function updateUserMetas(WC_Order $order, stdClass $new): string
@@ -1003,14 +1001,9 @@ WHERE {$wpdb->posts}.post_type = 'product'
                 foreach ($wcCart->get_cart_contents() as $cartContent) {
                     /** @var WC_Product_Simple $product */
                     $product = $cartContent['data'];
-                    /** @var  WC_Meta_Data[] $metaDatas */
-                    $metaDatas = $product->get_meta_data();
-                    foreach ($metaDatas as $metaData) {
-                        $data = $metaData->get_data();
-                        if ($data["key"] === '_' . Sage::TOKEN . $prop) {
-                            $result = $this->findFraisExpeditionGrille($pExpedition, (float)$metaData->get_data()['value']);
-                            break;
-                        }
+                    $value = SageService::getInstance()->get_post_meta_single($product->get_id(), '_' . Sage::TOKEN . $prop, true);
+                    if (!empty($value)) {
+                        $result = $this->findFraisExpeditionGrille($pExpedition, (float)$value);
                     }
                 }
             }
@@ -1148,24 +1141,19 @@ WHERE {$wpdb->posts}.post_type = 'product'
     public function getPricesProduct(WC_Product $product, bool $flat = false): array
     {
         $r = [];
-        /** @var WC_Meta_Data[] $metaDatas */
-        $metaDatas = $product->get_meta_data();
-        foreach ($metaDatas as $metaData) {
-            $data = $metaData->get_data();
-            if ($data["key"] !== '_' . Sage::TOKEN . '_prices') {
-                continue;
+        $prices = SageService::getInstance()->get_post_meta_single($product->get_id(), '_' . Sage::TOKEN . '_prices', true);
+        if (empty($prices)) {
+            return $r;
+        }
+        $prices = json_decode($prices, false, 512, JSON_THROW_ON_ERROR);
+        foreach ($prices as $price) {
+            // Catégorie comptable (nCatCompta): [Locale, Export, Métropole]
+            // Catégorie tarifaire (nCatTarif): [Tarif GC, Tarif Remise, Prix public, Tarif Partenaire]
+            if ($flat) {
+                $r[] = $price;
+            } else {
+                $r[$price->nCatTarif->cbIndice][$price->nCatCompta->cbIndice] = $price;
             }
-            $prices = json_decode($data["value"], false, 512, JSON_THROW_ON_ERROR);
-            foreach ($prices as $price) {
-                // Catégorie comptable (nCatCompta): [Locale, Export, Métropole]
-                // Catégorie tarifaire (nCatTarif): [Tarif GC, Tarif Remise, Prix public, Tarif Partenaire]
-                if ($flat) {
-                    $r[] = $price;
-                } else {
-                    $r[$price->nCatTarif->cbIndice][$price->nCatCompta->cbIndice] = $price;
-                }
-            }
-            break;
         }
         return $r;
     }

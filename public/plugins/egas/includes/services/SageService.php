@@ -698,7 +698,10 @@ WHERE user_login LIKE %s
         return $this->resources;
     }
 
-    public function getFieldsForEntity(Resource $resource, bool $withMetadata = true): array
+    public function getFieldsForEntity(
+        Resource $resource,
+        bool     $withMetadata = true
+    ): array
     {
         $transDomain = $resource->getTransDomain();
         $typeModel = GraphqlService::getInstance()->getTypeModel($resource->getTypeModel());
@@ -868,5 +871,18 @@ ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
         $website = GraphqlService::getInstance()->getWebsite($id);
         update_option(Sage::TOKEN . '_website_api', json_encode($website));
         return $website;
+    }
+
+    public function get_post_meta_single(int $post_id, string $key = '', bool $single = false): array|string
+    {
+        $data = get_post_meta($post_id, $key, $single);
+
+        if ($key) {
+            return $data;
+        }
+        foreach ($data as $key => $value) {
+            $data[$key] = $value[0];
+        }
+        return $data;
     }
 }

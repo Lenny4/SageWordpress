@@ -11,9 +11,7 @@ use App\services\GraphqlService;
 use App\services\SageService;
 use App\services\TwigService;
 use App\services\WoocommerceService;
-use stdClass;
 use Swaggest\JsonDiff\JsonDiff;
-use WC_Meta_Data;
 use WC_Order;
 use WC_Order_Item;
 use WC_Order_Item_Product;
@@ -70,7 +68,10 @@ class WoocommerceHook
             if (!empty($arRef)) {
                 return [Sage::TOKEN => __('Egas', Sage::TOKEN)];
             }
-            return array_merge([Sage::TOKEN => __('Egas', Sage::TOKEN)], $types);
+            if (filter_var(get_option(Sage::TOKEN . '_sage_create_new_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
+                return array_merge([Sage::TOKEN => __('Sage', Sage::TOKEN)], $types);
+            }
+            return $types;
         });
 
         add_action('add_meta_boxes', static function (string $screen, mixed $obj): void { // remove [Product type | virtual | downloadable] add product arRef
@@ -85,6 +86,10 @@ class WoocommerceHook
 
         // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
         add_filter('woocommerce_product_data_tabs', static function (array $tabs) { // Code to Create Tab in the Backend
+            $arRef = SageService::getInstance()->getArRef(get_the_ID());
+            if (empty($arRef) && !filter_var(get_option(Sage::TOKEN . '_sage_create_new_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
+                return $tabs;
+            }
             foreach ($tabs as $tabName => $value) {
                 if (!in_array($tabName, [
                     'linked_product',
@@ -108,34 +113,33 @@ class WoocommerceHook
             if (!($product instanceof WC_Product)) {
                 return;
             }
-            $oldMetaData = $product->get_meta_data();
-            $arRef = $product->get_meta(FArticleResource::META_KEY);
+            $sageService = SageService::getInstance();
+            $oldMetaData = $sageService->get_post_meta_single($product->get_id());
+            $arRef = $oldMetaData[FArticleResource::META_KEY];
             $meta = [
                 'changes' => [],
                 'old' => $oldMetaData,
                 'new' => $oldMetaData,
             ];
             $messages = [];
-            $updateApi = $product->get_meta('_' . Sage::TOKEN . '_updateApi'); // returns "" if not exists in bdd
+            $updateApi = $oldMetaData['_' . Sage::TOKEN . '_updateApi'] ?? null;
+            $createApi = $oldMetaData['_' . Sage::TOKEN . '_createApi'] ?? null;
             $graphqlService = GraphqlService::getInstance();
             $fArticle = $graphqlService->getFArticle($arRef);
-            if (!empty($arRef) && empty($updateApi) && filter_var(get_option(Sage::TOKEN . '_website_update_product', false), FILTER_VALIDATE_BOOLEAN)) {
+            if (
+                !empty($arRef) &&
+                empty($updateApi) &&
+                empty($createApi) &&
+                filter_var(get_option(Sage::TOKEN . '_website_update_product', false), FILTER_VALIDATE_BOOLEAN)
+            ) {
                 [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage($arRef, ignoreCanImport: true, fArticle: $fArticle, showSuccessMessage: false);
                 $messages = [$responseError, $message];
                 if (!is_null($response)) {
-                    $product->read_meta_data(true);
-                    $meta['new'] = $product->get_meta_data();
-                    foreach ($meta as $key => $value) {
-                        $meta[$key . 'Array'] = new stdClass();
-                        foreach ($value as $metaItem) {
-                            $data = $metaItem->get_data();
-                            if ($data['key'] === '_' . Sage::TOKEN . '_last_update') {
-                                continue;
-                            }
-                            $meta[$key . 'Array']->{$data['key']} = $data['value'];
-                        }
-                    }
-                    $jsonDiff = new JsonDiff($meta['oldArray'], $meta['newArray']);
+                    clean_post_cache($product->get_id());
+                    $meta['new'] = $sageService->get_post_meta_single($product->get_id());
+                    unset($meta['old']['_' . Sage::TOKEN . '_last_update']);
+                    unset($meta['new']['_' . Sage::TOKEN . '_last_update']);
+                    $jsonDiff = new JsonDiff($meta['old'], $meta['new']);
                     $meta['changes'] = [
                         'removed' => (array)$jsonDiff->getRemoved(),
                         'added' => (array)$jsonDiff->getAdded(),
@@ -163,6 +167,15 @@ class WoocommerceHook
                     break;
                 }
             }
+            // todo temporaire au lieu de recréer id, key, value il faudrait opuvoir l'utiliser directement tel quel (donc modification a faire dans la js interface MetadataInterface)
+            foreach ($meta['new'] as $key => $value) {
+                $meta['new'][$key] = [
+                    'id' => 0,
+                    'key' => $key,
+                    'value' => $value,
+                ];
+            }
+            $meta['new'] = array_values($meta['new']);
             echo TwigService::getInstance()->render('woocommerce/tabs/sage.html.twig', [
                 'fArticle' => $fArticle,
                 'pCattarifs' => $graphqlService->getPCattarifs(),
@@ -178,6 +191,7 @@ class WoocommerceHook
                 'metaChanges' => $meta['changes'],
                 'productMeta' => $meta['new'],
                 'updateApi' => $updateApi,
+                'createApi' => $createApi,
                 'hasChanges' => $hasChanges,
                 'changeTypes' => $changeTypes,
             ]);
@@ -295,14 +309,9 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             ) {
                 return;
             }
-            /** @var WC_Meta_Data[] $metaDatas */
-            $metaDatas = $product->get_meta_data();
-            foreach ($metaDatas as $metaData) {
-                $data = $metaData->get_data();
-                if ($data["key"] === FArticleResource::META_KEY) {
-                    echo __('Egas ref', Sage::TOKEN) . ': ' . $data["value"];
-                    break;
-                }
+            $arRef = SageService::getInstance()->get_post_meta_single($product->get_id(), FArticleResource::META_KEY, true);
+            if (!empty($arRef)) {
+                echo __('Egas ref', Sage::TOKEN) . ': ' . $arRef;
             }
         }, 10, 3);
         // endregion

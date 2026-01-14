@@ -272,9 +272,7 @@ class WordpressService
                 FArticleResource::META_KEY,
                 ...array_map(function (SageEntityMetadata $metadata) {
                     return '_' . Sage::TOKEN . $metadata->getField();
-                }, array_filter($resource->getMetadata()(), function (SageEntityMetadata $metadata) {
-                    return $metadata->isCustom();
-                })),
+                }, $resource->getMetadata()()),
             ];
             $meta = get_post_meta($postId);
             foreach ($meta as $key => $values) {
@@ -291,8 +289,12 @@ class WordpressService
                     update_post_meta($postId, $key, $value);
                 }
             }
-            if (!$isNew && filter_var(get_option(Sage::TOKEN . '_sage_update_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
-                update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
+            if (!$isNew) {
+                if (filter_var(get_option(Sage::TOKEN . '_sage_update_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
+                    update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
+                }
+            } elseif (filter_var(get_option(Sage::TOKEN . '_sage_create_new_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
+                update_post_meta($postId, '_' . Sage::TOKEN . '_createApi', (new DateTime())->format('Y-m-d H:i:s'));
             }
         }
     }
@@ -320,13 +322,17 @@ class WordpressService
                 update_user_meta($userId, $key, $value);
             }
         }
-        if ($nbUpdatedMeta > 0 && !$isNew) {
-            if (is_null($sageUpdateFcomptet)) {
-                $sageUpdateFcomptet = filter_var(get_option(Sage::TOKEN . '_sage_update_fcomptet', false), FILTER_VALIDATE_BOOLEAN);
+        if (!$isNew) {
+            if ($nbUpdatedMeta > 0) {
+                if (is_null($sageUpdateFcomptet)) {
+                    $sageUpdateFcomptet = filter_var(get_option(Sage::TOKEN . '_sage_update_fcomptet', false), FILTER_VALIDATE_BOOLEAN);
+                }
+                if ($sageUpdateFcomptet) {
+                    update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
+                }
             }
-            if ($sageUpdateFcomptet) {
-                update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
-            }
+        } elseif (filter_var(get_option(Sage::TOKEN . '_sage_create_new_fcomptet', false), FILTER_VALIDATE_BOOLEAN)) {
+            update_user_meta($userId, '_' . Sage::TOKEN . '_createApi', (new DateTime())->format('Y-m-d H:i:s'));
         }
     }
 

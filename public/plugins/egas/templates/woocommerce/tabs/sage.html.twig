@@ -31,6 +31,12 @@
     <p>{{ 'Date des modifications'|trans }} : {{ updateApi }}</p>
   </div>
 {% endif %}
+{% if createApi is not empty %}
+  <div class="notice notice-warning is-dismissible">
+    <p>{{ 'Ce produit n\'est pas encore créé dans Sage. Il sera créé automatiquement dès que possible.'|trans }}</p>
+    <p>{{ 'Date de création'|trans }} : {{ createApi }}</p>
+  </div>
+{% endif %}
 <div data-{{ TOKEN }}-pcattarifs="{{ pCattarifs|json_encode }}"></div>
 <div data-{{ TOKEN }}-pcatcomptas="{{ pCatComptas|json_encode }}"></div>
 <div data-{{ TOKEN }}-fpays="{{ fPays|json_encode }}"></div>

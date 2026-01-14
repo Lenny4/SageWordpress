@@ -2,13 +2,11 @@
 
 namespace App\resources;
 
-use App\class\SageEntityMetadata;
 use App\enum\Sage\TiersTypeEnum;
 use App\Sage;
 use App\services\GraphqlService;
 use App\services\SageService;
 use App\utils\SageTranslationUtils;
-use DateTime;
 use stdClass;
 
 class FComptetResource extends Resource
@@ -49,7 +47,7 @@ class FComptetResource extends Resource
                     'label' => __("Créer le compte dans Sage.", Sage::TOKEN),
                     'description' => __("Créer le compte dans Sage lorsqu'un nouveau utilisateur Wordpress est crée.", Sage::TOKEN),
                     'type' => 'checkbox',
-                    'default' => 'off',
+                    'default' => 'on',
                 ],
                 [
                     'id' => 'sage_create_old_fcomptet',
@@ -95,12 +93,9 @@ class FComptetResource extends Resource
                 ],
             ];
         };
-        $this->metadata = static function (?stdClass $obj = null): array {
+        $this->metadata = function (?stdClass $obj = null): array {
             $result = [
-                new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fComptet) {
-                    return (new DateTime())->format('Y-m-d H:i:s');
-                }, showInOptions: true, custom: true),
-                new SageEntityMetadata(field: '_postId', value: null, showInOptions: true, custom: true),
+                ...$this->getMandatoryMetadata(),
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFComptetSelectionSet(), $result, $obj);
         };

@@ -2,7 +2,6 @@
 
 namespace App\resources;
 
-use App\class\SageEntityMetadata;
 use App\enum\Sage\DomaineTypeEnum;
 use App\Sage;
 use App\services\GraphqlService;
@@ -51,7 +50,7 @@ class FDocenteteResource extends Resource
                     'label' => __("Créer le document de vente dans Sage.", Sage::TOKEN),
                     'description' => __("Créer le document de vente dans Sage lorsqu'une nouveaulle commande Wordpress est crée.", Sage::TOKEN),
                     'type' => 'checkbox',
-                    'default' => 'off',
+                    'default' => 'on',
                 ],
 //            [
 //                'id' => 'sage_create_old_fdocentete',
@@ -90,9 +89,9 @@ class FDocenteteResource extends Resource
                 ],
             ];
         };
-        $this->metadata = static function (?stdClass $obj = null): array {
+        $this->metadata = function (?stdClass $obj = null): array {
             $result = [
-                new SageEntityMetadata(field: '_postId', value: null, showInOptions: true, custom: true),
+                ...$this->getMandatoryMetadata(),
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFDocenteteSelectionSet(), $result, $obj);
         };

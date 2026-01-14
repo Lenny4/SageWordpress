@@ -10,7 +10,6 @@ use App\services\GraphqlService;
 use App\services\SageService;
 use App\services\WoocommerceService;
 use App\utils\SageTranslationUtils;
-use DateTime;
 use stdClass;
 
 class FArticleResource extends Resource
@@ -55,7 +54,7 @@ class FArticleResource extends Resource
                     'label' => __("Créer l'article dans Sage.", Sage::TOKEN),
                     'description' => __("Créer l'article dans Sage lorsqu'un nouveau produit Woocommerce est crée.", Sage::TOKEN),
                     'type' => 'checkbox',
-                    'default' => 'off',
+                    'default' => 'on',
                 ],
 //            [
 //                'id' => 'sage_create_old_farticle',
@@ -106,21 +105,18 @@ class FArticleResource extends Resource
                 // todo ajouter une option pour considérer les catalogues comme des catégories
             ];
         };
-        $this->metadata = static function (?stdClass $obj = null): array {
+        $this->metadata = function (?stdClass $obj = null): array {
             $result = [
+                ...$this->getMandatoryMetadata(),
                 new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {
                     return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
-                }, custom: true),
+                }),
                 new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) {
                     return json_encode(WoocommerceService::getInstance()->getMaxPrice($fArticle->prices), JSON_THROW_ON_ERROR);
-                }, custom: true),
-                new SageEntityMetadata(field: '_last_update', value: static function (StdClass $fArticle) {
-                    return (new DateTime())->format('Y-m-d H:i:s');
-                }, showInOptions: true, custom: true),
-                new SageEntityMetadata(field: '_postId', value: null, showInOptions: true, custom: true),
+                }),
                 new SageEntityMetadata(field: '_canEditArSuiviStock', value: static function (StdClass $fArticle) {
                     return $fArticle->canEditArSuiviStock;
-                }, custom: true),
+                }),
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFArticleSelectionSet(), $result, $obj);
         };

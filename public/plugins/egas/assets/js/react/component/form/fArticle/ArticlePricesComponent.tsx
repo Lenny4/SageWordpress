@@ -96,12 +96,14 @@ export const ArticlePricesComponent = () => {
                           );
                           return (
                             <td key={index + "_" + index2 + "_" + index3}>
-                              <PriceComponent
-                                price={
-                                  // @ts-ignore
-                                  price["price" + htTtc]
-                                }
-                              />
+                              {price && (
+                                <PriceComponent
+                                  price={
+                                    // @ts-ignore
+                                    price["price" + htTtc]
+                                  }
+                                />
+                              )}
                             </td>
                           );
                         });

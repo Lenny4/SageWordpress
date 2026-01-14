@@ -2,7 +2,9 @@
 
 namespace App\resources;
 
+use App\class\SageEntityMetadata;
 use Closure;
+use DateTime;
 use stdClass;
 
 abstract class Resource
@@ -318,5 +320,15 @@ abstract class Resource
     {
         $this->importCondition = $importCondition;
         return $this;
+    }
+
+    public function getMandatoryMetadata(): array
+    {
+        return [
+            new SageEntityMetadata(field: '_updateApi'),
+            new SageEntityMetadata(field: '_createApi'),
+            new SageEntityMetadata(field: '_postId', showInOptions: true),
+            new SageEntityMetadata(field: '_last_update', value: static fn(StdClass $obj) => (new DateTime())->format('Y-m-d H:i:s'), showInOptions: true),
+        ];
     }
 }
