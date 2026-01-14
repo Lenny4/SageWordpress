@@ -68,7 +68,7 @@ class WoocommerceHook
             if (!empty($arRef)) {
                 return [Sage::TOKEN => __('Egas', Sage::TOKEN)];
             }
-            if (filter_var(get_option(Sage::TOKEN . '_sage_create_new_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
+            if (filter_var(get_option(Sage::TOKEN . '_sage_create_new_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
                 return array_merge([Sage::TOKEN => __('Sage', Sage::TOKEN)], $types);
             }
             return $types;
@@ -87,7 +87,7 @@ class WoocommerceHook
         // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
         add_filter('woocommerce_product_data_tabs', static function (array $tabs) { // Code to Create Tab in the Backend
             $arRef = SageService::getInstance()->getArRef(get_the_ID());
-            if (empty($arRef) && !filter_var(get_option(Sage::TOKEN . '_sage_create_new_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
+            if (empty($arRef) && !filter_var(get_option(Sage::TOKEN . '_sage_create_new_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
                 return $tabs;
             }
             foreach ($tabs as $tabName => $value) {
@@ -130,7 +130,7 @@ class WoocommerceHook
                 !empty($arRef) &&
                 empty($updateApi) &&
                 empty($createApi) &&
-                filter_var(get_option(Sage::TOKEN . '_website_update_product', false), FILTER_VALIDATE_BOOLEAN)
+                filter_var(get_option(Sage::TOKEN . '_website_update_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)
             ) {
                 [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage($arRef, ignoreCanImport: true, fArticle: $fArticle, showSuccessMessage: false);
                 $messages = [$responseError, $message];

@@ -58,6 +58,9 @@ class WordpressHook
             }
             AdminController::addSections();
             $screen_id = $wordpressService->get_order_screen_id();
+            if ($wordpressService->isOptionFormSubmitted()) {
+                $wordpressService->removeCreateUpdateApi();
+            }
             // like register_order_origin_column in woocommerce/src/Internal/Orders/OrderAttributionController.php
             // HPOS and non-HPOS use different hooks.
             add_filter("manage_{$screen_id}_columns", [WoocommerceController::class, 'addColumn'], 11);

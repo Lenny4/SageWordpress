@@ -78,17 +78,50 @@ class WordpressService
         }
     }
 
-    public function addWebsiteSageApi(bool $force = false): bool|string
+    public function isOptionFormSubmitted(): bool
     {
-        // woocommerce/includes/admin/class-wc-admin-meta-boxes.php:134 add_meta_box( 'woocommerce-product-data
-        $formSubmitted =
+        return
             array_key_exists('settings-updated', $_GET) &&
             array_key_exists('page', $_GET) &&
             $_GET["settings-updated"] === 'true' &&
             $_GET["page"] === Sage::TOKEN . '_settings';
+    }
+
+    public function removeCreateUpdateApi(): void
+    {
+        global $wpdb;
+        foreach (SageService::getInstance()->getResources() as $resource) {
+            $fields = [];
+            if (!filter_var(get_option(Sage::TOKEN . '_sage_create_new_' . $resource->getEntityName(), false), FILTER_VALIDATE_BOOLEAN)) {
+                $fields[] = 'createApi';
+            }
+            if (!filter_var(get_option(Sage::TOKEN . '_sage_update_' . $resource->getEntityName(), false), FILTER_VALIDATE_BOOLEAN)) {
+                $fields[] = 'updateApi';
+            }
+            foreach ($fields as $field) {
+                $args = ['_' . Sage::TOKEN . '_' . $field];
+                $where = "";
+                if (!is_null($postType = $resource->getPostType())) {
+                    $args[] = $postType;
+                    $where .= "AND {$resource->getTable()}.post_type = %s";
+                }
+                $wpdb->query($wpdb->prepare("
+                    DELETE {$resource->getMetaTable()}
+                    FROM {$resource->getMetaTable()}
+                    INNER JOIN {$resource->getTable()}
+                        ON {$resource->getTable()}.ID = {$resource->getMetaTable()}.{$resource->getMetaColumnIdentifier()}
+                    WHERE {$resource->getMetaTable()}.meta_key = %s {$where}
+", ...$args));
+            }
+        }
+    }
+
+    public function addWebsiteSageApi(bool $force = false): bool|string
+    {
+        // woocommerce/includes/admin/class-wc-admin-meta-boxes.php:134 add_meta_box( 'woocommerce-product-data
         if (
             !$force && (
-            !($formSubmitted && current_user_can('manage_options'))
+            !($this->isOptionFormSubmitted() && current_user_can('manage_options'))
             )
         ) {
             return false;
@@ -290,10 +323,10 @@ class WordpressService
                 }
             }
             if (!$isNew) {
-                if (filter_var(get_option(Sage::TOKEN . '_sage_update_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
+                if (filter_var(get_option(Sage::TOKEN . '_sage_update_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
                     update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
                 }
-            } elseif (filter_var(get_option(Sage::TOKEN . '_sage_create_new_farticle', false), FILTER_VALIDATE_BOOLEAN)) {
+            } elseif (filter_var(get_option(Sage::TOKEN . '_sage_create_new_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
                 update_post_meta($postId, '_' . Sage::TOKEN . '_createApi', (new DateTime())->format('Y-m-d H:i:s'));
             }
         }
@@ -325,13 +358,13 @@ class WordpressService
         if (!$isNew) {
             if ($nbUpdatedMeta > 0) {
                 if (is_null($sageUpdateFcomptet)) {
-                    $sageUpdateFcomptet = filter_var(get_option(Sage::TOKEN . '_sage_update_fcomptet', false), FILTER_VALIDATE_BOOLEAN);
+                    $sageUpdateFcomptet = filter_var(get_option(Sage::TOKEN . '_sage_update_' . FComptetResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN);
                 }
                 if ($sageUpdateFcomptet) {
                     update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
                 }
             }
-        } elseif (filter_var(get_option(Sage::TOKEN . '_sage_create_new_fcomptet', false), FILTER_VALIDATE_BOOLEAN)) {
+        } elseif (filter_var(get_option(Sage::TOKEN . '_sage_create_new_' . FComptetResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
             update_user_meta($userId, '_' . Sage::TOKEN . '_createApi', (new DateTime())->format('Y-m-d H:i:s'));
         }
     }

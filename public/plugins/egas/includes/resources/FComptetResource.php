@@ -43,42 +43,42 @@ class FComptetResource extends Resource
         $this->options = function (): array {
             return [
                 [
-                    'id' => 'sage_create_new_fcomptet',
+                    'id' => 'sage_create_new_' . self::ENTITY_NAME,
                     'label' => __("Créer le compte dans Sage.", Sage::TOKEN),
                     'description' => __("Créer le compte dans Sage lorsqu'un nouveau utilisateur Wordpress est crée.", Sage::TOKEN),
                     'type' => 'checkbox',
                     'default' => 'on',
                 ],
                 [
-                    'id' => 'sage_create_old_fcomptet',
+                    'id' => 'sage_create_old_' . self::ENTITY_NAME,
                     'label' => __("Importe les anciens utilisateurs.", Sage::TOKEN),
                     'description' => __("Importe les anciens utilisateurs Woocommerce dans Sage.", Sage::TOKEN),
                     'type' => 'checkbox',
                     'default' => 'off',
                 ],
                 [
-                    'id' => 'sage_update_fcomptet',
+                    'id' => 'sage_update_' . self::ENTITY_NAME,
                     'label' => __("Met à jour le compte Sage.", Sage::TOKEN),
                     'description' => __("Met à jour le compte Sage lorsque l'utilisateur WooCommerce qui lui est lié est modifié.", Sage::TOKEN),
                     'type' => 'checkbox',
                     'default' => 'off',
                 ],
                 [
-                    'id' => 'website_create_new_user',
+                    'id' => 'website_create_new_' . self::ENTITY_NAME,
                     'label' => __("Créer l'utilisateur dans Woocommerce.", Sage::TOKEN),
                     'description' => __("Créer l'utilisateur dans Woocommerce lorsqu'un nouveau compte Sage est crée.", Sage::TOKEN),
                     'type' => 'resource',
                     'default' => '',
                 ],
                 [
-                    'id' => 'website_create_old_user',
+                    'id' => 'website_create_old_' . self::ENTITY_NAME,
                     'label' => __("Importe les anciens comptes Sage.", Sage::TOKEN),
                     'description' => __("Importe les anciens comptes Sage dans Woocommerce.", Sage::TOKEN),
                     'type' => 'resource',
                     'default' => '',
                 ],
                 [
-                    'id' => 'website_update_user',
+                    'id' => 'website_update_' . self::ENTITY_NAME,
                     'label' => __("Met à jour l'utilisateur Woocommerce.", Sage::TOKEN),
                     'description' => __("Met à jour l'utilisateur Woocommerce lorsque le compte Sage qui lui est lié est modifié.", Sage::TOKEN),
                     'type' => 'checkbox',
@@ -100,8 +100,10 @@ class FComptetResource extends Resource
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFComptetSelectionSet(), $result, $obj);
         };
         $this->metaKeyIdentifier = self::META_KEY;
+        $this->table = $wpdb->users;
         $this->metaTable = $wpdb->usermeta;
         $this->metaColumnIdentifier = 'user_id';
+        $this->postType = null;
         $this->importCondition = [
             new ImportConditionDto(
                 field: 'ctType', // [IsProjected(true)]

@@ -46,42 +46,42 @@ class FDocenteteResource extends Resource
         $this->options = function (): array {
             return [
                 [
-                    'id' => 'sage_create_new_fdocentete',
+                    'id' => 'sage_create_new_' . self::ENTITY_NAME,
                     'label' => __("Créer le document de vente dans Sage.", Sage::TOKEN),
                     'description' => __("Créer le document de vente dans Sage lorsqu'une nouveaulle commande Wordpress est crée.", Sage::TOKEN),
                     'type' => 'checkbox',
                     'default' => 'on',
                 ],
 //            [
-//                'id' => 'sage_create_old_fdocentete',
+//                'id' => 'sage_create_old_' . self::ENTITY_NAME,
 //                'label' => __('Importe les anciennes commandes.', Sage::TOKEN),
 //                'description' => __("Importe les anciennes commandes Woocommerce dans Sage.", Sage::TOKEN),
 //                'type' => 'checkbox',
 //                'default' => 'off',
 //            ],
                 [
-                    'id' => 'sage_update_fdocentete',
+                    'id' => 'sage_update_' . self::ENTITY_NAME,
                     'label' => __("Met à jour le document de vente Sage.", Sage::TOKEN),
                     'description' => __("Met à jour le document de vente Sage lorsque la commande WooCommerce qui lui est lié est modifiée.", Sage::TOKEN),
                     'type' => 'checkbox',
                     'default' => 'off',
                 ],
                 [
-                    'id' => 'website_create_new_order',
+                    'id' => 'website_create_new_' . self::ENTITY_NAME,
                     'label' => __("Créer la commande dans Woocommerce.", Sage::TOKEN),
                     'description' => __("Créer la commande dans Woocommerce lorsqu'un nouveau document de vente Sage est crée.", Sage::TOKEN),
                     'type' => 'resource',
                     'default' => '',
                 ],
                 [
-                    'id' => 'website_create_old_order',
+                    'id' => 'website_create_old_' . self::ENTITY_NAME,
                     'label' => __("Importe les anciens documents de vente Sage.", Sage::TOKEN),
                     'description' => __("Importe les anciens documents de vente Sage dans WooCommerce.", Sage::TOKEN),
                     'type' => 'resource',
                     'default' => '',
                 ],
                 [
-                    'id' => 'website_update_order',
+                    'id' => 'website_update_' . self::ENTITY_NAME,
                     'label' => __("Met à jour la commande Woocommerce.", Sage::TOKEN),
                     'description' => __("Met à jour la commande Woocommerce lorsque le document de vente Sage qui lui est lié est modifié.", Sage::TOKEN),
                     'type' => 'checkbox',
@@ -96,8 +96,10 @@ class FDocenteteResource extends Resource
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFDocenteteSelectionSet(), $result, $obj);
         };
         $this->metaKeyIdentifier = self::META_KEY;
+        $this->table = $wpdb->posts;
         $this->metaTable = $wpdb->prefix . 'wc_orders_meta';
         $this->metaColumnIdentifier = 'order_id';
+        $this->postType = null;
         $this->importCondition = [
             new ImportConditionDto(
                 field: 'doDomaine', // [IsProjected(true)]

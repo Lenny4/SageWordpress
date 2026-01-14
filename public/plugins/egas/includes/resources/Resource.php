@@ -52,6 +52,11 @@ abstract class Resource
      * Meta key which give the identifier value
      */
     protected string $metaKeyIdentifier;
+
+    protected string $table;
+
+    protected ?string $postType = null; // used for public function removeCreateUpdateApi
+
     /**
      * Meta table to use
      */
@@ -330,5 +335,27 @@ abstract class Resource
             new SageEntityMetadata(field: '_postId', showInOptions: true),
             new SageEntityMetadata(field: '_last_update', value: static fn(StdClass $obj) => (new DateTime())->format('Y-m-d H:i:s'), showInOptions: true),
         ];
+    }
+
+    public function getTable(): string
+    {
+        return $this->table;
+    }
+
+    public function setTable(string $table): self
+    {
+        $this->table = $table;
+        return $this;
+    }
+
+    public function getPostType(): ?string
+    {
+        return $this->postType;
+    }
+
+    public function setPostType(?string $postType): self
+    {
+        $this->postType = $postType;
+        return $this;
     }
 }

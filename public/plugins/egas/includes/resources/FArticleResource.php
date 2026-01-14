@@ -50,28 +50,28 @@ class FArticleResource extends Resource
             $initFilterJson = json_encode($initFilter);
             return [
                 [
-                    'id' => 'sage_create_new_farticle',
+                    'id' => 'sage_create_new_' . self::ENTITY_NAME,
                     'label' => __("Créer l'article dans Sage.", Sage::TOKEN),
                     'description' => __("Créer l'article dans Sage lorsqu'un nouveau produit Woocommerce est crée.", Sage::TOKEN),
                     'type' => 'checkbox',
                     'default' => 'on',
                 ],
 //            [
-//                'id' => 'sage_create_old_farticle',
+//                'id' => 'sage_create_old_' . self::ENTITY_NAME,
 //                'label' => __("Importe les anciens produits.", Sage::TOKEN),
 //                'description' => __("Importe les anciens produits Woocommerce dans Sage.", Sage::TOKEN),
 //                'type' => 'checkbox',
 //                'default' => 'off',
 //            ],
                 [
-                    'id' => 'sage_update_farticle',
+                    'id' => 'sage_update_' . self::ENTITY_NAME,
                     'label' => __("Met à jour l’article Sage.", Sage::TOKEN),
                     'description' => __("Met à jour l’article Sage lorsque le produit WooCommerce qui lui est lié est modifié.", Sage::TOKEN),
                     'type' => 'checkbox',
                     'default' => 'off',
                 ],
                 [
-                    'id' => 'website_create_new_product',
+                    'id' => 'website_create_new_' . self::ENTITY_NAME,
                     'label' => __("Créer le produit dans Woocommerce.", Sage::TOKEN),
                     'description' => __("Créer le produit dans Woocommerce lorsqu'un nouvel article Sage est crée.", Sage::TOKEN),
                     'type' => 'resource',
@@ -79,7 +79,7 @@ class FArticleResource extends Resource
                     'default' => '',
                 ],
                 [
-                    'id' => 'website_create_old_product',
+                    'id' => 'website_create_old_' . self::ENTITY_NAME,
                     'label' => __("Importe les anciens articles.", Sage::TOKEN),
                     'description' => __("Importe les anciens articles Sage dans Woocommerce.", Sage::TOKEN),
                     'type' => 'resource',
@@ -96,7 +96,7 @@ class FArticleResource extends Resource
                     'default' => '',
                 ],
                 [
-                    'id' => 'website_update_product',
+                    'id' => 'website_update_' . self::ENTITY_NAME,
                     'label' => __("Met à jour le produit Woocommerce.", Sage::TOKEN),
                     'description' => __("Met à jour le produit Woocommerce lorsque l'article Sage qui lui est lié est modifié.", Sage::TOKEN),
                     'type' => 'checkbox',
@@ -121,8 +121,10 @@ class FArticleResource extends Resource
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFArticleSelectionSet(), $result, $obj);
         };
         $this->metaKeyIdentifier = self::META_KEY;
+        $this->table = $wpdb->posts;
         $this->metaTable = $wpdb->postmeta;
         $this->metaColumnIdentifier = 'post_id';
+        $this->postType = 'product';
         $this->importCondition = [
             new ImportConditionDto(
                 field: 'arType', // [IsProjected(true)]
