@@ -731,4 +731,14 @@ final class SageTranslationUtils
             ]
         ];
     }
+
+    public static function trans(
+        array  $translations,
+        string $domain,
+        string $key,
+        string $missingSuffix = '~'
+    ): string|array
+    {
+        return $translations[$domain][$key] ?? $key . $missingSuffix;
+    }
 }

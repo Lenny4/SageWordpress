@@ -717,7 +717,7 @@ WHERE user_login LIKE %s
         $trans = SageTranslationUtils::getTranslations();
         $objectFields = [];
         foreach ($fieldsObject as $fieldObject) {
-            $v = $trans[$transDomain][$fieldObject->name];
+            $v = SageTranslationUtils::trans($trans, $transDomain, $fieldObject->name);
             $objectFields[$fieldObject->name] = $v['label'] ?? $v;
         }
 

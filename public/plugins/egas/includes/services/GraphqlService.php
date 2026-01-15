@@ -631,7 +631,7 @@ class GraphqlService
                     $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets, $arrayKey);
                 }
                 if (!empty($results)) {
-                    $results = $cacheService->get($cacheName, function() use ($results) {
+                    $results = $cacheService->get($cacheName, function () use ($results) {
                         return $results;
                     });
                 }
@@ -2013,7 +2013,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                     $f['name'] = $inputFields[$rawField]->name;
                     $f['type'] = $inputFields[$rawField]->type->name;
                 }
-                $v = $trans[$entityName][$rawField];
+                $v = SageTranslationUtils::trans($trans, $transDomain, $rawField);
                 if (is_array($v) && array_key_exists('values', $v)) {
                     $f['values'] = $v['values'];
                 }
