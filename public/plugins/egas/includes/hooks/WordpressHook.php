@@ -131,6 +131,7 @@ FROM {$wpdb->usermeta}
     INNER JOIN {$wpdb->users} ON {$wpdb->users}.ID = {$wpdb->usermeta}.user_id
 WHERE meta_key = %s
   AND meta_value = %s
+LIMIT 1
 ", [FComptetResource::META_KEY, $ctNum]));
                     if (
                         !empty($r) &&

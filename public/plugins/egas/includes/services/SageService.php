@@ -786,13 +786,20 @@ WHERE user_login LIKE %s
         $metaTable = $resource->getMetaTable();
         $metaColumnIdentifier = $resource->getMetaColumnIdentifier();
         global $wpdb;
+        $metaTable2 = $metaTable . '2';
+        $idList  = implode("','", array_map('esc_sql', $ids)); // sécurise les IDs
+        $keyList = implode("','", array_map('esc_sql', array_merge([$metaKeyIdentifier], $fieldNames)));
         $temps = $wpdb->get_results("
-SELECT " . $metaTable . "2." . $metaColumnIdentifier . " post_id, " . $metaTable . "2.meta_value, " . $metaTable . "2.meta_key
-FROM " . $metaTable . "
-         LEFT JOIN " . $metaTable . " " . $metaTable . "2 ON " . $metaTable . "2." . $metaColumnIdentifier . " = " . $metaTable . "." . $metaColumnIdentifier . "
-WHERE " . $metaTable . ".meta_value IN ('" . implode("','", $ids) . "')
-  AND " . $metaTable . "2.meta_key IN ('" . implode("','", [$metaKeyIdentifier, ...$fieldNames]) . "')
-ORDER BY " . $metaTable . "2.meta_key = '" . $metaKeyIdentifier . "' DESC;
+SELECT
+    {$metaTable2}.{$metaColumnIdentifier} AS post_id,
+    {$metaTable2}.meta_value,
+    {$metaTable2}.meta_key
+FROM {$metaTable}
+LEFT JOIN {$metaTable} {$metaTable2}
+    ON {$metaTable2}.{$metaColumnIdentifier} = {$metaTable}.{$metaColumnIdentifier}
+WHERE {$metaTable}.meta_value IN ('{$idList}')
+  AND {$metaTable2}.meta_key IN ('{$keyList}')
+ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
 ");
         $results = [];
         $mapping = [];

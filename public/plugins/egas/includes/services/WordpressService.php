@@ -98,15 +98,17 @@ class WordpressService
             foreach ($fields as $field) {
                 $args = ['_' . Sage::TOKEN . '_' . $field];
                 $where = "";
+                $join = "";
                 if (!is_null($postType = $resource->getPostType())) {
                     $args[] = $postType;
                     $where .= "AND {$resource->getTable()}.post_type = %s";
+                    $join .= "INNER JOIN {$resource->getTable()}
+                        ON {$resource->getTable()}.ID = {$resource->getMetaTable()}.{$resource->getMetaColumnIdentifier()}";
                 }
                 $wpdb->query($wpdb->prepare("
                     DELETE {$resource->getMetaTable()}
                     FROM {$resource->getMetaTable()}
-                    INNER JOIN {$resource->getTable()}
-                        ON {$resource->getTable()}.ID = {$resource->getMetaTable()}.{$resource->getMetaColumnIdentifier()}
+                    {$join}
                     WHERE {$resource->getMetaTable()}.meta_key = %s {$where}
 ", ...$args));
             }
@@ -431,19 +433,22 @@ WHERE meta_key = %s
         return $email;
     }
 
+    /**
+     * Exemple: si on créer un nouvel article et que y'a un article dans la poubelle avec le même arRef ça va enlever
+     * la meta key arRef
+     */
     public function deleteMetaTrashResource(string $key, string $value): void
     {
         global $wpdb;
         $wpdb->query($wpdb->prepare("
-DELETE
-FROM {$wpdb->postmeta}
-WHERE {$wpdb->postmeta}.post_id IN (SELECT DISTINCT(postmeta2.post_id)
-                              FROM (SELECT * FROM {$wpdb->postmeta}) postmeta2
-                                       INNER JOIN {$wpdb->posts}
-                                                  ON {$wpdb->posts}.ID = postmeta2.post_id AND {$wpdb->posts}.post_status = 'trash'
-                              WHERE meta_key = %s
-                                AND meta_value = %s)
-  AND {$wpdb->postmeta}.meta_key LIKE '_" . Sage::TOKEN . "_%'
+DELETE pm
+FROM {$wpdb->postmeta} pm
+         JOIN {$wpdb->posts} p ON p.ID = pm.post_id AND p.post_status = 'trash'
+         JOIN {$wpdb->postmeta} pm_filter
+              ON pm_filter.post_id = pm.post_id
+                  AND pm_filter.meta_key = %s
+                  AND pm_filter.meta_value = %s
+WHERE pm.meta_key LIKE '_" . Sage::TOKEN . "_%'
         ", [$key, $value]));
     }
 
