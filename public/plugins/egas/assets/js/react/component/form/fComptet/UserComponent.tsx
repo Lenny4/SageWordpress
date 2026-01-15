@@ -369,6 +369,7 @@ const UserComponent = () => {
                 </label>
                 <br />
                 <br />
+                {/*todo checker cette option si _sage_create_new_*/}
                 <label htmlFor={`_${TOKEN}_creationType_new`}>
                   <input
                     type="radio"
@@ -416,7 +417,7 @@ const UserComponent = () => {
                     onChange={handleChangeCheckbox("autoGenerateCtNum")}
                   />
                   <label htmlFor={`_${TOKEN}_auto_generate_ctnum`}>
-                    Laisser l'API Sage générer le code client automatiquement.
+                    Laisser Egas générer le code client automatiquement.
                   </label>
                 </td>
               </tr>

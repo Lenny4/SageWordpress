@@ -123,13 +123,11 @@ class WoocommerceHook
             ];
             $messages = [];
             $updateApi = $oldMetaData['_' . Sage::TOKEN . '_updateApi'] ?? null;
-            $createApi = $oldMetaData['_' . Sage::TOKEN . '_createApi'] ?? null;
             $graphqlService = GraphqlService::getInstance();
             $fArticle = $graphqlService->getFArticle($arRef);
             if (
                 !empty($arRef) &&
                 empty($updateApi) &&
-                empty($createApi) &&
                 filter_var(get_option(Sage::TOKEN . '_website_update_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)
             ) {
                 [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage($arRef, ignoreCanImport: true, fArticle: $fArticle, showSuccessMessage: false);
@@ -194,7 +192,6 @@ class WoocommerceHook
                 'metaChanges' => $meta['changes'],
                 'productMeta' => $meta['new'],
                 'updateApi' => $updateApi,
-                'createApi' => $createApi,
                 'hasChanges' => $hasChanges,
                 'changeTypes' => $changeTypes,
             ]);

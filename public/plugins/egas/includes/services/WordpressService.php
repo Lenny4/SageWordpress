@@ -92,9 +92,6 @@ class WordpressService
         global $wpdb;
         foreach (SageService::getInstance()->getResources() as $resource) {
             $fields = [];
-            if (!filter_var(get_option(Sage::TOKEN . '_sage_create_new_' . $resource->getEntityName(), false), FILTER_VALIDATE_BOOLEAN)) {
-                $fields[] = 'createApi';
-            }
             if (!filter_var(get_option(Sage::TOKEN . '_sage_update_' . $resource->getEntityName(), false), FILTER_VALIDATE_BOOLEAN)) {
                 $fields[] = 'updateApi';
             }
@@ -293,11 +290,9 @@ class WordpressService
             return;
         }
         $arRef = null;
-        $isNew = false;
         $flatPost = PathUtils::flatternPostSageData($_POST);
         if (array_key_exists(FArticleResource::META_KEY, $flatPost)) {
             $arRef = $flatPost[FArticleResource::META_KEY];
-            $isNew = empty(get_post_meta($postId, FArticleResource::META_KEY, true));
         }
         if (!empty($arRef)) {
             $resource = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME);
@@ -322,12 +317,8 @@ class WordpressService
                     update_post_meta($postId, $key, $value);
                 }
             }
-            if (!$isNew) {
-                if (filter_var(get_option(Sage::TOKEN . '_sage_update_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
-                    update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
-                }
-            } elseif (filter_var(get_option(Sage::TOKEN . '_sage_create_new_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
-                update_post_meta($postId, '_' . Sage::TOKEN . '_createApi', (new DateTime())->format('Y-m-d H:i:s'));
+            if (filter_var(get_option(Sage::TOKEN . '_sage_update_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
+                update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
             }
         }
     }
@@ -341,13 +332,40 @@ class WordpressService
     public function saveCustomerUserMetaFields(int $userId, bool $isNew): void
     {
         $nbUpdatedMeta = 0;
+        $oldCreationType = get_user_meta($userId, '_' . Sage::TOKEN . '_creationType', true);
+        if (empty($oldCreationType) || $oldCreationType === 'none') {
+            $isNew = true;
+        }
         $sageUpdateFcomptet = null;
+        if (array_key_exists('_' . Sage::TOKEN . '_creationType', $_POST)) {
+            $sageUpdateFcomptet = $_POST['_' . Sage::TOKEN . '_creationType'] !== 'none';
+            if ($sageUpdateFcomptet) {
+                $fComptet = GraphqlService::getInstance()->getFComptet($_POST[FComptetResource::META_KEY]);
+                if ($_POST['_' . Sage::TOKEN . '_creationType'] === 'link') {
+                    if (
+                        !array_key_exists(FComptetResource::META_KEY, $_POST) ||
+                        !($fComptet instanceof stdClass)
+                    ) {
+                        return;
+                    }
+                    $user = get_users([
+                        'meta_key' => FComptetResource::META_KEY,
+                        'meta_value' => strtoupper($_POST[FComptetResource::META_KEY])
+                    ]);
+                    if (!empty($user) && $user[0]->ID !== $userId) {
+                        return;
+                    }
+                }
+                if ($_POST['_' . Sage::TOKEN . '_creationType'] === 'new') {
+                    if ($fComptet instanceof stdClass) {
+                        return;
+                    }
+                }
+            }
+        }
         foreach ($_POST as $key => $value) {
             if (str_starts_with($key, '_' . Sage::TOKEN)) {
-                $value = trim(preg_replace('/\s\s+/', ' ', $value));
-                if ($key === '_' . Sage::TOKEN . '_creationType') {
-                    $sageUpdateFcomptet = $value !== 'none';
-                }
+                $value = trim(preg_replace('/\s\s+/', ' ', $value)); // supprimer les espaces supérieur à 2
                 if ($key === FComptetResource::META_KEY) {
                     $value = strtoupper($value);
                 }
@@ -364,8 +382,6 @@ class WordpressService
                     update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
                 }
             }
-        } elseif (filter_var(get_option(Sage::TOKEN . '_sage_create_new_' . FComptetResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
-            update_user_meta($userId, '_' . Sage::TOKEN . '_createApi', (new DateTime())->format('Y-m-d H:i:s'));
         }
     }
 

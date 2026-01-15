@@ -331,7 +331,6 @@ abstract class Resource
     {
         return [
             new SageEntityMetadata(field: '_updateApi'),
-            new SageEntityMetadata(field: '_createApi'),
             new SageEntityMetadata(field: '_postId', showInOptions: true),
             new SageEntityMetadata(field: '_last_update', value: static fn(StdClass $obj) => (new DateTime())->format('Y-m-d H:i:s'), showInOptions: true),
         ];
