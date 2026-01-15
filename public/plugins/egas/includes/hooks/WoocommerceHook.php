@@ -139,7 +139,10 @@ class WoocommerceHook
                     $meta['new'] = $sageService->get_post_meta_single($product->get_id());
                     unset($meta['old']['_' . Sage::TOKEN . '_last_update']);
                     unset($meta['new']['_' . Sage::TOKEN . '_last_update']);
-                    $jsonDiff = new JsonDiff($meta['old'], $meta['new']);
+                    $jsonDiff = new JsonDiff(
+                        array_filter($meta['old'], fn($v) => $v !== null),
+                        array_filter($meta['new'], fn($v) => $v !== null)
+                    );
                     $meta['changes'] = [
                         'removed' => (array)$jsonDiff->getRemoved(),
                         'added' => (array)$jsonDiff->getAdded(),
