@@ -55,7 +55,7 @@ abstract class Resource
 
     protected string $table;
 
-    protected ?string $postType = null; // used for public function removeCreateUpdateApi
+    protected ?string $postType = null; // used for public function removeUpdateApi
 
     /**
      * Meta table to use

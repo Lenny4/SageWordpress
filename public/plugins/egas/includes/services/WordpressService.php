@@ -87,7 +87,7 @@ class WordpressService
             $_GET["page"] === Sage::TOKEN . '_settings';
     }
 
-    public function removeCreateUpdateApi(): void
+    public function removeUpdateApi(): void
     {
         global $wpdb;
         foreach (SageService::getInstance()->getResources() as $resource) {
