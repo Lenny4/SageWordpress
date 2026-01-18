@@ -120,6 +120,21 @@ class FArticleResource extends Resource
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFArticleSelectionSet(), $result, $obj);
         };
+        $this->bddMetadata = function (?int $productId, bool $clearCache = false): array {
+            if (empty($productId)) {
+                return [];
+            }
+            if ($clearCache) {
+                clean_post_cache($productId);
+            }
+            return SageService::getInstance()->get_post_meta_single($productId);
+        };
+        $this->sageEntity = function (?string $arRef): StdClass|null {
+            return GraphqlService::getInstance()->getFArticle($arRef);
+        };
+        $this->importFromSage = function (string $arRef, $showSuccessMessage = true): array|string {
+            return WoocommerceService::getInstance()->importFArticleFromSage($arRef, showSuccessMessage: $showSuccessMessage);
+        };
         $this->metaKeyIdentifier = self::META_KEY;
         $this->table = $wpdb->posts;
         $this->metaTable = $wpdb->postmeta;

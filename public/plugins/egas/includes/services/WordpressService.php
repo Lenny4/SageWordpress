@@ -87,6 +87,7 @@ class WordpressService
             $_GET["page"] === Sage::TOKEN . '_settings';
     }
 
+    // todo tester si ça marche
     public function removeUpdateApi(): void
     {
         global $wpdb;

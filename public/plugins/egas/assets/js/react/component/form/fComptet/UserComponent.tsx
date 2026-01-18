@@ -15,7 +15,7 @@ const autoCreateSageFcomptet =
   ) === "on";
 let translations: any = getTranslations();
 let currentCtNumSearch = "";
-const user = JSON.parse(
+const initUser = JSON.parse(
   $(`[data-${TOKEN}-user]`).attr(`data-${TOKEN}-user`) ?? "null",
 );
 const userMetaWordpress = JSON.parse(
@@ -29,6 +29,9 @@ const pCattarifs: any[] = JSON.parse(
 const pCatComptas: any[] = JSON.parse(
   $(`[data-${TOKEN}-pcatcomptas]`).attr(`data-${TOKEN}-pcatcomptas`) ?? "[]",
 ).Ven;
+const initFComptet = JSON.parse(
+  $(`[data-${TOKEN}-fComptet]`).attr(`data-${TOKEN}-fComptet`) ?? "null",
+);
 
 interface FormState {
   creationType: InputInterface;
@@ -69,7 +72,7 @@ const UserComptaComponent: React.FC<State> = ({
   const getDefaultValue = (): FormState2 => {
     let value = getMetadataValue(prop);
     if (value === "") {
-      if (!user || !userHasCtNum) {
+      if (!initUser || !userHasCtNum) {
         if (fComptet) {
           value = fComptet[prop].toString();
         } else {
@@ -85,8 +88,6 @@ const UserComptaComponent: React.FC<State> = ({
     };
   };
   const [values, setValues] = React.useState<FormState2>(getDefaultValue());
-  const [nComptaMetaDataValue, setNComptaMetaDataValue] =
-    React.useState<string>(getMetadataValue(prop));
   const handleChangeSelect =
     (prop: keyof FormState2) => (event: ChangeEvent<HTMLSelectElement>) => {
       setValues((v) => {
@@ -141,20 +142,6 @@ const UserComptaComponent: React.FC<State> = ({
             );
           })}
         </select>
-        {userHasCtNum &&
-          fComptet &&
-          fComptet[prop].toString() !== nComptaMetaDataValue && (
-            <div>
-              <span className="error-message">
-                La catégorie renseignée dans Sage est différente de celle
-                renseignée dans Wordpress.
-              </span>
-              <br />
-              <span>
-                Valeur dans Sage: <strong>{labelSage}</strong>
-              </span>
-            </div>
-          )}
       </td>
     </tr>
   );
@@ -171,7 +158,7 @@ const UserComponent = () => {
       autoGenerateCtNum: { value: true },
       creationType: {
         value:
-          user && !userHasCtNum
+          initUser && !userHasCtNum
             ? "none"
             : autoCreateSageFcomptet
               ? "new"
@@ -182,8 +169,9 @@ const UserComponent = () => {
   const [values, setValues] = React.useState<FormState>(getDefaultValue());
   const [loadingSearchFComptet, setLoadingSearchFComptet] =
     React.useState<boolean>(false);
-  const [fComptet, setFComptet] = React.useState<any | undefined>(undefined);
-  const [thisUser, setThisUser] = React.useState<any | undefined>(undefined);
+  const [fComptet, setFComptet] = React.useState<any | undefined>(initFComptet);
+  const [user, setUser] = React.useState<any | undefined>(undefined);
+  const isFirstRun = React.useRef(true);
 
   const handleChange =
     (prop: keyof FormState) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -232,8 +220,9 @@ const UserComponent = () => {
     if (response.status === 200) {
       if (currentCtNumSearch === ctNum) {
         const data = await response.json();
+        // todo remove
         setFComptet(data.fComptet);
-        setThisUser(data.user);
+        setUser(data.user);
       }
     } else {
       // todo toastr
@@ -243,13 +232,13 @@ const UserComponent = () => {
     }
   };
 
-  const showCreationType = !user || !userHasCtNum;
+  const showCreationType = !initUser || !userHasCtNum;
   const notValidCtNumExists =
     (fComptet &&
       getMetadataValue("ctNum") !== fComptet.ctNum &&
       values.creationType.value === "new") ||
     (fComptet === null && values.creationType.value === "link");
-  const notValidCtNumAlreadyLink = thisUser && thisUser.ID !== user?.ID;
+  const notValidCtNumAlreadyLink = user && user.ID !== initUser?.ID;
   const validCtNum =
     !notValidCtNumExists &&
     !notValidCtNumAlreadyLink &&
@@ -257,11 +246,11 @@ const UserComponent = () => {
       (values.creationType.value === "new" &&
         (fComptet === null || values.autoGenerateCtNum.value)));
   const showCtNumField =
-    (!!user && userHasCtNum) ||
+    (!!initUser && userHasCtNum) ||
     values.creationType.value === "link" ||
     (values.creationType.value === "new" && !values.autoGenerateCtNum.value);
   const showSageForm =
-    (!!user && userHasCtNum) ||
+    (!!initUser && userHasCtNum) ||
     ((values.creationType.value === "link" ||
       values.creationType.value === "new") &&
       validCtNum);
@@ -299,8 +288,12 @@ const UserComponent = () => {
   }, [values.ctNum.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
+    }
     setFComptet(undefined);
-    setThisUser(undefined);
+    setUser(undefined);
   }, [values.ctNum.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
@@ -316,7 +309,7 @@ const UserComponent = () => {
         return { ...v };
       });
       setFComptet(undefined);
-      setThisUser(undefined);
+      setUser(undefined);
     }
   }, [values.autoGenerateCtNum.value, values.creationType.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -491,15 +484,15 @@ const UserComponent = () => {
                             <span>Ce compte Sage existe déjà </span>
                           </>
                         )}
-                        {thisUser ? (
+                        {user ? (
                           <a
                             href={
                               siteUrl +
                               "/wp-admin/user-edit.php?user_id=" +
-                              thisUser.ID
+                              user.ID
                             }
                           >
-                            {thisUser.data.display_name}
+                            {user.data.display_name}
                           </a>
                         ) : (
                           <>

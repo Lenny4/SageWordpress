@@ -862,7 +862,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $message = '';
         $userId = $new->userId;
         if (is_null($userId)) {
-            [$userId, $message] = SageService::getInstance()->importFComptetFromSage($new->ctNum);
+            [$response, $responseError, $message, $userId] = SageService::getInstance()->importFComptetFromSage($new->ctNum);
             if (!is_numeric($userId)) {
                 return $message;
             }
@@ -1070,7 +1070,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return $order;
     }
 
-    public function importFDocenteteFromSage(string $doPiece, string $doType, array $headers = []): array
+    public function importFDocenteteFromSage(string $doPiece, string $doType, array $headers = [], $showSuccessMessage = true): array
     {
         $order = new WC_Order();
         $order = $this->linkOrderFDocentete($order, $doPiece, $doType, headers: $headers);

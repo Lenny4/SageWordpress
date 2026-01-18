@@ -1,7 +1,8 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-{#  todo delete ?#}
+  {% include 'sage/list-change-entity.html.twig' %}
   <div data-{{ TOKEN }}-user="{{ user|json_encode }}"></div>
+  <div data-{{ TOKEN }}-fComptet="{{ fComptet|json_encode }}"></div>
   <div data-{{ TOKEN }}-user-meta-wordpress="{{ userMetaWordpress|json_encode }}"></div>
   <div data-{{ TOKEN }}-pcattarifs="{{ pCattarifs|json_encode }}"></div>
   <div data-{{ TOKEN }}-pcatcomptas="{{ pCatComptas|json_encode }}"></div>

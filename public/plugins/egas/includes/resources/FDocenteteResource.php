@@ -95,6 +95,21 @@ class FDocenteteResource extends Resource
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFDocenteteSelectionSet(), $result, $obj);
         };
+        $this->bddMetadata = function (?string $identifier, bool $clearCache = false): array {
+            if (empty($identifier)) {
+                return [];
+            }
+            if ($clearCache) {
+                clean_post_cache($identifier);
+            }
+            return SageService::getInstance()->get_post_meta_single($identifier);
+        };
+        $this->sageEntity = function (?string $doPiece, ?int $doType): StdClass|null {
+            return GraphqlService::getInstance()->getFDocentetes($doPiece, [$doType]);
+        };
+        $this->importFromSage = function (string $doPiece, string $doType, $showSuccessMessage = true): array|string {
+            return WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, showSuccessMessage: $showSuccessMessage);
+        };
         $this->metaKeyIdentifier = self::META_KEY;
         $this->table = $wpdb->posts;
         $this->metaTable = $wpdb->prefix . 'wc_orders_meta';

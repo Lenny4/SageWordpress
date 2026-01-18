@@ -16,6 +16,7 @@ use App\utils\RoundUtils;
 use App\utils\SageTranslationUtils;
 use Exception;
 use StdClass;
+use Swaggest\JsonDiff\JsonDiff;
 use Symfony\Component\HttpFoundation\Response;
 use WC_Order;
 use WC_Order_Item_Tax;
@@ -599,6 +600,7 @@ WHERE user_login LIKE %s
     public function importFComptetFromSage(
         ?string              $ctNum,
         stdClass|string|null $fComptet = null,
+        bool                 $showSuccessMessage = true,
     ): array
     {
         if (is_null($ctNum)) {
@@ -626,32 +628,33 @@ WHERE user_login LIKE %s
             $userId,
         );
         if (is_string($wpUser)) {
-            return [null, $wpUser];
+            return [null, null, $wpUser, $userId];
         }
         $newUser = is_null($userId);
         if ($newUser) {
             $userId = wp_create_user($wpUser->user_login, $wpUser->user_pass, $wpUser->user_email);
         }
         if ($userId instanceof WP_Error) {
-            return [null, "<div class='notice notice-error is-dismissible'>
+            return [null, null, "<div class='notice notice-error is-dismissible'>
                                 <pre>" . $userId->get_error_code() . "</pre>
                                 <pre>" . $userId->get_error_message() . "</pre>
-                                </div>"];
+                                </div>", $userId];
         }
         $wpUser = new WP_User($userId);
+        $wpUser->user_email = $fComptet->ctEmail;
         wp_update_user($wpUser);
         foreach ($metadata as $key => $value) {
             update_user_meta($userId, $key, $value);
         }
         $url = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "user-edit.php?user_id=" . $userId . "'>" . __("Voir l'utilisateur", Sage::TOKEN) . "</a></span></strong>";
         if (!$newUser) {
-            return [$userId, "<div class='notice notice-success is-dismissible'>
+            return [true, null, $showSuccessMessage ? "<div class='notice notice-success is-dismissible'>
                         " . __('L\'utilisateur a été modifié', Sage::TOKEN) . $url . "
-                                </div>"];
+                                </div>" : "", $userId];
         }
-        return [$userId, "<div class='notice notice-success is-dismissible'>
+        return [true, null, $showSuccessMessage ? "<div class='notice notice-success is-dismissible'>
                         " . __('L\'utilisateur a été créé', Sage::TOKEN) . $url . "
-                                </div>"];
+                                </div>" : "", $userId];
     }
 
     public function getResource(string $entityName): Resource|null
@@ -787,7 +790,7 @@ WHERE user_login LIKE %s
         $metaColumnIdentifier = $resource->getMetaColumnIdentifier();
         global $wpdb;
         $metaTable2 = $metaTable . '2';
-        $idList  = implode("','", array_map('esc_sql', $ids)); // sécurise les IDs
+        $idList = implode("','", array_map('esc_sql', $ids)); // sécurise les IDs
         $keyList = implode("','", array_map('esc_sql', array_merge([$metaKeyIdentifier], $fieldNames)));
         $temps = $wpdb->get_results("
 SELECT
@@ -891,5 +894,109 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
             $data[$key] = $value[0];
         }
         return $data;
+    }
+
+    public function get_user_meta_single(int $user_id, string $key = '', bool $single = false): array|string
+    {
+        $data = get_user_meta($user_id, $key, $single);
+
+        if ($key) {
+            return $data;
+        }
+        foreach ($data as $key => $value) {
+            $data[$key] = $value[0];
+        }
+        return $data;
+    }
+
+    public function importFromSageIfUpdateApi(Resource $resource, int $wpIdentifier): array
+    {
+        $oldMetaData = $resource->getBddMetadata()($wpIdentifier);
+        $sageIdentifier = $oldMetaData[$resource::META_KEY];
+        $hasChanges = false;
+        $meta = [
+            'changes' => [],
+            'old' => $oldMetaData,
+            'new' => $oldMetaData,
+        ];
+        $messages = [];
+        $updateApi = $oldMetaData['_' . Sage::TOKEN . '_updateApi'] ?? null;
+        $changeTypes = [];
+        $sageEntity = $resource->getSageEntity()($sageIdentifier);
+        if (
+            empty($sageIdentifier)
+            || !empty($updateApi)
+            || !filter_var(
+                get_option(Sage::TOKEN . '_website_update_' . $resource::ENTITY_NAME, false),
+                FILTER_VALIDATE_BOOLEAN
+            )
+        ) {
+            return [
+                $sageEntity,
+                $messages,
+                $meta,
+                $updateApi,
+                $hasChanges,
+                $changeTypes
+            ];
+        }
+        [$response, $responseError, $message, $postId] = $resource->getImportFromSage()($sageIdentifier, $sageEntity, false);
+        $messages = array_values(array_unique([$responseError, $message]));
+        if (!is_null($response)) {
+            $meta['new'] = $resource->getBddMetadata()($wpIdentifier, true);
+            foreach (['new', 'old'] as $key) {
+                $meta[$key] = array_filter(
+                    $meta[$key],
+                    fn ($value, $key) => str_starts_with($key, '_' . Sage::TOKEN),
+                    ARRAY_FILTER_USE_BOTH
+                );
+                unset($meta[$key]['_' . Sage::TOKEN . '_last_update']);
+            }
+            $jsonDiff = new JsonDiff(
+                array_filter($meta['old'], fn($v) => $v !== null),
+                array_filter($meta['new'], fn($v) => $v !== null)
+            );
+            $meta['changes'] = [
+                'removed' => (array)$jsonDiff->getRemoved(),
+                'added' => (array)$jsonDiff->getAdded(),
+                'modified' => (array)$jsonDiff->getModifiedNew(),
+            ];
+        }
+        $changeTypes = array_keys($meta['changes']);
+        foreach ($changeTypes as $type) {
+            foreach ($meta['changes'][$type] as $key => $value) {
+                if (is_array($value) || is_object($value)) {
+                    $meta['changes'][$type][$key] = json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+                }
+            }
+        }
+        if (isset($meta["changes"]["removed"])) {
+            $meta["changes"]["removed"] = array_filter($meta["changes"]["removed"], static function (string $value) {
+                return !empty($value);
+            });
+        }
+        foreach ($changeTypes as $type) {
+            if (!empty($meta['changes'][$type])) {
+                $hasChanges = true;
+                break;
+            }
+        }
+        foreach ($meta['new'] as $key => $value) {
+            $meta['new'][$key] = [
+                'id' => 0,
+                'key' => $key,
+                'value' => $value,
+            ];
+        }
+        $meta['new'] = array_values($meta['new']);
+
+        return [
+            $sageEntity,
+            $messages,
+            $meta,
+            $updateApi,
+            $hasChanges,
+            $changeTypes
+        ];
     }
 }

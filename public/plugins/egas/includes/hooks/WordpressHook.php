@@ -7,6 +7,7 @@ use App\controllers\WoocommerceController;
 use App\resources\FComptetResource;
 use App\Sage;
 use App\services\GraphqlService;
+use App\services\SageService;
 use App\services\TwigService;
 use App\services\WordpressService;
 use stdClass;
@@ -74,21 +75,42 @@ class WordpressHook
         });
         // region link wordpress user to sage user
         add_action('personal_options', function (WP_User $user): void {
+            $sageService = SageService::getInstance();
             $sageGraphQl = GraphqlService::getInstance();
+            [
+                $fComptet,
+                $messages,
+                $meta,
+                $updateApi,
+                $hasChanges,
+                $changeTypes
+            ] = $sageService->importFromSageIfUpdateApi($sageService->getResource(FComptetResource::ENTITY_NAME), $user->ID);
             echo TwigService::getInstance()->render('user/formMetaFields.html.twig', [
                 'user' => $user,
+                'fComptet' => $fComptet,
                 'userMetaWordpress' => get_user_meta($user->ID),
                 'pCattarifs' => $sageGraphQl->getPCattarifs(),
                 'pCatComptas' => $sageGraphQl->getPCatComptas(),
+                'messages' => $messages,
+                'meta' => $meta,
+                'updateApi' => $updateApi,
+                'hasChanges' => $hasChanges,
+                'changeTypes' => $changeTypes,
             ]);
         });
         add_action('user_new_form', function (): void {
             $sageGraphQl = GraphqlService::getInstance();
             echo TwigService::getInstance()->render('user/formMetaFields.html.twig', [
                 'user' => null,
+                'fComptet' => null,
                 'userMetaWordpress' => null,
                 'pCattarifs' => $sageGraphQl->getPCattarifs(),
                 'pCatComptas' => $sageGraphQl->getPCatComptas(),
+                'messages' => [],
+                'meta' => [],
+                'updateApi' => false,
+                'hasChanges' => false,
+                'changeTypes' => [],
             ]);
         });
         add_action('profile_update', function (int $userId) {
@@ -166,8 +188,13 @@ LIMIT 1
             WP_REST_Request $request,
             bool            $creating
         ): void {
+            $sageService = SageService::getInstance();
+            $metadata = $sageService->get_user_meta_single($user->ID);
+            if (array_key_exists(FComptetResource::META_KEY, $metadata)) {
+                $sageService->importFComptetFromSage($metadata[FComptetResource::META_KEY], showSuccessMessage: false);
+            }
             if ($creating) {
-                if (filter_var(get_option(Sage::TOKEN . '_mail_website_create_new_user', false), FILTER_VALIDATE_BOOLEAN)) {
+                if (filter_var(get_option(Sage::TOKEN . '_mail_website_create_new_' . FComptetResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
                     // Accepts only 'user', 'admin' , 'both' or default '' as $notify.
                     wp_send_new_user_notifications($user->ID, 'user');
                 }

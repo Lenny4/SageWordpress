@@ -85,8 +85,8 @@ class FComptetResource extends Resource
                     'default' => 'off',
                 ],
                 [
-                    'id' => 'mail_website_create_new_user',
-                    'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', Sage::TOKEN),
+                    'id' => 'mail_website_create_new_' . Sage::TOKEN,
+                    'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', self::ENTITY_NAME),
                     'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", Sage::TOKEN),
                     'type' => 'checkbox',
                     'default' => 'off',
@@ -98,6 +98,21 @@ class FComptetResource extends Resource
                 ...$this->getMandatoryMetadata(),
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFComptetSelectionSet(), $result, $obj);
+        };
+        $this->bddMetadata = function (?int $userId, bool $clearCache = false): array {
+            if (empty($userId)) {
+                return [];
+            }
+            if ($clearCache) {
+                clean_user_cache($userId);
+            }
+            return SageService::getInstance()->get_user_meta_single($userId);
+        };
+        $this->sageEntity = function (?string $ctNum): StdClass|null {
+            return GraphqlService::getInstance()->getFComptet($ctNum);
+        };
+        $this->importFromSage = function (?string $ctNum, stdClass|string|null $fComptet = null, $showSuccessMessage = true): array|string {
+            return SageService::getInstance()->importFComptetFromSage($ctNum, $fComptet, $showSuccessMessage);
         };
         $this->metaKeyIdentifier = self::META_KEY;
         $this->table = $wpdb->users;
@@ -114,7 +129,7 @@ class FComptetResource extends Resource
                 }),
         ];
         $this->import = static function (string $identifier) {
-            [$userId, $message] = SageService::getInstance()->importFComptetFromSage($identifier);
+            [$response, $responseError, $message, $userId] = SageService::getInstance()->importFComptetFromSage($identifier);
             return $userId;
         };
         $this->selectionSet = GraphqlService::getInstance()->_getFComptetSelectionSet();

@@ -48,15 +48,13 @@ abstract class Resource
      * Callback which transform data of Sage entity to the metadata
      */
     protected Closure $metadata;
+    protected Closure $bddMetadata;
     /**
      * Meta key which give the identifier value
      */
     protected string $metaKeyIdentifier;
-
     protected string $table;
-
     protected ?string $postType = null; // used for public function removeUpdateApi
-
     /**
      * Meta table to use
      */
@@ -77,6 +75,8 @@ abstract class Resource
      */
     protected ?Closure $getIdentifier = null;
     private Closure $canImport;
+    protected Closure $sageEntity;
+    protected Closure $importFromSage;
 
     protected function __construct()
     {
@@ -355,6 +355,39 @@ abstract class Resource
     public function setPostType(?string $postType): self
     {
         $this->postType = $postType;
+        return $this;
+    }
+
+    public function getBddMetadata(): Closure
+    {
+        return $this->bddMetadata;
+    }
+
+    public function setBddMetadata(Closure $bddMetadata): self
+    {
+        $this->bddMetadata = $bddMetadata;
+        return $this;
+    }
+
+    public function getSageEntity(): Closure
+    {
+        return $this->sageEntity;
+    }
+
+    public function setSageEntity(Closure $sageEntity): self
+    {
+        $this->sageEntity = $sageEntity;
+        return $this;
+    }
+
+    public function getImportFromSage(): Closure
+    {
+        return $this->importFromSage;
+    }
+
+    public function setImportFromSage(Closure $importFromSage): self
+    {
+        $this->importFromSage = $importFromSage;
         return $this;
     }
 }

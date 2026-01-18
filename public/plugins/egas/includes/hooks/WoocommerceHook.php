@@ -11,7 +11,6 @@ use App\services\GraphqlService;
 use App\services\SageService;
 use App\services\TwigService;
 use App\services\WoocommerceService;
-use Swaggest\JsonDiff\JsonDiff;
 use WC_Order;
 use WC_Order_Item;
 use WC_Order_Item_Product;
@@ -114,69 +113,15 @@ class WoocommerceHook
                 return;
             }
             $sageService = SageService::getInstance();
-            $oldMetaData = $sageService->get_post_meta_single($product->get_id());
-            $arRef = $oldMetaData[FArticleResource::META_KEY];
-            $meta = [
-                'changes' => [],
-                'old' => $oldMetaData,
-                'new' => $oldMetaData,
-            ];
-            $messages = [];
-            $updateApi = $oldMetaData['_' . Sage::TOKEN . '_updateApi'] ?? null;
+            [
+                $fArticle,
+                $messages,
+                $meta,
+                $updateApi,
+                $hasChanges,
+                $changeTypes
+            ] = $sageService->importFromSageIfUpdateApi($sageService->getResource(FArticleResource::ENTITY_NAME), $product->get_id());
             $graphqlService = GraphqlService::getInstance();
-            $fArticle = $graphqlService->getFArticle($arRef);
-            if (
-                !empty($arRef) &&
-                empty($updateApi) &&
-                filter_var(get_option(Sage::TOKEN . '_website_update_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)
-            ) {
-                [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage($arRef, ignoreCanImport: true, fArticle: $fArticle, showSuccessMessage: false);
-                $messages = [$responseError, $message];
-                if (!is_null($response)) {
-                    clean_post_cache($product->get_id());
-                    $meta['new'] = $sageService->get_post_meta_single($product->get_id());
-                    unset($meta['old']['_' . Sage::TOKEN . '_last_update']);
-                    unset($meta['new']['_' . Sage::TOKEN . '_last_update']);
-                    $jsonDiff = new JsonDiff(
-                        array_filter($meta['old'], fn($v) => $v !== null),
-                        array_filter($meta['new'], fn($v) => $v !== null)
-                    );
-                    $meta['changes'] = [
-                        'removed' => (array)$jsonDiff->getRemoved(),
-                        'added' => (array)$jsonDiff->getAdded(),
-                        'modified' => (array)$jsonDiff->getModifiedNew(),
-                    ];
-                }
-            }
-            $changeTypes = array_keys($meta['changes']);
-            foreach ($changeTypes as $type) {
-                foreach ($meta['changes'][$type] as $key => $value) {
-                    if (is_array($value) || is_object($value)) {
-                        $meta['changes'][$type][$key] = json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
-                    }
-                }
-            }
-            if (isset($meta["changes"]["removed"])) {
-                $meta["changes"]["removed"] = array_filter($meta["changes"]["removed"], static function (string $value) {
-                    return !empty($value);
-                });
-            }
-            $hasChanges = false;
-            foreach ($changeTypes as $type) {
-                if (!empty($meta['changes'][$type])) {
-                    $hasChanges = true;
-                    break;
-                }
-            }
-            // todo temporaire au lieu de recréer id, key, value il faudrait opuvoir l'utiliser directement tel quel (donc modification a faire dans la js interface MetadataInterface)
-            foreach ($meta['new'] as $key => $value) {
-                $meta['new'][$key] = [
-                    'id' => 0,
-                    'key' => $key,
-                    'value' => $value,
-                ];
-            }
-            $meta['new'] = array_values($meta['new']);
             echo TwigService::getInstance()->render('woocommerce/tabs/sage.html.twig', [
                 'fArticle' => $fArticle,
                 'pCattarifs' => $graphqlService->getPCattarifs(),
@@ -187,10 +132,9 @@ class WoocommerceHook
                 'fDepots' => $graphqlService->getFDepots(),
                 'fPays' => $graphqlService->getFPays(),
                 'pPreference' => $graphqlService->getPPreference(),
-                'messages' => $messages,
                 'panelId' => Sage::TARGET_PANEL,
-                'metaChanges' => $meta['changes'],
-                'productMeta' => $meta['new'],
+                'messages' => $messages,
+                'meta' => $meta,
                 'updateApi' => $updateApi,
                 'hasChanges' => $hasChanges,
                 'changeTypes' => $changeTypes,
