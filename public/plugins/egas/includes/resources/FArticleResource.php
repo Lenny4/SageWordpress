@@ -54,7 +54,7 @@ class FArticleResource extends Resource
                     'label' => __("Créer l'article dans Sage.", Sage::TOKEN),
                     'description' => __("Créer l'article dans Sage lorsqu'un nouveau produit Woocommerce est crée.", Sage::TOKEN),
                     'type' => 'checkbox',
-                    'default' => 'on',
+                    'default' => 'off',
                 ],
 //            [
 //                'id' => 'sage_create_old_' . self::ENTITY_NAME,

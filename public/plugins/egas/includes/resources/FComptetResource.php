@@ -47,7 +47,7 @@ class FComptetResource extends Resource
                     'label' => __("Créer le compte dans Sage.", Sage::TOKEN),
                     'description' => __("Créer le compte dans Sage lorsqu'un nouveau utilisateur Wordpress est crée.", Sage::TOKEN),
                     'type' => 'checkbox',
-                    'default' => 'on',
+                    'default' => 'off',
                 ],
                 [
                     'id' => 'sage_create_old_' . self::ENTITY_NAME,

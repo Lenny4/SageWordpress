@@ -50,7 +50,7 @@ class FDocenteteResource extends Resource
                     'label' => __("Créer le document de vente dans Sage.", Sage::TOKEN),
                     'description' => __("Créer le document de vente dans Sage lorsqu'une nouveaulle commande Wordpress est crée.", Sage::TOKEN),
                     'type' => 'checkbox',
-                    'default' => 'on',
+                    'default' => 'off',
                 ],
 //            [
 //                'id' => 'sage_create_old_' . self::ENTITY_NAME,
