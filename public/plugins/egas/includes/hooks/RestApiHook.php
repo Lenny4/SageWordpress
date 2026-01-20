@@ -146,13 +146,8 @@ class RestApiHook
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
                     $arRef = $request['arRef'];
-                    $headers = [];
-                    if (!empty($authorization = $request->get_header('authorization'))) {
-                        $headers['authorization'] = $authorization;
-                    }
                     [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage(
                         $arRef,
-                        headers: $headers,
                     );
                     if ($request->get_param('json') === '1') {
                         if ($response instanceof WP_Error) {
@@ -193,12 +188,8 @@ class RestApiHook
                 'callback' => static function (WP_REST_Request $request) {
                     $doPiece = $request['doPiece'];
                     $doType = $request['doType'];
-                    $headers = [];
-                    if (!empty($authorization = $request->get_header('authorization'))) {
-                        $headers['authorization'] = $authorization;
-                    }
                     $orderId = $request->get_param('orderId');
-                    [$message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, $headers, $orderId);
+                    [$message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, $orderId);
                     return new WP_REST_Response([
                         'id' => $order->get_id(),
                         'message' => $message,

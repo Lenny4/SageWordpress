@@ -146,7 +146,7 @@ class WoocommerceService
         }
     }
 
-    public function linkOrderFDocentete(WC_Order $order, string $doPiece, int $doType, array $headers = []): WC_Order
+    public function linkOrderFDocentete(WC_Order $order, string $doPiece, int $doType): WC_Order
     {
         $graphqlService = GraphqlService::getInstance();
         $fDocentete = $graphqlService->getFDocentetes(
@@ -176,7 +176,7 @@ class WoocommerceService
                 extended: true,
             );
             $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
-            [$message, $order] = $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder, headers: $headers);
+            [$message, $order] = $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
         }
         return $order;
     }
@@ -250,7 +250,7 @@ class WoocommerceService
         return $result;
     }
 
-    public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder, array $headers = []): array
+    public function applyTasksSynchronizeOrder(WC_Order $order, array $tasksSynchronizeOrder): array
     {
         $message = '';
         $syncChanges = $tasksSynchronizeOrder["syncChanges"];
@@ -276,7 +276,6 @@ class WoocommerceService
                         if (is_null($syncChange["new"]->postId)) {
                             [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage(
                                 $syncChange["new"]->arRef,
-                                headers: $headers,
                                 ignoreCanImport: true,
                             );
                             $tasksSynchronizeOrder["syncChanges"][$i]["new"]->postId = $postId;
@@ -360,7 +359,6 @@ class WoocommerceService
 
     public function importFArticleFromSage(
         string        $arRef,
-        array         $headers = [],
         bool          $ignoreCanImport = false,
         stdClass|null $fArticle = null,
         bool          $showSuccessMessage = true,
@@ -402,7 +400,6 @@ class WoocommerceService
                 $article,
                 FArticleResource::META_KEY,
                 $arRef,
-                headers: $headers
             );
             $postId = null;
             if (is_string($responseError)) {
@@ -1070,10 +1067,10 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return $order;
     }
 
-    public function importFDocenteteFromSage(string $doPiece, string $doType, array $headers = [], string|int|null $orderId = null, $showSuccessMessage = true): array
+    public function importFDocenteteFromSage(string $doPiece, string $doType, string|int|null $orderId = null, $showSuccessMessage = true): array
     {
         $order = new WC_Order($orderId);
-        $order = $this->linkOrderFDocentete($order, $doPiece, $doType, headers: $headers);
+        $order = $this->linkOrderFDocentete($order, $doPiece, $doType);
         $extendedFDocentetes = GraphqlService::getInstance()->getFDocentetes(
             $doPiece,
             [(int)$doType],
@@ -1088,7 +1085,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
             extended: true,
         );
         $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
-        return $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder, $headers);
+        return $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
     }
 
     public function custom_price(string $price, WC_Product $product, int $userId = 0, ?bool $withTaxes = null): float|string

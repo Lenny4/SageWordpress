@@ -558,7 +558,6 @@ WHERE user_login LIKE %s
         array   $body,
         ?string $deleteKey,
         ?string $deleteValue,
-        array   $headers = [],
     ): array
     {
         if (!is_null($deleteKey) && !is_null($deleteValue)) {
@@ -567,7 +566,7 @@ WHERE user_login LIKE %s
         $response = RequestService::getInstance()->selfRequest($url, [
             'headers' => [
                 'Content-Type' => 'application/json',
-                ...$headers,
+                'authorization' => get_option(Sage::TOKEN . '_authorization'),
             ],
             'method' => $method,
             'body' => json_encode($body, JSON_THROW_ON_ERROR),
