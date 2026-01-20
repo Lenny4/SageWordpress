@@ -132,7 +132,7 @@ class FArticleResource extends Resource
         $this->sageEntity = function (?string $arRef): StdClass|null {
             return GraphqlService::getInstance()->getFArticle($arRef);
         };
-        $this->importFromSage = function (string $arRef, $showSuccessMessage = true): array|string {
+        $this->importFromSage = function (?string $arRef, stdClass|string|null $fArticle = null, $showSuccessMessage = true): array|string {
             return WoocommerceService::getInstance()->importFArticleFromSage($arRef, showSuccessMessage: $showSuccessMessage);
         };
         $this->metaKeyIdentifier = self::META_KEY;

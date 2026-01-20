@@ -901,7 +901,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
 
     public function getFDocenteteIdentifierFromOrder(WC_Order $order): array|null
     {
-        $result = SageService::getInstance()->get_post_meta_single($order->get_id(), FDocenteteResource::META_KEY, true);
+        $result = $order->get_meta(FDocenteteResource::META_KEY);
         if (!empty($result)) {
             return json_decode($result, true, 512, JSON_THROW_ON_ERROR);
         }

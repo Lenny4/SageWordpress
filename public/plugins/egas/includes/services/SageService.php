@@ -604,22 +604,22 @@ WHERE user_login LIKE %s
     ): array
     {
         if (is_null($ctNum)) {
-            return [null, "<div class='error'>
+            return [null, null, "<div class='error'>
                     " . __("Vous devez spécifier le numéro de compte Sage", Sage::TOKEN) . "
-                            </div>"];
+                            </div>", 0];
         }
         $fComptet ??= GraphqlService::getInstance()->getFComptet($ctNum);
         if (is_null($fComptet)) {
-            return [null, "<div class='error'>
+            return [null, null, "<div class='error'>
                     " . __("Le compte Sage n'a pas pu être importé", Sage::TOKEN) . "
-                            </div>"];
+                            </div>", 0];
         }
         $resource = SageService::getInstance()->getResource(FComptetResource::ENTITY_NAME);
         $canImportFComptet = $resource->getCanImport()($fComptet);
         if (!empty($canImportFComptet)) {
-            return [null, "<div class='error'>
+            return [null, null, "<div class='error'>
                         " . implode(' ', $canImportFComptet) . "
-                                </div>"];
+                                </div>", 0];
         }
         $ctNum = $fComptet->ctNum;
         $userId = WordpressService::getInstance()->getUserIdWithCtNum($ctNum);
@@ -924,61 +924,53 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
         $changeTypes = [];
         $sageEntity = $resource->getSageEntity()($sageIdentifier);
         if (
-            empty($sageIdentifier)
-            || !empty($updateApi)
-            || !filter_var(
+            !empty($sageIdentifier)
+            && empty($updateApi)
+            && filter_var(
                 get_option(Sage::TOKEN . '_website_update_' . $resource::ENTITY_NAME, false),
                 FILTER_VALIDATE_BOOLEAN
             )
         ) {
-            return [
-                $sageEntity,
-                $messages,
-                $meta,
-                $updateApi,
-                $hasChanges,
-                $changeTypes
-            ];
-        }
-        [$response, $responseError, $message, $postId] = $resource->getImportFromSage()($sageIdentifier, $sageEntity, false);
-        $messages = array_values(array_unique([$responseError, $message]));
-        if (!is_null($response)) {
-            $meta['new'] = $resource->getBddMetadata()($wpIdentifier, true);
-            foreach (['new', 'old'] as $key) {
-                $meta[$key] = array_filter(
-                    $meta[$key],
-                    fn ($value, $key) => str_starts_with($key, '_' . Sage::TOKEN),
-                    ARRAY_FILTER_USE_BOTH
+            [$response, $responseError, $message, $postId] = $resource->getImportFromSage()($sageIdentifier, $sageEntity, false);
+            $messages = array_values(array_unique([$responseError, $message]));
+            if (!is_null($response)) {
+                $meta['new'] = $resource->getBddMetadata()($wpIdentifier, true);
+                foreach (['new', 'old'] as $key) {
+                    $meta[$key] = array_filter(
+                        $meta[$key],
+                        fn($value, $key) => str_starts_with($key, '_' . Sage::TOKEN),
+                        ARRAY_FILTER_USE_BOTH
+                    );
+                    unset($meta[$key]['_' . Sage::TOKEN . '_last_update']);
+                }
+                $jsonDiff = new JsonDiff(
+                    array_filter($meta['old'], fn($v) => $v !== null),
+                    array_filter($meta['new'], fn($v) => $v !== null)
                 );
-                unset($meta[$key]['_' . Sage::TOKEN . '_last_update']);
+                $meta['changes'] = [
+                    'removed' => (array)$jsonDiff->getRemoved(),
+                    'added' => (array)$jsonDiff->getAdded(),
+                    'modified' => (array)$jsonDiff->getModifiedNew(),
+                ];
             }
-            $jsonDiff = new JsonDiff(
-                array_filter($meta['old'], fn($v) => $v !== null),
-                array_filter($meta['new'], fn($v) => $v !== null)
-            );
-            $meta['changes'] = [
-                'removed' => (array)$jsonDiff->getRemoved(),
-                'added' => (array)$jsonDiff->getAdded(),
-                'modified' => (array)$jsonDiff->getModifiedNew(),
-            ];
-        }
-        $changeTypes = array_keys($meta['changes']);
-        foreach ($changeTypes as $type) {
-            foreach ($meta['changes'][$type] as $key => $value) {
-                if (is_array($value) || is_object($value)) {
-                    $meta['changes'][$type][$key] = json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+            $changeTypes = array_keys($meta['changes']);
+            foreach ($changeTypes as $type) {
+                foreach ($meta['changes'][$type] as $key => $value) {
+                    if (is_array($value) || is_object($value)) {
+                        $meta['changes'][$type][$key] = json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+                    }
                 }
             }
-        }
-        if (isset($meta["changes"]["removed"])) {
-            $meta["changes"]["removed"] = array_filter($meta["changes"]["removed"], static function (string $value) {
-                return !empty($value);
-            });
-        }
-        foreach ($changeTypes as $type) {
-            if (!empty($meta['changes'][$type])) {
-                $hasChanges = true;
-                break;
+            if (isset($meta["changes"]["removed"])) {
+                $meta["changes"]["removed"] = array_filter($meta["changes"]["removed"], static function (string $value) {
+                    return !empty($value);
+                });
+            }
+            foreach ($changeTypes as $type) {
+                if (!empty($meta['changes'][$type])) {
+                    $hasChanges = true;
+                    break;
+                }
             }
         }
         foreach ($meta['new'] as $key => $value) {
