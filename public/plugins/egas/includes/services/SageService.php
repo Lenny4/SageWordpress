@@ -577,11 +577,6 @@ WHERE user_login LIKE %s
             $responseError = "<div class='notice notice-error is-dismissible'>
                                 <pre>" . $response->get_error_code() . "</pre>
                                 <pre>" . $response->get_error_message() . "</pre>
-                                </div>";
-        }
-
-        if ($response instanceof WP_Error) {
-            $responseError = "<div class='notice notice-error is-dismissible'>
                                 <pre>" . json_encode($response, JSON_THROW_ON_ERROR) . "</pre>
                                 </div>";
         } else if (!in_array($response["response"]["code"], [Response::HTTP_OK, Response::HTTP_CREATED], true)) {

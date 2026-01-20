@@ -187,7 +187,7 @@ class RestApiHook
                     return current_user_can('manage_options');
                 },
             ]);
-            // todo supprimer ? utiliser seulement /import/(?P<entityName>[A-Za-z0-9]+)/(?P<identifier>.+)
+            // todo supprimer ? utiliser seulement /import/(?P<entityName>[A-Za-z0-9]+)/(?P<identifier>.+), plutot faire les register rest route sur les resources directement
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+)/(?P<doType>\d+)/import', args: [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
@@ -197,7 +197,8 @@ class RestApiHook
                     if (!empty($authorization = $request->get_header('authorization'))) {
                         $headers['authorization'] = $authorization;
                     }
-                    [$message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, $headers);
+                    $orderId = $request->get_param('orderId');
+                    [$message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, $headers, $orderId);
                     return new WP_REST_Response([
                         'id' => $order->get_id(),
                         'message' => $message,

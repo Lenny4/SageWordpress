@@ -9,6 +9,7 @@ use App\services\SageService;
 use App\services\WoocommerceService;
 use App\utils\SageTranslationUtils;
 use stdClass;
+use WC_Order;
 
 class FDocenteteResource extends Resource
 {
@@ -52,13 +53,13 @@ class FDocenteteResource extends Resource
                     'type' => 'checkbox',
                     'default' => 'off',
                 ],
-//            [
-//                'id' => 'sage_create_old_' . self::ENTITY_NAME,
-//                'label' => __('Importe les anciennes commandes.', Sage::TOKEN),
-//                'description' => __("Importe les anciennes commandes Woocommerce dans Sage.", Sage::TOKEN),
-//                'type' => 'checkbox',
-//                'default' => 'off',
-//            ],
+                [
+                    'id' => 'sage_create_old_' . self::ENTITY_NAME,
+                    'label' => __('Importe les anciennes commandes.', Sage::TOKEN),
+                    'description' => __("Importe les anciennes commandes Woocommerce dans Sage.", Sage::TOKEN),
+                    'type' => 'checkbox',
+                    'default' => 'off',
+                ],
                 [
                     'id' => 'sage_update_' . self::ENTITY_NAME,
                     'label' => __("Met à jour le document de vente Sage.", Sage::TOKEN),
@@ -95,19 +96,20 @@ class FDocenteteResource extends Resource
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFDocenteteSelectionSet(), $result, $obj);
         };
-        $this->bddMetadata = function (?string $identifier, bool $clearCache = false): array {
-            if (empty($identifier)) {
+        $this->bddMetadata = function (?int $orderId, bool $clearCache = false): array {
+            if (empty($orderId)) {
                 return [];
             }
+            $order = new WC_Order($orderId);
             if ($clearCache) {
-                clean_post_cache($identifier);
+                $order->init_meta_data();
             }
-            return SageService::getInstance()->get_post_meta_single($identifier);
+            return $order->get_meta_data();
         };
         $this->sageEntity = function (?string $doPiece, ?int $doType): StdClass|null {
             return GraphqlService::getInstance()->getFDocentetes($doPiece, [$doType]);
         };
-        $this->importFromSage = function (string $doPiece, string $doType, $showSuccessMessage = true): array|string {
+        $this->importFromSage = function (?string $identifier, stdClass|string|null $fDocentete = null, $showSuccessMessage = true): array|string {
             return WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, showSuccessMessage: $showSuccessMessage);
         };
         $this->metaKeyIdentifier = self::META_KEY;

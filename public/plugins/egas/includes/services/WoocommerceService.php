@@ -1070,9 +1070,9 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return $order;
     }
 
-    public function importFDocenteteFromSage(string $doPiece, string $doType, array $headers = [], $showSuccessMessage = true): array
+    public function importFDocenteteFromSage(string $doPiece, string $doType, array $headers = [], string|int|null $orderId = null, $showSuccessMessage = true): array
     {
-        $order = new WC_Order();
+        $order = new WC_Order($orderId);
         $order = $this->linkOrderFDocentete($order, $doPiece, $doType, headers: $headers);
         $extendedFDocentetes = GraphqlService::getInstance()->getFDocentetes(
             $doPiece,
