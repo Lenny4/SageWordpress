@@ -80,10 +80,11 @@ class GraphqlService
         }
         $hostUrl = get_option(Sage::TOKEN . '_api_host_url');
         $message = null;
+        $link = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "admin.php?page=" . Sage::TOKEN . "_settings'>" . __("Modifier", Sage::TOKEN) . "</a></span></strong>";
         if (!is_string($hostUrl) || ($hostUrl === '' || $hostUrl === '0')) {
-            $message = __("Veuillez renseigner l'host du serveur Sage.", Sage::TOKEN);
+            $message = __("Veuillez renseigner l'host du serveur Sage. ", Sage::TOKEN) . $link;
         } else if (filter_var($hostUrl, FILTER_VALIDATE_URL) === false) {
-            $message = __("L'host du serveur Sage n'est pas une url valide.", Sage::TOKEN);
+            $message = __("L'host du serveur Sage n'est pas une url valide. ", Sage::TOKEN) . $link;
         }
         if (!is_null($message)) {
             AdminController::adminNotices("
