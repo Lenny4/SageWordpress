@@ -906,7 +906,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
     public function importFromSageIfUpdateApi(Resource $resource, int $wpIdentifier): array
     {
         $oldMetaData = $resource->getBddMetadata()($wpIdentifier);
-        $sageIdentifier = $oldMetaData[$resource::META_KEY];
+        $sageIdentifier = $oldMetaData[$resource::META_KEY] ?? null;
         $hasChanges = false;
         $meta = [
             'changes' => [],
@@ -916,7 +916,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
         $messages = [];
         $updateApi = $oldMetaData['_' . Sage::TOKEN . '_updateApi'] ?? null;
         $changeTypes = [];
-        $sageEntity = $resource->getSageEntity()($sageIdentifier);
+        $sageEntity = $sageIdentifier ? $resource->getSageEntity()($sageIdentifier) : null;
         if (
             !empty($sageIdentifier)
             && empty($updateApi)

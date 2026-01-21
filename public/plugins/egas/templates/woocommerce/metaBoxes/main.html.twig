@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-{#  todo delete ?#}
+  {#  todo delete ? #}
   {% set flattenAllTranslations = flattenAllTranslations(allTranslations['fDocentetes']) %}
   {% set currencySymbol = get_woocommerce_currency_symbol() %}
 
@@ -35,11 +35,12 @@
       </div>
       <div id="{{ TOKEN }}-fdocentete-dopiece-result"></div>
     </div>
-    <div class="text-divider mt-2 mb-2">{{ 'OU'|trans }}</div>
-    <div class="text-center">
-      <button type="button" id="order-fdocentete-create" data-order-fdocentete-create="{{ orderId }}"
-              class="button button-primary">{{ 'Créer un nouveau document de vente dans Sage'|trans }}</button>
-    </div>
+    {% if get_option(TOKEN~'_sage_create_new_fDocentetes') %}
+      <div class="text-divider mt-2 mb-2">{{ 'OU'|trans }}</div>
+      <div class="text-center">
+        {{ 'Laissez vide et Egas créera un nouveau document'|trans }}
+      </div>
+    {% endif %}
   {% else %}
     {% if mainFDocentete|gettype == 'string' %}
       <div class="notice notice-error">
