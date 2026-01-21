@@ -145,7 +145,11 @@ class WordpressService
         $currentPassword = current(array_filter($passwords, static fn(array $password): bool => $password['name'] === $optionName));
         if ($force || empty($password) || $currentPassword === false) {
             if ($currentPassword !== false) {
-                WP_Application_Passwords::delete_application_password($userId, $optionName);
+                foreach ($passwords as $password) {
+                    if ($password['name'] === $optionName) {
+                        WP_Application_Passwords::delete_application_password($userId, $password['uuid']);
+                    }
+                }
             }
             $newApplicationPassword = WP_Application_Passwords::create_new_application_password($userId, [
                 'name' => $optionName

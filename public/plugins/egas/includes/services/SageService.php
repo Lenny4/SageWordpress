@@ -566,7 +566,7 @@ WHERE user_login LIKE %s
         $response = RequestService::getInstance()->selfRequest($url, [
             'headers' => [
                 'Content-Type' => 'application/json',
-                'authorization' => get_option(Sage::TOKEN . '_authorization'),
+                'authorization' => "Basic " . get_option(Sage::TOKEN . '_authorization'),
             ],
             'method' => $method,
             'body' => json_encode($body, JSON_THROW_ON_ERROR),

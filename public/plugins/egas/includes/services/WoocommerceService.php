@@ -395,7 +395,7 @@ class WoocommerceService
             // which extends
             // woocommerce/includes/rest-api/Controllers/Version3/class-wc-rest-products-controller.php
             [$response, $responseError] = SageService::getInstance()->createResource(
-                '/wc/v3/products/' . $articlePostId,
+                '/wc/v3/products',
                 'POST',
                 $article,
                 FArticleResource::META_KEY,
