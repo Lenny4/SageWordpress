@@ -3,6 +3,7 @@
 namespace App\hooks;
 
 use App\class\SageShippingMethod__index__;
+use App\class\term\WC_Product_Egas;
 use App\controllers\AdminController;
 use App\controllers\WoocommerceController;
 use App\resources\FArticleResource;
@@ -62,17 +63,7 @@ class WoocommerceHook
             return $label;
         }, accepted_args: 2);
 
-        add_filter('product_type_selector', static function (array $types): array {
-            $arRef = SageService::getInstance()->getArRef(get_the_ID());
-            if (!empty($arRef)) {
-                return [Sage::TOKEN => __('Egas', Sage::TOKEN)];
-            }
-            if (filter_var(get_option(Sage::TOKEN . '_sage_create_new_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
-                return array_merge([Sage::TOKEN => __('Sage', Sage::TOKEN)], $types);
-            }
-            return $types;
-        });
-
+        // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
         add_action('add_meta_boxes', static function (string $screen, mixed $obj): void { // remove [Product type | virtual | downloadable] add product arRef
             if ($screen === 'product') {
                 global $wp_meta_boxes;
@@ -82,13 +73,26 @@ class WoocommerceHook
                 WoocommerceController::showMetaBoxOrder($wp_meta_boxes, $screen);
             }
         }, 40, 2); // woocommerce/includes/admin/class-wc-admin-meta-boxes.php => 40 > 30 : add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 30 );
-
-        // region Custom Product Tabs In WooCommerce https://aovup.com/woocommerce/add-tabs/
-        add_filter('woocommerce_product_data_tabs', static function (array $tabs) { // Code to Create Tab in the Backend
-            $arRef = SageService::getInstance()->getArRef(get_the_ID());
-            if (empty($arRef) && !filter_var(get_option(Sage::TOKEN . '_sage_create_new_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
-                return $tabs;
+        add_filter('product_type_selector', static function (array $types): array {
+            $arRef = get_post_meta(get_the_ID(), FArticleResource::META_KEY, true);
+            if (!empty($arRef)) {
+                return [Sage::TOKEN => __('Egas', Sage::TOKEN)];
             }
+            return array_merge([Sage::TOKEN => __('Sage product', Sage::TOKEN)], $types);
+        });
+        add_filter('product_type_options', function (array $productOptions) {
+            foreach ($productOptions as &$productOption) {
+                $productOption["wrapper_class"] .= ' hide_if_' . Sage::TOKEN;
+            }
+            return $productOptions;
+        });
+        add_filter('woocommerce_product_class', function (string $classname, string $product_type) {
+            if ($product_type === Sage::TOKEN) {
+                return WC_Product_Egas::class;
+            }
+            return $classname;
+        }, accepted_args: 2);
+        add_filter('woocommerce_product_data_tabs', static function (array $tabs) { // Code to Create Tab in the Backend
             foreach ($tabs as $tabName => $value) {
                 if (!in_array($tabName, [
                     'linked_product',
@@ -268,7 +272,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
 
         add_action('manage_product_posts_custom_column', function (string $column, int $postId) { // https://www.conicsolutions.net/tutorials/woocommerce-how-to-add-custom-columns-on-the-products-list-in-dashboard/
             if ($column === Sage::TOKEN) {
-                $arRef = SageService::getInstance()->getArRef($postId);
+                $arRef = get_post_meta($postId, FArticleResource::META_KEY, true);
                 if (!empty($arRef)) {
 //                    echo '<span class="dashicons dashicons-yes" style="color: green"></span>';
                     echo $arRef;

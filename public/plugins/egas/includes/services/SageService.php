@@ -733,11 +733,6 @@ WHERE user_login LIKE %s
         return $objectFields;
     }
 
-    public function getArRef(int $postId): mixed
-    {
-        return get_post_meta($postId, FArticleResource::META_KEY, true);
-    }
-
     public function addSelectionSetAsMetadata(array $selectionSets, array &$sageEntityMetadatas, ?stdClass $obj, string $prefix = ''): array
     {
         foreach ($selectionSets as $subEntity => $selectionSet) {

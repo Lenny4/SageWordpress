@@ -94,33 +94,23 @@ class WoocommerceController
 
     public static function showMetaBoxProduct(array $wp_meta_boxes, string $screen): void
     {
-        $arRef = SageService::getInstance()->getArRef(get_the_ID());
         $id = 'woocommerce-product-data';
         $context = 'normal';
         remove_meta_box($id, $screen, $context);
 
         $callback = $wp_meta_boxes[$screen][$context]["high"][$id]["callback"];
-        add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $wpPost) use ($arRef, $callback): void {
+        add_meta_box($id, __('Product data', 'woocommerce'), static function (WP_Post $wpPost) use ($callback): void {
             ob_start();
             $callback($wpPost);
             $html = ob_get_clean();
-            $crawler = new Crawler($html);
-            $a = $crawler->filter('span.product-data-wrapper')->first();
-            $content = $a->outerHtml();
-            $hasArRef = !empty($arRef);
-            $labelArRef = '';
-            if ($hasArRef) {
-                $labelArRef = ': <span style="display: initial" class="h4">' . $arRef . '</span>';
-            }
-            $content = str_replace($content, $labelArRef . $content, $html);
-            if ($hasArRef || str_contains($wpPost->post_status, 'draft')) {
-                $content = str_replace(
+            if (str_contains($wpPost->post_status, 'auto-draft')) {
+                $html = str_replace(
                     ["selected='selected'", "option value=" . Sage::TOKEN],
                     ['', "option value=" . Sage::TOKEN . " selected='selected'"],
-                    $content
+                    $html
                 );
             }
-            echo $content;
+            echo $html;
         }, $screen, $context, 'high');
     }
 

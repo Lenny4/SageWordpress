@@ -44,6 +44,9 @@ class WordpressService
         // endregion
         $this->applyDefaultResourceOptions();
         $this->addWebsiteSageApi(true);
+        if (!term_exists(Sage::TOKEN, 'product_type')) {
+            wp_insert_term(__(Sage::TOKEN, Sage::TOKEN), 'product_type', ['slug' => Sage::TOKEN]);
+        }
 
         // $this->init() is called during activation and add_action init because sometimes add_action init could fail when plugin is installed
         $this->init();
