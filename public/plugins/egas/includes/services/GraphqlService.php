@@ -2029,12 +2029,14 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                      ]
                  ] as $fieldType) {
             foreach ($fieldType['rawFields'] as $rawField) {
-                if (array_key_exists('isFilter', $fieldType) && !array_key_exists($rawField, $_filterFields)) {
+                $isFilter = array_key_exists($rawField, $_filterFields);
+                if (array_key_exists('isFilter', $fieldType) && !$isFilter) {
                     continue;
                 }
                 $f = [
                     'name' => $rawField,
                     'type' => $selectionSets[$rawField] ?? 'StringOperationFilterInput',
+                    'isFilter' => $isFilter,
                     'transDomain' => $transDomain,
                     'values' => null,
                 ];

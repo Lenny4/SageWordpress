@@ -93,7 +93,7 @@ export const ListSageEntityTableHeaderComponent: React.FC<State2> = ({
                   alignItems: "center",
                 }}
               >
-                {field.name.startsWith("metaData") ? (
+                {!field.isFilter ? (
                   <span>{label}</span>
                 ) : (
                   <a

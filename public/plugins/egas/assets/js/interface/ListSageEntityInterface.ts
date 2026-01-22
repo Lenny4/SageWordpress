@@ -10,6 +10,7 @@ export interface FilterTypeInterface {
 export interface FilterShowFieldInterface {
   name: string;
   transDomain: string;
+  isFilter: boolean;
   type: keyof FilterTypeInterface;
   values: string[] | any | null;
 }
