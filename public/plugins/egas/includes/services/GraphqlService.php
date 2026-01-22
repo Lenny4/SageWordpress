@@ -69,7 +69,7 @@ class GraphqlService
         }
     }
 
-    private function ping(): void
+    public function ping(): void
     {
         if (!is_null($this->pingApi)) {
             return;
@@ -372,7 +372,7 @@ class GraphqlService
 
         $function = function () use ($object) {
             // https://graphql.org/learn/introspection/
-            $query = (new Query('__type'))
+            $query1 = (new Query('__type'))
                 ->setArguments(['name' => $object])
                 ->setSelectionSet(
                     [
@@ -400,7 +400,29 @@ class GraphqlService
                             ),
                     ]
                 );
-            return $this->runQuery($query)?->data?->__type?->fields;
+            $rawFields = $this->runQuery($query1)?->data?->__type?->fields;
+            $fields = array_map(function (stdClass $field) {
+                return $field->name;
+            }, $rawFields);
+            $query2 = (new Query('__type'))
+                ->setArguments(['name' => $object . 'FilterInput'])
+                ->setSelectionSet(
+                    [
+                        (new Query('inputFields'))
+                            ->setSelectionSet(
+                                [
+                                    'name',
+                                ],
+                            ),
+                    ]
+                );
+            $filterFields = [];
+            foreach ($this->runQuery($query2)?->data?->__type?->inputFields ?? [] as $filterField) {
+                if (in_array($filterField->name, $fields)) {
+                    $filterFields[$filterField->name] = $filterField->name;
+                }
+            }
+            return [$rawFields, $filterFields];
         };
         $typeModel = $cacheService->get($cacheName, $function);
         if (empty($typeModel)) {
@@ -1978,6 +2000,8 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $showFields = [];
         $filterFields = [];
         $inputFields = $this->getTypeFilter($resource->getFilterType()) ?? [];
+        [$_rawFields, $_filterFields] = $this->getTypeModel($resource->getTypeModel());
+
         $transDomain = $resource->getTransDomain();
         $trans = SageTranslationUtils::getTranslations();
         $selectionSets = [];
@@ -2001,9 +2025,13 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                      [
                          'rawFields' => $rawFilterFields,
                          'array' => &$filterFields,
+                         'isFilter' => true,
                      ]
                  ] as $fieldType) {
             foreach ($fieldType['rawFields'] as $rawField) {
+                if (array_key_exists('isFilter', $fieldType) && !array_key_exists($rawField, $_filterFields)) {
+                    continue;
+                }
                 $f = [
                     'name' => $rawField,
                     'type' => $selectionSets[$rawField] ?? 'StringOperationFilterInput',

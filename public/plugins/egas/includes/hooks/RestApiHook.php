@@ -57,6 +57,10 @@ class RestApiHook
             return $response;
         }, 10, 3);
         add_action('rest_api_init', function () {
+            add_filter('rest_pre_dispatch', function ($result) {
+                GraphqlService::getInstance()->ping();
+                return $result; // must return $result
+            });
             register_rest_route(Sage::TOKEN . '/v1', '/search-entities/(?P<entityName>[A-Za-z0-9]+)', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {

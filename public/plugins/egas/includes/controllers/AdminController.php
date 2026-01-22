@@ -165,7 +165,14 @@ class AdminController
             ];
             $sageService = SageService::getInstance();
             foreach ($sageService->getResources() as $resource) {
-                $fieldOptions = $sageService->getFieldsForEntity($resource);
+                $showFields = [];
+                $filterFields = [];
+                foreach ($sageService->getFieldsForEntity($resource) as $key => $fieldOption) {
+                    $showFields[$key] = $fieldOption["label"];
+                    if ($fieldOption['isFilter']) {
+                        $filterFields[$key] = $fieldOption["label"];
+                    }
+                }
                 $defaultFields = $resource->getDefaultFields();
                 $options = [
                     [
@@ -173,7 +180,7 @@ class AdminController
                         'label' => __('Champs à montrer', Sage::TOKEN),
                         'description' => __('Veuillez sélectionner les champs à afficher sur le tableau.', Sage::TOKEN),
                         'type' => '2_select_multi',
-                        'options' => $fieldOptions,
+                        'options' => $showFields,
                         'default' => $defaultFields,
                     ],
                     [
@@ -181,7 +188,7 @@ class AdminController
                         'label' => __('Champs pouvant être filtrés', Sage::TOKEN),
                         'description' => __('Veuillez sélectionner les champs pouvant servir à filter vos résultats.', Sage::TOKEN),
                         'type' => '2_select_multi',
-                        'options' => array_filter($fieldOptions, static function (string $key) {
+                        'options' => array_filter($filterFields, static function (string $key) {
                             return !str_starts_with($key, Sage::PREFIX_META_DATA);
                         }, ARRAY_FILTER_USE_KEY),
                         'default' => array_filter($defaultFields, static function (string $v) {

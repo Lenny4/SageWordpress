@@ -5,7 +5,6 @@ namespace App\services;
 use App\class\dto\ArgumentSelectionSetDto;
 use App\class\SageEntityMetadata;
 use App\controllers\AdminController;
-use App\resources\FArticleResource;
 use App\resources\FComptetResource;
 use App\resources\Resource;
 use App\Sage;
@@ -701,23 +700,26 @@ WHERE user_login LIKE %s
     ): array
     {
         $transDomain = $resource->getTransDomain();
-        $typeModel = GraphqlService::getInstance()->getTypeModel($resource->getTypeModel());
-        if (!is_null($typeModel)) {
-            $fieldsObject = array_filter($typeModel,
-                static fn(stdClass $entity): bool => $entity->type->kind !== 'OBJECT' &&
-                    $entity->type->kind !== 'LIST' &&
-                    $entity->type->ofType?->kind !== 'LIST');
+        [$rawFields, $filterFields] = GraphqlService::getInstance()->getTypeModel($resource->getTypeModel());
+        if (!is_null($rawFields)) {
+            $rawFields = array_filter($rawFields,
+                static fn(stdClass $rawField): bool => $rawField->type->kind !== 'OBJECT' &&
+                    $rawField->type->kind !== 'LIST' &&
+                    $rawField->type->ofType?->kind !== 'LIST');
         } else {
-            $fieldsObject = [];
+            $rawFields = [];
         }
 
         $trans = SageTranslationUtils::getTranslations();
         $objectFields = [];
-        foreach ($fieldsObject as $fieldObject) {
-            $v = SageTranslationUtils::trans($trans, $transDomain, $fieldObject->name);
-            $objectFields[$fieldObject->name] = $v['label'] ?? $v;
+        foreach ($rawFields as $rawField) {
+            $v = SageTranslationUtils::trans($trans, $transDomain, $rawField->name);
+            $objectFields[$rawField->name] = [
+                'label' => $v['label'] ?? $v,
+                'name' => $rawField->name,
+                'isFilter' => in_array($rawField->name, $filterFields),
+            ];
         }
-
         // region custom meta fields
         if ($withMetadata) {
             foreach ($resource->getMetadata()() as $metadata) {
@@ -725,7 +727,11 @@ WHERE user_login LIKE %s
                     continue;
                 }
                 $fieldName = Sage::META_DATA_PREFIX . $metadata->getField();
-                $objectFields[$fieldName] = $trans[$transDomain][$fieldName];
+                $objectFields[$fieldName] = [
+                    'label' => $trans[$transDomain][$fieldName],
+                    'name' => $fieldName,
+                    'isFilter' => false,
+                ];
             }
         }
         // endregion

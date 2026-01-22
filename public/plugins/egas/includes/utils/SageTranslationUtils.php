@@ -282,7 +282,7 @@ final class SageTranslationUtils
                         '4' => __("Archivé", Sage::TOKEN),
                     ],
                 ],
-                "doStatutString" => __("Statut", Sage::TOKEN),
+                "doStatutString" => __("Statut (chaîne)", Sage::TOKEN),
                 "doHeure" => __("Heure", Sage::TOKEN),
                 "caNo" => __("caNo", Sage::TOKEN),
                 "doTransfere" => __("Document transféré (True) ou non (False)", Sage::TOKEN),
