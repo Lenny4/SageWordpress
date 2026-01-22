@@ -39,8 +39,8 @@ class FDocenteteResource extends Resource
             Sage::META_DATA_PREFIX . '_postId',
         ];
         $this->mandatoryFields = [
-            'doPiece', // [IsProjected(true)]
-            'doType', // [IsProjected(true)]
+            'doPiece',
+            'doType',
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FDOCENTETES;
@@ -119,7 +119,7 @@ class FDocenteteResource extends Resource
         $this->postType = null;
         $this->importCondition = [
             new ImportConditionDto(
-                field: 'doDomaine', // [IsProjected(true)]
+                field: 'doDomaine',
                 value: DomaineTypeEnum::DomaineTypeVente->value,
                 condition: 'eq',
                 message: function ($fDocentete) {

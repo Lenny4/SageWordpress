@@ -382,12 +382,11 @@ class WoocommerceService
             }
         }
         $articlePostId = $this->getWooCommerceIdArticle($arRef);
-        $isCreation = is_null($articlePostId);
         $article = $this->convertSageArticleToWoocommerce($fArticle, SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME), $articlePostId);
         $dismissNotice = "<button type='button' class='notice-dismiss " . Sage::TOKEN . "-notice-dismiss'><span class='screen-reader-text'>" . __('Dismiss this notice.') . "</span></button>";
         $urlArticle = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "post.php?post=%id%&action=edit'>" . __("Voir l'article", Sage::TOKEN) . "</a></span></strong>";
         $message = '';
-        if ($isCreation) {
+        if (is_null($articlePostId)) {
             // cannot create an article without request
             // ========================================
             // created with: (new WC_REST_Products_Controller())->create_item($request);

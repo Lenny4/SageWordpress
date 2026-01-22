@@ -39,7 +39,7 @@ class FArticleResource extends Resource
             Sage::META_DATA_PREFIX . '_postId',
         ];
         $this->mandatoryFields = [
-            'arRef', // [IsProjected(true)]
+            'arRef',
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FARTICLES;
@@ -142,7 +142,7 @@ class FArticleResource extends Resource
         $this->postType = 'product';
         $this->importCondition = [
             new ImportConditionDto(
-                field: 'arType', // [IsProjected(true)]
+                field: 'arType',
                 value: [
                     ArticleTypeEnum::ArticleTypeStandard->value,
                 ],
@@ -152,7 +152,7 @@ class FArticleResource extends Resource
                 }
             ),
             new ImportConditionDto(
-                field: 'arNomencl', // [IsProjected(true)]
+                field: 'arNomencl',
                 value: NomenclatureTypeEnum::NomenclatureTypeAucun->value,
                 condition: 'eq',
                 message: function ($fArticle) {

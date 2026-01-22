@@ -36,7 +36,7 @@ class FComptetResource extends Resource
             Sage::META_DATA_PREFIX . '_postId',
         ];
         $this->mandatoryFields = [
-            'ctNum', // [IsProjected(true)]
+            'ctNum',
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FCOMPTETS;
@@ -121,7 +121,7 @@ class FComptetResource extends Resource
         $this->postType = null;
         $this->importCondition = [
             new ImportConditionDto(
-                field: 'ctType', // [IsProjected(true)]
+                field: 'ctType',
                 value: TiersTypeEnum::TiersTypeClient->value,
                 condition: 'eq',
                 message: function ($fComptet) {
