@@ -1435,6 +1435,7 @@ WHERE meta_key = %s
                     'lsNoSerie',
                 ]),
                 ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                    'cbMarq',
                     'dlNoIn',
                     'dlNoOut',
                     'lsQte',

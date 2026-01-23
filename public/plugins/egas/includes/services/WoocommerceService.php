@@ -192,6 +192,7 @@ class WoocommerceService
         bool              $getFeeChanges = false,
         bool              $getCouponChanges = false,
         bool              $getTaxesChanges = false,
+        bool              $getSerialChanges = false,
         bool              $getUserChanges = false,
     ): array
     {
@@ -210,11 +211,12 @@ class WoocommerceService
         $getFeeChanges = $allChanges || $getFeeChanges;
         $getCouponChanges = $allChanges || $getCouponChanges;
         $getTaxesChanges = $allChanges || $getTaxesChanges;
+        $getSerialChanges = $allChanges || $getSerialChanges;
         $getUserChanges = $allChanges || $getUserChanges;
         $sageService = SageService::getInstance();
         $fDoclignes = $sageService->getFDoclignes($extendedFDocentetes);
         $mainFDocentete = $sageService->getMainFDocenteteOfExtendedFDocentetes($order, $extendedFDocentetes);
-        if ($getProductChanges || $getTaxesChanges) {
+        if ($getProductChanges || $getTaxesChanges || $getSerialChanges) {
             [$productChanges, $products, $taxeCodesProduct] = $sageService->getTasksSynchronizeOrder_Products($order, $fDoclignes);
             $result['products'] = $products;
             if ($getProductChanges) {
@@ -523,7 +525,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $message = $this->changeQuantityProductOrder($order, $itemId, $new->quantity, false);
         $message .= $this->changePriceProductOrder($order, $itemId, $new->linePriceHt, false);
         $message .= $this->changeTaxesProductOrder($order, $itemId, $new->taxes, $alreadyAddedTaxes);
-        $message .= $this->changeSerialOutProductOrder($order, $itemId, $new->fLotseriesOut, false);
+        $message .= $this->changeSerialOutProductOrder($order, $itemId, $new->fLotseriesOut);
         return $message;
     }
 
@@ -562,17 +564,29 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return '';
     }
 
-    private function changeSerialOutProductOrder(WC_Order $order, int $itemId, array $fLotseriesOut, bool $save = true): string
+    private function changeSerialOutProductOrder(WC_Order $order, int $itemId, array|null $fLotseriesOut): string
     {
         $lineItems = array_values($order->get_items());
         foreach ($lineItems as $lineItem) {
             if ($lineItem->get_id() === $itemId) {
                 $metadata = $lineItem->get_meta_data();
-                $metadata['fLotseriesOut'] = $fLotseriesOut;
-                $lineItem->set_meta_data($metadata);
-                if ($save) {
-                    $lineItem->save();
+                $found = false;
+                foreach ($metadata as $key => $value) {
+                    if ($value['key'] === '_' . Sage::TOKEN . '_fLotseriesOut') {
+                        $found = true;
+                        $metadata[$key]["value"] = json_encode($fLotseriesOut);
+                        $lineItem->set_meta_data($metadata);
+                        break;
+                    }
                 }
+                if (!$found) {
+                    $lineItem->add_meta_data(
+                        '_' . Sage::TOKEN . '_fLotseriesOut',
+                        json_encode($fLotseriesOut),
+                        true
+                    );
+                }
+                $lineItem->save_meta_data();
                 break;
             }
         }

@@ -17,6 +17,7 @@ use Exception;
 use StdClass;
 use Swaggest\JsonDiff\JsonDiff;
 use Symfony\Component\HttpFoundation\Response;
+use WC_Meta_Data;
 use WC_Order;
 use WC_Order_Item_Tax;
 use WC_Product;
@@ -168,6 +169,18 @@ WHERE user_login LIKE %s
                     $old->taxes[$taxeNumber] = ['code' => $rates[$idRate]->tax_rate_name, 'amount' => (float)$amount];
                     $taxeNumber++;
                 }
+                /** @var WC_Meta_Data[] $metaData */
+                $metaData = $lineItems[$i]->get_meta_data();
+                $old->fLotseriesOut = null;
+                if (!empty($metaData)) {
+                    foreach ($metaData as $meta) {
+                        $data = $meta->get_data();
+                        if ($data['key'] === '_' . Sage::TOKEN . '_fLotseriesOut') {
+                            $old->fLotseriesOut = json_decode($data['value'], true);
+                            break;
+                        }
+                    }
+                }
             }
             $new = null;
             if (isset($fDoclignes[$i])) {
@@ -185,6 +198,10 @@ WHERE user_login LIKE %s
                         $new->taxes[$taxeNumber] = ['code' => $fDoclignes[$i]->{'dlCodeTaxe' . $taxeNumber}, 'amount' => (float)$fDoclignes[$i]->{'dlMontantTaxe' . $taxeNumber}];
                     }
                 }
+                $new->fLotseriesOut = null;
+                if (!empty($fDoclignes[$i]->fLotseriesOut)) {
+                    $new->fLotseriesOut = $fDoclignes[$i]->fLotseriesOut;
+                }
             }
             $changes = [];
             if (!is_null($new) && !is_null($old)) {
@@ -199,6 +216,9 @@ WHERE user_login LIKE %s
                     }
                     if (array_values($new->taxes) !== array_values($old->taxes)) {
                         $changes[] = OrderUtils::CHANGE_TAXES_PRODUCT_ACTION;
+                    }
+                    if (json_encode($new->fLotseriesOut) !== json_encode($old->fLotseriesOut)) {
+                        $changes[] = OrderUtils::CHANGE_SERIAL_PRODUCT_OUT_ACTION;
                     }
                 }
             } else if (is_null($new)) {
