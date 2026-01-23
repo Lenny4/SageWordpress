@@ -688,7 +688,7 @@ class AdminController
                 optionName: 'woocommerce_calc_taxes',
                 optionValue: 'yes',
                 trans: __('Enable tax rates and calculations', 'woocommerce'),
-                description: __("Cette option doit être activé pour que le plugin Sage fonctionne correctement afin de récupérer les taxes directement renseignées dans Sage.", Sage::TOKEN),
+                description: __("Cette option doit être activé pour que le plugin Egas fonctionne correctement afin de récupérer les taxes directement renseignées dans Sage.", Sage::TOKEN),
             ),
         ];
         if (!is_null($pDossier?->nDeviseCompteNavigation?->dCodeIso)) {
@@ -716,7 +716,7 @@ class AdminController
             $optionNames = [];
             foreach ($changes as $sageExpectedOption) {
                 $optionValue = $sageExpectedOption->getOptionValue();
-                $result .= "<div>" . __('Le plugin Sage a besoin de modifier l\'option', Sage::TOKEN) . " <code>" .
+                $result .= "<div>" . __('Le plugin Egas a besoin de modifier l\'option', Sage::TOKEN) . " <code>" .
                     $sageExpectedOption->getTrans() . "</code> " . __('pour lui donner la valeur', Sage::TOKEN) . " <code>" .
                     $optionValue . "</code>
 <div class='tooltip'>

@@ -147,16 +147,16 @@ class FArticleResource extends Resource
                     ArticleTypeEnum::ArticleTypeStandard->value,
                 ],
                 condition: 'in',
-                message: function ($fArticle) {
-                    return __("Seuls les articles standard ou à gamme peuvent être importés.", Sage::TOKEN);
+                message: function (array $fArticle) {
+                    return __("Seuls les articles standard peuvent être importés.", Sage::TOKEN) . ' [' . $fArticle["arRef"] . ']';
                 }
             ),
             new ImportConditionDto(
                 field: 'arNomencl',
                 value: NomenclatureTypeEnum::NomenclatureTypeAucun->value,
                 condition: 'eq',
-                message: function ($fArticle) {
-                    return __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", Sage::TOKEN);
+                message: function (array $fArticle) {
+                    return __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", Sage::TOKEN) . ' [' . $fArticle["arRef"] . ']';
                 }
             ),
         ];
@@ -166,7 +166,9 @@ class FArticleResource extends Resource
             );
             return $postId;
         };
-        $this->selectionSet = GraphqlService::getInstance()->_getFArticleSelectionSet();
+        $this->selectionSet = function () {
+            return GraphqlService::getInstance()->_getFArticleSelectionSet();
+        };
     }
 
     public static function getDefaultResourceFilter(): array

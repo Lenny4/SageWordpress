@@ -85,7 +85,7 @@ class FComptetResource extends Resource
                     'default' => 'off',
                 ],
                 [
-                    'id' => 'mail_website_create_new_' . Sage::TOKEN,
+                    'id' => 'mail_website_create_new_' . self::ENTITY_NAME,
                     'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', self::ENTITY_NAME),
                     'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", Sage::TOKEN),
                     'type' => 'checkbox',
@@ -124,15 +124,17 @@ class FComptetResource extends Resource
                 field: 'ctType',
                 value: TiersTypeEnum::TiersTypeClient->value,
                 condition: 'eq',
-                message: function ($fComptet) {
-                    return __("Le compte n'est pas un compte client.", Sage::TOKEN);
+                message: function (array $fComptet) {
+                    return __("Le compte n'est pas un compte client.", Sage::TOKEN) . ' [' . $fComptet["ctNum"] . ']';
                 }),
         ];
         $this->import = static function (string $identifier) {
             [$response, $responseError, $message, $userId] = SageService::getInstance()->importFComptetFromSage($identifier);
             return $userId;
         };
-        $this->selectionSet = GraphqlService::getInstance()->_getFComptetSelectionSet();
+        $this->selectionSet = function () {
+            return GraphqlService::getInstance()->_getFComptetSelectionSet();
+        };
     }
 
     public static function getInstance(): self

@@ -4,7 +4,7 @@
  * Plugin URI: https://github.com/Lenny4/SageWordpress
  * Description: A plugin to use Sage on your WordPress website.
  * Version: 1.0.0
- * Author: Alexandre Beaujour
+ * Author: Egas
  * Author URI: https://lenny4.github.io/
  *
  * Requires at least: 6.3

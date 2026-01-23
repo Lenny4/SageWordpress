@@ -424,11 +424,6 @@ WHERE meta_key = %s
         return null;
     }
 
-    public function getUserWordpressIdForSage(int $userId)
-    {
-        return get_user_meta($userId, FComptetResource::META_KEY, true);
-    }
-
     public function getValidWordpressMail(?string $value): string|null
     {
         if (is_null($value)) {

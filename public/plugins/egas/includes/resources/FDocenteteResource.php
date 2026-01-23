@@ -2,11 +2,13 @@
 
 namespace App\resources;
 
+use App\enum\Sage\ArticleTypeEnum;
 use App\enum\Sage\DomaineTypeEnum;
 use App\Sage;
 use App\services\GraphqlService;
 use App\services\SageService;
 use App\services\WoocommerceService;
+use App\utils\FDocenteteUtils;
 use App\utils\SageTranslationUtils;
 use stdClass;
 use WC_Order;
@@ -122,8 +124,15 @@ class FDocenteteResource extends Resource
                 field: 'doDomaine',
                 value: DomaineTypeEnum::DomaineTypeVente->value,
                 condition: 'eq',
-                message: function ($fDocentete) {
-                    return __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN);
+                message: function (array $fDocentete) {
+                    return __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN) . ' [' . $fDocentete["doPiece"] . '][' . $fDocentete["doType"] . ']';
+                }),
+            new ImportConditionDto(
+                field: 'doType',
+                value: FDocenteteUtils::DO_TYPE_MAPPABLE,
+                condition: 'in',
+                message: function (array $fDocentete) {
+                    return __("Seuls les documents ayant ces doType peuvent être importés.", Sage::TOKEN) . ' [' . implode(',', FDocenteteUtils::DO_TYPE_MAPPABLE) . '][' . $fDocentete["doPiece"] . '][' . $fDocentete["doType"] . ']';
                 }),
         ];
         $this->import = static function (string $identifier) {
@@ -131,7 +140,9 @@ class FDocenteteResource extends Resource
             [$message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($data->doPiece, $data->doType);
             return $order->get_id();
         };
-        $this->selectionSet = GraphqlService::getInstance()->_getFDocenteteSelectionSet();
+        $this->selectionSet = function () {
+            return GraphqlService::getInstance()->_getFDocenteteSelectionSet();
+        };
         $this->getIdentifier = static function (array $fDocentete) {
             return json_encode(['doPiece' => $fDocentete["doPiece"], 'doType' => $fDocentete["doType"]], JSON_THROW_ON_ERROR);
         };

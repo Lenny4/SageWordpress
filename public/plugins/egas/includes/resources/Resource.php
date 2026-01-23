@@ -68,7 +68,7 @@ abstract class Resource
      */
     protected array $importCondition;
     protected Closure $import;
-    protected array $selectionSet;
+    protected Closure $selectionSet;
     protected ?Closure $postUrl = null;
     /**
      * Can be use if the Sage entity has multiple column as id
@@ -283,17 +283,6 @@ abstract class Resource
         return $this;
     }
 
-    public function getSelectionSet(): array
-    {
-        return $this->selectionSet;
-    }
-
-    public function setSelectionSet(array $selectionSet): Resource
-    {
-        $this->selectionSet = $selectionSet;
-        return $this;
-    }
-
     public function getPostUrl(): ?Closure
     {
         return $this->postUrl;
@@ -388,6 +377,17 @@ abstract class Resource
     public function setImportFromSage(Closure $importFromSage): self
     {
         $this->importFromSage = $importFromSage;
+        return $this;
+    }
+
+    public function getSelectionSet(): Closure
+    {
+        return $this->selectionSet;
+    }
+
+    public function setSelectionSet(Closure $selectionSet): self
+    {
+        $this->selectionSet = $selectionSet;
         return $this;
     }
 }

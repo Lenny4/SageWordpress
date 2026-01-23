@@ -194,7 +194,11 @@ LIMIT 1
                 $sageService->importFComptetFromSage($metadata[FComptetResource::META_KEY], showSuccessMessage: false);
             }
             if ($creating) {
-                if (filter_var(get_option(Sage::TOKEN . '_mail_website_create_new_' . FComptetResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
+                if (
+                    filter_var(get_option(Sage::TOKEN . '_mail_website_create_new_' . FComptetResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN) &&
+                    !str_ends_with($user->user_email, '@nomail.com')
+                ) {
+
                     // Accepts only 'user', 'admin' , 'both' or default '' as $notify.
                     wp_send_new_user_notifications($user->ID, 'user');
                 }

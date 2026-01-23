@@ -612,6 +612,9 @@ class GraphqlService
             if (!is_null($sortField)) {
                 $order = '{ ' . $sortField . ': ' . strtoupper((string)$sortValue) . ' }';
             }
+            if (is_null($order)) {
+                $order = '{ cbMarq: ASC }';
+            }
 
             $arguments = [
                 'skip' => $nbPerPage * ($page - 1),
@@ -1349,7 +1352,7 @@ WHERE meta_key = %s
         bool $getExpedition = false,
         bool $getUser = false,
         bool $getLivraison = false,
-        bool $getLotSerie = false, // todo
+        bool $getLotSerie = false,
     ): array
     {
         $result = [
@@ -1369,7 +1372,7 @@ WHERE meta_key = %s
             $result['fraisExpedition'] = $this->_getFraisExpeditionSelectionSet();
         }
         if ($getFDoclignes) {
-            $result['fDoclignes'] = new ArgumentSelectionSetDto($this->_getFDocligneSelectionSet(), 'dlNo');
+            $result['fDoclignes'] = new ArgumentSelectionSetDto($this->_getFDocligneSelectionSet($getLotSerie), 'dlNo');
         }
         if ($getUser) {
             $result['doTiersNavigation'] = $this->_getFComptetSelectionSet();
@@ -1391,6 +1394,10 @@ WHERE meta_key = %s
         bool $getLotSerie = false,
     ): array
     {
+        $mandatoryFields = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME)->getMandatoryFields();
+        $fArticleSelectionSet = array_filter($this->_getFArticleSelectionSet(), function (array|ArgumentSelectionSetDto $selectionSet) use ($mandatoryFields) {
+            return is_array($selectionSet) && array_key_exists('name', $selectionSet) && in_array($selectionSet['name'], $mandatoryFields);
+        });
         $r = [
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
                 'dlMontantHt',
@@ -1420,11 +1427,17 @@ WHERE meta_key = %s
                     return 'dlPiece' . $field;
                 }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
             ]),
+            'arRefNavigation' => $fArticleSelectionSet,
         ];
         if ($getLotSerie) {
-            $r['fLotseriesNavigation'] = [
+            $r['fLotseriesOut'] = [
                 ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                     'lsNoSerie',
+                ]),
+                ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                    'dlNoIn',
+                    'dlNoOut',
+                    'lsQte',
                 ]),
             ];
         }
@@ -2005,7 +2018,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $transDomain = $resource->getTransDomain();
         $trans = SageTranslationUtils::getTranslations();
         $selectionSets = [];
-        foreach ($resource->getSelectionSet() as $selectionSet) {
+        foreach ($resource->getSelectionSet()() as $selectionSet) {
             if (is_array($selectionSet) && array_key_exists('name', $selectionSet)) {
                 $selectionSets[$selectionSet['name']] = $selectionSet['type'];
             }

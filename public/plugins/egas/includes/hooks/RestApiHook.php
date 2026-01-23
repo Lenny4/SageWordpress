@@ -56,11 +56,11 @@ class RestApiHook
             $response->set_data($data);
             return $response;
         }, 10, 3);
+        add_filter('rest_pre_dispatch', function ($result) {
+            GraphqlService::getInstance()->ping();
+            return $result; // must return $result
+        });
         add_action('rest_api_init', function () {
-            add_filter('rest_pre_dispatch', function ($result) {
-                GraphqlService::getInstance()->ping();
-                return $result; // must return $result
-            });
             register_rest_route(Sage::TOKEN . '/v1', '/search-entities/(?P<entityName>[A-Za-z0-9]+)', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
@@ -132,6 +132,7 @@ class RestApiHook
                         addWordpressProductId: true,
                         getUser: true,
                         getLivraison: true,
+                        getLotSerie: true,
                         extended: true,
                     );
                     $tasksSynchronizeOrder = $woocommerceService->getTasksSynchronizeOrder($order, $extendedFDocentetes);
@@ -157,12 +158,11 @@ class RestApiHook
                         if ($response instanceof WP_Error) {
                             $body = json_encode($response->get_error_messages());
                             $code = $response->get_error_code();
-                        } else if (is_null($response)) {
-                            // todo test
+                        } else if (is_null($response) || is_int($response)) {
                             return new WP_REST_Response(json_encode([
                                 'responseError' => $responseError,
                                 'message' => $message,
-                            ]), 500);
+                            ]), is_int($response) ? $response : Response::HTTP_INTERNAL_SERVER_ERROR);
                         } else {
                             $body = $response["body"];
                             $code = $response['response']['code'];

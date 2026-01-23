@@ -16,6 +16,7 @@ use App\Sage;
 use App\utils\OrderUtils;
 use App\utils\TaxeUtils;
 use stdClass;
+use Symfony\Component\HttpFoundation\Response;
 use WC_Cart;
 use WC_Order;
 use WC_Order_Item_Shipping;
@@ -42,20 +43,20 @@ class WoocommerceService
     public function convertFComptetToUser(
         StdClass $fComptet,
         ?int     $userId = null,
-    ): array|string
+    ): array
     {
         $email = explode(';', $fComptet->ctEmail)[0];
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return [null, "<div class='notice notice-error is-dismissible'>" . __("L'adresse email n'est pas au bon format [email: '" . $email . "']", Sage::TOKEN) . "</div>", null];
+            $email = $fComptet->ctNum . '@nomail.com';
         }
-        $mailExistsUserId = email_exists($email);
-        if ($mailExistsUserId !== false && $mailExistsUserId !== $userId) {
-            $ctNum = WordpressService::getInstance()->getUserWordpressIdForSage($mailExistsUserId);
-            if (!empty($ctNum)) {
-                return [null, "<div class='notice notice-error is-dismissible'>" . __('This email address [' . $email . '] is already registered for user id: ' . $mailExistsUserId . '.', 'woocommerce') . "</div>", null];
-            }
-            $userId = $mailExistsUserId;
+        $i = 1;
+        $newEmail = $email;
+        while (email_exists($newEmail)) {
+            $emailArray = explode('@', $email);
+            $emailArray[0] .= $i;
+            $newEmail = implode('@', $emailArray);
         }
+        $email = $newEmail;
         $sageService = SageService::getInstance();
         $fComptetAddress = $sageService->createAddressWithFComptet($fComptet);
         $address = [];
@@ -173,6 +174,7 @@ class WoocommerceService
                 addWordpressProductId: true,
                 getUser: true,
                 getLivraison: true,
+                getLotSerie: true,
                 extended: true,
             );
             $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
@@ -301,6 +303,9 @@ class WoocommerceService
                     case OrderUtils::CHANGE_TAXES_PRODUCT_ACTION:
                         $message .= $this->changeTaxesProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->taxes, $alreadyAddedTaxes);
                         break;
+                    case OrderUtils::CHANGE_SERIAL_PRODUCT_OUT_ACTION:
+                        $message .= $this->changeSerialOutProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->fLotseriesOut);
+                        break;
                     case OrderUtils::REPLACE_PRODUCT_ACTION:
                         $message .= $this->replaceProductToOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->postId, $syncChange["new"]->quantity, $syncChange["new"], $alreadyAddedTaxes);
                         break;
@@ -376,7 +381,7 @@ class WoocommerceService
             $resource = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME);
             $canImportFArticle = $resource->getCanImport()($fArticle);
             if (!empty($canImportFArticle)) {
-                return [null, null, "<div class='error'>
+                return [Response::HTTP_CONFLICT, null, "<div class='error'>
                         " . implode(' ', $canImportFArticle) . "
                                 </div>", 0];
             }
@@ -518,6 +523,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $message = $this->changeQuantityProductOrder($order, $itemId, $new->quantity, false);
         $message .= $this->changePriceProductOrder($order, $itemId, $new->linePriceHt, false);
         $message .= $this->changeTaxesProductOrder($order, $itemId, $new->taxes, $alreadyAddedTaxes);
+        $message .= $this->changeSerialOutProductOrder($order, $itemId, $new->fLotseriesOut, false);
         return $message;
     }
 
@@ -547,6 +553,23 @@ WHERE {$wpdb->posts}.post_type = 'product'
                     'subtotal' => (string)$linePriceHt, // subtotal is what the price should be, if higher than total difference will be display as discount (Before discount)
                     'total' => (string)$linePriceHt,
                 ]);
+                if ($save) {
+                    $lineItem->save();
+                }
+                break;
+            }
+        }
+        return '';
+    }
+
+    private function changeSerialOutProductOrder(WC_Order $order, int $itemId, array $fLotseriesOut, bool $save = true): string
+    {
+        $lineItems = array_values($order->get_items());
+        foreach ($lineItems as $lineItem) {
+            if ($lineItem->get_id() === $itemId) {
+                $metadata = $lineItem->get_meta_data();
+                $metadata['fLotseriesOut'] = $fLotseriesOut;
+                $lineItem->set_meta_data($metadata);
                 if ($save) {
                     $lineItem->save();
                 }
@@ -878,6 +901,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
             addWordpressProductId: true,
             getUser: true,
             getLivraison: true,
+            getLotSerie: true,
             extended: true,
         );
 
@@ -1081,6 +1105,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
             addWordpressProductId: true,
             getUser: true,
             getLivraison: true,
+            getLotSerie: true,
             extended: true,
         );
         $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);

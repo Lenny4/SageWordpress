@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Alexandre Beaujour
+# Copyright (C) 2023 Egas
 # This file is distributed under the same license as the Sage plugin.
 msgid ""
 msgstr ""
@@ -30,7 +30,7 @@ msgid "A plugin to use Sage on your wordpress website."
 msgstr ""
 
 #. Author of the plugin
-msgid "Alexandre Beaujour"
+msgid "Egas"
 msgstr ""
 
 #. Author URI of the plugin
