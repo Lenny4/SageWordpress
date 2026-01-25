@@ -18,6 +18,7 @@ use App\utils\TaxeUtils;
 use stdClass;
 use Symfony\Component\HttpFoundation\Response;
 use WC_Cart;
+use WC_Meta_Data;
 use WC_Order;
 use WC_Order_Item_Shipping;
 use WC_Order_Item_Tax;
@@ -278,10 +279,7 @@ class WoocommerceService
                     case OrderUtils::ADD_PRODUCT_ACTION:
                     case OrderUtils::REPLACE_PRODUCT_ACTION:
                         if (is_null($syncChange["new"]->postId)) {
-                            [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage(
-                                $syncChange["new"]->arRef,
-                                ignoreCanImport: true,
-                            );
+                            [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage($syncChange["new"]->arRef);
                             $tasksSynchronizeOrder["syncChanges"][$i]["new"]->postId = $postId;
                             $message .= $message2;
                         }
@@ -366,7 +364,6 @@ class WoocommerceService
 
     public function importFArticleFromSage(
         string        $arRef,
-        bool          $ignoreCanImport = false,
         stdClass|null $fArticle = null,
         bool          $showSuccessMessage = true,
     ): array
@@ -379,14 +376,12 @@ class WoocommerceService
                         " . __("L'article n'a pas pu être importé", Sage::TOKEN) . "
                                 </div>", 0];
         }
-        if (!$ignoreCanImport) {
-            $resource = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME);
-            $canImportFArticle = $resource->getCanImport()($fArticle);
-            if (!empty($canImportFArticle)) {
-                return [Response::HTTP_CONFLICT, null, "<div class='error'>
+        $resource = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME);
+        $canImportFArticle = $resource->getCanImport()($fArticle);
+        if (!empty($canImportFArticle)) {
+            return [Response::HTTP_CONFLICT, null, "<div class='error'>
                         " . implode(' ', $canImportFArticle) . "
                                 </div>", 0];
-            }
         }
         $articlePostId = $this->getWooCommerceIdArticle($arRef);
         $article = $this->convertSageArticleToWoocommerce($fArticle, SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME), $articlePostId);
@@ -567,24 +562,23 @@ WHERE {$wpdb->posts}.post_type = 'product'
     private function changeSerialOutProductOrder(WC_Order $order, int $itemId, array|null $fLotseriesOut): string
     {
         $lineItems = array_values($order->get_items());
+        $key = '_' . Sage::TOKEN . '_fLotseriesOut';
         foreach ($lineItems as $lineItem) {
             if ($lineItem->get_id() === $itemId) {
-                $metadata = $lineItem->get_meta_data();
+                /** @var WC_Meta_Data[] $wcMetaDatas */
+                $wcMetaDatas = $lineItem->get_meta_data();
                 $found = false;
-                foreach ($metadata as $key => $value) {
-                    if ($value['key'] === '_' . Sage::TOKEN . '_fLotseriesOut') {
+                foreach ($wcMetaDatas as $wcMetaData) {
+                    $value = $wcMetaData->get_data();
+                    if ($value['key'] === $key) {
                         $found = true;
-                        $metadata[$key]["value"] = json_encode($fLotseriesOut);
-                        $lineItem->set_meta_data($metadata);
+                        $value["value"] = json_encode($fLotseriesOut);
+                        $lineItem->set_meta_data($value);
                         break;
                     }
                 }
                 if (!$found) {
-                    $lineItem->add_meta_data(
-                        '_' . Sage::TOKEN . '_fLotseriesOut',
-                        json_encode($fLotseriesOut),
-                        true
-                    );
+                    $lineItem->add_meta_data($key, json_encode($fLotseriesOut), true);
                 }
                 $lineItem->save_meta_data();
                 break;

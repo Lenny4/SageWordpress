@@ -259,7 +259,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             }
             $arRef = SageService::getInstance()->get_post_meta_single($product->get_id(), FArticleResource::META_KEY, true);
             if (!empty($arRef)) {
-                echo __('Egas ref', Sage::TOKEN) . ': ' . $arRef;
+                echo __('Sage ref', Sage::TOKEN) . ': ' . $arRef;
             }
         }, 10, 3);
         // endregion
