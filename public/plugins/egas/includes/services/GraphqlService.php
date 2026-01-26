@@ -1239,14 +1239,12 @@ class GraphqlService
             ]
         ];
         if ($extended) {
-            $filter["filter"]["values"][] = ['rawValue' => ['extendedDoPieceDoType' => ["doPiece" => ["eq" => $doPiece]]]];
-            if (!empty($doTypes)) {
-                $filter["filter"]["values"][] = [
-                    'field' => 'doType',
-                    'condition' => 'in',
-                    'value' => $doTypes,
-                ];
-            }
+            $filter["filter"]["values"][] = ['rawValue' => ['extendedDoPieceDoType' => [
+                "doPiece" => ["eq" => $doPiece],
+                "doType" => ["in" => array_values(array_map(function (string|int $doType) {
+                    return (int)$doType;
+                }, $doTypes))],
+            ]]];
         } else {
             $filter["filter"]["values"][] = [
                 'field' => 'doPiece',
@@ -1356,7 +1354,7 @@ WHERE meta_key = %s
     ): array
     {
         $result = [
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['doType']),
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", ['doType', 'doDomaine']),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'doPiece',
                 'doTiers',
@@ -1413,6 +1411,7 @@ WHERE meta_key = %s
             ]),
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                 'dlNo',
+                'dlLigne',
                 'doType',
                 'dlQte',
                 ...array_map(static function (string $field) {

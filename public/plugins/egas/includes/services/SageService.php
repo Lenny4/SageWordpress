@@ -109,7 +109,10 @@ WHERE user_login LIKE %s
             if ($a->doType !== $b->doType) {
                 return $a->doType <=> $b->doType;
             }
-            return $a->doPiece <=> $b->doPiece;
+            if ($a->doPiece !== $b->doPiece) {
+                return strcmp($b->doPiece, $a->doPiece);
+            }
+            return $a->dlLigne <=> $b->dlLigne;
         });
         return $fDoclignes;
     }

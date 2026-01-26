@@ -137,7 +137,7 @@ class FDocenteteResource extends Resource
         ];
         $this->import = static function (string $identifier) {
             $data = json_decode(stripslashes($identifier), false, 512, JSON_THROW_ON_ERROR);
-            [$message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($data->doPiece, $data->doType);
+            [$result, $errorMessage, $message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($data->doPiece, $data->doType);
             return $order->get_id();
         };
         $this->selectionSet = function () {

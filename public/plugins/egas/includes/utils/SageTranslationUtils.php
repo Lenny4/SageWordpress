@@ -672,6 +672,7 @@ final class SageTranslationUtils
                 'seeItem' => __("Voir l'élément", Sage::TOKEN),
                 'itemAlreadyImported' => __("Mettre à jour cet élément", Sage::TOKEN),
                 'importItem' => __("Importer cet élément", Sage::TOKEN),
+                '_' . Sage::TOKEN . '_fLotseriesOut' => __("Numéro de série", Sage::TOKEN),
             ],
             'sentences' => [
                 'multipleDoPieces' => __("Plusieurs documents de ventes correspondent à ce numéro, veuillez spécifier duquel il s'agit", Sage::TOKEN),

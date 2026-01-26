@@ -121,22 +121,7 @@ class RestApiHook
                     $order = new WC_Order($request['id']);
                     $woocommerceService = WoocommerceService::getInstance();
                     $fDocenteteIdentifier = $woocommerceService->getFDocenteteIdentifierFromOrder($order);
-                    $extendedFDocentetes = GraphqlService::getInstance()->getFDocentetes(
-                        $fDocenteteIdentifier["doPiece"],
-                        [$fDocenteteIdentifier["doType"]],
-                        doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
-                        doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
-                        getError: true,
-                        getFDoclignes: true,
-                        getExpedition: true,
-                        addWordpressProductId: true,
-                        getUser: true,
-                        getLivraison: true,
-                        getLotSerie: true,
-                        extended: true,
-                    );
-                    $tasksSynchronizeOrder = $woocommerceService->getTasksSynchronizeOrder($order, $extendedFDocentetes);
-                    [$message, $order] = $woocommerceService->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
+                    [$response, $responseError, $message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($fDocenteteIdentifier["doPiece"], $fDocenteteIdentifier["doType"], $order);
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
                         'html' => WoocommerceController::getMetaboxFDocentete($order, message: $message),
@@ -146,7 +131,6 @@ class RestApiHook
                     return current_user_can('manage_options');
                 },
             ]);
-            // todo supprimer ? utiliser seulement /import/(?P<entityName>[A-Za-z0-9]+)/(?P<identifier>.+) voir du côté de l'api Uri.EscapeDataString("/" + DbToken + "/v1/import si c'est possible
             register_rest_route(Sage::TOKEN . '/v1', '/farticles/(?P<arRef>([^&]*))/import', args: [ // https://stackoverflow.com/a/10126995/6824121
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
@@ -186,18 +170,17 @@ class RestApiHook
                     return current_user_can('manage_options');
                 },
             ]);
-            // todo supprimer ? utiliser seulement /import/(?P<entityName>[A-Za-z0-9]+)/(?P<identifier>.+), plutot faire les register rest route sur les resources directement
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+)/(?P<doType>\d+)/import', args: [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
                     $doPiece = $request['doPiece'];
                     $doType = $request['doType'];
                     $orderId = $request->get_param('orderId');
-                    [$message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, $orderId);
+                    [$response, $responseError, $message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, new WC_Order($orderId));
                     return new WP_REST_Response([
                         'id' => $order->get_id(),
                         'message' => $message,
-                    ], $message === "" ? Response::HTTP_CREATED : Response::HTTP_INTERNAL_SERVER_ERROR);
+                    ], is_int($response) ? $response : Response::HTTP_OK);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can('manage_options');
@@ -258,11 +241,10 @@ class RestApiHook
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/fdocentete', [
                 'methods' => 'POST',
                 'callback' => static function (WP_REST_Request $request) {
-                    $order = new WC_Order($request['id']);
                     $body = json_decode($request->get_body(), false);
                     $doPiece = $body->{Sage::TOKEN . "-fdocentete-dopiece"};
                     $doType = (int)$body->{Sage::TOKEN . "-fdocentete-dotype"};
-                    $order = WoocommerceService::getInstance()->linkOrderFDocentete($order, $doPiece, $doType);
+                    [$order, $extendedFDocentetes] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, new WC_Order($request['id']));
                     return new WP_REST_Response([
                         // we create a new order here to be sure to refresh all data from bdd
                         'html' => WoocommerceController::getMetaboxFDocentete($order)

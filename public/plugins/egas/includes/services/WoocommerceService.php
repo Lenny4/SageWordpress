@@ -140,48 +140,12 @@ class WoocommerceService
             is_numeric($_POST[Sage::TOKEN . '-fdocentete-dotype']) &&
             !empty($_POST[Sage::TOKEN . '-fdocentete-dopiece'])
         ) {
-            $this->linkOrderFDocentete(
-                $order,
+            $this->importFDocenteteFromSage(
                 $_POST[Sage::TOKEN . '-fdocentete-dopiece'],
                 (int)$_POST[Sage::TOKEN . '-fdocentete-dotype'],
+                $order,
             );
         }
-    }
-
-    public function linkOrderFDocentete(WC_Order $order, string $doPiece, int $doType): WC_Order
-    {
-        $graphqlService = GraphqlService::getInstance();
-        $fDocentete = $graphqlService->getFDocentetes(
-            $doPiece,
-            [$doType],
-            doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
-            doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
-            single: true
-        );
-        if ($fDocentete instanceof stdClass) {
-            $order->update_meta_data(FDocenteteResource::META_KEY, json_encode([
-                'doPiece' => $fDocentete->doPiece,
-                'doType' => $fDocentete->doType,
-            ], JSON_THROW_ON_ERROR));
-            $order->save();
-            $extendedFDocentetes = $graphqlService->getFDocentetes(
-                $doPiece,
-                [$doType],
-                doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
-                doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
-                getError: true,
-                getFDoclignes: true,
-                getExpedition: true,
-                addWordpressProductId: true,
-                getUser: true,
-                getLivraison: true,
-                getLotSerie: true,
-                extended: true,
-            );
-            $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
-            [$message, $order] = $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
-        }
-        return $order;
     }
 
     public function getTasksSynchronizeOrder(
@@ -359,7 +323,7 @@ class WoocommerceService
         $order->calculate_totals(false);
         // endregion
 
-        return [$message, $order];
+        return [null, "", $message, $order];
     }
 
     public function importFArticleFromSage(
@@ -500,10 +464,13 @@ WHERE {$wpdb->posts}.post_type = 'product'
     private function addProductToOrder(WC_Order $order, ?int $productId, int $quantity, stdClass $new, array &$alreadyAddedTaxes): string
     {
         $message = '';
+        if (empty($productId)) {
+            return $message;
+        }
         $qty = wc_stock_amount($quantity);
         if (is_null($new->postId)) {
             [$response, $responseError, $message2, $postId] = $this->importFArticleFromSage($new->arRef);
-            if ($response["response"]["code"] !== 201) {
+            if ($response["response"]["code"] !== 201 && $response["response"]["code"] !== 200) {
                 return $message2;
             }
             $productId = json_decode($response["body"], false, 512, JSON_THROW_ON_ERROR)->id;
@@ -1093,18 +1060,40 @@ WHERE {$wpdb->posts}.post_type = 'product'
         if (!empty($fDocenteteIdentifier)) {
             $order->add_order_note(__('Le document de vente Sage a été désynchronisé de la commande.', Sage::TOKEN) . ' [' . $fDocenteteIdentifier["doPiece"] . ']');
             $order->delete_meta_data(FDocenteteResource::META_KEY);
+            $order->delete_meta_data('_' . Sage::TOKEN . '_doPiece');
+            $order->delete_meta_data('_' . Sage::TOKEN . '_doType');
             $order->save();
         }
         return $order;
     }
 
-    public function importFDocenteteFromSage(string $doPiece, string $doType, string|int|null $orderId = null, $showSuccessMessage = true): array
+    public function importFDocenteteFromSage(string $doPiece, string $doType, WC_Order|null $order = null, $showSuccessMessage = true): array
     {
-        $order = new WC_Order($orderId);
-        $order = $this->linkOrderFDocentete($order, $doPiece, $doType);
-        $extendedFDocentetes = GraphqlService::getInstance()->getFDocentetes(
+        if (is_null($order)) {
+            $orders = wc_get_orders([
+                'limit' => 1,
+                'meta_query' => [
+                    'relation' => 'AND',
+                    [
+                        'key'   => '_' . Sage::TOKEN . '_doPiece',
+                        'value' => $doPiece,
+                    ],
+                    [
+                        'key'   => '_' . Sage::TOKEN . '_doType',
+                        'value' => $doType,
+                    ]
+                ]
+            ]);
+            if (empty($orders)) {
+                $order = new WC_Order();
+            } else {
+                $order = $orders[0];
+            }
+        }
+        $graphqlService = GraphqlService::getInstance();
+        $extendedFDocentetes = $graphqlService->getFDocentetes(
             $doPiece,
-            [(int)$doType],
+            [$doType],
             doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
             doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
             getError: true,
@@ -1116,6 +1105,36 @@ WHERE {$wpdb->posts}.post_type = 'product'
             getLotSerie: true,
             extended: true,
         );
+        if (!is_array($extendedFDocentetes)) {
+            return [null, null, $extendedFDocentetes, 0];
+        }
+        $fDocentete = null;
+        if (!empty($extendedFDocentetes)) {
+            $fDocentete = array_values(array_filter($extendedFDocentetes, function ($fDocentete) use ($doPiece, $doType) {
+                return $fDocentete->doPiece === $doPiece && $fDocentete->doType === (int)$doType;
+            }));
+            if (!empty($fDocentete)) {
+                $fDocentete = $fDocentete[0];
+            } else {
+                return [null, null, $extendedFDocentetes, 0];
+            }
+        }
+        $resource = SageService::getInstance()->getResource(FDocenteteResource::ENTITY_NAME);
+        foreach ($extendedFDocentetes as $extendedFDocentete) {
+            $canImportFDocentete = $resource->getCanImport()($extendedFDocentete);
+            if (!empty($canImportFDocentete)) {
+                return [Response::HTTP_CONFLICT, null, "<div class='error'>
+                        " . implode(' ', $canImportFDocentete) . "
+                                </div>", 0];
+            }
+        }
+        $order->update_meta_data(FDocenteteResource::META_KEY, json_encode([
+            'doPiece' => $fDocentete->doPiece,
+            'doType' => $fDocentete->doType,
+        ], JSON_THROW_ON_ERROR));
+        $order->update_meta_data('_' . Sage::TOKEN . '_doPiece', $fDocentete->doPiece);
+        $order->update_meta_data('_' . Sage::TOKEN . '_doType', $fDocentete->doType);
+        $order->save();
         $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
         return $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
     }

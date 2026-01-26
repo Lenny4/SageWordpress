@@ -12,6 +12,9 @@ use App\services\GraphqlService;
 use App\services\SageService;
 use App\services\TwigService;
 use App\services\WoocommerceService;
+use App\utils\SageTranslationUtils;
+use stdClass;
+use WC_Meta_Data;
 use WC_Order;
 use WC_Order_Item;
 use WC_Order_Item_Product;
@@ -20,8 +23,13 @@ use WC_Shipping_Rate;
 
 class WoocommerceHook
 {
+    private array $trans;
+
     public function __construct()
     {
+        add_action('init', function (): void {
+            $this->trans = SageTranslationUtils::getTranslations();
+        });
         // region link wordpress order to sage order
         $screenId = 'woocommerce_page_wc-orders';
         add_action('add_meta_boxes_' . $screenId, static function (WC_Order $order) use ($screenId): void { // woocommerce/src/Internal/Admin/Orders/Edit.php: do_action( 'add_meta_boxes_' . $this->screen_id, $this->order );
@@ -282,5 +290,24 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             }
         }, 10, 2);
         // endregion
+
+        add_filter('woocommerce_order_item_display_meta_key', function (string $key) {
+            return SageTranslationUtils::trans($this->trans, 'words', $key);
+        });
+        add_filter('woocommerce_order_item_display_meta_value', function (string $value, WC_Meta_Data $wcMetaData) {
+            $data = $wcMetaData->get_data();
+            if ($data['key'] === '_' . Sage::TOKEN . '_fLotseriesOut' && $data['value'] !== 'null') {
+                $data = json_decode($data['value'], true);
+                if (is_array($data) && !empty($data)) {
+                    return $data[0]['lsNoSerie'];
+                }
+            }
+            return $value;
+        }, accepted_args: 3);
+        add_filter('woocommerce_order_item_get_formatted_meta_data', function (array $metaDatas) {
+            return array_filter($metaDatas, function (stdClass $metaData) {
+                return $metaData->value !== 'null';
+            });
+        });
     }
 }
