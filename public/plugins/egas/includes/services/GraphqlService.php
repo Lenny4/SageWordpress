@@ -367,7 +367,7 @@ class GraphqlService
             if (is_null($result)) {
                 $cacheService->delete($cacheName);
             }
-            return $result;
+            return [[], []];
         }
 
         $function = function () use ($object) {

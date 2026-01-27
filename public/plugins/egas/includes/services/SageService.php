@@ -5,6 +5,7 @@ namespace App\services;
 use App\class\dto\ArgumentSelectionSetDto;
 use App\class\SageEntityMetadata;
 use App\controllers\AdminController;
+use App\resources\FArticleResource;
 use App\resources\FComptetResource;
 use App\resources\Resource;
 use App\Sage;
@@ -99,6 +100,10 @@ WHERE user_login LIKE %s
         $fDoclignes = [];
         foreach ($fDocentetes as $fDocentete) {
             $fDoclignes = [...$fDoclignes, ...$fDocentete->fDoclignes];
+        }
+        $resource = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME);
+        foreach ($fDoclignes as $fDocligne) {
+            $fDocligne->canImport = $resource->getCanImport()($fDocligne->arRefNavigation);
         }
         usort($fDoclignes, static function (stdClass $a, stdClass $b) {
             foreach (FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE as $suffix) {

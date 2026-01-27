@@ -80,8 +80,11 @@ abstract class Resource
 
     protected function __construct()
     {
-        $this->canImport = function (stdClass|array $entity) {
+        $this->canImport = function (stdClass|array|null $entity) {
             $r = [];
+            if (empty($entity)) {
+                return $r;
+            }
             $entity = (array)$entity;
             foreach ($this->importCondition as $importCondition) {
                 $v = $entity[$importCondition->getField()];

@@ -180,6 +180,9 @@ class WoocommerceService
         $getUserChanges = $allChanges || $getUserChanges;
         $sageService = SageService::getInstance();
         $fDoclignes = $sageService->getFDoclignes($extendedFDocentetes);
+        $fDoclignes = array_values(array_filter($fDoclignes, function (StdClass $fDocligne) {
+            return empty($fDocligne->canImport);
+        }));
         $mainFDocentete = $sageService->getMainFDocenteteOfExtendedFDocentetes($order, $extendedFDocentetes);
         if ($getProductChanges || $getTaxesChanges || $getSerialChanges) {
             [$productChanges, $products, $taxeCodesProduct] = $sageService->getTasksSynchronizeOrder_Products($order, $fDoclignes);
@@ -1067,7 +1070,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return $order;
     }
 
-    public function importFDocenteteFromSage(string $doPiece, string $doType, WC_Order|null $order = null, $showSuccessMessage = true): array
+    public function importFDocenteteFromSage(string $doPiece, string $doType, WC_Order|null $order = null, ?string $origin = null): array
     {
         if (is_null($order)) {
             $orders = wc_get_orders([
@@ -1075,11 +1078,11 @@ WHERE {$wpdb->posts}.post_type = 'product'
                 'meta_query' => [
                     'relation' => 'AND',
                     [
-                        'key'   => '_' . Sage::TOKEN . '_doPiece',
+                        'key' => '_' . Sage::TOKEN . '_doPiece',
                         'value' => $doPiece,
                     ],
                     [
-                        'key'   => '_' . Sage::TOKEN . '_doType',
+                        'key' => '_' . Sage::TOKEN . '_doType',
                         'value' => $doType,
                     ]
                 ]
@@ -1127,6 +1130,10 @@ WHERE {$wpdb->posts}.post_type = 'product'
                         " . implode(' ', $canImportFDocentete) . "
                                 </div>", 0];
             }
+        }
+        if (!empty($origin) && empty($order->get_created_via())) {
+            $order->add_meta_data('_wc_order_attribution_source_type', 'utm');
+            $order->add_meta_data('_wc_order_attribution_utm_source', $origin);
         }
         $order->update_meta_data(FDocenteteResource::META_KEY, json_encode([
             'doPiece' => $fDocentete->doPiece,

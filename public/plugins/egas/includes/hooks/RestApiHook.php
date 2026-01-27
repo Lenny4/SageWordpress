@@ -164,7 +164,7 @@ class RestApiHook
                             $order,
                             message: $message,
                         )
-                    ], $response['response']['code']);
+                    ], is_int($response) ? $response : $response['response']['code']);
                 },
                 'permission_callback' => static function (WP_REST_Request $request) {
                     return current_user_can('manage_options');
@@ -173,10 +173,11 @@ class RestApiHook
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+)/(?P<doType>\d+)/import', args: [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
+                    set_time_limit(60 * 10);
                     $doPiece = $request['doPiece'];
                     $doType = $request['doType'];
                     $orderId = $request->get_param('orderId');
-                    [$response, $responseError, $message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, new WC_Order($orderId));
+                    [$response, $responseError, $message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, new WC_Order($orderId), $request->get_param('origin'));
                     return new WP_REST_Response([
                         'id' => $order->get_id(),
                         'message' => $message,

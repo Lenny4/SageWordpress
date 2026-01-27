@@ -201,21 +201,30 @@
                     </div>
                   </td>
                   <td class="{% if display.showBorderX %} border-right {% endif %} {{ className }}">
-                    {% if fDocligneFormatted.postId is null %}
-                      <div data-tippy-content="<div>
+                    {% if fDocligneFormatted.canImport is not empty %}
+                      <div data-tippy-placement="right" data-tippy-content="<div>
+                            {% for message in fDocligneFormatted.canImport %}
+                            <p>{{ message }}</p>
+                            {% endfor %}
+                          </div>">
+                                              <span class="dashicons dashicons-no button"
+                                                    style="color: red; cursor: default; padding-right: 22px"></span>
+                      </div>
+                    {% elseif fDocligneFormatted.postId is null %}
+                      <div data-tippy-placement="right" data-tippy-content="<div>
                           <p>{{ 'Ce produit n\'existe pas dans Wordpress. Veuillez cliquer sur la croix pour le créer.'|trans }}</p>
                         </div>" data-import-farticle="{{ fDocligneFormatted.arRef }}"
                            data-order-id="{{ orderId }}" data-nonce="{{ wpnonce }}">
                                             <span class="dashicons dashicons-no button"
                                                   style="color: red; padding-right: 22px"></span>
                       </div>
-                    {% else %}
-                      <a href="{{ get_admin_url() }}post.php?post={{ fDocligneFormatted.postId }}&action=edit"
-                         data-tippy-content="<div>
+                      {% else %}
+                        <a href="{{ get_admin_url() }}post.php?post={{ fDocligneFormatted.postId }}&action=edit"
+                           data-tippy-placement="right" data-tippy-content="<div>
                           {{ 'Voir l\'article Wordpress'|trans }}
                         </div>">
-                        <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>
-                      </a>
+                          <span class="dashicons dashicons-visibility button" style="padding-right: 22px"></span>
+                        </a>
                     {% endif %}
                   </td>
                 {% endif %}
