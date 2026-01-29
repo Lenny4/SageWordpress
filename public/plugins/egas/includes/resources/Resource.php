@@ -351,7 +351,7 @@ abstract class Resource
         return [
             new SageEntityMetadata(field: '_updateApi'),
             new SageEntityMetadata(field: '_postId', showInOptions: true),
-            new SageEntityMetadata(field: '_last_update', value: static fn(StdClass $stdClass): string => (\Carbon\Carbon::now())->format('Y-m-d H:i:s'), showInOptions: true),
+            new SageEntityMetadata(field: '_last_update', value: static fn(StdClass $stdClass): string => (DateTime::now())->format('Y-m-d H:i:s'), showInOptions: true),
         ];
     }
 

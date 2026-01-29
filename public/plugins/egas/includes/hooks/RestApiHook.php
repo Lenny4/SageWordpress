@@ -63,7 +63,7 @@ class RestApiHook
         add_action('rest_api_init', function (): void {
             register_rest_route(Sage::TOKEN . '/v1', '/search-entities/(?P<entityName>[A-Za-z0-9]+)', [
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     $entityName = $request['entityName'];
                     $selectionSet = '_get' . ucfirst(substr($entityName, 0, -1)) . 'SelectionSet';
                     $graphqlService = GraphqlService::getInstance();
@@ -84,7 +84,7 @@ class RestApiHook
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/search/sage-entity-menu/(?P<resourceName>[A-Za-z0-9]+)', [
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     $resourceName = $request['resourceName'];
                     $resource = SageService::getInstance()->getResource($resourceName);
                     [
@@ -106,7 +106,7 @@ class RestApiHook
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/farticles/(?P<arRef>([^&]*))/available', args: [ // https://stackoverflow.com/a/10126995/6824121
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     return new WP_REST_Response([
                         'availableArRef' => GraphqlService::getInstance()->getAvailableArRef(arRef: $request['arRef']),
                     ], Response::HTTP_OK);
@@ -117,7 +117,7 @@ class RestApiHook
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/sync', [
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     $order = new WC_Order($request['id']);
                     $woocommerceService = WoocommerceService::getInstance();
                     $fDocenteteIdentifier = $woocommerceService->getFDocenteteIdentifierFromOrder($order);
@@ -133,7 +133,7 @@ class RestApiHook
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/farticles/(?P<arRef>([^&]*))/import', args: [ // https://stackoverflow.com/a/10126995/6824121
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     $arRef = $request['arRef'];
                     [$response, $responseError, $message, $postId] = WoocommerceService::getInstance()->importFArticleFromSage(
                         $arRef,
@@ -172,7 +172,7 @@ class RestApiHook
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+)/(?P<doType>\d+)/import', args: [
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     set_time_limit(60 * 10);
                     $doPiece = $request['doPiece'];
                     $doType = $request['doType'];
@@ -189,7 +189,7 @@ class RestApiHook
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+$)', [
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     $extended = false;
                     if (
                         array_key_exists('extended', $_GET) &&
@@ -227,7 +227,7 @@ class RestApiHook
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/desynchronize', [
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     $order = new WC_Order($request['id']);
                     $order = WoocommerceService::getInstance()->desynchronizeOrder($order);
                     return new WP_REST_Response([
@@ -241,7 +241,7 @@ class RestApiHook
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/fdocentete', [
                 'methods' => 'POST',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     $body = json_decode($request->get_body(), false);
                     $doPiece = $body->{Sage::TOKEN . "-fdocentete-dopiece"};
                     $doType = (int)$body->{Sage::TOKEN . "-fdocentete-dotype"};
@@ -275,7 +275,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/add-website-sage-api', [
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     $result = WordpressService::getInstance()->addWebsiteSageApi(true);
                     if ($result !== true) {
                         return new WP_REST_Response($result, Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -288,7 +288,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/healthz', [
                 'methods' => 'GET',
-                'callback' => static function (): \WP_REST_Response {
+                'callback' => static function (): WP_REST_Response {
                     return new WP_REST_Response(null, Response::HTTP_OK);
                 },
                 'permission_callback' => static function (): true {
@@ -297,7 +297,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/meta-box-order', [
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     // this includes import woocommerce_wp_text_input
                     include_once __DIR__ . '/../../woocommerce/includes/admin/wc-meta-box-functions.php';
                     $order = new WC_Order($request['id']);
@@ -314,7 +314,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/user/(?P<ctNum>([^&]*))', [
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     $ctNum = $request['ctNum'];
                     $fComptet = GraphqlService::getInstance()->getFComptet($ctNum);
                     $user = get_users([
@@ -337,7 +337,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/import/(?P<entityName>[A-Za-z0-9]+)/(?P<identifier>.+)', [
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): \WP_REST_Response {
+                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                     $resource = SageService::getInstance()->getResource($request['entityName']);
                     $postId = $resource->getImport()($request['identifier']);
                     return new WP_REST_Response([

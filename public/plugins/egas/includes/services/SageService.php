@@ -290,7 +290,7 @@ WHERE user_login LIKE %s
         // endregion
 
         $foundSimilar = false;
-        $formatFunction = function (stdClass $oldOrNew): \StdClass {
+        $formatFunction = function (stdClass $oldOrNew): StdClass {
             $oldOrNew->taxes = array_filter($oldOrNew->taxes, static fn(array $taxe): bool => $taxe['amount'] > 0);
             usort($oldOrNew->taxes, static fn(array $a, array $b): int => strcmp((string) $a['code'], (string) $b['code']));
             $oldOrNew->taxes = array_values($oldOrNew->taxes);

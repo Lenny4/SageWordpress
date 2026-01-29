@@ -5,6 +5,8 @@ use Rector\Config\RectorConfig;
 use Rector\ValueObject\PhpVersion;
 
 return RectorConfig::configure()
+    ->withParallel(240, 1)
+    ->withImportNames()
     ->withPaths([
         __DIR__ . '/includes',
     ])
@@ -14,7 +16,7 @@ return RectorConfig::configure()
 //        codeQuality: true,
 //        codingStyle: true,
         typeDeclarations: true,
-//        privatization: true,
+        privatization: true,
 //        instanceOf: true,
 //        earlyReturn: true,
 //        strictBooleans: true,
