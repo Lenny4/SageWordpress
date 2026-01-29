@@ -329,7 +329,7 @@ class GraphqlService
         $cacheName = 'FilterType';
         $cacheService = CacheService::getInstance();
         if (!$this->pingApi) {
-            $result = $cacheService->get($cacheName, static fn() => null);
+            $result = $cacheService->get($cacheName, static fn(): null => null);
             if (is_null($result)) {
                 $cacheService->delete($cacheName);
             }
@@ -363,14 +363,14 @@ class GraphqlService
         $cacheName = 'TypeModel_' . $object;
         $cacheService = CacheService::getInstance();
         if (!$this->pingApi) {
-            $result = $cacheService->get($cacheName, static fn() => null);
+            $result = $cacheService->get($cacheName, static fn(): null => null);
             if (is_null($result)) {
                 $cacheService->delete($cacheName);
             }
             return [[], []];
         }
 
-        $function = function () use ($object) {
+        $function = function () use ($object): array {
             // https://graphql.org/learn/introspection/
             $query1 = (new Query('__type'))
                 ->setArguments(['name' => $object])
@@ -475,7 +475,7 @@ class GraphqlService
 
     private function _formatOperationFilterInput(string $type, array $fields): array
     {
-        return array_map(static fn(string $field) => [
+        return array_map(static fn(string $field): array => [
             "name" => $field,
             "type" => $type,
         ], $fields);
@@ -583,7 +583,7 @@ class GraphqlService
         }
         if (!is_null($cacheName)) {
             $cacheService ??= CacheService::getInstance();
-            $result = $cacheService->get($cacheName, static fn() => null);
+            $result = $cacheService->get($cacheName, static fn(): null => null);
             if (is_null($result)) {
                 $cacheService->delete($cacheName);
             } else {
@@ -591,7 +591,7 @@ class GraphqlService
             }
         }
 
-        $function = function () use ($entityName, $queryParams, $selectionSets, $getError) {
+        $function = function () use ($entityName, $queryParams, $selectionSets, $getError): array|object|string|null {
             $nbPerPage = (int)($queryParams["per_page"] ?? Sage::$defaultPagination);
             $page = (int)($queryParams["paged"] ?? 1);
             $where = null;
@@ -1235,7 +1235,7 @@ class GraphqlService
         if ($extended) {
             $filter["filter"]["values"][] = ['rawValue' => ['extendedDoPieceDoType' => [
                 "doPiece" => ["eq" => $doPiece],
-                "doType" => ["in" => array_values(array_map(fn(string|int $doType) => (int)$doType, $doTypes))],
+                "doType" => ["in" => array_values(array_map(fn(string|int $doType): int => (int)$doType, $doTypes))],
             ]]];
         } else {
             $filter["filter"]["values"][] = [
@@ -1298,7 +1298,7 @@ class GraphqlService
             }
             $fDoclignes = $this->addWordpressProductId($fDoclignes);
             foreach ($fDocentetes as $fDocentete) {
-                $fDocentete->fDoclignes = array_filter($fDoclignes, static fn(stdClass $fDocligne) => $fDocligne->doPiece === $fDocentete->doPiece && $fDocligne->doType === $fDocentete->doType);
+                $fDocentete->fDoclignes = array_filter($fDoclignes, static fn(stdClass $fDocligne): bool => $fDocligne->doPiece === $fDocentete->doPiece && $fDocligne->doType === $fDocentete->doType);
             }
         }
         if ($getWordpressIds) {
@@ -1381,28 +1381,28 @@ WHERE meta_key = %s
     ): array
     {
         $mandatoryFields = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME)->getMandatoryFields();
-        $fArticleSelectionSet = array_filter($this->_getFArticleSelectionSet(), fn(array|ArgumentSelectionSetDto $selectionSet) => is_array($selectionSet) && array_key_exists('name', $selectionSet) && in_array($selectionSet['name'], $mandatoryFields));
+        $fArticleSelectionSet = array_filter($this->_getFArticleSelectionSet(), fn(array|ArgumentSelectionSetDto $selectionSet): bool => is_array($selectionSet) && array_key_exists('name', $selectionSet) && in_array($selectionSet['name'], $mandatoryFields));
         $r = [
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
                 'dlMontantHt',
                 // 'dlMontantTtc', // don't use dlMontantTtc because it applies ignored taxe
             ]),
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
-                ...array_map(static fn(string $field) => 'dlCodeTaxe' . $field, FDocenteteUtils::ALL_TAXES),
-                ...array_map(static fn(string $field) => 'dlMontantTaxe' . $field, FDocenteteUtils::ALL_TAXES),
+                ...array_map(static fn(string $field): string => 'dlCodeTaxe' . $field, FDocenteteUtils::ALL_TAXES),
+                ...array_map(static fn(string $field): string => 'dlMontantTaxe' . $field, FDocenteteUtils::ALL_TAXES),
             ]),
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                 'dlNo',
                 'dlLigne',
                 'doType',
                 'dlQte',
-                ...array_map(static fn(string $field) => 'dlQte' . $field, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
+                ...array_map(static fn(string $field): string => 'dlQte' . $field, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
             ]),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'doPiece',
                 'arRef',
                 'dlDesign',
-                ...array_map(static fn(string $field) => 'dlPiece' . $field, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
+                ...array_map(static fn(string $field): string => 'dlPiece' . $field, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
             ]),
             'arRefNavigation' => $fArticleSelectionSet,
         ];
@@ -1878,7 +1878,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $result = [
                 ...$result,
                 ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
-                    ...array_map(static fn(int $number) => 'caCompta' . $t . str_pad((string)$number, 2, '0', STR_PAD_LEFT), range(1, PCatComptaUtils::NB_TIERS_TYPE)),
+                    ...array_map(static fn(int $number): string => 'caCompta' . $t . str_pad((string)$number, 2, '0', STR_PAD_LEFT), range(1, PCatComptaUtils::NB_TIERS_TYPE)),
                 ]),
             ];
         }
@@ -1896,7 +1896,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             // Check if the method name starts with "get"
             if (str_starts_with($methodName, 'get')) {
                 $parameters = $method->getParameters();
-                $paramNames = array_map(fn($param) => $param->getName(), $parameters);
+                $paramNames = array_map(fn($param): string => $param->getName(), $parameters);
 
                 // Check if both 'useCache' and 'getFromSage' are in the parameter list
                 if (
@@ -2050,7 +2050,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 , JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), true, 512, JSON_THROW_ON_ERROR);
             $data = SageService::getInstance()->populateMetaDatas($data, $showFields, $resource);
         }
-        $hideFields = array_map(static fn(string $hideField) => str_replace(Sage::PREFIX_META_DATA, '', $hideField), $hideFields);
+        $hideFields = array_map(static fn(string $hideField): string|array => str_replace(Sage::PREFIX_META_DATA, '', $hideField), $hideFields);
         return [
             $data,
             $showFields,
@@ -2066,14 +2066,14 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $cacheName = 'TypeFilter_' . $object;
         $cacheService = CacheService::getInstance();
         if (!$this->pingApi) {
-            $typeModel = $cacheService->get($cacheName, static fn() => null);
+            $typeModel = $cacheService->get($cacheName, static fn(): null => null);
             if (is_null($typeModel)) {
                 $cacheService->delete($cacheName);
             }
             return $typeModel;
         }
 
-        $function = function () use ($object) {
+        $function = function () use ($object): array {
             $query = (new Query('__type'))
                 ->setArguments(['name' => $object])
                 ->setSelectionSet(

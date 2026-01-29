@@ -188,8 +188,8 @@ class AdminController
                         'label' => __('Champs pouvant être filtrés', Sage::TOKEN),
                         'description' => __('Veuillez sélectionner les champs pouvant servir à filter vos résultats.', Sage::TOKEN),
                         'type' => '2_select_multi',
-                        'options' => array_filter($filterFields, static fn(string $key) => !str_starts_with($key, Sage::PREFIX_META_DATA), ARRAY_FILTER_USE_KEY),
-                        'default' => array_filter($defaultFields, static fn(string $v) => !str_starts_with($v, Sage::PREFIX_META_DATA)),
+                        'options' => array_filter($filterFields, static fn(string $key): bool => !str_starts_with($key, Sage::PREFIX_META_DATA), ARRAY_FILTER_USE_KEY),
+                        'default' => array_filter($defaultFields, static fn(string $v): bool => !str_starts_with($v, Sage::PREFIX_META_DATA)),
                     ],
                     [
                         'id' => $resource->getEntityName() . '_perPage',
@@ -451,7 +451,7 @@ class AdminController
     private static function getResourceFilter(Resource $resource, array $filterFields): array
     {
         return [
-            'importCondition' => array_map(fn(ImportConditionDto $importCondition) => [
+            'importCondition' => array_map(fn(ImportConditionDto $importCondition): array => [
                 'field' => $importCondition->getField(),
                 'value' => $importCondition->getValue(),
                 'condition' => $importCondition->getCondition(),

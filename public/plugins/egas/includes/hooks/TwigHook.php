@@ -52,7 +52,7 @@ class TwigHook
             return html_entity_decode(get_woocommerce_currency_symbol());
         }));
         $twig->addFunction(new TwigFunction('show_taxes_change', static function (array $taxes): string {
-            return implode(' | ', array_map(static function (array $taxe) {
+            return implode(' | ', array_map(static function (array $taxe): string {
                 return $taxe['code'] . ' => ' . $taxe['amount'];
             }, $taxes));
         }));
@@ -71,7 +71,7 @@ class TwigHook
             return $result;
         }));
         $twig->addFunction(new TwigFunction('formatFDoclignes', static function (array $fDoclignes, array $doTypes): array {
-            usort($fDoclignes, static function (stdClass $a, stdClass $b) use ($doTypes) {
+            usort($fDoclignes, static function (stdClass $a, stdClass $b) use ($doTypes): int {
                 foreach ($doTypes as $doType) {
                     if ($a->doType === $doType) {
                         $doPieceA = $a->doPiece;
@@ -184,7 +184,7 @@ class TwigHook
             return get_admin_url();
         }));
         $twig->addFunction(new TwigFunction('getDefaultFilters', static function (): array {
-            return array_map(static function (Resource $resource) {
+            return array_map(static function (Resource $resource): array {
                 $entityName = $resource->getEntityName();
                 return [
                     'entityName' => Sage::TOKEN . '_' . $entityName,
@@ -199,7 +199,7 @@ class TwigHook
             return SageService::getInstance()->getMainFDocenteteOfExtendedFDocentetes($order, $fDocentetes);
         }));
         $twig->addFunction(new TwigFunction('getFDocentete', static function (array $fDocentetes, string $doPiece, int $doType): stdClass|null|string {
-            $fDocentete = current(array_filter($fDocentetes, static function (stdClass $fDocentete) use ($doPiece, $doType) {
+            $fDocentete = current(array_filter($fDocentetes, static function (stdClass $fDocentete) use ($doPiece, $doType): bool {
                 return $fDocentete->doPiece === $doPiece && $fDocentete->doType === $doType;
             }));
             if ($fDocentete !== false) {

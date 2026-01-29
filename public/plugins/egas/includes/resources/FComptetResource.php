@@ -124,7 +124,7 @@ class FComptetResource extends Resource
                 field: 'ctType',
                 value: TiersTypeEnum::TiersTypeClient->value,
                 condition: 'eq',
-                message: function (array $fComptet) {
+                message: function (array $fComptet): string {
                     return __("Le compte n'est pas un compte client.", Sage::TOKEN) . ' [' . $fComptet["ctNum"] . ']';
                 }),
         ];
@@ -132,7 +132,7 @@ class FComptetResource extends Resource
             [$response, $responseError, $message, $userId] = SageService::getInstance()->importFComptetFromSage($identifier);
             return $userId;
         };
-        $this->selectionSet = function () {
+        $this->selectionSet = function (): array {
             return GraphqlService::getInstance()->_getFComptetSelectionSet();
         };
     }

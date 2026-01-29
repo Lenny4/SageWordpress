@@ -40,7 +40,7 @@ class WoocommerceController
             . $identifier["doPiece"];
     }
 
-    public static function getMetaboxFDocentete(WC_Order $order, string $message = '')
+    public static function getMetaboxFDocentete(WC_Order $order, string $message = ''): string
     {
         $woocommerceService = WoocommerceService::getInstance();
         $graphqlService = GraphqlService::getInstance();
@@ -164,7 +164,7 @@ class WoocommerceController
             $selectNode = $select->getNode(0);
             // Remove select2-hidden-accessible
             $classes = explode(' ', $selectNode->getAttribute('class'));
-            $classes = array_filter($classes, fn($c) => $c !== 'wc-customer-search');
+            $classes = array_filter($classes, fn($c): bool => $c !== 'wc-customer-search');
             $selectNode->setAttribute('class', implode(' ', $classes));
             // Hide the select
             $selectNode->setAttribute('style', 'display:none;');

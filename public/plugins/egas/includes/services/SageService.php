@@ -103,7 +103,7 @@ WHERE user_login LIKE %s
         foreach ($fDoclignes as $fDocligne) {
             $fDocligne->canImport = $resource->getCanImport()($fDocligne->arRefNavigation);
         }
-        usort($fDoclignes, static function (stdClass $a, stdClass $b) {
+        usort($fDoclignes, static function (stdClass $a, stdClass $b): int {
             foreach (FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE as $suffix) {
                 if ($a->{'dlPiece' . $suffix} !== $b->{'dlPiece' . $suffix}) {
                     return strcmp((string) $a->{'dlPiece' . $suffix}, (string) $b->{'dlPiece' . $suffix});
@@ -130,7 +130,7 @@ WHERE user_login LIKE %s
         }
         $fDocenteteIdentifier = WoocommerceService::getInstance()->getFDocenteteIdentifierFromOrder($order);
         if (count($extendedFDocentetes) > 1) {
-            usort($extendedFDocentetes, static function (stdClass $a, stdClass $b) use ($fDocenteteIdentifier) {
+            usort($extendedFDocentetes, static function (stdClass $a, stdClass $b) use ($fDocenteteIdentifier): int {
                 if ($fDocenteteIdentifier["doPiece"] === $a->doPiece && $fDocenteteIdentifier["doType"] === $a->doType) {
                     return -1;
                 }
@@ -273,7 +273,7 @@ WHERE user_login LIKE %s
         // region new
         $new = new stdClass();
         $new->method_id = FDocenteteUtils::slugifyPExpeditionEIntitule($fDocentete->doExpeditNavigation->eIntitule);
-        $pExpedition = current(array_filter($pExpeditions, static fn(stdClass $pExpedition) => $pExpedition->slug === $new->method_id));
+        $pExpedition = current(array_filter($pExpeditions, static fn(stdClass $pExpedition): bool => $pExpedition->slug === $new->method_id));
         $new->name = '';
         if ($pExpedition !== false) {
             $new->name = $pExpedition->eIntitule;
@@ -290,9 +290,9 @@ WHERE user_login LIKE %s
         // endregion
 
         $foundSimilar = false;
-        $formatFunction = function (stdClass $oldOrNew) {
-            $oldOrNew->taxes = array_filter($oldOrNew->taxes, static fn(array $taxe) => $taxe['amount'] > 0);
-            usort($oldOrNew->taxes, static fn(array $a, array $b) => strcmp((string) $a['code'], (string) $b['code']));
+        $formatFunction = function (stdClass $oldOrNew): \StdClass {
+            $oldOrNew->taxes = array_filter($oldOrNew->taxes, static fn(array $taxe): bool => $taxe['amount'] > 0);
+            usort($oldOrNew->taxes, static fn(array $a, array $b): int => strcmp((string) $a['code'], (string) $b['code']));
             $oldOrNew->taxes = array_values($oldOrNew->taxes);
             return $oldOrNew;
         };
@@ -558,7 +558,7 @@ WHERE user_login LIKE %s
             ) {
                 continue;
             }
-            $result[$filterType->name] = array_values(array_filter(array_map(fn(stdClass $value) => $value->name, $filterType->inputFields), fn(string $item) => !in_array($item, ["and", "or"])));
+            $result[$filterType->name] = array_values(array_filter(array_map(fn(stdClass $value) => $value->name, $filterType->inputFields), fn(string $item): bool => !in_array($item, ["and", "or"])));
         }
         return $result;
     }
@@ -776,7 +776,7 @@ WHERE user_login LIKE %s
             return $data;
         }
         $entityName = $resource->getEntityName();
-        $fieldNames = array_map(static fn(array $field) => str_replace(Sage::PREFIX_META_DATA, '', $field['name']), array_filter($fields, static fn(array $field) => str_starts_with((string) $field['name'], Sage::PREFIX_META_DATA)));
+        $fieldNames = array_map(static fn(array $field): string|array => str_replace(Sage::PREFIX_META_DATA, '', $field['name']), array_filter($fields, static fn(array $field): bool => str_starts_with((string) $field['name'], Sage::PREFIX_META_DATA)));
         $mandatoryField = $resource->getMandatoryFields()[0];
         $getIdentifier = $resource->getGetIdentifier();
         if (is_null($getIdentifier)) {
@@ -814,12 +814,12 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
             $results[$mapping[$temp->post_id]][$temp->meta_key] = $temp->meta_value;
         }
 
-        $includePostId = array_filter($fields, static fn(array $field) => $field['name'] === Sage::META_DATA_PREFIX . '_postId') !== [];
+        $includePostId = array_filter($fields, static fn(array $field): bool => $field['name'] === Sage::META_DATA_PREFIX . '_postId') !== [];
         $mapping = array_flip($mapping);
         $canImport = $resource->getCanImport();
         $postUrl = $resource->getPostUrl();
         if (is_null($postUrl)) {
-            $postUrl = static function (array $entity) {
+            $postUrl = static function (array $entity): ?string {
                 if (!empty($entity["_" . Sage::TOKEN . "_postId"])) {
                     return admin_url('post.php?post=' . $entity["_" . Sage::TOKEN . "_postId"]) . '&action=edit';
                 }
@@ -935,14 +935,14 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
                 foreach (['new', 'old'] as $key) {
                     $meta[$key] = array_filter(
                         $meta[$key],
-                        fn($value, $key) => str_starts_with((string) $key, '_' . Sage::TOKEN),
+                        fn($value, $key): bool => str_starts_with((string) $key, '_' . Sage::TOKEN),
                         ARRAY_FILTER_USE_BOTH
                     );
                     unset($meta[$key]['_' . Sage::TOKEN . '_last_update']);
                 }
                 $jsonDiff = new JsonDiff(
-                    array_filter($meta['old'], fn($v) => $v !== null),
-                    array_filter($meta['new'], fn($v) => $v !== null)
+                    array_filter($meta['old'], fn($v): bool => $v !== null),
+                    array_filter($meta['new'], fn($v): bool => $v !== null)
                 );
                 $meta['changes'] = [
                     'removed' => (array)$jsonDiff->getRemoved(),
@@ -959,7 +959,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
                 }
             }
             if (isset($meta["changes"]["removed"])) {
-                $meta["changes"]["removed"] = array_filter($meta["changes"]["removed"], static fn(string $value) => !empty($value));
+                $meta["changes"]["removed"] = array_filter($meta["changes"]["removed"], static fn(string $value): bool => !empty($value));
             }
             foreach ($changeTypes as $type) {
                 if (!empty($meta['changes'][$type])) {

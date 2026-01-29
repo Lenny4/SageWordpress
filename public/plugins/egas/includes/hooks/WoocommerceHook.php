@@ -57,10 +57,10 @@ class WoocommerceHook
         }, accepted_args: 2);
         // endregion
 
-        add_filter('woocommerce_shipping_rate_cost', static function (string $cost, WC_Shipping_Rate $wcShippingRate) {
+        add_filter('woocommerce_shipping_rate_cost', static function (string $cost, WC_Shipping_Rate $wcShippingRate): string {
             return (string)(WoocommerceService::getInstance()->getShippingRateCosts(WC()->cart, $wcShippingRate) ?? $cost);
         }, accepted_args: 2);
-        add_filter('woocommerce_shipping_rate_label', static function (string $label, WC_Shipping_Rate $wcShippingRate) {
+        add_filter('woocommerce_shipping_rate_label', static function (string $label, WC_Shipping_Rate $wcShippingRate): string {
             if (!str_starts_with($wcShippingRate->get_method_id(), Sage::TOKEN . '-')) {
                 return $label;
             }
@@ -88,13 +88,13 @@ class WoocommerceHook
             }
             return array_merge([Sage::TOKEN => __('Sage product', Sage::TOKEN)], $types);
         });
-        add_filter('product_type_options', function (array $productOptions) {
+        add_filter('product_type_options', function (array $productOptions): array {
             foreach ($productOptions as &$productOption) {
                 $productOption["wrapper_class"] .= ' hide_if_' . Sage::TOKEN;
             }
             return $productOptions;
         });
-        add_filter('woocommerce_product_class', function (string $classname, string $product_type) {
+        add_filter('woocommerce_product_class', function (string $classname, string $product_type): string {
             if ($product_type === Sage::TOKEN) {
                 return WC_Product_Egas::class;
             }
@@ -172,7 +172,7 @@ class WoocommerceHook
         // endregion
 
         // region add sage shipping methods
-        add_filter('woocommerce_shipping_methods', static function (array $result) {
+        add_filter('woocommerce_shipping_methods', static function (array $result): array {
             $className = pathinfo(str_replace('\\', '/', SageShippingMethod__index__::class), PATHINFO_FILENAME);
             $pExpeditions = GraphqlService::getInstance()->getPExpeditions(
                 getError: true,
@@ -237,18 +237,18 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
 
         // region edit woocommerce price
         // https://stackoverflow.com/a/45807054/6824121
-        add_filter('woocommerce_get_price_including_tax', function ($price, $quantity, $product) {
+        add_filter('woocommerce_get_price_including_tax', function ($price, $quantity, $product): float|string {
             return WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id(), true);
         }, 99, 3);
-        add_filter('woocommerce_get_price_excluding_tax', function ($price, $quantity, $product) {
+        add_filter('woocommerce_get_price_excluding_tax', function ($price, $quantity, $product): float|string {
             return WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id(), false);
         }, 99, 3);
         // Simple, grouped and external products
-        add_filter('woocommerce_product_get_price', fn($price, $product) => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
-        add_filter('woocommerce_product_get_regular_price', fn($price, $product) => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
+        add_filter('woocommerce_product_get_price', fn($price, $product): float|string => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
+        add_filter('woocommerce_product_get_regular_price', fn($price, $product): float|string => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
         // Variations
-        add_filter('woocommerce_product_variation_get_regular_price', fn($price, $product) => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
-        add_filter('woocommerce_product_variation_get_price', fn($price, $product) => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
+        add_filter('woocommerce_product_variation_get_regular_price', fn($price, $product): float|string => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
+        add_filter('woocommerce_product_variation_get_price', fn($price, $product): float|string => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
         // Variable (price range)
 //        add_filter('woocommerce_variation_prices_price', fn($price, $variation, $product) => $this->custom_variable_price($price, $variation, $product), 99, 3);
 //        add_filter('woocommerce_variation_prices_regular_price', fn($price, $variation, $product) => $this->custom_variable_price($price, $variation, $product), 99, 3);
@@ -291,7 +291,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         }, 10, 2);
         // endregion
 
-        add_filter('woocommerce_order_item_display_meta_key', function (string $key) {
+        add_filter('woocommerce_order_item_display_meta_key', function (string $key): string|array {
             return SageTranslationUtils::trans($this->trans, 'words', $key);
         });
         add_filter('woocommerce_order_item_display_meta_value', function (string $value, WC_Meta_Data $wcMetaData) {
@@ -304,8 +304,8 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             }
             return $value;
         }, accepted_args: 3);
-        add_filter('woocommerce_order_item_get_formatted_meta_data', function (array $metaDatas) {
-            return array_filter($metaDatas, function (stdClass $metaData) {
+        add_filter('woocommerce_order_item_get_formatted_meta_data', function (array $metaDatas): array {
+            return array_filter($metaDatas, function (stdClass $metaData): bool {
                 return $metaData->value !== 'null';
             });
         });

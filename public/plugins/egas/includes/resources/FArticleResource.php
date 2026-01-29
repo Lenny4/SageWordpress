@@ -147,7 +147,7 @@ class FArticleResource extends Resource
                     ArticleTypeEnum::ArticleTypeStandard->value,
                 ],
                 condition: 'in',
-                message: function (array $fArticle) {
+                message: function (array $fArticle): string {
                     return __("Seuls les articles standard peuvent être importés.", Sage::TOKEN) . ' [' . $fArticle["arRef"] . ']';
                 }
             ),
@@ -155,7 +155,7 @@ class FArticleResource extends Resource
                 field: 'arNomencl',
                 value: NomenclatureTypeEnum::NomenclatureTypeAucun->value,
                 condition: 'eq',
-                message: function (array $fArticle) {
+                message: function (array $fArticle): string {
                     return __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", Sage::TOKEN) . ' [' . $fArticle["arRef"] . ']';
                 }
             ),
@@ -166,7 +166,7 @@ class FArticleResource extends Resource
             );
             return $postId;
         };
-        $this->selectionSet = function () {
+        $this->selectionSet = function (): array {
             return GraphqlService::getInstance()->_getFArticleSelectionSet();
         };
     }

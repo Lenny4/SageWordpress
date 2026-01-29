@@ -124,14 +124,14 @@ class FDocenteteResource extends Resource
                 field: 'doDomaine',
                 value: DomaineTypeEnum::DomaineTypeVente->value,
                 condition: 'eq',
-                message: function (array $fDocentete) {
+                message: function (array $fDocentete): string {
                     return __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN) . ' [' . $fDocentete["doPiece"] . '][' . $fDocentete["doType"] . ']';
                 }),
             new ImportConditionDto(
                 field: 'doType',
                 value: FDocenteteUtils::DO_TYPE_MAPPABLE,
                 condition: 'in',
-                message: function (array $fDocentete) {
+                message: function (array $fDocentete): string {
                     return __("Seuls les documents ayant ces doType peuvent être importés.", Sage::TOKEN) . ' [' . implode(',', FDocenteteUtils::DO_TYPE_MAPPABLE) . '][' . $fDocentete["doPiece"] . '][' . $fDocentete["doType"] . ']';
                 }),
         ];
@@ -140,7 +140,7 @@ class FDocenteteResource extends Resource
             [$result, $errorMessage, $message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($data->doPiece, $data->doType);
             return $order->get_id();
         };
-        $this->selectionSet = function () {
+        $this->selectionSet = function (): array {
             return GraphqlService::getInstance()->_getFDocenteteSelectionSet();
         };
         $this->getIdentifier = static function (array $fDocentete) {

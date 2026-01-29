@@ -210,7 +210,7 @@ class WordpressService
     private function getTaxesChanges(array $fTaxes, array $rates): array
     {
         $taxeChanges = [];
-        $compareFunction = function (stdClass $fTaxe, stdClass $rate) {
+        $compareFunction = function (stdClass $fTaxe, stdClass $rate): bool {
             $taTaux = (float)($fTaxe->taNp === 1 ? 0 : $fTaxe->taTaux);
             return
                 $fTaxe->taCode === $rate->tax_rate_name &&
@@ -220,7 +220,7 @@ class WordpressService
                 $rate->city_count === 0;
         };
         foreach ($fTaxes as $fTaxe) {
-            $rate = current(array_filter($rates, static function (stdClass $rate) use ($compareFunction, $fTaxe) {
+            $rate = current(array_filter($rates, static function (stdClass $rate) use ($compareFunction, $fTaxe): bool {
                 return $compareFunction($fTaxe, $rate);
             }));
             if ($rate === false) {
@@ -232,7 +232,7 @@ class WordpressService
             }
         }
         foreach ($rates as $rate) {
-            $fTaxe = current(array_filter($fTaxes, static function (stdClass $fTaxe) use ($compareFunction, $rate) {
+            $fTaxe = current(array_filter($fTaxes, static function (stdClass $fTaxe) use ($compareFunction, $rate): bool {
                 return $compareFunction($fTaxe, $rate);
             }));
             if ($fTaxe === false) {
@@ -308,7 +308,7 @@ class WordpressService
             $resource = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME);
             $metadataToKeep = [
                 FArticleResource::META_KEY,
-                ...array_map(function (SageEntityMetadata $metadata) {
+                ...array_map(function (SageEntityMetadata $metadata): string {
                     return '_' . Sage::TOKEN . $metadata->getField();
                 }, $resource->getMetadata()()),
             ];

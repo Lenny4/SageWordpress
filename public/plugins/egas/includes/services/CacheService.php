@@ -30,12 +30,12 @@ class CacheService
         $this->cache->clear();
     }
 
-    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null)
+    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed
     {
         return $this->cache->get($key, $callback, $beta, $metadata);
     }
 
-    public function delete(string $key)
+    public function delete(string $key): bool
     {
         return $this->cache->delete($key);
     }

@@ -63,7 +63,7 @@ class WoocommerceService
         $address = [];
         $fPays = GraphqlService::getInstance()->getFPays(false);
         foreach (OrderUtils::ALL_ADDRESS_TYPE as $addressType) {
-            $thisAdress = current(array_filter($fComptet->fLivraisons, static function (StdClass $fLivraison) use ($addressType, $fComptetAddress) {
+            $thisAdress = current(array_filter($fComptet->fLivraisons, static function (StdClass $fLivraison) use ($addressType, $fComptetAddress): bool {
                 if ($addressType === OrderUtils::BILLING_ADDRESS_TYPE) {
                     return $fLivraison->liAdresseFact === 1;
                 }
@@ -88,7 +88,7 @@ class WoocommerceService
                 $thisAddress->liIntitule,
                 $thisAddress->liContact
             );
-            $fPay = current(array_filter($fPays, static fn(StdClass $fPay) => $fPay->paIntitule === $thisAddress->liPays));
+            $fPay = current(array_filter($fPays, static fn(StdClass $fPay): bool => $fPay->paIntitule === $thisAddress->liPays));
             $meta = [
                 ...$meta,
                 // region woocommerce (got from: woocommerce/includes/class-wc-privacy-erasers.php)
@@ -180,7 +180,7 @@ class WoocommerceService
         $getUserChanges = $allChanges || $getUserChanges;
         $sageService = SageService::getInstance();
         $fDoclignes = $sageService->getFDoclignes($extendedFDocentetes);
-        $fDoclignes = array_values(array_filter($fDoclignes, function (StdClass $fDocligne) {
+        $fDoclignes = array_values(array_filter($fDoclignes, function (StdClass $fDocligne): bool {
             return empty($fDocligne->canImport);
         }));
         $mainFDocentete = $sageService->getMainFDocenteteOfExtendedFDocentetes($order, $extendedFDocentetes);
@@ -215,7 +215,7 @@ class WoocommerceService
             $result['syncChanges'] = [...$result['syncChanges'], ...$userChanges];
         }
 
-        $result['allProductsExistInWordpress'] = array_filter($fDoclignes, static function (stdClass $fDocligne) {
+        $result['allProductsExistInWordpress'] = array_filter($fDoclignes, static function (stdClass $fDocligne): bool {
                 return is_null($fDocligne->postId);
             }) === [];
 
@@ -226,7 +226,7 @@ class WoocommerceService
     {
         $message = '';
         $syncChanges = $tasksSynchronizeOrder["syncChanges"];
-        usort($syncChanges, static function (array $a, array $b) {
+        usort($syncChanges, static function (array $a, array $b): int {
             $lastA = in_array(OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION, $a['changes'], true);
             $lastB = in_array(OrderUtils::UPDATE_WC_ORDER_ITEM_TAX_ACTION, $b['changes'], true);
             if ($lastA && !$lastB) {
@@ -587,7 +587,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         [$taxe, $rates] = $this->getWordpressTaxes();
         $result = ['total' => [], 'subtotal' => []];
         foreach ($taxes as $taxe) {
-            $rate = current(array_filter($rates, static function (stdClass $rate) use ($taxe) {
+            $rate = current(array_filter($rates, static function (stdClass $rate) use ($taxe): bool {
                 return $rate->tax_rate_name === $taxe['code'];
             }));
             if ($rate === false) {
@@ -618,13 +618,13 @@ WHERE {$wpdb->posts}.post_type = 'product'
     public function getWordpressTaxes(): array
     {
         $taxes = WC_Tax::get_tax_rate_classes();
-        $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
+        $taxe = current(array_filter($taxes, static function (stdClass $taxe): bool {
             return $taxe->slug === Sage::TOKEN;
         }));
         if ($taxe === false) {
             WC_Tax::create_tax_class(__('Egas', Sage::TOKEN), Sage::TOKEN);
             $taxes = WC_Tax::get_tax_rate_classes();
-            $taxe = current(array_filter($taxes, static function (stdClass $taxe) {
+            $taxe = current(array_filter($taxes, static function (stdClass $taxe): bool {
                 return $taxe->slug === Sage::TOKEN;
             }));
         }
@@ -652,7 +652,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
     private function getTaxesChanges(array $fTaxes, array $rates): array
     {
         $taxeChanges = [];
-        $compareFunction = function (stdClass $fTaxe, stdClass $rate) {
+        $compareFunction = function (stdClass $fTaxe, stdClass $rate): bool {
             $taTaux = (float)($fTaxe->taNp === 1 ? 0 : $fTaxe->taTaux);
             return
                 $fTaxe->taCode === $rate->tax_rate_name &&
@@ -662,7 +662,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
                 $rate->city_count === 0;
         };
         foreach ($fTaxes as $fTaxe) {
-            $rate = current(array_filter($rates, static function (stdClass $rate) use ($compareFunction, $fTaxe) {
+            $rate = current(array_filter($rates, static function (stdClass $rate) use ($compareFunction, $fTaxe): bool {
                 return $compareFunction($fTaxe, $rate);
             }));
             if ($rate === false) {
@@ -674,7 +674,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
             }
         }
         foreach ($rates as $rate) {
-            $fTaxe = current(array_filter($fTaxes, static function (stdClass $fTaxe) use ($compareFunction, $rate) {
+            $fTaxe = current(array_filter($fTaxes, static function (stdClass $fTaxe) use ($compareFunction, $rate): bool {
                 return $compareFunction($fTaxe, $rate);
             }));
             if ($fTaxe === false) {
@@ -768,7 +768,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $toAdd = array_diff($toAdd, $alreadyAddedTaxes);
         [$taxe, $rates] = $this->getWordpressTaxes();
         foreach ($toAdd as $codeToAdd) {
-            $rate = current(array_filter($rates, static function (stdClass $rate) use ($codeToAdd) {
+            $rate = current(array_filter($rates, static function (stdClass $rate) use ($codeToAdd): bool {
                 return $rate->tax_rate_name === $codeToAdd;
             }));
             $orderItemTax = new WC_Order_Item_Tax();
@@ -955,7 +955,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
             return null;
         }
         $methodId = $wcShippingRate->get_method_id();
-        $pExpedition = current(array_filter($pExpeditions, static function ($pExpedition) use ($methodId) {
+        $pExpedition = current(array_filter($pExpeditions, static function ($pExpedition) use ($methodId): bool {
             return $pExpedition->slug === $methodId;
         }));
         if ($pExpedition === false) {
@@ -973,7 +973,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         }
         $price = false;
         if (!is_null($pExpedition->arRefNavigation)) {
-            $price = current(array_filter($pExpedition->arRefNavigation->prices, static function (stdClass $price) use ($userNCatTarif, $userNCatCompta) {
+            $price = current(array_filter($pExpedition->arRefNavigation->prices, static function (stdClass $price) use ($userNCatTarif, $userNCatCompta): bool {
                 return $price->nCatTarif->cbIndice === $userNCatTarif && $price->nCatCompta->cbIndice === $userNCatCompta;
             }));
         }
@@ -1113,7 +1113,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         }
         $fDocentete = null;
         if (!empty($extendedFDocentetes)) {
-            $fDocentete = array_values(array_filter($extendedFDocentetes, function ($fDocentete) use ($doPiece, $doType) {
+            $fDocentete = array_values(array_filter($extendedFDocentetes, function ($fDocentete) use ($doPiece, $doType): bool {
                 return $fDocentete->doPiece === $doPiece && $fDocentete->doType === (int)$doType;
             }));
             if (!empty($fDocentete)) {
@@ -1218,7 +1218,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         if (count($prices) === 0) {
             return null;
         }
-        usort($prices, static function (StdClass $a, StdClass $b) {
+        usort($prices, static function (StdClass $a, StdClass $b): int {
             return $b->priceTtc <=> $a->priceTtc;
         });
         return $prices[0];
