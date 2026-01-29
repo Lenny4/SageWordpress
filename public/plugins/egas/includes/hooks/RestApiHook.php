@@ -78,9 +78,7 @@ class RestApiHook
                     // todo return error message
                     return new WP_REST_Response(null, Response::HTTP_INTERNAL_SERVER_ERROR);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/search/sage-entity-menu/(?P<resourceName>[A-Za-z0-9]+)', [
                 'methods' => 'GET',
@@ -100,20 +98,14 @@ class RestApiHook
                     }
                     return new WP_REST_Response($data, Response::HTTP_SERVICE_UNAVAILABLE);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/farticles/(?P<arRef>([^&]*))/available', args: [ // https://stackoverflow.com/a/10126995/6824121
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request): WP_REST_Response {
-                    return new WP_REST_Response([
-                        'availableArRef' => GraphqlService::getInstance()->getAvailableArRef(arRef: $request['arRef']),
-                    ], Response::HTTP_OK);
-                },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'callback' => static fn(WP_REST_Request $request): WP_REST_Response => new WP_REST_Response([
+                    'availableArRef' => GraphqlService::getInstance()->getAvailableArRef(arRef: $request['arRef']),
+                ], Response::HTTP_OK),
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/sync', [
                 'methods' => 'GET',
@@ -127,9 +119,7 @@ class RestApiHook
                         'html' => WoocommerceController::getMetaboxFDocentete($order, message: $message),
                     ], Response::HTTP_OK);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/farticles/(?P<arRef>([^&]*))/import', args: [ // https://stackoverflow.com/a/10126995/6824121
                 'methods' => 'GET',
@@ -166,9 +156,7 @@ class RestApiHook
                         )
                     ], is_int($response) ? $response : $response['response']['code']);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+)/(?P<doType>\d+)/import', args: [
                 'methods' => 'GET',
@@ -183,9 +171,7 @@ class RestApiHook
                         'message' => $message,
                     ], is_int($response) ? $response : Response::HTTP_OK);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/fdocentetes/(?P<doPiece>[A-Za-z0-9]+$)', [
                 'methods' => 'GET',
@@ -198,7 +184,7 @@ class RestApiHook
                         $extended = true;
                     }
                     $fDocentetes = GraphqlService::getInstance()->getFDocentetes(
-                        strtoupper(trim($request['doPiece'])),
+                        strtoupper(trim((string) $request['doPiece'])),
                         doTypes: FDocenteteUtils::DO_TYPE_MAPPABLE,
                         doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
                         doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
@@ -221,9 +207,7 @@ class RestApiHook
                     }
                     return new WP_REST_Response($fDocentetes, Response::HTTP_OK);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/desynchronize', [
                 'methods' => 'GET',
@@ -235,9 +219,7 @@ class RestApiHook
                         'html' => WoocommerceController::getMetaboxFDocentete($order)
                     ], Response::HTTP_OK);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/fdocentete', [
                 'methods' => 'POST',
@@ -251,9 +233,7 @@ class RestApiHook
                         'html' => WoocommerceController::getMetaboxFDocentete($order)
                     ], Response::HTTP_OK);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/deactivate-shipping-zones', [
                 'methods' => 'GET',
@@ -269,9 +249,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     wp_redirect($redirect);
                     exit();
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/add-website-sage-api', [
                 'methods' => 'GET',
@@ -282,18 +260,12 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                     }
                     return new WP_REST_Response(null, Response::HTTP_OK);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/healthz', [
                 'methods' => 'GET',
-                'callback' => static function (): WP_REST_Response {
-                    return new WP_REST_Response(null, Response::HTTP_OK);
-                },
-                'permission_callback' => static function (): true {
-                    return true;
-                },
+                'callback' => static fn(): WP_REST_Response => new WP_REST_Response(null, Response::HTTP_OK),
+                'permission_callback' => static fn(): true => true,
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/meta-box-order', [
                 'methods' => 'GET',
@@ -308,9 +280,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                         'itemHtml' => $itemHtml
                     ], Response::HTTP_OK);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/user/(?P<ctNum>([^&]*))', [
                 'methods' => 'GET',
@@ -331,9 +301,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                         'user' => $user,
                     ], Response::HTTP_OK);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/import/(?P<entityName>[A-Za-z0-9]+)/(?P<identifier>.+)', [
                 'methods' => 'GET',
@@ -344,9 +312,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                         'id' => $postId,
                     ], Response::HTTP_OK);
                 },
-                'permission_callback' => static function (WP_REST_Request $request) {
-                    return current_user_can('manage_options');
-                },
+                'permission_callback' => static fn(WP_REST_Request $request) => current_user_can('manage_options'),
             ]);
             $this->expose_all_user_meta_in_rest(); // must be call after all register_rest_route
         });
@@ -357,7 +323,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         $sage = Sage::getInstance();
         $plugin_data = get_plugin_data($sage->file);
         $version = $plugin_data['Version'];
-        $cache_key = Sage::TOKEN . '_all_user_meta_keys_' . md5($version);
+        $cache_key = Sage::TOKEN . '_all_user_meta_keys_' . md5((string) $version);
         $meta_keys = get_transient($cache_key);
         if (empty($meta_keys)) {
             global $wpdb;

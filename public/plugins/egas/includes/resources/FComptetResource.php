@@ -40,59 +40,57 @@ class FComptetResource extends Resource
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FCOMPTETS;
-        $this->options = function (): array {
-            return [
-                [
-                    'id' => 'sage_create_new_' . self::ENTITY_NAME,
-                    'label' => __("Créer le compte dans Sage.", Sage::TOKEN),
-                    'description' => __("Créer le compte dans Sage lorsqu'un nouveau utilisateur Wordpress est crée.", Sage::TOKEN),
-                    'type' => 'checkbox',
-                    'default' => 'off',
-                ],
-                [
-                    'id' => 'sage_create_old_' . self::ENTITY_NAME,
-                    'label' => __("Importe les anciens utilisateurs.", Sage::TOKEN),
-                    'description' => __("Importe les anciens utilisateurs Woocommerce dans Sage.", Sage::TOKEN),
-                    'type' => 'checkbox',
-                    'default' => 'off',
-                ],
-                [
-                    'id' => 'sage_update_' . self::ENTITY_NAME,
-                    'label' => __("Met à jour le compte Sage.", Sage::TOKEN),
-                    'description' => __("Met à jour le compte Sage lorsque l'utilisateur WooCommerce qui lui est lié est modifié.", Sage::TOKEN),
-                    'type' => 'checkbox',
-                    'default' => 'off',
-                ],
-                [
-                    'id' => 'website_create_new_' . self::ENTITY_NAME,
-                    'label' => __("Créer l'utilisateur dans Woocommerce.", Sage::TOKEN),
-                    'description' => __("Créer l'utilisateur dans Woocommerce lorsqu'un nouveau compte Sage est crée.", Sage::TOKEN),
-                    'type' => 'resource',
-                    'default' => '',
-                ],
-                [
-                    'id' => 'website_create_old_' . self::ENTITY_NAME,
-                    'label' => __("Importe les anciens comptes Sage.", Sage::TOKEN),
-                    'description' => __("Importe les anciens comptes Sage dans Woocommerce.", Sage::TOKEN),
-                    'type' => 'resource',
-                    'default' => '',
-                ],
-                [
-                    'id' => 'website_update_' . self::ENTITY_NAME,
-                    'label' => __("Met à jour l'utilisateur Woocommerce.", Sage::TOKEN),
-                    'description' => __("Met à jour l'utilisateur Woocommerce lorsque le compte Sage qui lui est lié est modifié.", Sage::TOKEN),
-                    'type' => 'checkbox',
-                    'default' => 'off',
-                ],
-                [
-                    'id' => 'mail_website_create_new_' . self::ENTITY_NAME,
-                    'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', self::ENTITY_NAME),
-                    'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", Sage::TOKEN),
-                    'type' => 'checkbox',
-                    'default' => 'off',
-                ],
-            ];
-        };
+        $this->options = fn(): array => [
+            [
+                'id' => 'sage_create_new_' . self::ENTITY_NAME,
+                'label' => __("Créer le compte dans Sage.", Sage::TOKEN),
+                'description' => __("Créer le compte dans Sage lorsqu'un nouveau utilisateur Wordpress est crée.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+            [
+                'id' => 'sage_create_old_' . self::ENTITY_NAME,
+                'label' => __("Importe les anciens utilisateurs.", Sage::TOKEN),
+                'description' => __("Importe les anciens utilisateurs Woocommerce dans Sage.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+            [
+                'id' => 'sage_update_' . self::ENTITY_NAME,
+                'label' => __("Met à jour le compte Sage.", Sage::TOKEN),
+                'description' => __("Met à jour le compte Sage lorsque l'utilisateur WooCommerce qui lui est lié est modifié.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+            [
+                'id' => 'website_create_new_' . self::ENTITY_NAME,
+                'label' => __("Créer l'utilisateur dans Woocommerce.", Sage::TOKEN),
+                'description' => __("Créer l'utilisateur dans Woocommerce lorsqu'un nouveau compte Sage est crée.", Sage::TOKEN),
+                'type' => 'resource',
+                'default' => '',
+            ],
+            [
+                'id' => 'website_create_old_' . self::ENTITY_NAME,
+                'label' => __("Importe les anciens comptes Sage.", Sage::TOKEN),
+                'description' => __("Importe les anciens comptes Sage dans Woocommerce.", Sage::TOKEN),
+                'type' => 'resource',
+                'default' => '',
+            ],
+            [
+                'id' => 'website_update_' . self::ENTITY_NAME,
+                'label' => __("Met à jour l'utilisateur Woocommerce.", Sage::TOKEN),
+                'description' => __("Met à jour l'utilisateur Woocommerce lorsque le compte Sage qui lui est lié est modifié.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+            [
+                'id' => 'mail_website_create_new_' . self::ENTITY_NAME,
+                'label' => __('Envoyer automatiquement le mail pour définir le mot de passe', self::ENTITY_NAME),
+                'description' => __("Lorsqu'un compte Wordpress est créé à partir d'un compte Sage, un mail pour définir le mot de passe du compte Wordpress est automatiquement envoyé à l'utilisateur.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+        ];
         $this->metadata = function (?stdClass $obj = null): array {
             $result = [
                 ...$this->getMandatoryMetadata(),
@@ -108,12 +106,8 @@ class FComptetResource extends Resource
             }
             return SageService::getInstance()->get_user_meta_single($userId);
         };
-        $this->sageEntity = function (?string $ctNum): StdClass|null {
-            return GraphqlService::getInstance()->getFComptet($ctNum);
-        };
-        $this->importFromSage = function (?string $ctNum, stdClass|string|null $fComptet = null, $showSuccessMessage = true): array|string {
-            return SageService::getInstance()->importFComptetFromSage($ctNum, $fComptet, $showSuccessMessage);
-        };
+        $this->sageEntity = fn(?string $ctNum): StdClass|null => GraphqlService::getInstance()->getFComptet($ctNum);
+        $this->importFromSage = fn(?string $ctNum, stdClass|string|null $fComptet = null, $showSuccessMessage = true): array|string => SageService::getInstance()->importFComptetFromSage($ctNum, $fComptet, $showSuccessMessage);
         $this->metaKeyIdentifier = self::META_KEY;
         $this->table = $wpdb->users;
         $this->metaTable = $wpdb->usermeta;
@@ -124,17 +118,13 @@ class FComptetResource extends Resource
                 field: 'ctType',
                 value: TiersTypeEnum::TiersTypeClient->value,
                 condition: 'eq',
-                message: function (array $fComptet): string {
-                    return __("Le compte n'est pas un compte client.", Sage::TOKEN) . ' [' . $fComptet["ctNum"] . ']';
-                }),
+                message: fn(array $fComptet): string => __("Le compte n'est pas un compte client.", Sage::TOKEN) . ' [' . $fComptet["ctNum"] . ']'),
         ];
         $this->import = static function (string $identifier) {
             [$response, $responseError, $message, $userId] = SageService::getInstance()->importFComptetFromSage($identifier);
             return $userId;
         };
-        $this->selectionSet = function (): array {
-            return GraphqlService::getInstance()->_getFComptetSelectionSet();
-        };
+        $this->selectionSet = fn(): array => GraphqlService::getInstance()->_getFComptetSelectionSet();
     }
 
     public static function getInstance(): self

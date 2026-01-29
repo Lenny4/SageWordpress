@@ -108,15 +108,9 @@ class FArticleResource extends Resource
         $this->metadata = function (?stdClass $obj = null): array {
             $result = [
                 ...$this->getMandatoryMetadata(),
-                new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {
-                    return json_encode($fArticle->prices, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
-                }),
-                new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) {
-                    return json_encode(WoocommerceService::getInstance()->getMaxPrice($fArticle->prices), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
-                }),
-                new SageEntityMetadata(field: '_canEditArSuiviStock', value: static function (StdClass $fArticle) {
-                    return $fArticle->canEditArSuiviStock;
-                }),
+                new SageEntityMetadata(field: '_prices', value: static fn(StdClass $fArticle) => json_encode($fArticle->prices, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)),
+                new SageEntityMetadata(field: '_max_price', value: static fn(StdClass $fArticle) => json_encode(WoocommerceService::getInstance()->getMaxPrice($fArticle->prices), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)),
+                new SageEntityMetadata(field: '_canEditArSuiviStock', value: static fn(StdClass $fArticle) => $fArticle->canEditArSuiviStock),
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFArticleSelectionSet(), $result, $obj);
         };
@@ -129,12 +123,8 @@ class FArticleResource extends Resource
             }
             return SageService::getInstance()->get_post_meta_single($productId);
         };
-        $this->sageEntity = function (?string $arRef): StdClass|null {
-            return GraphqlService::getInstance()->getFArticle($arRef);
-        };
-        $this->importFromSage = function (?string $arRef, stdClass|string|null $fArticle = null, $showSuccessMessage = true): array|string {
-            return WoocommerceService::getInstance()->importFArticleFromSage($arRef, showSuccessMessage: $showSuccessMessage);
-        };
+        $this->sageEntity = fn(?string $arRef): StdClass|null => GraphqlService::getInstance()->getFArticle($arRef);
+        $this->importFromSage = fn(?string $arRef, stdClass|string|null $fArticle = null, $showSuccessMessage = true): array|string => WoocommerceService::getInstance()->importFArticleFromSage($arRef, showSuccessMessage: $showSuccessMessage);
         $this->metaKeyIdentifier = self::META_KEY;
         $this->table = $wpdb->posts;
         $this->metaTable = $wpdb->postmeta;
@@ -147,17 +137,13 @@ class FArticleResource extends Resource
                     ArticleTypeEnum::ArticleTypeStandard->value,
                 ],
                 condition: 'in',
-                message: function (array $fArticle): string {
-                    return __("Seuls les articles standard peuvent être importés.", Sage::TOKEN) . ' [' . $fArticle["arRef"] . ']';
-                }
+                message: fn(array $fArticle): string => __("Seuls les articles standard peuvent être importés.", Sage::TOKEN) . ' [' . $fArticle["arRef"] . ']'
             ),
             new ImportConditionDto(
                 field: 'arNomencl',
                 value: NomenclatureTypeEnum::NomenclatureTypeAucun->value,
                 condition: 'eq',
-                message: function (array $fArticle): string {
-                    return __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", Sage::TOKEN) . ' [' . $fArticle["arRef"] . ']';
-                }
+                message: fn(array $fArticle): string => __("Seuls les articles ayant une nomenclature Aucun peuvent être importés.", Sage::TOKEN) . ' [' . $fArticle["arRef"] . ']'
             ),
         ];
         $this->import = static function (string $identifier) {
@@ -166,9 +152,7 @@ class FArticleResource extends Resource
             );
             return $postId;
         };
-        $this->selectionSet = function (): array {
-            return GraphqlService::getInstance()->_getFArticleSelectionSet();
-        };
+        $this->selectionSet = fn(): array => GraphqlService::getInstance()->_getFArticleSelectionSet();
     }
 
     public static function getDefaultResourceFilter(): array

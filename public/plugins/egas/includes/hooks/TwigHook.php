@@ -36,26 +36,14 @@ class TwigHook
         $twig = TwigService::getInstance()->twig;
         $twig->addFunction(new TwigFunction('getTranslations', static fn(): array => SageTranslationUtils::getTranslations()));
         $twig->addFunction(new TwigFunction('get_locale', static fn(): string => substr(get_locale(), 0, 2)));
-        $twig->addFunction(new TwigFunction('getAllFilterType', static function (): array {
-            return SageService::getInstance()->getAllFilterType();
-        }));
+        $twig->addFunction(new TwigFunction('getAllFilterType', static fn(): array => SageService::getInstance()->getAllFilterType()));
         $twig->addFunction(new TwigFunction('getPaginationRange', static fn(): array => Sage::$paginationRange));
         $twig->addFunction(new TwigFunction('get_site_url', static fn() => get_site_url()));
         $twig->addFunction(new TwigFunction('get_option', static fn(string $option): string => get_option($option)));
-        $twig->addFunction(new TwigFunction('get_woocommerce_currency_symbol', static function (): string {
-            return html_entity_decode(get_woocommerce_currency_symbol());
-        }));
-        $twig->addFunction(new TwigFunction('get_woocommerce_currency', static function (): string {
-            return get_woocommerce_currency();
-        }));
-        $twig->addFunction(new TwigFunction('order_get_currency', static function (): string {
-            return html_entity_decode(get_woocommerce_currency_symbol());
-        }));
-        $twig->addFunction(new TwigFunction('show_taxes_change', static function (array $taxes): string {
-            return implode(' | ', array_map(static function (array $taxe): string {
-                return $taxe['code'] . ' => ' . $taxe['amount'];
-            }, $taxes));
-        }));
+        $twig->addFunction(new TwigFunction('get_woocommerce_currency_symbol', static fn(): string => html_entity_decode(get_woocommerce_currency_symbol())));
+        $twig->addFunction(new TwigFunction('get_woocommerce_currency', static fn(): string => get_woocommerce_currency()));
+        $twig->addFunction(new TwigFunction('order_get_currency', static fn(): string => html_entity_decode(get_woocommerce_currency_symbol())));
+        $twig->addFunction(new TwigFunction('show_taxes_change', static fn(array $taxes): string => implode(' | ', array_map(static fn(array $taxe): string => $taxe['code'] . ' => ' . $taxe['amount'], $taxes))));
         $twig->addFunction(new TwigFunction('getDoTypes', static function (array $fDoclignes): array {
             $result = [];
             foreach ($fDoclignes as $fDocligne) {
@@ -180,36 +168,24 @@ class TwigHook
 
             return $allTranslations;
         }));
-        $twig->addFunction(new TwigFunction('get_admin_url', static function (): string {
-            return get_admin_url();
-        }));
-        $twig->addFunction(new TwigFunction('getDefaultFilters', static function (): array {
-            return array_map(static function (Resource $resource): array {
-                $entityName = $resource->getEntityName();
-                return [
-                    'entityName' => Sage::TOKEN . '_' . $entityName,
-                    'value' => get_option(Sage::TOKEN . '_default_filter_' . $entityName, null),
-                ];
-            }, SageService::getInstance()->getResources());
-        }));
-        $twig->addFunction(new TwigFunction('getFDoclignes', static function (array|null|string $fDocentetes): array {
-            return SageService::getInstance()->getFDoclignes($fDocentetes);
-        }));
-        $twig->addFunction(new TwigFunction('getMainFDocenteteOfExtendedFDocentetes', static function (WC_Order $order, array|null|string $fDocentetes): stdClass|null|string {
-            return SageService::getInstance()->getMainFDocenteteOfExtendedFDocentetes($order, $fDocentetes);
-        }));
+        $twig->addFunction(new TwigFunction('get_admin_url', static fn(): string => get_admin_url()));
+        $twig->addFunction(new TwigFunction('getDefaultFilters', static fn(): array => array_map(static function (Resource $resource): array {
+            $entityName = $resource->getEntityName();
+            return [
+                'entityName' => Sage::TOKEN . '_' . $entityName,
+                'value' => get_option(Sage::TOKEN . '_default_filter_' . $entityName, null),
+            ];
+        }, SageService::getInstance()->getResources())));
+        $twig->addFunction(new TwigFunction('getFDoclignes', static fn(array|null|string $fDocentetes): array => SageService::getInstance()->getFDoclignes($fDocentetes)));
+        $twig->addFunction(new TwigFunction('getMainFDocenteteOfExtendedFDocentetes', static fn(WC_Order $order, array|null|string $fDocentetes): stdClass|null|string => SageService::getInstance()->getMainFDocenteteOfExtendedFDocentetes($order, $fDocentetes)));
         $twig->addFunction(new TwigFunction('getFDocentete', static function (array $fDocentetes, string $doPiece, int $doType): stdClass|null|string {
-            $fDocentete = current(array_filter($fDocentetes, static function (stdClass $fDocentete) use ($doPiece, $doType): bool {
-                return $fDocentete->doPiece === $doPiece && $fDocentete->doType === $doType;
-            }));
+            $fDocentete = current(array_filter($fDocentetes, static fn(stdClass $fDocentete): bool => $fDocentete->doPiece === $doPiece && $fDocentete->doType === $doType));
             if ($fDocentete !== false) {
                 return $fDocentete;
             }
             return null;
         }));
-        $twig->addFunction(new TwigFunction('getToken', static function (): string {
-            return Sage::TOKEN;
-        }));
+        $twig->addFunction(new TwigFunction('getToken', static fn(): string => Sage::TOKEN));
     }
 
     private function registerFilter(): void

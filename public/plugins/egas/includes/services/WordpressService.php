@@ -216,9 +216,7 @@ class WordpressService
                 $rate->city_count === 0;
         };
         foreach ($fTaxes as $fTaxe) {
-            $rate = current(array_filter($rates, static function (stdClass $rate) use ($compareFunction, $fTaxe): bool {
-                return $compareFunction($fTaxe, $rate);
-            }));
+            $rate = current(array_filter($rates, static fn(stdClass $rate): bool => $compareFunction($fTaxe, $rate)));
             if ($rate === false) {
                 $taxeChanges[] = [
                     'old' => null,
@@ -228,9 +226,7 @@ class WordpressService
             }
         }
         foreach ($rates as $rate) {
-            $fTaxe = current(array_filter($fTaxes, static function (stdClass $fTaxe) use ($compareFunction, $rate): bool {
-                return $compareFunction($fTaxe, $rate);
-            }));
+            $fTaxe = current(array_filter($fTaxes, static fn(stdClass $fTaxe): bool => $compareFunction($fTaxe, $rate)));
             if ($fTaxe === false) {
                 $taxeChanges[] = [
                     'old' => $rate,
@@ -247,13 +243,9 @@ class WordpressService
         $graphqlService = GraphqlService::getInstance();
         // woocommerce/includes/class-wc-ajax.php : shipping_zone_add_method
         $pExpeditions = $graphqlService->getPExpeditions();
-        $newSlugs = array_map(static function (stdClass $pExpedition) {
-            return $pExpedition->slug;
-        }, $pExpeditions);
+        $newSlugs = array_map(static fn(stdClass $pExpedition) => $pExpedition->slug, $pExpeditions);
         $zones = WC_Shipping_Zones::get_zones();
-        $zoneIds = [0, ...array_map(static function (array $zone) {
-            return $zone['id'];
-        }, $zones)];
+        $zoneIds = [0, ...array_map(static fn(array $zone) => $zone['id'], $zones)];
         foreach ($zoneIds as $zoneId) {
             $zone = new WC_Shipping_Zone($zoneId);
             $oldSlugs = [];
@@ -304,9 +296,7 @@ class WordpressService
             $resource = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME);
             $metadataToKeep = [
                 FArticleResource::META_KEY,
-                ...array_map(function (SageEntityMetadata $metadata): string {
-                    return '_' . Sage::TOKEN . $metadata->getField();
-                }, $resource->getMetadata()()),
+                ...array_map(fn(SageEntityMetadata $metadata): string => '_' . Sage::TOKEN . $metadata->getField(), $resource->getMetadata()()),
             ];
             $meta = get_post_meta($postId);
             foreach ($meta as $key => $values) {
@@ -359,7 +349,7 @@ class WordpressService
                     }
                     $user = get_users([
                         'meta_key' => FComptetResource::META_KEY,
-                        'meta_value' => strtoupper($_POST[FComptetResource::META_KEY])
+                        'meta_value' => strtoupper((string) $_POST[FComptetResource::META_KEY])
                     ]);
                     if (!empty($user) && $user[0]->ID !== $userId) {
                         return;
@@ -374,7 +364,7 @@ class WordpressService
         }
         foreach ($_POST as $key => $value) {
             if (str_starts_with($key, '_' . Sage::TOKEN)) {
-                $value = trim(preg_replace('/\s\s+/', ' ', $value)); // supprimer les espaces supérieur à 2
+                $value = trim(preg_replace('/\s\s+/', ' ', (string) $value)); // supprimer les espaces supérieur à 2
                 if ($key === FComptetResource::META_KEY) {
                     $value = strtoupper($value);
                 }

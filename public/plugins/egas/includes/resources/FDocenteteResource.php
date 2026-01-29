@@ -46,52 +46,50 @@ class FDocenteteResource extends Resource
         ];
         $this->filterType = self::FILTER_TYPE;
         $this->transDomain = SageTranslationUtils::TRANS_FDOCENTETES;
-        $this->options = function (): array {
-            return [
-                [
-                    'id' => 'sage_create_new_' . self::ENTITY_NAME,
-                    'label' => __("Créer le document de vente dans Sage.", Sage::TOKEN),
-                    'description' => __("Créer le document de vente dans Sage lorsqu'une nouveaulle commande Wordpress est crée.", Sage::TOKEN),
-                    'type' => 'checkbox',
-                    'default' => 'off',
-                ],
-                [
-                    'id' => 'sage_create_old_' . self::ENTITY_NAME,
-                    'label' => __('Importe les anciennes commandes.', Sage::TOKEN),
-                    'description' => __("Importe les anciennes commandes Woocommerce dans Sage.", Sage::TOKEN),
-                    'type' => 'checkbox',
-                    'default' => 'off',
-                ],
-                [
-                    'id' => 'sage_update_' . self::ENTITY_NAME,
-                    'label' => __("Met à jour le document de vente Sage.", Sage::TOKEN),
-                    'description' => __("Met à jour le document de vente Sage lorsque la commande WooCommerce qui lui est lié est modifiée.", Sage::TOKEN),
-                    'type' => 'checkbox',
-                    'default' => 'off',
-                ],
-                [
-                    'id' => 'website_create_new_' . self::ENTITY_NAME,
-                    'label' => __("Créer la commande dans Woocommerce.", Sage::TOKEN),
-                    'description' => __("Créer la commande dans Woocommerce lorsqu'un nouveau document de vente Sage est crée.", Sage::TOKEN),
-                    'type' => 'resource',
-                    'default' => '',
-                ],
-                [
-                    'id' => 'website_create_old_' . self::ENTITY_NAME,
-                    'label' => __("Importe les anciens documents de vente Sage.", Sage::TOKEN),
-                    'description' => __("Importe les anciens documents de vente Sage dans WooCommerce.", Sage::TOKEN),
-                    'type' => 'resource',
-                    'default' => '',
-                ],
-                [
-                    'id' => 'website_update_' . self::ENTITY_NAME,
-                    'label' => __("Met à jour la commande Woocommerce.", Sage::TOKEN),
-                    'description' => __("Met à jour la commande Woocommerce lorsque le document de vente Sage qui lui est lié est modifié.", Sage::TOKEN),
-                    'type' => 'checkbox',
-                    'default' => 'off',
-                ],
-            ];
-        };
+        $this->options = fn(): array => [
+            [
+                'id' => 'sage_create_new_' . self::ENTITY_NAME,
+                'label' => __("Créer le document de vente dans Sage.", Sage::TOKEN),
+                'description' => __("Créer le document de vente dans Sage lorsqu'une nouveaulle commande Wordpress est crée.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+            [
+                'id' => 'sage_create_old_' . self::ENTITY_NAME,
+                'label' => __('Importe les anciennes commandes.', Sage::TOKEN),
+                'description' => __("Importe les anciennes commandes Woocommerce dans Sage.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+            [
+                'id' => 'sage_update_' . self::ENTITY_NAME,
+                'label' => __("Met à jour le document de vente Sage.", Sage::TOKEN),
+                'description' => __("Met à jour le document de vente Sage lorsque la commande WooCommerce qui lui est lié est modifiée.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+            [
+                'id' => 'website_create_new_' . self::ENTITY_NAME,
+                'label' => __("Créer la commande dans Woocommerce.", Sage::TOKEN),
+                'description' => __("Créer la commande dans Woocommerce lorsqu'un nouveau document de vente Sage est crée.", Sage::TOKEN),
+                'type' => 'resource',
+                'default' => '',
+            ],
+            [
+                'id' => 'website_create_old_' . self::ENTITY_NAME,
+                'label' => __("Importe les anciens documents de vente Sage.", Sage::TOKEN),
+                'description' => __("Importe les anciens documents de vente Sage dans WooCommerce.", Sage::TOKEN),
+                'type' => 'resource',
+                'default' => '',
+            ],
+            [
+                'id' => 'website_update_' . self::ENTITY_NAME,
+                'label' => __("Met à jour la commande Woocommerce.", Sage::TOKEN),
+                'description' => __("Met à jour la commande Woocommerce lorsque le document de vente Sage qui lui est lié est modifié.", Sage::TOKEN),
+                'type' => 'checkbox',
+                'default' => 'off',
+            ],
+        ];
         $this->metadata = function (?stdClass $obj = null): array {
             $result = [
                 ...$this->getMandatoryMetadata(),
@@ -108,12 +106,8 @@ class FDocenteteResource extends Resource
             }
             return $order->get_meta_data();
         };
-        $this->sageEntity = function (?string $doPiece, ?int $doType): StdClass|null {
-            return GraphqlService::getInstance()->getFDocentetes($doPiece, [$doType]);
-        };
-        $this->importFromSage = function (?string $identifier, stdClass|string|null $fDocentete = null, $showSuccessMessage = true): array|string {
-            return WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, showSuccessMessage: $showSuccessMessage);
-        };
+        $this->sageEntity = fn(?string $doPiece, ?int $doType): StdClass|null => GraphqlService::getInstance()->getFDocentetes($doPiece, [$doType]);
+        $this->importFromSage = fn(?string $identifier, stdClass|string|null $fDocentete = null, $showSuccessMessage = true): array|string => WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, showSuccessMessage: $showSuccessMessage);
         $this->metaKeyIdentifier = self::META_KEY;
         $this->table = $wpdb->posts;
         $this->metaTable = $wpdb->prefix . 'wc_orders_meta';
@@ -124,28 +118,20 @@ class FDocenteteResource extends Resource
                 field: 'doDomaine',
                 value: DomaineTypeEnum::DomaineTypeVente->value,
                 condition: 'eq',
-                message: function (array $fDocentete): string {
-                    return __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN) . ' [' . $fDocentete["doPiece"] . '][' . $fDocentete["doType"] . ']';
-                }),
+                message: fn(array $fDocentete): string => __("Seuls les documents de ventes peuvent être importés.", Sage::TOKEN) . ' [' . $fDocentete["doPiece"] . '][' . $fDocentete["doType"] . ']'),
             new ImportConditionDto(
                 field: 'doType',
                 value: FDocenteteUtils::DO_TYPE_MAPPABLE,
                 condition: 'in',
-                message: function (array $fDocentete): string {
-                    return __("Seuls les documents ayant ces doType peuvent être importés.", Sage::TOKEN) . ' [' . implode(',', FDocenteteUtils::DO_TYPE_MAPPABLE) . '][' . $fDocentete["doPiece"] . '][' . $fDocentete["doType"] . ']';
-                }),
+                message: fn(array $fDocentete): string => __("Seuls les documents ayant ces doType peuvent être importés.", Sage::TOKEN) . ' [' . implode(',', FDocenteteUtils::DO_TYPE_MAPPABLE) . '][' . $fDocentete["doPiece"] . '][' . $fDocentete["doType"] . ']'),
         ];
         $this->import = static function (string $identifier) {
             $data = json_decode(stripslashes($identifier), false, 512, JSON_THROW_ON_ERROR);
             [$result, $errorMessage, $message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($data->doPiece, $data->doType);
             return $order->get_id();
         };
-        $this->selectionSet = function (): array {
-            return GraphqlService::getInstance()->_getFDocenteteSelectionSet();
-        };
-        $this->getIdentifier = static function (array $fDocentete) {
-            return json_encode(['doPiece' => $fDocentete["doPiece"], 'doType' => $fDocentete["doType"]], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
-        };
+        $this->selectionSet = fn(): array => GraphqlService::getInstance()->_getFDocenteteSelectionSet();
+        $this->getIdentifier = static fn(array $fDocentete) => json_encode(['doPiece' => $fDocentete["doPiece"], 'doType' => $fDocentete["doType"]], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
     }
 
     public static function getInstance(): self

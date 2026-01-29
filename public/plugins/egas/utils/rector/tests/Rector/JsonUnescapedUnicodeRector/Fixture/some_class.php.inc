@@ -2,7 +2,15 @@
 
 namespace Rector\Tests\TypeDeclaration\Rector\JsonUnescapedUnicodeRector\Fixture;
 
-// @todo fill code before
+$content = [
+  "nom" => "Alice",
+  "age" => 30,
+  "ville" => "Paris",
+  "hobbies" => ["lecture", "voyage", "cinema"]
+];
+$json = json_encode($content);
+json_encode($content);
+json_decode($json);
 
 ?>
 -----
@@ -10,6 +18,14 @@ namespace Rector\Tests\TypeDeclaration\Rector\JsonUnescapedUnicodeRector\Fixture
 
 namespace Rector\Tests\TypeDeclaration\Rector\JsonUnescapedUnicodeRector\Fixture;
 
-// @todo fill code after
+$content = [
+  "nom" => "Alice",
+  "age" => 30,
+  "ville" => "Paris",
+  "hobbies" => ["lecture", "voyage", "cinema"]
+];
+$json = json_encode($content);
+json_encode($content, JSON_UNESCAPED_UNICODE);
+json_decode($json, null, 512, JSON_UNESCAPED_UNICODE);
 
 ?>

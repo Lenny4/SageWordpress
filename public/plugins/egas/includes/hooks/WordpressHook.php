@@ -64,8 +64,8 @@ class WordpressHook
             }
             // like register_order_origin_column in woocommerce/src/Internal/Orders/OrderAttributionController.php
             // HPOS and non-HPOS use different hooks.
-            add_filter("manage_{$screen_id}_columns", [WoocommerceController::class, 'addColumn'], 11);
-            add_filter("manage_edit-{$screen_id}_columns", [WoocommerceController::class, 'addColumn'], 11);
+            add_filter("manage_{$screen_id}_columns", WoocommerceController::addColumn(...), 11);
+            add_filter("manage_edit-{$screen_id}_columns", WoocommerceController::addColumn(...), 11);
             add_action("manage_{$screen_id}_custom_column", static function (string $column_name, WC_Order $order): void {
                 echo WoocommerceController::displayColumn($column_name, $order);
             }, 10, 2);
@@ -210,9 +210,7 @@ LIMIT 1
             $columns[Sage::TOKEN] = __("Sage", Sage::TOKEN);
             return $columns;
         });
-        add_filter('manage_users_custom_column', static function (string $val, string $columnName, int $userId): string {
-            return WordpressService::getInstance()->getUserWordpressIdForSage($userId) ?? '';
-        }, accepted_args: 3);
+        add_filter('manage_users_custom_column', static fn(string $val, string $columnName, int $userId): string => WordpressService::getInstance()->getUserWordpressIdForSage($userId) ?? '', accepted_args: 3);
         // endregion
         // endregion
     }

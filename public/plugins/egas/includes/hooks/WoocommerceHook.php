@@ -57,9 +57,7 @@ class WoocommerceHook
         }, accepted_args: 2);
         // endregion
 
-        add_filter('woocommerce_shipping_rate_cost', static function (string $cost, WC_Shipping_Rate $wcShippingRate): string {
-            return (string)(WoocommerceService::getInstance()->getShippingRateCosts(WC()->cart, $wcShippingRate) ?? $cost);
-        }, accepted_args: 2);
+        add_filter('woocommerce_shipping_rate_cost', static fn(string $cost, WC_Shipping_Rate $wcShippingRate): string => (string)(WoocommerceService::getInstance()->getShippingRateCosts(WC()->cart, $wcShippingRate) ?? $cost), accepted_args: 2);
         add_filter('woocommerce_shipping_rate_label', static function (string $label, WC_Shipping_Rate $wcShippingRate): string {
             if (!str_starts_with($wcShippingRate->get_method_id(), Sage::TOKEN . '-')) {
                 return $label;
@@ -237,12 +235,8 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
 
         // region edit woocommerce price
         // https://stackoverflow.com/a/45807054/6824121
-        add_filter('woocommerce_get_price_including_tax', function ($price, $quantity, $product): float|string {
-            return WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id(), true);
-        }, 99, 3);
-        add_filter('woocommerce_get_price_excluding_tax', function ($price, $quantity, $product): float|string {
-            return WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id(), false);
-        }, 99, 3);
+        add_filter('woocommerce_get_price_including_tax', fn($price, $quantity, $product): float|string => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id(), true), 99, 3);
+        add_filter('woocommerce_get_price_excluding_tax', fn($price, $quantity, $product): float|string => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id(), false), 99, 3);
         // Simple, grouped and external products
         add_filter('woocommerce_product_get_price', fn($price, $product): float|string => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
         add_filter('woocommerce_product_get_regular_price', fn($price, $product): float|string => WoocommerceService::getInstance()->custom_price($price, $product, get_current_user_id()), 99, 2);
@@ -291,23 +285,17 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         }, 10, 2);
         // endregion
 
-        add_filter('woocommerce_order_item_display_meta_key', function (string $key): string|array {
-            return SageTranslationUtils::trans($this->trans, 'words', $key);
-        });
+        add_filter('woocommerce_order_item_display_meta_key', fn(string $key): string|array => SageTranslationUtils::trans($this->trans, 'words', $key));
         add_filter('woocommerce_order_item_display_meta_value', function (string $value, WC_Meta_Data $wcMetaData) {
             $data = $wcMetaData->get_data();
             if ($data['key'] === '_' . Sage::TOKEN . '_fLotseriesOut' && $data['value'] !== 'null') {
-                $data = json_decode($data['value'], true, 512, JSON_THROW_ON_ERROR);
+                $data = json_decode((string) $data['value'], true, 512, JSON_THROW_ON_ERROR);
                 if (is_array($data) && !empty($data)) {
                     return $data[0]['lsNoSerie'];
                 }
             }
             return $value;
         }, accepted_args: 3);
-        add_filter('woocommerce_order_item_get_formatted_meta_data', function (array $metaDatas): array {
-            return array_filter($metaDatas, function (stdClass $metaData): bool {
-                return $metaData->value !== 'null';
-            });
-        });
+        add_filter('woocommerce_order_item_get_formatted_meta_data', fn(array $metaDatas): array => array_filter($metaDatas, fn(stdClass $metaData): bool => $metaData->value !== 'null'));
     }
 }
