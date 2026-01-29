@@ -364,7 +364,7 @@ class WordpressService
         }
         foreach ($_POST as $key => $value) {
             if (str_starts_with($key, '_' . Sage::TOKEN)) {
-                $value = trim(preg_replace('/\s\s+/', ' ', (string) $value)); // supprimer les espaces supérieur à 2
+                $value = trim((string) preg_replace('/\s\s+/', ' ', (string) $value)); // supprimer les espaces supérieur à 2
                 if ($key === FComptetResource::META_KEY) {
                     $value = strtoupper($value);
                 }

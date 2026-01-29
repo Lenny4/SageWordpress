@@ -178,7 +178,7 @@ WHERE user_login LIKE %s
                     foreach ($metaData as $meta) {
                         $data = $meta->get_data();
                         if ($data['key'] === '_' . Sage::TOKEN . '_fLotseriesOut') {
-                            $old->fLotseriesOut = json_decode((string) $data['value'], true, 512, JSON_THROW_ON_ERROR);
+                            $old->fLotseriesOut = json_decode((string) $data['value'], null, 512, JSON_THROW_ON_ERROR);
                             break;
                         }
                     }
