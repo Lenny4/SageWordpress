@@ -4,9 +4,9 @@ namespace App\controllers;
 
 use App\enum\Sage\DocumentProvenanceTypeEnum;
 use App\enum\Sage\DomaineTypeEnum;
+use App\resources\FDocenteteResource;
 use App\Sage;
 use App\services\GraphqlService;
-use App\services\SageService;
 use App\services\TwigService;
 use App\services\WoocommerceService;
 use App\utils\FDocenteteUtils;
@@ -68,6 +68,9 @@ class WoocommerceController
                 $message .= $extendedFDocentetes;
             }
             $tasksSynchronizeOrder = $woocommerceService->getTasksSynchronizeOrder($order, $extendedFDocentetes);
+            if (filter_var(get_option(Sage::TOKEN . '_website_update_' . FDocenteteResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
+                $woocommerceService->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
+            }
         }
         // original WC_Meta_Box_Order_Data::output
         return TwigService::getInstance()->render('woocommerce/metaBoxes/main.html.twig', [
