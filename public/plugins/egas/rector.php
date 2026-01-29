@@ -9,5 +9,19 @@ return RectorConfig::configure()
         __DIR__ . '/includes',
     ])
     // uncomment to reach your current PHP version
-     ->withPhpSets()
-    ->withTypeCoverageLevel(0);
+     ->withPhpSets(
+         php82: true
+    )
+    ->withPreparedSets(
+        deadCode: true,
+        codeQuality: true,
+        codingStyle: true,
+        typeDeclarations: true,
+        privatization: true,
+        naming: true,
+        instanceOf: true,
+        earlyReturn: true,
+        strictBooleans: true,
+        carbon: true,
+        rectorPreset: true,
+    );

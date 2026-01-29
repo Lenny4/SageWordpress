@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\resources;
 
 use App\class\SageEntityMetadata;
@@ -13,78 +15,102 @@ abstract class Resource
      * Title displayed in left menu and settings
      */
     protected string $title;
+
     /**
      * Description displayed in the settings
      */
     protected string $description;
+
     /**
      * Field to request this entity in GraphQL
      */
     protected string $entityName;
+
     /**
      * Model of this entity in GraphQL
      */
     protected string $typeModel;
+
     protected string $defaultSortField;
+
     /**
      * Default fields selected in settings wp-admin/admin.php?page=sage_settings&tab=fDocentetes
      */
     protected array $defaultFields;
+
     /**
      * Fields that we must request even if they are not selected in the fields to show
      * these fields allow to identify this entity
      */
     protected array $mandatoryFields;
+
     /**
      * Filter type of this entity in GraphQL
      */
     protected string $filterType;
+
     protected string $transDomain;
+
     /**
      * Further options to show besides "Fields to show" and "Default per page"
      */
     protected Closure $options;
+
     /**
      * Callback which transform data of Sage entity to the metadata
      */
     protected Closure $metadata;
+
     protected Closure $bddMetadata;
+
     /**
      * Meta key which give the identifier value
      */
     protected string $metaKeyIdentifier;
+
     protected string $table;
+
     protected ?string $postType = null; // used for public function removeUpdateApi
     /**
      * Meta table to use
      */
     protected string $metaTable;
+
     /**
      * Column in the meta table to use to identify
      */
     protected string $metaColumnIdentifier;
+
     /**
      * @var ImportConditionDto[]
      */
     protected array $importCondition;
+
     protected Closure $import;
+
     protected Closure $selectionSet;
+
     protected ?Closure $postUrl = null;
+
     /**
      * Can be use if the Sage entity has multiple column as id
      */
     protected ?Closure $getIdentifier = null;
+
     private Closure $canImport;
+
     protected Closure $sageEntity;
+
     protected Closure $importFromSage;
 
     protected function __construct()
     {
-        $this->canImport = function (stdClass|array|null $entity) {
+        $this->canImport = function (stdClass|array|null $entity): array {
             $r = [];
             if (empty($entity)) {
                 return $r;
             }
+
             $entity = (array)$entity;
             foreach ($this->importCondition as $importCondition) {
                 $v = $entity[$importCondition->getField()];
@@ -92,10 +118,11 @@ abstract class Resource
                     if (!in_array($v, $importCondition->getValue())) {
                         $r[] = $importCondition->getMessage()($entity);
                     }
-                } else if ($v !== $importCondition->getValue()) {
+                } elseif ($v !== $importCondition->getValue()) {
                     $r[] = $importCondition->getMessage()($entity);
                 }
             }
+
             return $r;
         };
     }
@@ -324,7 +351,7 @@ abstract class Resource
         return [
             new SageEntityMetadata(field: '_updateApi'),
             new SageEntityMetadata(field: '_postId', showInOptions: true),
-            new SageEntityMetadata(field: '_last_update', value: static fn(StdClass $obj) => (new DateTime())->format('Y-m-d H:i:s'), showInOptions: true),
+            new SageEntityMetadata(field: '_last_update', value: static fn(StdClass $stdClass): string => (\Carbon\Carbon::now())->format('Y-m-d H:i:s'), showInOptions: true),
         ];
     }
 
