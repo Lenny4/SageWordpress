@@ -4,9 +4,9 @@ Wordpress host url: https://caddy
 Wordpress db host: 192.168.0.31
 
 rector:
-./runc php vendor/bin/rector process --debug
+./runc php vendor/bin/rector process --debug --clear-cache
 rector specific folder:
-./runc php vendor/bin/rector process includes/controllers/ --debug
+./runc php vendor/bin/rector process includes/controllers/ --debug --clear-cache
 
 On ne mets pas
 if (!defined('ABSPATH')) {
