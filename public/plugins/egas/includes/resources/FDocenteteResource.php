@@ -144,7 +144,7 @@ class FDocenteteResource extends Resource
             return GraphqlService::getInstance()->_getFDocenteteSelectionSet();
         };
         $this->getIdentifier = static function (array $fDocentete) {
-            return json_encode(['doPiece' => $fDocentete["doPiece"], 'doType' => $fDocentete["doType"]], JSON_THROW_ON_ERROR);
+            return json_encode(['doPiece' => $fDocentete["doPiece"], 'doType' => $fDocentete["doType"]], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
         };
     }
 

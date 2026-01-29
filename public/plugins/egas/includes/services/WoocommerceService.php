@@ -542,13 +542,13 @@ WHERE {$wpdb->posts}.post_type = 'product'
                     $value = $wcMetaData->get_data();
                     if ($value['key'] === $key) {
                         $found = true;
-                        $value["value"] = json_encode($fLotseriesOut);
+                        $value["value"] = json_encode($fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
                         $lineItem->set_meta_data($value);
                         break;
                     }
                 }
                 if (!$found) {
-                    $lineItem->add_meta_data($key, json_encode($fLotseriesOut), true);
+                    $lineItem->add_meta_data($key, json_encode($fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), true);
                 }
                 $lineItem->save_meta_data();
                 break;
@@ -1138,7 +1138,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $order->update_meta_data(FDocenteteResource::META_KEY, json_encode([
             'doPiece' => $fDocentete->doPiece,
             'doType' => $fDocentete->doType,
-        ], JSON_THROW_ON_ERROR));
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $order->update_meta_data('_' . Sage::TOKEN . '_doPiece', $fDocentete->doPiece);
         $order->update_meta_data('_' . Sage::TOKEN . '_doType', $fDocentete->doType);
         $order->save();

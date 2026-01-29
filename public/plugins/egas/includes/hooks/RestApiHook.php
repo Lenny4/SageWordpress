@@ -140,13 +140,13 @@ class RestApiHook
                     );
                     if ($request->get_param('json') === '1') {
                         if ($response instanceof WP_Error) {
-                            $body = json_encode($response->get_error_messages());
+                            $body = json_encode($response->get_error_messages(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
                             $code = $response->get_error_code();
                         } else if (is_null($response) || is_int($response)) {
                             return new WP_REST_Response(json_encode([
                                 'responseError' => $responseError,
                                 'message' => $message,
-                            ]), is_int($response) ? $response : Response::HTTP_INTERNAL_SERVER_ERROR);
+                            ], JSON_UNESCAPED_UNICODE), is_int($response) ? $response : Response::HTTP_INTERNAL_SERVER_ERROR);
                         } else {
                             $body = $response["body"];
                             $code = $response['response']['code'];

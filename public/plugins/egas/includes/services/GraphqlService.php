@@ -239,7 +239,7 @@ class GraphqlService
         if ($value === '') {
             return null;
         }
-        return json_encode($this->filterToGraphQlWhere(json_decode($value, true)));
+        return json_encode($this->filterToGraphQlWhere(json_decode($value, true)), JSON_UNESCAPED_UNICODE);
     }
 
     public function filterToGraphQlWhere(array $filter): stdClass
@@ -567,7 +567,7 @@ class GraphqlService
             }
         }
         if ($getFromSage) {
-            update_option($optionName, json_encode($entities, JSON_THROW_ON_ERROR));
+            update_option($optionName, json_encode($entities, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         }
         return $entities;
     }
@@ -625,7 +625,7 @@ class GraphqlService
             }
 
             if (!is_null($where)) {
-                $arguments['where'] = new RawObject(preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($where, JSON_THROW_ON_ERROR)));
+                $arguments['where'] = new RawObject(preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($where, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)));
             }
 
             $query = (new Query($entityName))
@@ -1316,7 +1316,7 @@ class GraphqlService
                 return json_encode([
                     'doPiece' => $fDocentete->doPiece,
                     'doType' => $fDocentete->doType,
-                ], JSON_THROW_ON_ERROR);
+                ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
             }, $fDocentetes);
             global $wpdb;
             $r = $wpdb->get_results(
@@ -2075,7 +2075,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $data = [];
         if ($getData) {
             $data = json_decode(json_encode($this->searchEntities($entityName, $queryParams, $showFields)
-                , JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
+                , JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), true, 512, JSON_THROW_ON_ERROR);
             $data = SageService::getInstance()->populateMetaDatas($data, $showFields, $resource);
         }
         $hideFields = array_map(static function (string $hideField) {

@@ -47,7 +47,7 @@ class FArticleResource extends Resource
             // todo
 //            $websiteApi = SageService::getInstance()->getWebsiteOption();
             $initFilter = self::getDefaultResourceFilter();
-            $initFilterJson = json_encode($initFilter);
+            $initFilterJson = json_encode($initFilter, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
             return [
                 [
                     'id' => 'sage_create_new_' . self::ENTITY_NAME,
@@ -92,7 +92,7 @@ class FArticleResource extends Resource
                                 'value' => '2000-01-01'
                             ]
                         ]
-                    ]),
+                    ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
                     'default' => '',
                 ],
                 [
@@ -109,10 +109,10 @@ class FArticleResource extends Resource
             $result = [
                 ...$this->getMandatoryMetadata(),
                 new SageEntityMetadata(field: '_prices', value: static function (StdClass $fArticle) {
-                    return json_encode($fArticle->prices, JSON_THROW_ON_ERROR);
+                    return json_encode($fArticle->prices, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
                 }),
                 new SageEntityMetadata(field: '_max_price', value: static function (StdClass $fArticle) {
-                    return json_encode(WoocommerceService::getInstance()->getMaxPrice($fArticle->prices), JSON_THROW_ON_ERROR);
+                    return json_encode(WoocommerceService::getInstance()->getMaxPrice($fArticle->prices), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
                 }),
                 new SageEntityMetadata(field: '_canEditArSuiviStock', value: static function (StdClass $fArticle) {
                     return $fArticle->canEditArSuiviStock;

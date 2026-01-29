@@ -413,7 +413,7 @@ class AdminController
                     $queryParams,
                 ] = GraphqlService::getInstance()->getResourceWithQuery($resource, getData: false, allFilterField: true, withMetadata: false);
                 $html .= '
-                <div data-resource-filter="' . htmlspecialchars(json_encode(self::getResourceFilter($resource, $filterFields)), ENT_QUOTES, 'UTF-8') . '">
+                <div data-resource-filter="' . htmlspecialchars(json_encode(self::getResourceFilter($resource, $filterFields), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '">
                     <input type="text" class="hidden" id="' . esc_attr($field['id']) . '" name="' . esc_attr($option_name) . '" value="" data-init-filter="' . esc_attr($data) . '" />
                     <input id="' . esc_attr($field['id']) . '_select" type="checkbox" ' . $checked . '/>
                     <label for="' . esc_attr($field['id']) . '"><span class="description">' . $field['description'] . '</span></label>
