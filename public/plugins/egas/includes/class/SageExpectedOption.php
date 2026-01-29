@@ -4,7 +4,7 @@ namespace App\class;
 
 final class SageExpectedOption
 {
-    private ?string $currentOptionValue;
+    private ?string $currentOptionValue = null;
 
     public function __construct(
         private string $optionName,

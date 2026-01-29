@@ -75,9 +75,7 @@ FROM {$wpdb->users}
 WHERE user_login LIKE %s
 ", [$ctNum . '%']));
         if (!empty($r)) {
-            $names = array_map(static function (stdClass $user) {
-                return $user->user_login;
-            }, $r);
+            $names = array_map(static fn(stdClass $user) => $user->user_login, $r);
             $result = null;
             $i = 1;
             while (is_null($result)) {
@@ -108,7 +106,7 @@ WHERE user_login LIKE %s
         usort($fDoclignes, static function (stdClass $a, stdClass $b) {
             foreach (FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE as $suffix) {
                 if ($a->{'dlPiece' . $suffix} !== $b->{'dlPiece' . $suffix}) {
-                    return strcmp($a->{'dlPiece' . $suffix}, $b->{'dlPiece' . $suffix});
+                    return strcmp((string) $a->{'dlPiece' . $suffix}, (string) $b->{'dlPiece' . $suffix});
                 }
             }
             if ($a->doType !== $b->doType) {
@@ -184,7 +182,7 @@ WHERE user_login LIKE %s
                     foreach ($metaData as $meta) {
                         $data = $meta->get_data();
                         if ($data['key'] === '_' . Sage::TOKEN . '_fLotseriesOut') {
-                            $old->fLotseriesOut = json_decode($data['value'], true);
+                            $old->fLotseriesOut = json_decode((string) $data['value'], true);
                             break;
                         }
                     }
@@ -251,9 +249,7 @@ WHERE user_login LIKE %s
         $products = [];
         if (!empty($productIds)) {
             $products = wc_get_products(['include' => $productIds]); // https://github.com/woocommerce/woocommerce/wiki/wc_get_products-and-WC_Product_Query
-            $products = array_combine(array_map(static function (WC_Product $product) {
-                return $product->get_id();
-            }, $products), $products);
+            $products = array_combine(array_map(static fn(WC_Product $product) => $product->get_id(), $products), $products);
         }
         return [$productChanges, $products, $taxeCodes];
     }
@@ -277,9 +273,7 @@ WHERE user_login LIKE %s
         // region new
         $new = new stdClass();
         $new->method_id = FDocenteteUtils::slugifyPExpeditionEIntitule($fDocentete->doExpeditNavigation->eIntitule);
-        $pExpedition = current(array_filter($pExpeditions, static function (stdClass $pExpedition) use ($new) {
-            return $pExpedition->slug === $new->method_id;
-        }));
+        $pExpedition = current(array_filter($pExpeditions, static fn(stdClass $pExpedition) => $pExpedition->slug === $new->method_id));
         $new->name = '';
         if ($pExpedition !== false) {
             $new->name = $pExpedition->eIntitule;
@@ -297,12 +291,8 @@ WHERE user_login LIKE %s
 
         $foundSimilar = false;
         $formatFunction = function (stdClass $oldOrNew) {
-            $oldOrNew->taxes = array_filter($oldOrNew->taxes, static function (array $taxe) {
-                return $taxe['amount'] > 0;
-            });
-            usort($oldOrNew->taxes, static function (array $a, array $b) {
-                return strcmp($a['code'], $b['code']);
-            });
+            $oldOrNew->taxes = array_filter($oldOrNew->taxes, static fn(array $taxe) => $taxe['amount'] > 0);
+            usort($oldOrNew->taxes, static fn(array $a, array $b) => strcmp((string) $a['code'], (string) $b['code']));
             $oldOrNew->taxes = array_values($oldOrNew->taxes);
             return $oldOrNew;
         };
@@ -391,9 +381,7 @@ WHERE user_login LIKE %s
     public function getTasksSynchronizeOrder_Taxes(WC_Order $order, array $new): array
     {
         $taxesChanges = [];
-        $old = array_values(array_map(static function (WC_Order_Item_Tax $wcOrderItemTax) {
-            return $wcOrderItemTax->get_label();
-        }, $order->get_taxes()));
+        $old = array_values(array_map(static fn(WC_Order_Item_Tax $wcOrderItemTax) => $wcOrderItemTax->get_label(), $order->get_taxes()));
         $changes = [];
         [$toRemove, $toAdd] = WoocommerceService::getInstance()->getToRemoveToAddTaxes($order, $new);
         if (count($toRemove) > 0 || count($toAdd) > 0) {
@@ -457,7 +445,7 @@ WHERE user_login LIKE %s
                 }
             }
             foreach ($metadata as $key => $value) {
-                if (str_starts_with($key, $addressType)) {
+                if (str_starts_with((string) $key, $addressType)) {
                     $fields[] = $key;
                 }
             }
@@ -551,9 +539,9 @@ WHERE user_login LIKE %s
             if (empty($fullName)) {
                 continue;
             }
-            $fullName = trim($fullName);
+            $fullName = trim((string) $fullName);
             $lastName = (!str_contains($fullName, ' ')) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $fullName);
-            $firstName = trim(preg_replace('#' . preg_quote($lastName, '#') . '#', '', $fullName));
+            $firstName = trim((string) preg_replace('#' . preg_quote((string) $lastName, '#') . '#', '', $fullName));
             return [$firstName, $lastName];
         }
         return ['', ''];
@@ -570,11 +558,7 @@ WHERE user_login LIKE %s
             ) {
                 continue;
             }
-            $result[$filterType->name] = array_values(array_filter(array_map(function (stdClass $value) {
-                return $value->name;
-            }, $filterType->inputFields), function (string $item) {
-                return !in_array($item, ["and", "or"]);
-            }));
+            $result[$filterType->name] = array_values(array_filter(array_map(fn(stdClass $value) => $value->name, $filterType->inputFields), fn(string $item) => !in_array($item, ["and", "or"])));
         }
         return $result;
     }
@@ -771,9 +755,7 @@ WHERE user_login LIKE %s
     {
         foreach ($selectionSets as $subEntity => $selectionSet) {
             if (is_array($selectionSet) && array_key_exists('name', $selectionSet)) {
-                $sageEntityMetadatas[] = new SageEntityMetadata(field: '_' . $prefix . $selectionSet['name'], value: static function (StdClass $entity) use ($selectionSet, $prefix) {
-                    return PathUtils::getByPath($entity, $prefix)->{$selectionSet['name']};
-                });
+                $sageEntityMetadatas[] = new SageEntityMetadata(field: '_' . $prefix . $selectionSet['name'], value: static fn(StdClass $entity) => PathUtils::getByPath($entity, $prefix)->{$selectionSet['name']});
             } else if (!is_null($obj) && $selectionSet instanceof ArgumentSelectionSetDto) {
                 foreach ($obj->{$subEntity} as $subObject) {
                     $this->addSelectionSetAsMetadata(
@@ -794,17 +776,11 @@ WHERE user_login LIKE %s
             return $data;
         }
         $entityName = $resource->getEntityName();
-        $fieldNames = array_map(static function (array $field) {
-            return str_replace(Sage::PREFIX_META_DATA, '', $field['name']);
-        }, array_filter($fields, static function (array $field) {
-            return str_starts_with($field['name'], Sage::PREFIX_META_DATA);
-        }));
+        $fieldNames = array_map(static fn(array $field) => str_replace(Sage::PREFIX_META_DATA, '', $field['name']), array_filter($fields, static fn(array $field) => str_starts_with((string) $field['name'], Sage::PREFIX_META_DATA)));
         $mandatoryField = $resource->getMandatoryFields()[0];
         $getIdentifier = $resource->getGetIdentifier();
         if (is_null($getIdentifier)) {
-            $getIdentifier = static function (array $entity) use ($mandatoryField) {
-                return $entity[$mandatoryField];
-            };
+            $getIdentifier = static fn(array $entity) => $entity[$mandatoryField];
         }
         $ids = array_map($getIdentifier, $data["data"][$entityName]["items"]);
 
@@ -838,9 +814,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
             $results[$mapping[$temp->post_id]][$temp->meta_key] = $temp->meta_value;
         }
 
-        $includePostId = array_filter($fields, static function (array $field) {
-                return $field['name'] === Sage::META_DATA_PREFIX . '_postId';
-            }) !== [];
+        $includePostId = array_filter($fields, static fn(array $field) => $field['name'] === Sage::META_DATA_PREFIX . '_postId') !== [];
         $mapping = array_flip($mapping);
         $canImport = $resource->getCanImport();
         $postUrl = $resource->getPostUrl();
@@ -884,7 +858,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
             if (!empty($this->websiteApiOption)) {
                 try {
                     $this->websiteApiOption = json_decode($this->websiteApiOption, false);
-                } catch (Exception $e) {
+                } catch (Exception) {
                     // nothing
                 }
             }
@@ -961,7 +935,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
                 foreach (['new', 'old'] as $key) {
                     $meta[$key] = array_filter(
                         $meta[$key],
-                        fn($value, $key) => str_starts_with($key, '_' . Sage::TOKEN),
+                        fn($value, $key) => str_starts_with((string) $key, '_' . Sage::TOKEN),
                         ARRAY_FILTER_USE_BOTH
                     );
                     unset($meta[$key]['_' . Sage::TOKEN . '_last_update']);
@@ -985,9 +959,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
                 }
             }
             if (isset($meta["changes"]["removed"])) {
-                $meta["changes"]["removed"] = array_filter($meta["changes"]["removed"], static function (string $value) {
-                    return !empty($value);
-                });
+                $meta["changes"]["removed"] = array_filter($meta["changes"]["removed"], static fn(string $value) => !empty($value));
             }
             foreach ($changeTypes as $type) {
                 if (!empty($meta['changes'][$type])) {

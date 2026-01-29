@@ -6,17 +6,8 @@ use Closure;
 
 class ImportConditionDto
 {
-    private string $field;
-    private array|string|bool|int $value;
-    private string $condition;
-    private Closure $message;
-
-    public function __construct(string $field, array|string|bool|int $value, string $condition, Closure $message)
+    public function __construct(private string $field, private array|string|bool|int $value, private string $condition, private Closure $message)
     {
-        $this->field = $field;
-        $this->value = $value;
-        $this->condition = $condition;
-        $this->message = $message;
     }
 
     public function getField(): string

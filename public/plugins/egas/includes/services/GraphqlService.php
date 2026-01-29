@@ -401,9 +401,7 @@ class GraphqlService
                     ]
                 );
             $rawFields = $this->runQuery($query1)?->data?->__type?->fields;
-            $fields = array_map(function (stdClass $field) {
-                return $field->name;
-            }, $rawFields);
+            $fields = array_map(fn(stdClass $field) => $field->name, $rawFields);
             $query2 = (new Query('__type'))
                 ->setArguments(['name' => $object . 'FilterInput'])
                 ->setSelectionSet(
@@ -477,12 +475,10 @@ class GraphqlService
 
     private function _formatOperationFilterInput(string $type, array $fields): array
     {
-        return array_map(static function (string $field) use ($type) {
-            return [
-                "name" => $field,
-                "type" => $type,
-            ];
-        }, $fields);
+        return array_map(static fn(string $field) => [
+            "name" => $field,
+            "type" => $type,
+        ], $fields);
     }
 
     private function getEntitiesAndSaveInOption(
@@ -657,9 +653,7 @@ class GraphqlService
                     $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets, $arrayKey);
                 }
                 if (!empty($results)) {
-                    $results = $cacheService->get($cacheName, function () use ($results) {
-                        return $results;
-                    });
+                    $results = $cacheService->get($cacheName, fn() => $results);
                 }
             } else {
                 if (isset($results->data->{$entityName}->items)) {
@@ -704,7 +698,7 @@ class GraphqlService
         $result = [];
         foreach ($selectionSets as $key => $value) {
             if (is_numeric($key)) {
-                if (!str_starts_with($value['name'], Sage::PREFIX_META_DATA)) {
+                if (!str_starts_with((string) $value['name'], Sage::PREFIX_META_DATA)) {
                     $result[] = $value['name'];
                 }
             } else {
@@ -1241,9 +1235,7 @@ class GraphqlService
         if ($extended) {
             $filter["filter"]["values"][] = ['rawValue' => ['extendedDoPieceDoType' => [
                 "doPiece" => ["eq" => $doPiece],
-                "doType" => ["in" => array_values(array_map(function (string|int $doType) {
-                    return (int)$doType;
-                }, $doTypes))],
+                "doType" => ["in" => array_values(array_map(fn(string|int $doType) => (int)$doType, $doTypes))],
             ]]];
         } else {
             $filter["filter"]["values"][] = [
@@ -1306,18 +1298,14 @@ class GraphqlService
             }
             $fDoclignes = $this->addWordpressProductId($fDoclignes);
             foreach ($fDocentetes as $fDocentete) {
-                $fDocentete->fDoclignes = array_filter($fDoclignes, static function (stdClass $fDocligne) use ($fDocentete) {
-                    return $fDocligne->doPiece === $fDocentete->doPiece && $fDocligne->doType === $fDocentete->doType;
-                });
+                $fDocentete->fDoclignes = array_filter($fDoclignes, static fn(stdClass $fDocligne) => $fDocligne->doPiece === $fDocentete->doPiece && $fDocligne->doType === $fDocentete->doType);
             }
         }
         if ($getWordpressIds) {
-            $values = array_map(static function (stdClass $fDocentete) {
-                return json_encode([
-                    'doPiece' => $fDocentete->doPiece,
-                    'doType' => $fDocentete->doType,
-                ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
-            }, $fDocentetes);
+            $values = array_map(static fn(stdClass $fDocentete) => json_encode([
+                'doPiece' => $fDocentete->doPiece,
+                'doType' => $fDocentete->doType,
+            ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), $fDocentetes);
             global $wpdb;
             $r = $wpdb->get_results(
                 $wpdb->prepare("
@@ -1393,38 +1381,28 @@ WHERE meta_key = %s
     ): array
     {
         $mandatoryFields = SageService::getInstance()->getResource(FArticleResource::ENTITY_NAME)->getMandatoryFields();
-        $fArticleSelectionSet = array_filter($this->_getFArticleSelectionSet(), function (array|ArgumentSelectionSetDto $selectionSet) use ($mandatoryFields) {
-            return is_array($selectionSet) && array_key_exists('name', $selectionSet) && in_array($selectionSet['name'], $mandatoryFields);
-        });
+        $fArticleSelectionSet = array_filter($this->_getFArticleSelectionSet(), fn(array|ArgumentSelectionSetDto $selectionSet) => is_array($selectionSet) && array_key_exists('name', $selectionSet) && in_array($selectionSet['name'], $mandatoryFields));
         $r = [
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
                 'dlMontantHt',
                 // 'dlMontantTtc', // don't use dlMontantTtc because it applies ignored taxe
             ]),
             ...$this->_formatOperationFilterInput("DecimalOperationFilterInput", [
-                ...array_map(static function (string $field) {
-                    return 'dlCodeTaxe' . $field;
-                }, FDocenteteUtils::ALL_TAXES),
-                ...array_map(static function (string $field) {
-                    return 'dlMontantTaxe' . $field;
-                }, FDocenteteUtils::ALL_TAXES),
+                ...array_map(static fn(string $field) => 'dlCodeTaxe' . $field, FDocenteteUtils::ALL_TAXES),
+                ...array_map(static fn(string $field) => 'dlMontantTaxe' . $field, FDocenteteUtils::ALL_TAXES),
             ]),
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                 'dlNo',
                 'dlLigne',
                 'doType',
                 'dlQte',
-                ...array_map(static function (string $field) {
-                    return 'dlQte' . $field;
-                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
+                ...array_map(static fn(string $field) => 'dlQte' . $field, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
             ]),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'doPiece',
                 'arRef',
                 'dlDesign',
-                ...array_map(static function (string $field) {
-                    return 'dlPiece' . $field;
-                }, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
+                ...array_map(static fn(string $field) => 'dlPiece' . $field, FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE),
             ]),
             'arRefNavigation' => $fArticleSelectionSet,
         ];
@@ -1497,9 +1475,7 @@ WHERE meta_key = %s
     private function addWordpressUserId(array $fDocentetes): array
     {
         global $wpdb;
-        $ctNums = array_map(static function (stdClass $fDocentete) {
-            return $fDocentete->doTiers;
-        }, $fDocentetes);
+        $ctNums = array_map(static fn(stdClass $fDocentete) => $fDocentete->doTiers, $fDocentetes);
         $r = $wpdb->get_results(
             $wpdb->prepare("
 SELECT user_id, meta_value
@@ -1524,9 +1500,7 @@ WHERE meta_key = %s
     private function addWordpressProductId(array $fDoclignes): array
     {
         global $wpdb;
-        $arRefs = array_values(array_unique(array_map(static function (stdClass $fDocligne) {
-            return $fDocligne->arRef;
-        }, $fDoclignes)));
+        $arRefs = array_values(array_unique(array_map(static fn(stdClass $fDocligne) => $fDocligne->arRef, $fDoclignes)));
         $r = $wpdb->get_results(
             $wpdb->prepare(
                 "
@@ -1904,9 +1878,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $result = [
                 ...$result,
                 ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
-                    ...array_map(static function (int $number) use ($t) {
-                        return 'caCompta' . $t . str_pad((string)$number, 2, '0', STR_PAD_LEFT);
-                    }, range(1, PCatComptaUtils::NB_TIERS_TYPE)),
+                    ...array_map(static fn(int $number) => 'caCompta' . $t . str_pad((string)$number, 2, '0', STR_PAD_LEFT), range(1, PCatComptaUtils::NB_TIERS_TYPE)),
                 ]),
             ];
         }
@@ -2078,9 +2050,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
                 , JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), true, 512, JSON_THROW_ON_ERROR);
             $data = SageService::getInstance()->populateMetaDatas($data, $showFields, $resource);
         }
-        $hideFields = array_map(static function (string $hideField) {
-            return str_replace(Sage::PREFIX_META_DATA, '', $hideField);
-        }, $hideFields);
+        $hideFields = array_map(static fn(string $hideField) => str_replace(Sage::PREFIX_META_DATA, '', $hideField), $hideFields);
         return [
             $data,
             $showFields,
