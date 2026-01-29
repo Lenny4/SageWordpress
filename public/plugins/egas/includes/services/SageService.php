@@ -25,10 +25,6 @@ use WC_Product;
 use WP_Error;
 use WP_User;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 class SageService
 {
     private static ?SageService $instance = null;
@@ -182,7 +178,7 @@ WHERE user_login LIKE %s
                     foreach ($metaData as $meta) {
                         $data = $meta->get_data();
                         if ($data['key'] === '_' . Sage::TOKEN . '_fLotseriesOut') {
-                            $old->fLotseriesOut = json_decode((string) $data['value'], true);
+                            $old->fLotseriesOut = json_decode((string) $data['value'], true, 512, JSON_THROW_ON_ERROR);
                             break;
                         }
                     }
@@ -223,7 +219,7 @@ WHERE user_login LIKE %s
                     if (array_values($new->taxes) !== array_values($old->taxes)) {
                         $changes[] = OrderUtils::CHANGE_TAXES_PRODUCT_ACTION;
                     }
-                    if (json_encode($new->fLotseriesOut) !== json_encode($old->fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)) {
+                    if (json_encode($new->fLotseriesOut, JSON_THROW_ON_ERROR) !== json_encode($old->fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)) {
                         $changes[] = OrderUtils::CHANGE_SERIAL_PRODUCT_OUT_ACTION;
                     }
                 }
@@ -855,7 +851,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
             $this->websiteApiOption = get_option(Sage::TOKEN . '_website_api', null);
             if (!empty($this->websiteApiOption)) {
                 try {
-                    $this->websiteApiOption = json_decode($this->websiteApiOption, false);
+                    $this->websiteApiOption = json_decode($this->websiteApiOption, false, 512, JSON_THROW_ON_ERROR);
                 } catch (Exception) {
                     // nothing
                 }

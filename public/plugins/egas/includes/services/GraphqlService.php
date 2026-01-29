@@ -38,10 +38,6 @@ use RuntimeException;
 use stdClass;
 use Throwable;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 class GraphqlService
 {
     private static ?GraphqlService $instance = null;
@@ -122,7 +118,7 @@ class GraphqlService
 
         curl_close($curlHandle);
         try {
-            $response = json_decode($responseString, true);
+            $response = json_decode($responseString, true, 512, JSON_THROW_ON_ERROR);
             if (!is_null($response)) {
                 $this->pingApi = $response["status"] === 'Healthy';
                 if (!$this->pingApi) {
@@ -239,7 +235,7 @@ class GraphqlService
         if ($value === '') {
             return null;
         }
-        return json_encode($this->filterToGraphQlWhere(json_decode($value, true)), JSON_UNESCAPED_UNICODE);
+        return json_encode($this->filterToGraphQlWhere(json_decode($value, true, 512, JSON_THROW_ON_ERROR)), JSON_UNESCAPED_UNICODE);
     }
 
     public function filterToGraphQlWhere(array $filter): stdClass
@@ -598,7 +594,7 @@ class GraphqlService
             if (array_key_exists('filter', $queryParams)) {
                 $filter = $queryParams['filter'];
                 if (is_string($filter)) {
-                    $filter = json_decode(urldecode($filter), true);
+                    $filter = json_decode(urldecode($filter), true, 512, JSON_THROW_ON_ERROR);
                 }
                 $where = $this->filterToGraphQlWhere($filter);
             }

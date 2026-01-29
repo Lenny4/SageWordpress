@@ -242,7 +242,7 @@ class RestApiHook
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/fdocentete', [
                 'methods' => 'POST',
                 'callback' => static function (WP_REST_Request $request): WP_REST_Response {
-                    $body = json_decode($request->get_body(), false);
+                    $body = json_decode($request->get_body(), false, 512, JSON_THROW_ON_ERROR);
                     $doPiece = $body->{Sage::TOKEN . "-fdocentete-dopiece"};
                     $doType = (int)$body->{Sage::TOKEN . "-fdocentete-dotype"};
                     [$order, $extendedFDocentetes] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, new WC_Order($request['id']));

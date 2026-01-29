@@ -2,10 +2,6 @@
 
 namespace App;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 /**
  * Main plugin class.
  */

@@ -297,7 +297,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         add_filter('woocommerce_order_item_display_meta_value', function (string $value, WC_Meta_Data $wcMetaData) {
             $data = $wcMetaData->get_data();
             if ($data['key'] === '_' . Sage::TOKEN . '_fLotseriesOut' && $data['value'] !== 'null') {
-                $data = json_decode($data['value'], true);
+                $data = json_decode($data['value'], true, 512, JSON_THROW_ON_ERROR);
                 if (is_array($data) && !empty($data)) {
                     return $data[0]['lsNoSerie'];
                 }

@@ -6,10 +6,6 @@ use App\Sage;
 use WP_Error;
 use WP_Http;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 class RequestService
 {
     private static ?RequestService $instance = null;

@@ -2,10 +2,6 @@
 
 namespace App\utils;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 final class TaxeUtils
 {
     public const ADD_TAXE_ACTION = 'add_taxe_action';

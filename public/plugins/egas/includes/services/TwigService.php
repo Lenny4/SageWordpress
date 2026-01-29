@@ -7,10 +7,6 @@ use Twig\Environment;
 use Twig\Extension\DebugExtension;
 use Twig\Loader\FilesystemLoader;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 class TwigService
 {
     private static ?TwigService $instance = null;

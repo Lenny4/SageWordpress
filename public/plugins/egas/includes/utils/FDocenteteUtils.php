@@ -6,10 +6,6 @@ use App\enum\Sage\DocumentTypeEnum;
 use App\Sage;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 final class FDocenteteUtils
 {
     // basically all doTypes which are saved in history or facture

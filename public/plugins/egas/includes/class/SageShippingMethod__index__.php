@@ -4,10 +4,6 @@ namespace App\class;
 
 use WC_Shipping_Free_Shipping;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 // clone of: woocommerce/includes/shipping/free-shipping/class-wc-shipping-free-shipping.php
 class SageShippingMethod__index__ extends WC_Shipping_Free_Shipping
 {

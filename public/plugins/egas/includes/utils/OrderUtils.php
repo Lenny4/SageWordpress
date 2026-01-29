@@ -2,10 +2,6 @@
 
 namespace App\utils;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 final class OrderUtils
 {
     public const REPLACE_PRODUCT_ACTION = 'replace_product_action';

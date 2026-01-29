@@ -2,15 +2,13 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\Php73\Rector\FuncCall\JsonThrowOnErrorRector;
 use Rector\ValueObject\PhpVersion;
 
 return RectorConfig::configure()
-    ->withParallel(240, 1)
-    ->withImportNames()
     ->withPaths([
         __DIR__ . '/includes',
     ])
-    // A. whole set
     ->withPreparedSets(
         deadCode: true,
 //        codeQuality: true,
@@ -23,5 +21,7 @@ return RectorConfig::configure()
 //        carbon: true,
 //        rectorPreset: true,
     )
-    // demonstrate specific PHP version
-    ->withPhpVersion(PhpVersion::PHP_82);
+    ->withPhpVersion(PhpVersion::PHP_82)
+    ->withRules([
+        JsonThrowOnErrorRector::class,
+    ]);

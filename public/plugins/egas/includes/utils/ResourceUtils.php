@@ -2,10 +2,6 @@
 
 namespace App\utils;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 final class ResourceUtils
 {
     public const FCOMPTET_ENTITY_NAME = 'fComptets';

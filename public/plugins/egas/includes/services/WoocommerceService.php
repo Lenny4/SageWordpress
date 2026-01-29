@@ -28,10 +28,6 @@ use WC_Shipping_Rate;
 use WC_Tax;
 use WP_User;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 class WoocommerceService
 {
     private static ?WoocommerceService $instance = null;

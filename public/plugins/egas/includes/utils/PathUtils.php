@@ -5,10 +5,6 @@ namespace App\utils;
 use App\Sage;
 use stdClass;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 final class PathUtils
 {
     public static function getByPath(stdClass $obj, string $path): stdClass|null

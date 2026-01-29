@@ -17,10 +17,6 @@ use WC_Shipping_Zone;
 use WC_Shipping_Zones;
 use WP_Application_Passwords;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 class WordpressService
 {
     private static ?WordpressService $instance = null;
@@ -461,11 +457,5 @@ FROM {$wpdb->postmeta} pm
                   AND pm_filter.meta_value = %s
 WHERE pm.meta_key LIKE '_" . Sage::TOKEN . "_%'
         ", [$key, $value]));
-    }
-
-    private function isApiAuthenticated(): bool
-    {
-        $response = RequestService::getInstance()->apiRequest('/Website/' . $_SERVER['HTTP_HOST'] . '/authorization');
-        return $response === 'true';
     }
 }

@@ -3,6 +3,17 @@ Api host url: https://192.168.0.35
 Wordpress host url: https://caddy
 Wordpress db host: 192.168.0.31
 
+rector:
+./runc php vendor/bin/rector process --debug
+rector specific folder:
+./runc php vendor/bin/rector process includes/controllers/ --debug
+
+On ne mets pas
+if (!defined('ABSPATH')) {
+exit;
+}
+car ça bloque rector, peut être le rajouter dans le build
+
 # Important
 
 launch chrome this way: `google-chrome --ignore-certificate-errors`
@@ -85,7 +96,6 @@ add_action('admin_head', function () {
 //            );
         });
 ```
-
 
 Outils pour se faire connaitre
 

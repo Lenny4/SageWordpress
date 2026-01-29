@@ -2,10 +2,6 @@
 
 namespace App\utils;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 final class PCatComptaUtils
 {
     public const TIERS_TYPE_VEN = 'Ven';

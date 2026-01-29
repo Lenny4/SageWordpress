@@ -5,10 +5,6 @@ namespace App\utils;
 use App\resources\FComptetResource;
 use App\Sage;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 final class SageTranslationUtils
 {
     public const TRANS_FCOMPTETS = 'fComptets';

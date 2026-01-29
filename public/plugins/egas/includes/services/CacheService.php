@@ -4,10 +4,6 @@ namespace App\services;
 
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 class CacheService
 {
     public final const CACHE_LIFETIME = 3600;
