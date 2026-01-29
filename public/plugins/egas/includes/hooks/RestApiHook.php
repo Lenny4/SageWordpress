@@ -60,7 +60,7 @@ class RestApiHook
             GraphqlService::getInstance()->ping();
             return $result; // must return $result
         });
-        add_action('rest_api_init', function () {
+        add_action('rest_api_init', function (): void {
             register_rest_route(Sage::TOKEN . '/v1', '/search-entities/(?P<entityName>[A-Za-z0-9]+)', [
                 'methods' => 'GET',
                 'callback' => static function (WP_REST_Request $request) {
@@ -257,7 +257,7 @@ class RestApiHook
             ]);
             register_rest_route(Sage::TOKEN . '/v1', '/deactivate-shipping-zones', [
                 'methods' => 'GET',
-                'callback' => static function (WP_REST_Request $request) {
+                'callback' => static function (WP_REST_Request $request): void {
                     global $wpdb;
                     $wpdb->get_results($wpdb->prepare("
 UPDATE {$wpdb->prefix}woocommerce_shipping_zone_methods

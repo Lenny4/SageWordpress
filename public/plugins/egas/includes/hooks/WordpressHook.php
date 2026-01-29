@@ -66,10 +66,10 @@ class WordpressHook
             // HPOS and non-HPOS use different hooks.
             add_filter("manage_{$screen_id}_columns", [WoocommerceController::class, 'addColumn'], 11);
             add_filter("manage_edit-{$screen_id}_columns", [WoocommerceController::class, 'addColumn'], 11);
-            add_action("manage_{$screen_id}_custom_column", static function (string $column_name, WC_Order $order) {
+            add_action("manage_{$screen_id}_custom_column", static function (string $column_name, WC_Order $order): void {
                 echo WoocommerceController::displayColumn($column_name, $order);
             }, 10, 2);
-            add_action("manage_{$screen_id}_posts_custom_column", static function (string $column_name, WC_Order $order) {
+            add_action("manage_{$screen_id}_posts_custom_column", static function (string $column_name, WC_Order $order): void {
                 echo WoocommerceController::displayColumn($column_name, $order);
             }, 10, 2);
         });
@@ -113,10 +113,10 @@ class WordpressHook
                 'changeTypes' => [],
             ]);
         });
-        add_action('profile_update', function (int $userId) {
+        add_action('profile_update', function (int $userId): void {
             WordpressService::getInstance()->saveCustomerUserMetaFields($userId, false);
         });
-        add_action('user_register', function (int $userId) {
+        add_action('user_register', function (int $userId): void {
             WordpressService::getInstance()->saveCustomerUserMetaFields($userId, true);
         });
         // endregion

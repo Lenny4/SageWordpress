@@ -36,7 +36,7 @@ class WoocommerceHook
             add_meta_box(
                 'woocommerce-order-' . Sage::TOKEN . '-main',
                 __('Egas', Sage::TOKEN),
-                static function () use ($order) {
+                static function () use ($order): void {
                     echo WoocommerceController::getMetaboxFDocentete($order);
                 },
                 $screenId,
@@ -207,7 +207,7 @@ class WoocommerceHook
             }
             return $result;
         });
-        add_action('woocommerce_settings_shipping', static function () {
+        add_action('woocommerce_settings_shipping', static function (): void {
             global $wpdb;
             $r = $wpdb->get_results(
                 $wpdb->prepare("
@@ -257,7 +257,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         // endregion
 
         // region edit woocommerce product display
-        add_action('woocommerce_after_order_itemmeta', function (int $item_id, WC_Order_Item $item, WC_Product|bool|null $product) {
+        add_action('woocommerce_after_order_itemmeta', function (int $item_id, WC_Order_Item $item, WC_Product|bool|null $product): void {
             if (
                 is_bool($product) ||
                 is_null($product) ||
@@ -278,7 +278,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             return $columns;
         }, 10, 1);
 
-        add_action('manage_product_posts_custom_column', function (string $column, int $postId) { // https://www.conicsolutions.net/tutorials/woocommerce-how-to-add-custom-columns-on-the-products-list-in-dashboard/
+        add_action('manage_product_posts_custom_column', function (string $column, int $postId): void { // https://www.conicsolutions.net/tutorials/woocommerce-how-to-add-custom-columns-on-the-products-list-in-dashboard/
             if ($column === Sage::TOKEN) {
                 $arRef = get_post_meta($postId, FArticleResource::META_KEY, true);
                 if (!empty($arRef)) {

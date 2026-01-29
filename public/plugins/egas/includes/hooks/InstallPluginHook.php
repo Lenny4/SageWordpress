@@ -11,10 +11,10 @@ class InstallPluginHook
     public function __construct()
     {
         $sage = Sage::getInstance();
-        register_activation_hook($sage->file, function () {
+        register_activation_hook($sage->file, function (): void {
             WordpressService::getInstance()->install();
         });
-        register_deactivation_hook($sage->file, function () {
+        register_deactivation_hook($sage->file, function (): void {
             flush_rewrite_rules();
         });
         add_action('upgrader_process_complete', function (WP_Upgrader $wpUpgrader, array $hook_extra): void {
