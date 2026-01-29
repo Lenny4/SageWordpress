@@ -30,7 +30,7 @@
         "wp-coding-standards/wpcs": "^3.0.0",
         "squizlabs/php_codesniffer": "^3.3.1",
         "wp-cli/wp-cli-bundle": "*",
-        "rector/rector": "^1.0.0"
+        "rector/rector": "^1.2"
     },
     "config": {
         "allow-plugins": {
