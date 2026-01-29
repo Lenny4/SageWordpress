@@ -10,7 +10,7 @@ return RectorConfig::configure()
     ])
     // A. whole set
     ->withPreparedSets(
-//        deadCode: true,
+        deadCode: true,
 //        codeQuality: true,
 //        codingStyle: true,
         typeDeclarations: true,

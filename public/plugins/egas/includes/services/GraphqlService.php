@@ -616,9 +616,7 @@ class GraphqlService
                 'skip' => $nbPerPage * ($page - 1),
                 'take' => $nbPerPage,
             ];
-            if (!is_null($order)) {
-                $arguments['order'] = new RawObject($order);
-            }
+            $arguments['order'] = new RawObject($order);
 
             if (!is_null($where)) {
                 $arguments['where'] = new RawObject(preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($where, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)));

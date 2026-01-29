@@ -720,7 +720,7 @@ class AdminController
                 $fieldsForm .= '<input type="hidden" name="' . $optionName . '" value="' . $optionValue . '">';
                 $optionNames[] = $optionName;
             }
-            $result .= '<form method="post" action="options.php" enctype="multipart/form-data">'
+            return $result . ('<form method="post" action="options.php" enctype="multipart/form-data">'
                 . $fieldsForm
                 . '<input type="hidden" name="page_options" value="' . esc_attr(implode(',', $optionNames)) . '"/>
                 <input type="hidden" name="_wp_http_referer" value="' . esc_attr($_SERVER["REQUEST_URI"]) . '">
@@ -731,8 +731,7 @@ class AdminController
                 <input name="Update" type="submit" class="button-primary" value="' . esc_attr(__('Mettre à jour', Sage::TOKEN)) . '">
                 </p>
                 </form>
-                </div>';
-            return $result;
+                </div>');
         }
         return null;
     }

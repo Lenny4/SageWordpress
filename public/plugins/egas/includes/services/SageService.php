@@ -296,36 +296,34 @@ WHERE user_login LIKE %s
             $oldOrNew->taxes = array_values($oldOrNew->taxes);
             return $oldOrNew;
         };
-        if (!empty($lineItemsShipping)) {
-            foreach ($lineItemsShipping as $lineItemShipping) {
-                $data = $lineItemShipping->get_data();
-                $old = new stdClass();
-                $old->method_id = $data["method_id"];
-                $old->name = $data["method_title"];
-                $old->priceHt = RoundUtils::round($data["total"]);
-                $old->priceTtc = RoundUtils::round($old->priceHt + RoundUtils::round($data["total_tax"]));
-                $old->taxes = [];
-                if (!is_null($data["taxes"])) {
-                    $taxeNumber = 1;
-                    foreach ($data["taxes"]["total"] as $idRate => $amount) {
-                        $old->taxes[$taxeNumber] = ['code' => $rates[$idRate]->tax_rate_name, 'amount' => (float)$amount];
-                        $taxeNumber++;
-                    }
+        foreach ($lineItemsShipping as $lineItemShipping) {
+            $data = $lineItemShipping->get_data();
+            $old = new stdClass();
+            $old->method_id = $data["method_id"];
+            $old->name = $data["method_title"];
+            $old->priceHt = RoundUtils::round($data["total"]);
+            $old->priceTtc = RoundUtils::round($old->priceHt + RoundUtils::round($data["total_tax"]));
+            $old->taxes = [];
+            if (!is_null($data["taxes"])) {
+                $taxeNumber = 1;
+                foreach ($data["taxes"]["total"] as $idRate => $amount) {
+                    $old->taxes[$taxeNumber] = ['code' => $rates[$idRate]->tax_rate_name, 'amount' => (float)$amount];
+                    $taxeNumber++;
                 }
-                if (
-                    json_encode($formatFunction($old), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) ===
-                    json_encode($formatFunction($new), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)
-                    && !$foundSimilar
-                ) {
-                    $foundSimilar = true;
-                } else {
-                    $old->id = $lineItemShipping->get_id();
-                    $shippingChanges[] = [
-                        'old' => $old,
-                        'new' => $new,
-                        'changes' => [OrderUtils::REMOVE_SHIPPING_ACTION],
-                    ];
-                }
+            }
+            if (
+                json_encode($formatFunction($old), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) ===
+                json_encode($formatFunction($new), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)
+                && !$foundSimilar
+            ) {
+                $foundSimilar = true;
+            } else {
+                $old->id = $lineItemShipping->get_id();
+                $shippingChanges[] = [
+                    'old' => $old,
+                    'new' => $new,
+                    'changes' => [OrderUtils::REMOVE_SHIPPING_ACTION],
+                ];
             }
         }
         if (!$foundSimilar) {

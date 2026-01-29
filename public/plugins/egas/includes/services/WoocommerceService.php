@@ -274,7 +274,7 @@ class WoocommerceService
                         $message .= $this->changeSerialOutProductOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->fLotseriesOut);
                         break;
                     case OrderUtils::REPLACE_PRODUCT_ACTION:
-                        $message .= $this->replaceProductToOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->postId, $syncChange["new"]->quantity, $syncChange["new"], $alreadyAddedTaxes);
+                        $message .= $this->replaceProductToOrder($order, $syncChange["old"]->itemId, $syncChange["new"]->postId, $syncChange["new"], $alreadyAddedTaxes);
                         break;
                     case OrderUtils::ADD_SHIPPING_ACTION:
                         $message .= $this->addShippingToOrder($order, $syncChange["new"], $alreadyAddedTaxes);
@@ -481,8 +481,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
 
         $product = wc_get_product($productId);
         $itemId = $order->add_product($product, $qty);
-        $message .= $this->updateProductOrder($order, $itemId, $new, $alreadyAddedTaxes);
-        return $message;
+        return $message . $this->updateProductOrder($order, $itemId, $new, $alreadyAddedTaxes);
     }
 
     private function updateProductOrder(WC_Order $order, int $itemId, stdClass $new, array &$alreadyAddedTaxes): string
@@ -490,8 +489,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $message = $this->changeQuantityProductOrder($order, $itemId, $new->quantity, false);
         $message .= $this->changePriceProductOrder($order, $itemId, $new->linePriceHt, false);
         $message .= $this->changeTaxesProductOrder($order, $itemId, $new->taxes, $alreadyAddedTaxes);
-        $message .= $this->changeSerialOutProductOrder($order, $itemId, $new->fLotseriesOut);
-        return $message;
+        return $message . $this->changeSerialOutProductOrder($order, $itemId, $new->fLotseriesOut);
     }
 
     private function changeQuantityProductOrder(WC_Order $order, int $itemId, int $quantity, bool $save = true): string
@@ -708,7 +706,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         }
     }
 
-    private function replaceProductToOrder(WC_Order $order, int $itemId, int $productId, int $quantity, stdClass $new, array &$alreadyAddedTaxes): string
+    private function replaceProductToOrder(WC_Order $order, int $itemId, int $productId, stdClass $new, array &$alreadyAddedTaxes): string
     {
         $message = '';
         $lineItems = array_values($order->get_items());
@@ -748,13 +746,11 @@ WHERE {$wpdb->posts}.post_type = 'product'
     {
         $message = '';
         $lineItemsShipping = array_values($order->get_items('shipping'));
-        if (!empty($lineItemsShipping)) {
-            foreach ($lineItemsShipping as $lineItemShipping) {
-                if ($lineItemShipping->get_id() === $id) {
-                    $order->remove_item($id);
-                    $order->save();
-                    break;
-                }
+        foreach ($lineItemsShipping as $lineItemShipping) {
+            if ($lineItemShipping->get_id() === $id) {
+                $order->remove_item($id);
+                $order->save();
+                break;
             }
         }
         return $message;
