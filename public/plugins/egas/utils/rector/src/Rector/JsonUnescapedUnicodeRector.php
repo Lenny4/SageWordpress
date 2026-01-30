@@ -135,8 +135,10 @@ CODE_SAMPLE
         if (isset($funcCall->args[1])) {
             $flags = $this->getFlags($funcCall->args[1]);
         }
-        $this->hasChanged = true;
-        $funcCall->args[1] = $this->getArgWithFlags($flags) ?? $funcCall->args[1];
+        if (!is_null($newArg = $this->getArgWithFlags($flags))) {
+            $this->hasChanged = true;
+            $funcCall->args[1] = $newArg;
+        }
         return $funcCall;
     }
 
@@ -220,8 +222,10 @@ CODE_SAMPLE
         if (!isset($funcCall->args[2])) {
             $funcCall->args[2] = new Arg(new LNumber(512));
         }
-        $this->hasChanged = true;
-        $funcCall->args[3] = $this->getArgWithFlags($flags, self::FLAGS) ?? $funcCall->args[3];
+        if (!is_null($newArg = $this->getArgWithFlags($flags))) {
+            $this->hasChanged = true;
+            $funcCall->args[3] = $newArg;
+        }
         return $funcCall;
     }
 
