@@ -169,24 +169,25 @@ CODE_SAMPLE
      */
     private function getFlags(Arg|Node\Expr\BinaryOp\BitwiseOr|ConstFetch $arg, array $flags = []): array
     {
+        // Unwrap Arg
+        if ($arg instanceof Arg) {
+            $arg = $arg->value;
+        }
+
+        // Single flag: SOME_CONST
         if ($arg instanceof ConstFetch) {
-            $constFetch = $arg;
-        } else {
-            if ($arg instanceof Arg) {
-                $array = $arg->value->jsonSerialize();
-            } else {
-                $array = $arg->jsonSerialize();
-            }
-            if ($arg instanceof Arg && $arg->value instanceof ConstFetch) { // single flag
-                $constFetch = $arg->value;
-            } else { // multiple flag
-                $flags = $this->getFlags($array['left'], $flags);
-                $constFetch = $array['right'];
-            }
+            $flags[] = $arg->name instanceof Name
+                ? $arg->name->getFirst()
+                : '';
+            return $flags;
         }
-        if (!is_null($constFetch)) {
-            $flags[] = $constFetch->jsonSerialize()['name']->getFirst();
+
+        // Multiple flags: FLAG_A | FLAG_B | FLAG_C
+        if ($arg instanceof Node\Expr\BinaryOp\BitwiseOr) {
+            $flags = $this->getFlags($arg->left, $flags);
+            $flags = $this->getFlags($arg->right, $flags);
         }
+
         return $flags;
     }
 
