@@ -355,10 +355,8 @@ class WordpressService
                         return;
                     }
                 }
-                if ($_POST['_' . Sage::TOKEN . '_creationType'] === 'new') {
-                    if ($fComptet instanceof stdClass) {
-                        return;
-                    }
+                if ($_POST['_' . Sage::TOKEN . '_creationType'] === 'new' && $fComptet instanceof stdClass) {
+                    return;
                 }
             }
         }
@@ -372,14 +370,12 @@ class WordpressService
                 update_user_meta($userId, $key, $value);
             }
         }
-        if (!$isNew) {
-            if ($nbUpdatedMeta > 0) {
-                if (is_null($sageUpdateFcomptet)) {
-                    $sageUpdateFcomptet = filter_var(get_option(Sage::TOKEN . '_sage_update_' . FComptetResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN);
-                }
-                if ($sageUpdateFcomptet) {
-                    update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
-                }
+        if (!$isNew && $nbUpdatedMeta > 0) {
+            if (is_null($sageUpdateFcomptet)) {
+                $sageUpdateFcomptet = filter_var(get_option(Sage::TOKEN . '_sage_update_' . FComptetResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN);
+            }
+            if ($sageUpdateFcomptet) {
+                update_user_meta($userId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
             }
         }
     }

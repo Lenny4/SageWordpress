@@ -267,9 +267,9 @@ WHERE user_login LIKE %s
                         $changes[] = OrderUtils::CHANGE_SERIAL_PRODUCT_OUT_ACTION;
                     }
                 }
-            } else if (is_null($new)) {
+            } elseif (is_null($new)) {
                 $changes[] = OrderUtils::REMOVE_PRODUCT_ACTION;
-            } else if (is_null($old) && !is_null($new->arRef)) {
+            } elseif (is_null($old) && !is_null($new->arRef)) {
                 $changes[] = OrderUtils::ADD_PRODUCT_ACTION;
             }
             if (!empty($changes)) {
@@ -454,7 +454,7 @@ WHERE user_login LIKE %s
                     OrderUtils::CHANGE_CUSTOMER_ACTION
                 ],
             ];
-        } else if (!is_null($orderUserId)) {
+        } elseif (!is_null($orderUserId)) {
             $userChanges = [...$userChanges, ...$this->getUserChanges($orderUserId, $fDocentete->doTiersNavigation)];
             $userChanges = [...$userChanges, ...$this->getOrderAddressTypeChanges(
                 $order,
@@ -493,11 +493,7 @@ WHERE user_login LIKE %s
                     !array_key_exists($field, $userMetaWordpress) ||
                     $userMetaWordpress[$field][0] !== $metadata[$field]
                 ) {
-                    if (array_key_exists($field, $userMetaWordpress)) {
-                        $old->{$field} = $userMetaWordpress[$field][0];
-                    } else {
-                        $old->{$field} = null;
-                    }
+                    $old->{$field} = array_key_exists($field, $userMetaWordpress) ? $userMetaWordpress[$field][0] : null;
                     $new->{$field} = $metadata[$field];
                 }
             }
@@ -578,7 +574,7 @@ WHERE user_login LIKE %s
                 continue;
             }
             $fullName = trim((string)$fullName);
-            $lastName = (!str_contains($fullName, ' ')) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $fullName);
+            $lastName = (str_contains($fullName, ' ')) ? preg_replace('#.*\s([\w-]*)$#', '$1', $fullName) : '';
             $firstName = trim((string)preg_replace('#' . preg_quote((string)$lastName, '#') . '#', '', $fullName));
             return [$firstName, $lastName];
         }
@@ -627,7 +623,7 @@ WHERE user_login LIKE %s
                                 <pre>" . $response->get_error_message() . "</pre>
                                 <pre>" . json_encode($response, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) . "</pre>
                                 </div>";
-        } else if (!in_array($response["response"]["code"], [Response::HTTP_OK, Response::HTTP_CREATED], true)) {
+        } elseif (!in_array($response["response"]["code"], [Response::HTTP_OK, Response::HTTP_CREATED], true)) {
             $responseError = "<div class='notice notice-error is-dismissible'>
                                 <pre>" . $response['response']['code'] . "</pre>
                                 <pre>" . $response['body'] . "</pre>
@@ -748,9 +744,13 @@ WHERE user_login LIKE %s
     public function addSelectionSetAsMetadata(array $selectionSets, array &$sageEntityMetadatas, ?stdClass $obj, string $prefix = ''): array
     {
         foreach ($selectionSets as $subEntity => $selectionSet) {
-            if (is_array($selectionSet) && array_key_exists('name', $selectionSet)) {
-                $sageEntityMetadatas[] = new SageEntityMetadata(field: '_' . $prefix . $selectionSet['name'], value: static fn(StdClass $entity) => PathUtils::getByPath($entity, $prefix)->{$selectionSet['name']});
-            } else if (!is_null($obj) && $selectionSet instanceof ArgumentSelectionSetDto) {
+            if (is_array($selectionSet)) {
+                if (array_key_exists('name', $selectionSet)) {
+                    $sageEntityMetadatas[] = new SageEntityMetadata(field: '_' . $prefix . $selectionSet['name'], value: static fn(StdClass $entity) => PathUtils::getByPath($entity, $prefix)->{$selectionSet['name']});
+                } else {
+                    $t = 0;
+                }
+            } elseif (!is_null($obj) && $selectionSet instanceof ArgumentSelectionSetDto) {
                 foreach ($obj->{$subEntity} as $subObject) {
                     $this->addSelectionSetAsMetadata(
                         $selectionSet->getSelectionSet(),

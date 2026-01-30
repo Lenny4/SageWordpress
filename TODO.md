@@ -1,12 +1,12 @@
 // vérifier que toutes les syncro marchent
-// todo rajouter customer_id > 0
+// ne pas relancer le cron sur les taskJob en erreur et permettre dans le site de les relancer manuellement
 // mettre le catalogue en catégorie, quand on créer un nouveau produit si aucune catégorie mettre la catégorie du dernier produit qui a une catégorie différente du nom de la famille
 // faire les paiements
+// remove not CreatedResources
 // voir comment ça se comporte quand on crée une commande avec un article qui n'est pas dans Sage
 // on updateWebsite reset TaskJobHistory
 //remove all FArticle ne doit pas supprimer tous les article mais on doit faire un update si on trouve la ligne correspondante
 // dans les ToWebsite( au lieu de faire un ExistsFComptetWebsite sauvegarder au niveau de SyncWebsiteJobDtos les identifiers déjà fait
-// changer updateIfExists to false quand ImportOldData != null
 //AD23A964-B01D-4BDB-93FF-B46940EA74B4
 //https://windows
 //

@@ -79,7 +79,7 @@ class GraphqlService
         $link = "<strong><span style='display: block; clear: both;'><a href='" . get_admin_url() . "admin.php?page=" . Sage::TOKEN . "_settings'>" . __("Modifier", Sage::TOKEN) . "</a></span></strong>";
         if (!is_string($hostUrl) || ($hostUrl === '' || $hostUrl === '0')) {
             $message = __("Veuillez renseigner l'host du serveur Sage. ", Sage::TOKEN) . $link;
-        } else if (filter_var($hostUrl, FILTER_VALIDATE_URL) === false) {
+        } elseif (filter_var($hostUrl, FILTER_VALIDATE_URL) === false) {
             $message = __("L'host du serveur Sage n'est pas une url valide. ", Sage::TOKEN) . $link;
         }
         if (!is_null($message)) {
@@ -133,9 +133,9 @@ class GraphqlService
             AdminController::adminNotices(
                 "<div id='" . Sage::TOKEN . "_join_api' class='error'><p>" .
                 __("L'API Sage n'est pas joignable. Avez-vous lancé le serveur ?", Sage::TOKEN)
-                . (!is_null($errorMsg)
-                    ? "<br>" . __('Error', Sage::TOKEN) . ": " . $errorMsg
-                    : ""
+                . (is_null($errorMsg)
+                    ? ""
+                    : "<br>" . __('Error', Sage::TOKEN) . ": " . $errorMsg
                 ) .
                 "</p></div>");
         }
@@ -277,7 +277,7 @@ class GraphqlService
             return null;
         }
         try {
-            return $client->runQuery($gql, variables: $variables)?->getResults();
+            return $client->runQuery($gql, variables: $variables)->getResults();
         } catch (Throwable $throwable) {
             // todo store logs
             $message = $throwable->getMessage();
@@ -567,7 +567,8 @@ class GraphqlService
                 $cacheService->delete($cacheName);
             }
             $results = $cacheService->get($cacheName, $function);
-            if (empty($results) || is_string($results)) { // if $results is string it means it's an error
+            if (empty($results) || is_string($results)) {
+                // if $results is string it means it's an error
                 $cacheService->delete($cacheName);
                 $results = $function();
                 if (isset($results->data->{$entityName}->items)) {
@@ -576,10 +577,8 @@ class GraphqlService
                 if (!empty($results)) {
                     $results = $cacheService->get($cacheName, fn() => $results);
                 }
-            } else {
-                if (isset($results->data->{$entityName}->items)) {
-                    $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets, $arrayKey);
-                }
+            } elseif (isset($results->data->{$entityName}->items)) {
+                $this->addKeysToCollection($results->data->{$entityName}->items, $selectionSets, $arrayKey);
             }
         }
 
@@ -740,7 +739,7 @@ class GraphqlService
                 ]),
             ];
         }
-        return [
+        $result = [
             ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
                 'arType',
                 'arPoidsNet',
@@ -804,6 +803,10 @@ class GraphqlService
                 ],
             ],
         ];
+        for ($i = 1; $i <= 4; $i++) {
+            $result['clNo' . $i . 'Navigation'] = $this->_getFCatalogueSelectionSet();
+        }
+        return $result;
     }
 
     public function _getFArtclientsSelectionSet(): array

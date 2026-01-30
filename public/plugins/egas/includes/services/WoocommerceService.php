@@ -161,11 +161,7 @@ class WoocommerceService
                     ]
                 ]
             ]);
-            if (empty($orders)) {
-                $order = new WC_Order();
-            } else {
-                $order = $orders[0];
-            }
+            $order = empty($orders) ? new WC_Order() : $orders[0];
         }
         $graphqlService = GraphqlService::getInstance();
         $extendedFDocentetes = $graphqlService->getFDocentetes(
@@ -404,7 +400,7 @@ class WoocommerceService
             $postId = null;
             if (is_string($responseError)) {
                 $message = $responseError;
-            } else if ($response["response"]["code"] === 201) {
+            } elseif ($response["response"]["code"] === 201) {
                 $body = json_decode((string)$response["body"], false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
                 $urlArticle = str_replace('%id%', $body->id, $urlArticle);
                 $postId = $body->id;
@@ -692,7 +688,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
                     "tax_rate_shipping" => "1",
                     "tax_rate_class" => Sage::TOKEN
                 ]);
-            } else if ($taxeChange["change"] === TaxeUtils::REMOVE_TAXE_ACTION) {
+            } elseif ($taxeChange["change"] === TaxeUtils::REMOVE_TAXE_ACTION) {
                 WC_Tax::_delete_tax_rate($taxeChange["old"]->tax_rate_id);
             }
         }
@@ -984,28 +980,26 @@ WHERE {$wpdb->posts}.post_type = 'product'
         $woocommerceShowTax = get_option('woocommerce_tax_display_cart') !== "excl"; // excl || incl
         if ($pExpedition->eTypeCalcul === ETypeCalculEnum::Valeur->value) {
             $result = $pExpedition->eValFrais;
-        } else {
+        } elseif ($pExpedition->eTypeFrais === DocumentFraisTypeEnum::DocFraisTypeQuantite->value) {
             // grille, in this case (DocFraisTypeForfait && DocFraisTypeColisage) cannot be selected in sage
-            if ($pExpedition->eTypeFrais === DocumentFraisTypeEnum::DocFraisTypeQuantite->value) {
-                $quantity = 0;
-                foreach ($wcCart->get_cart_contents() as $cartContent) {
-                    $quantity += $cartContent["quantity"];
-                }
-                $result = $this->findFraisExpeditionGrille($pExpedition, $quantity);
-            } else {
-                $prop = '';
-                if ($pExpedition->eTypeFrais === DocumentFraisTypeEnum::DocFraisTypePoidsNet->value) {
-                    $prop = '_poids_net';
-                } else if ($pExpedition->eTypeFrais === DocumentFraisTypeEnum::DocFraisTypePoidsBrut->value) {
-                    $prop = '_poids_brut';
-                }
-                foreach ($wcCart->get_cart_contents() as $cartContent) {
-                    /** @var WC_Product_Simple $product */
-                    $product = $cartContent['data'];
-                    $value = SageService::getInstance()->get_post_meta_single($product->get_id(), '_' . Sage::TOKEN . $prop, true);
-                    if (!empty($value)) {
-                        $result = $this->findFraisExpeditionGrille($pExpedition, (float)$value);
-                    }
+            $quantity = 0;
+            foreach ($wcCart->get_cart_contents() as $cartContent) {
+                $quantity += $cartContent["quantity"];
+            }
+            $result = $this->findFraisExpeditionGrille($pExpedition, $quantity);
+        } else {
+            $prop = '';
+            if ($pExpedition->eTypeFrais === DocumentFraisTypeEnum::DocFraisTypePoidsNet->value) {
+                $prop = '_poids_net';
+            } elseif ($pExpedition->eTypeFrais === DocumentFraisTypeEnum::DocFraisTypePoidsBrut->value) {
+                $prop = '_poids_brut';
+            }
+            foreach ($wcCart->get_cart_contents() as $cartContent) {
+                /** @var WC_Product_Simple $product */
+                $product = $cartContent['data'];
+                $value = SageService::getInstance()->get_post_meta_single($product->get_id(), '_' . Sage::TOKEN . $prop, true);
+                if ($value !== [] && ($value !== '' && $value !== '0')) {
+                    $result = $this->findFraisExpeditionGrille($pExpedition, (float)$value);
                 }
             }
         }
@@ -1142,7 +1136,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
 
     public function getMaxPrice(array $prices): stdClass|null
     {
-        if (count($prices) === 0) {
+        if ($prices === []) {
             return null;
         }
         usort($prices, static fn(StdClass $a, StdClass $b): int => $b->priceTtc <=> $a->priceTtc);

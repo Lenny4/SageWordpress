@@ -132,7 +132,7 @@ class RestApiHook
                         if ($response instanceof WP_Error) {
                             $body = json_encode($response->get_error_messages(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
                             $code = $response->get_error_code();
-                        } else if (is_null($response) || is_int($response)) {
+                        } elseif (is_null($response) || is_int($response)) {
                             return new WP_REST_Response(json_encode([
                                 'responseError' => $responseError,
                                 'message' => $message,
@@ -291,11 +291,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
                         'meta_key' => FComptetResource::META_KEY,
                         'meta_value' => strtoupper($ctNum)
                     ]);
-                    if (!empty($user)) {
-                        $user = $user[0];
-                    } else {
-                        $user = null;
-                    }
+                    $user = empty($user) ? null : $user[0];
                     return new WP_REST_Response([
                         'fComptet' => $fComptet,
                         'user' => $user,

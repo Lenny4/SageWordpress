@@ -74,7 +74,7 @@ class WoocommerceHook
             if ($screen === 'product') {
                 global $wp_meta_boxes;
                 WoocommerceController::showMetaBoxProduct($wp_meta_boxes, $screen);
-            } else if ($screen === 'woocommerce_page_wc-orders') {
+            } elseif ($screen === 'woocommerce_page_wc-orders') {
                 global $wp_meta_boxes;
                 WoocommerceController::showMetaBoxOrder($wp_meta_boxes, $screen);
             }
@@ -99,7 +99,7 @@ class WoocommerceHook
             return $classname;
         }, accepted_args: 2);
         add_filter('woocommerce_product_data_tabs', static function (array $tabs) { // Code to Create Tab in the Backend
-            foreach ($tabs as $tabName => $value) {
+            foreach (array_keys($tabs) as $tabName) {
                 if (!in_array($tabName, [
                     'linked_product',
                     'advanced',

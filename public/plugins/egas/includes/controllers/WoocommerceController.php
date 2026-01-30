@@ -169,7 +169,7 @@ class WoocommerceController
             // Hide the select
             $selectNode->setAttribute('style', 'display:none;');
             // Get selected option
-            $selectedOption = $select->filter('option[selected]')->count()
+            $selectedOption = $select->filter('option[selected]')->count() !== 0
                 ? $select->filter('option[selected]')
                 : $select->filter('option')->first();
             $selectedOptionText = trim($selectedOption->text());

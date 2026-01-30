@@ -29,14 +29,13 @@ final class PathUtils
                 } else {
                     return null;
                 }
-
                 // Accéder à l'élément du tableau
                 if (is_array($current) && isset($current[$key])) {
                     $current = $current[$key];
                 } else {
                     return null;
                 }
-            } else if (is_object($current) && isset($current->$segment)) {
+            } elseif (is_object($current) && isset($current->$segment)) {
                 $current = $current->$segment;
             } else {
                 return null;
