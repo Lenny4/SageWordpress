@@ -10,11 +10,8 @@ use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
-use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\LNumber;
 use Rector\Contract\PhpParser\Node\StmtsAwareInterface;
-use Rector\PhpParser\Enum\NodeGroup;
-use Rector\PhpParser\Node\BetterNodeFinder;
 use Rector\PhpParser\Node\Value\ValueResolver;
 use Rector\Rector\AbstractRector;
 use Rector\ValueObject\PhpVersionFeature;
@@ -31,8 +28,7 @@ final class JsonUnescapedUnicodeRector extends AbstractRector implements MinPhpV
     private const FLAGS = ['JSON_UNESCAPED_UNICODE'];
 
     public function __construct(
-        private readonly ValueResolver    $valueResolver,
-        private readonly BetterNodeFinder $betterNodeFinder
+        private readonly ValueResolver $valueResolver,
     )
     {
     }
