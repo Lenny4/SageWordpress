@@ -73,9 +73,8 @@ class TwigHook
                     }
                     if ($doPieceA !== $doPieceB) {
                         return strcmp($doPieceB, $doPieceA);
-                    } else {
-                        return $a->dlLigne <=> $b->dlLigne;
                     }
+                    return $a->dlLigne <=> $b->dlLigne;
                 }
                 return 0;
             });
