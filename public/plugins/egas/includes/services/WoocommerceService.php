@@ -144,6 +144,80 @@ class WoocommerceService
         }
     }
 
+    public function importFDocenteteFromSage(string $doPiece, string $doType, WC_Order|null $order = null, ?string $origin = null): array
+    {
+        if (is_null($order)) {
+            $orders = wc_get_orders([
+                'limit' => 1,
+                'meta_query' => [
+                    'relation' => 'AND',
+                    [
+                        'key' => '_' . Sage::TOKEN . '_doPiece',
+                        'value' => $doPiece,
+                    ],
+                    [
+                        'key' => '_' . Sage::TOKEN . '_doType',
+                        'value' => $doType,
+                    ]
+                ]
+            ]);
+            if (empty($orders)) {
+                $order = new WC_Order();
+            } else {
+                $order = $orders[0];
+            }
+        }
+        $graphqlService = GraphqlService::getInstance();
+        $extendedFDocentetes = $graphqlService->getFDocentetes(
+            $doPiece,
+            [$doType],
+            doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
+            doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
+            getError: true,
+            getFDoclignes: true,
+            getExpedition: true,
+            addWordpressProductId: true,
+            getUser: true,
+            getLivraison: true,
+            getLotSerie: true,
+            extended: true,
+        );
+        if (!is_array($extendedFDocentetes)) {
+            return [null, null, $extendedFDocentetes, 0];
+        }
+        $fDocentete = null;
+        if (!empty($extendedFDocentetes)) {
+            $fDocentete = array_values(array_filter($extendedFDocentetes, fn($fDocentete): bool => $fDocentete->doPiece === $doPiece && $fDocentete->doType === (int)$doType));
+            if (!empty($fDocentete)) {
+                $fDocentete = $fDocentete[0];
+            } else {
+                return [null, null, $extendedFDocentetes, 0];
+            }
+        }
+        $resource = SageService::getInstance()->getResource(FDocenteteResource::ENTITY_NAME);
+        foreach ($extendedFDocentetes as $extendedFDocentete) {
+            $canImportFDocentete = $resource->getCanImport()($extendedFDocentete);
+            if (!empty($canImportFDocentete)) {
+                return [Response::HTTP_CONFLICT, null, "<div class='error'>
+                        " . implode(' ', $canImportFDocentete) . "
+                                </div>", 0];
+            }
+        }
+        if (!empty($origin) && empty($order->get_created_via())) {
+            $order->add_meta_data('_wc_order_attribution_source_type', 'utm');
+            $order->add_meta_data('_wc_order_attribution_utm_source', $origin);
+        }
+        $order->update_meta_data(FDocenteteResource::META_KEY, json_encode([
+            'doPiece' => $fDocentete->doPiece,
+            'doType' => $fDocentete->doType,
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $order->update_meta_data('_' . Sage::TOKEN . '_doPiece', $fDocentete->doPiece);
+        $order->update_meta_data('_' . Sage::TOKEN . '_doType', $fDocentete->doType);
+        $order->save();
+        $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
+        return $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
+    }
+
     public function getTasksSynchronizeOrder(
         WC_Order          $order,
         array|null|string $extendedFDocentetes,
@@ -331,7 +405,7 @@ class WoocommerceService
             if (is_string($responseError)) {
                 $message = $responseError;
             } else if ($response["response"]["code"] === 201) {
-                $body = json_decode((string) $response["body"], false, 512, JSON_THROW_ON_ERROR);
+                $body = json_decode((string)$response["body"], false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
                 $urlArticle = str_replace('%id%', $body->id, $urlArticle);
                 $postId = $body->id;
                 if ($showSuccessMessage) {
@@ -434,7 +508,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
             if ($response["response"]["code"] !== 201 && $response["response"]["code"] !== 200) {
                 return $message2;
             }
-            $productId = json_decode((string) $response["body"], false, 512, JSON_THROW_ON_ERROR)->id;
+            $productId = json_decode((string)$response["body"], false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)->id;
         }
 
         $product = wc_get_product($productId);
@@ -479,34 +553,6 @@ WHERE {$wpdb->posts}.post_type = 'product'
                 if ($save) {
                     $lineItem->save();
                 }
-                break;
-            }
-        }
-        return '';
-    }
-
-    private function changeSerialOutProductOrder(WC_Order $order, int $itemId, array|null $fLotseriesOut): string
-    {
-        $lineItems = array_values($order->get_items());
-        $key = '_' . Sage::TOKEN . '_fLotseriesOut';
-        foreach ($lineItems as $lineItem) {
-            if ($lineItem->get_id() === $itemId) {
-                /** @var WC_Meta_Data[] $wcMetaDatas */
-                $wcMetaDatas = $lineItem->get_meta_data();
-                $found = false;
-                foreach ($wcMetaDatas as $wcMetaData) {
-                    $value = $wcMetaData->get_data();
-                    if ($value['key'] === $key) {
-                        $found = true;
-                        $value["value"] = json_encode($fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
-                        $lineItem->set_meta_data($value);
-                        break;
-                    }
-                }
-                if (!$found) {
-                    $lineItem->add_meta_data($key, json_encode($fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), true);
-                }
-                $lineItem->save_meta_data();
                 break;
             }
         }
@@ -650,6 +696,34 @@ WHERE {$wpdb->posts}.post_type = 'product'
                 WC_Tax::_delete_tax_rate($taxeChange["old"]->tax_rate_id);
             }
         }
+    }
+
+    private function changeSerialOutProductOrder(WC_Order $order, int $itemId, array|null $fLotseriesOut): string
+    {
+        $lineItems = array_values($order->get_items());
+        $key = '_' . Sage::TOKEN . '_fLotseriesOut';
+        foreach ($lineItems as $lineItem) {
+            if ($lineItem->get_id() === $itemId) {
+                /** @var WC_Meta_Data[] $wcMetaDatas */
+                $wcMetaDatas = $lineItem->get_meta_data();
+                $found = false;
+                foreach ($wcMetaDatas as $wcMetaData) {
+                    $value = $wcMetaData->get_data();
+                    if ($value['key'] === $key) {
+                        $found = true;
+                        $value["value"] = json_encode($fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+                        $lineItem->set_meta_data($value);
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $lineItem->add_meta_data($key, json_encode($fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), true);
+                }
+                $lineItem->save_meta_data();
+                break;
+            }
+        }
+        return '';
     }
 
     private function replaceProductToOrder(WC_Order $order, int $itemId, int $productId, stdClass $new, array &$alreadyAddedTaxes): string
@@ -834,7 +908,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
     {
         $result = $order->get_meta(FDocenteteResource::META_KEY);
         if (!empty($result)) {
-            return json_decode($result, true, 512, JSON_THROW_ON_ERROR);
+            return json_decode($result, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         }
         return null;
     }
@@ -999,80 +1073,6 @@ WHERE {$wpdb->posts}.post_type = 'product'
         return $order;
     }
 
-    public function importFDocenteteFromSage(string $doPiece, string $doType, WC_Order|null $order = null, ?string $origin = null): array
-    {
-        if (is_null($order)) {
-            $orders = wc_get_orders([
-                'limit' => 1,
-                'meta_query' => [
-                    'relation' => 'AND',
-                    [
-                        'key' => '_' . Sage::TOKEN . '_doPiece',
-                        'value' => $doPiece,
-                    ],
-                    [
-                        'key' => '_' . Sage::TOKEN . '_doType',
-                        'value' => $doType,
-                    ]
-                ]
-            ]);
-            if (empty($orders)) {
-                $order = new WC_Order();
-            } else {
-                $order = $orders[0];
-            }
-        }
-        $graphqlService = GraphqlService::getInstance();
-        $extendedFDocentetes = $graphqlService->getFDocentetes(
-            $doPiece,
-            [$doType],
-            doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
-            doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
-            getError: true,
-            getFDoclignes: true,
-            getExpedition: true,
-            addWordpressProductId: true,
-            getUser: true,
-            getLivraison: true,
-            getLotSerie: true,
-            extended: true,
-        );
-        if (!is_array($extendedFDocentetes)) {
-            return [null, null, $extendedFDocentetes, 0];
-        }
-        $fDocentete = null;
-        if (!empty($extendedFDocentetes)) {
-            $fDocentete = array_values(array_filter($extendedFDocentetes, fn($fDocentete): bool => $fDocentete->doPiece === $doPiece && $fDocentete->doType === (int)$doType));
-            if (!empty($fDocentete)) {
-                $fDocentete = $fDocentete[0];
-            } else {
-                return [null, null, $extendedFDocentetes, 0];
-            }
-        }
-        $resource = SageService::getInstance()->getResource(FDocenteteResource::ENTITY_NAME);
-        foreach ($extendedFDocentetes as $extendedFDocentete) {
-            $canImportFDocentete = $resource->getCanImport()($extendedFDocentete);
-            if (!empty($canImportFDocentete)) {
-                return [Response::HTTP_CONFLICT, null, "<div class='error'>
-                        " . implode(' ', $canImportFDocentete) . "
-                                </div>", 0];
-            }
-        }
-        if (!empty($origin) && empty($order->get_created_via())) {
-            $order->add_meta_data('_wc_order_attribution_source_type', 'utm');
-            $order->add_meta_data('_wc_order_attribution_utm_source', $origin);
-        }
-        $order->update_meta_data(FDocenteteResource::META_KEY, json_encode([
-            'doPiece' => $fDocentete->doPiece,
-            'doType' => $fDocentete->doType,
-        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-        $order->update_meta_data('_' . Sage::TOKEN . '_doPiece', $fDocentete->doPiece);
-        $order->update_meta_data('_' . Sage::TOKEN . '_doType', $fDocentete->doType);
-        $order->save();
-        $tasksSynchronizeOrder = $this->getTasksSynchronizeOrder($order, $extendedFDocentetes);
-        return $this->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
-    }
-
     public function custom_price(string $price, WC_Product $product, int $userId = 0, ?bool $withTaxes = null): float|string
     {
         $field = 'priceHt';
@@ -1127,7 +1127,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         if (empty($prices)) {
             return $r;
         }
-        $prices = json_decode($prices, false, 512, JSON_THROW_ON_ERROR);
+        $prices = json_decode($prices, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         foreach ($prices as $price) {
             // Catégorie comptable (nCatCompta): [Locale, Export, Métropole]
             // Catégorie tarifaire (nCatTarif): [Tarif GC, Tarif Remise, Prix public, Tarif Partenaire]

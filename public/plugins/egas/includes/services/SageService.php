@@ -102,7 +102,7 @@ WHERE user_login LIKE %s
         usort($fDoclignes, static function (stdClass $a, stdClass $b): int {
             foreach (FDocenteteUtils::FDOCLIGNE_MAPPING_DO_TYPE as $suffix) {
                 if ($a->{'dlPiece' . $suffix} !== $b->{'dlPiece' . $suffix}) {
-                    return strcmp((string) $a->{'dlPiece' . $suffix}, (string) $b->{'dlPiece' . $suffix});
+                    return strcmp((string)$a->{'dlPiece' . $suffix}, (string)$b->{'dlPiece' . $suffix});
                 }
             }
             if ($a->doType !== $b->doType) {
@@ -114,6 +114,58 @@ WHERE user_login LIKE %s
             return $a->dlLigne <=> $b->dlLigne;
         });
         return $fDoclignes;
+    }
+
+    public function getResource(string $entityName): Resource|null
+    {
+        $resources = $this->getResources();
+        foreach ($resources as $resource) {
+            if ($resource->getEntityName() == $entityName) {
+                return $resource;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @return Resource[]
+     */
+    public function getResources(): array
+    {
+        if (is_null($this->resources)) {
+            /** @var Resource[] $resources */
+            $resources = [];
+            $files = glob(__DIR__ . '/../resources' . '/*.php');
+            foreach ($files as $file) {
+                if (
+                    str_ends_with($file, '/Resource.php') ||
+                    str_ends_with($file, '/ImportConditionDto.php')
+                ) {
+                    continue;
+                }
+                $hookClass = 'App\\resources\\' . basename($file, '.php');
+                if (class_exists($hookClass) && $hookClass::supports()) {
+                    /** @var Resource $resource */
+                    $resource = $hookClass::getInstance();
+                    $mandatoryFields = $resource->getMandatoryFields();
+                    foreach ($resource->getImportCondition() as $importCondition) {
+                        $mandatoryFields[] = $importCondition->getField();
+                    }
+                    $resource->setMandatoryFields($mandatoryFields);
+                    $resources[] = $resource;
+                }
+            }
+            $this->resources = $resources;
+        }
+        return $this->resources;
+    }
+
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
     }
 
     public function getMainFDocenteteOfExtendedFDocentetes(WC_Order $order, array|null|string $extendedFDocentetes): stdClass|null|string
@@ -137,14 +189,6 @@ WHERE user_login LIKE %s
             });
         }
         return array_values($extendedFDocentetes)[0];
-    }
-
-    public static function getInstance(): self
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
     }
 
     public function getTasksSynchronizeOrder_Products(WC_Order $order, array $fDoclignes): array
@@ -178,7 +222,7 @@ WHERE user_login LIKE %s
                     foreach ($metaData as $meta) {
                         $data = $meta->get_data();
                         if ($data['key'] === '_' . Sage::TOKEN . '_fLotseriesOut') {
-                            $old->fLotseriesOut = json_decode((string) $data['value'], null, 512, JSON_THROW_ON_ERROR);
+                            $old->fLotseriesOut = json_decode((string)$data['value'], null, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
                             break;
                         }
                     }
@@ -219,7 +263,7 @@ WHERE user_login LIKE %s
                     if (array_values($new->taxes) !== array_values($old->taxes)) {
                         $changes[] = OrderUtils::CHANGE_TAXES_PRODUCT_ACTION;
                     }
-                    if (json_encode($new->fLotseriesOut, JSON_THROW_ON_ERROR) !== json_encode($old->fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)) {
+                    if (json_encode($new->fLotseriesOut, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) !== json_encode($old->fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)) {
                         $changes[] = OrderUtils::CHANGE_SERIAL_PRODUCT_OUT_ACTION;
                     }
                 }
@@ -288,7 +332,7 @@ WHERE user_login LIKE %s
         $foundSimilar = false;
         $formatFunction = function (stdClass $oldOrNew): StdClass {
             $oldOrNew->taxes = array_filter($oldOrNew->taxes, static fn(array $taxe): bool => $taxe['amount'] > 0);
-            usort($oldOrNew->taxes, static fn(array $a, array $b): int => strcmp((string) $a['code'], (string) $b['code']));
+            usort($oldOrNew->taxes, static fn(array $a, array $b): int => strcmp((string)$a['code'], (string)$b['code']));
             $oldOrNew->taxes = array_values($oldOrNew->taxes);
             return $oldOrNew;
         };
@@ -439,7 +483,7 @@ WHERE user_login LIKE %s
                 }
             }
             foreach ($metadata as $key => $value) {
-                if (str_starts_with((string) $key, $addressType)) {
+                if (str_starts_with((string)$key, $addressType)) {
                     $fields[] = $key;
                 }
             }
@@ -533,9 +577,9 @@ WHERE user_login LIKE %s
             if (empty($fullName)) {
                 continue;
             }
-            $fullName = trim((string) $fullName);
+            $fullName = trim((string)$fullName);
             $lastName = (!str_contains($fullName, ' ')) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $fullName);
-            $firstName = trim((string) preg_replace('#' . preg_quote((string) $lastName, '#') . '#', '', $fullName));
+            $firstName = trim((string)preg_replace('#' . preg_quote((string)$lastName, '#') . '#', '', $fullName));
             return [$firstName, $lastName];
         }
         return ['', ''];
@@ -656,50 +700,6 @@ WHERE user_login LIKE %s
                                 </div>" : "", $userId];
     }
 
-    public function getResource(string $entityName): Resource|null
-    {
-        $resources = $this->getResources();
-        foreach ($resources as $resource) {
-            if ($resource->getEntityName() == $entityName) {
-                return $resource;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * @return Resource[]
-     */
-    public function getResources(): array
-    {
-        if (is_null($this->resources)) {
-            /** @var Resource[] $resources */
-            $resources = [];
-            $files = glob(__DIR__ . '/../resources' . '/*.php');
-            foreach ($files as $file) {
-                if (
-                    str_ends_with($file, '/Resource.php') ||
-                    str_ends_with($file, '/ImportConditionDto.php')
-                ) {
-                    continue;
-                }
-                $hookClass = 'App\\resources\\' . basename($file, '.php');
-                if (class_exists($hookClass) && $hookClass::supports()) {
-                    /** @var Resource $resource */
-                    $resource = $hookClass::getInstance();
-                    $mandatoryFields = $resource->getMandatoryFields();
-                    foreach ($resource->getImportCondition() as $importCondition) {
-                        $mandatoryFields[] = $importCondition->getField();
-                    }
-                    $resource->setMandatoryFields($mandatoryFields);
-                    $resources[] = $resource;
-                }
-            }
-            $this->resources = $resources;
-        }
-        return $this->resources;
-    }
-
     public function getFieldsForEntity(
         Resource $resource,
         bool     $withMetadata = true
@@ -770,7 +770,7 @@ WHERE user_login LIKE %s
             return $data;
         }
         $entityName = $resource->getEntityName();
-        $fieldNames = array_map(static fn(array $field): string|array => str_replace(Sage::PREFIX_META_DATA, '', $field['name']), array_filter($fields, static fn(array $field): bool => str_starts_with((string) $field['name'], Sage::PREFIX_META_DATA)));
+        $fieldNames = array_map(static fn(array $field): string|array => str_replace(Sage::PREFIX_META_DATA, '', $field['name']), array_filter($fields, static fn(array $field): bool => str_starts_with((string)$field['name'], Sage::PREFIX_META_DATA)));
         $mandatoryField = $resource->getMandatoryFields()[0];
         $getIdentifier = $resource->getGetIdentifier();
         if (is_null($getIdentifier)) {
@@ -851,7 +851,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
             $this->websiteApiOption = get_option(Sage::TOKEN . '_website_api', null);
             if (!empty($this->websiteApiOption)) {
                 try {
-                    $this->websiteApiOption = json_decode($this->websiteApiOption, false, 512, JSON_THROW_ON_ERROR);
+                    $this->websiteApiOption = json_decode($this->websiteApiOption, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
                 } catch (Exception) {
                     // nothing
                 }
@@ -929,7 +929,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
                 foreach (['new', 'old'] as $key) {
                     $meta[$key] = array_filter(
                         $meta[$key],
-                        fn($value, $key): bool => str_starts_with((string) $key, '_' . Sage::TOKEN),
+                        fn($value, $key): bool => str_starts_with((string)$key, '_' . Sage::TOKEN),
                         ARRAY_FILTER_USE_BOTH
                     );
                     unset($meta[$key]['_' . Sage::TOKEN . '_last_update']);

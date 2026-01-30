@@ -40,7 +40,7 @@ class RestApiHook
                 foreach ($meta as $meta_key => $values) {
                     $value = maybe_unserialize($values[0]);
                     if (is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
-                        $decoded = json_decode($value, true);
+                        $decoded = json_decode($value, true, 512, JSON_UNESCAPED_UNICODE);
                         if (json_last_error() === JSON_ERROR_NONE) {
                             $value = $decoded;
                         }
@@ -141,7 +141,7 @@ class RestApiHook
                             $body = $response["body"];
                             $code = $response['response']['code'];
                             try {
-                                $body = json_decode($body, false, 512, JSON_THROW_ON_ERROR);
+                                $body = json_decode($body, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
                             } catch (Throwable) {
                                 // nothing
                             }
@@ -184,7 +184,7 @@ class RestApiHook
                         $extended = true;
                     }
                     $fDocentetes = GraphqlService::getInstance()->getFDocentetes(
-                        strtoupper(trim((string) $request['doPiece'])),
+                        strtoupper(trim((string)$request['doPiece'])),
                         doTypes: FDocenteteUtils::DO_TYPE_MAPPABLE,
                         doDomaine: DomaineTypeEnum::DomaineTypeVente->value,
                         doProvenance: DocumentProvenanceTypeEnum::DocProvenanceNormale->value,
@@ -224,7 +224,7 @@ class RestApiHook
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/fdocentete', [
                 'methods' => 'POST',
                 'callback' => static function (WP_REST_Request $request): WP_REST_Response {
-                    $body = json_decode($request->get_body(), false, 512, JSON_THROW_ON_ERROR);
+                    $body = json_decode($request->get_body(), false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
                     $doPiece = $body->{Sage::TOKEN . "-fdocentete-dopiece"};
                     $doType = (int)$body->{Sage::TOKEN . "-fdocentete-dotype"};
                     [$order, $extendedFDocentetes] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, new WC_Order($request['id']));
@@ -323,7 +323,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
         $sage = Sage::getInstance();
         $plugin_data = get_plugin_data($sage->file);
         $version = $plugin_data['Version'];
-        $cache_key = Sage::TOKEN . '_all_user_meta_keys_' . md5((string) $version);
+        $cache_key = Sage::TOKEN . '_all_user_meta_keys_' . md5((string)$version);
         $meta_keys = get_transient($cache_key);
         if (empty($meta_keys)) {
             global $wpdb;

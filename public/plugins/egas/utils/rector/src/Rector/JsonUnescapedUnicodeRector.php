@@ -19,26 +19,29 @@ use Rector\ValueObject\PhpVersionFeature;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
+use function is_array;
+use function is_string;
 
 /**
  * @see \Rector\Tests\TypeDeclaration\Rector\JsonUnescapedUnicodeRector\JsonUnescapedUnicodeRectorTest
  */
 final class JsonUnescapedUnicodeRector extends AbstractRector implements MinPhpVersionInterface
 {
+    private const FLAGS = ['JSON_THROW_ON_ERROR', 'JSON_UNESCAPED_UNICODE'];
     /**
      * @readonly
-     * @var \Rector\PhpParser\Node\Value\ValueResolver
+     * @var ValueResolver
      */
     private $valueResolver;
     /**
      * @readonly
-     * @var \Rector\PhpParser\Node\BetterNodeFinder
+     * @var BetterNodeFinder
      */
     private $betterNodeFinder;
     /**
      * @var bool
      */
-    private $hasChanged = \false;
+    private $hasChanged = false;
 
     public function __construct(ValueResolver $valueResolver, BetterNodeFinder $betterNodeFinder)
     {
@@ -72,14 +75,7 @@ CODE_SAMPLE
      */
     public function refactor(Node $node): ?Node
     {
-        // if found, skip it :)
-        $hasJsonErrorFuncCall = (bool)$this->betterNodeFinder->findFirst($node, function (Node $node): bool {
-            return $this->isNames($node, ['json_last_error', 'json_last_error_msg']);
-        });
-        if ($hasJsonErrorFuncCall) {
-            return null;
-        }
-        $this->hasChanged = \false;
+        $this->hasChanged = false;
         $this->traverseNodesWithCallable($node, function (Node $currentNode): ?FuncCall {
             if (!$currentNode instanceof FuncCall) {
                 return null;
@@ -101,44 +97,121 @@ CODE_SAMPLE
         return null;
     }
 
-    public function provideMinPhpVersion(): int
-    {
-        return PhpVersionFeature::JSON_EXCEPTION;
-    }
-
     private function shouldSkipFuncCall(FuncCall $funcCall): bool
     {
         if ($funcCall->isFirstClassCallable()) {
-            return \true;
+            return true;
         }
         if ($funcCall->args === null) {
-            return \true;
+            return true;
         }
         foreach ($funcCall->args as $arg) {
             if (!$arg instanceof Arg) {
                 continue;
             }
             if ($arg->name instanceof Identifier) {
-                return \true;
+                return true;
             }
         }
         return $this->isFirstValueStringOrArray($funcCall);
     }
 
+    private function isFirstValueStringOrArray(FuncCall $funcCall): bool
+    {
+        if (!isset($funcCall->getArgs()[0])) {
+            return false;
+        }
+        $firstArg = $funcCall->getArgs()[0];
+        $value = $this->valueResolver->getValue($firstArg->value);
+        if (is_string($value)) {
+            return true;
+        }
+        return is_array($value);
+    }
+
     private function processJsonEncode(FuncCall $funcCall): ?FuncCall
     {
+        $flags = [];
         if (isset($funcCall->args[1])) {
+            $flags = $this->getFlags($funcCall->args[1]);
+        }
+        $this->hasChanged = true;
+        $funcCall->args[1] = $this->getArgWithFlags($flags) ?? $funcCall->args[1];
+        return $funcCall;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getFlags(Arg|Node\Expr\BinaryOp\BitwiseOr|ConstFetch $arg, array $result = []): array
+    {
+        if ($arg instanceof ConstFetch) {
+            $constFetch = $arg;
+        } else {
+            if ($arg instanceof Arg) {
+                $array = $arg->value->jsonSerialize();
+            } else {
+                $array = $arg->jsonSerialize();
+            }
+            if ($arg->value instanceof ConstFetch) { // single flag
+                $constFetch = $arg->value;
+            } else { // multiple flag
+                $result = $this->getFlags($array['left'], $result);
+                $constFetch = $array['right'];
+            }
+        }
+        if (!is_null($constFetch)) {
+            $result[] = $constFetch->jsonSerialize()['name']->getFirst();
+        }
+        return $result;
+    }
+
+    private function getArgWithFlags(array $flags): Arg|null
+    {
+        $oldNbFlags = count($flags);
+        $flags = array_values(array_unique([...$flags, ...self::FLAGS]));
+        $newNbFlags = count($flags);
+        if ($oldNbFlags === $newNbFlags) {
             return null;
         }
-        $this->hasChanged = \true;
-        $funcCall->args[1] = new Arg($this->createConstFetch('JSON_UNESCAPED_UNICODE'));
-        return $funcCall;
+        if ($newNbFlags === 1) {
+            return new Arg($this->createConstFetch($flags[0]));
+        }
+        /** @var ConstFetch[] $constFetchs */
+        $constFetchs = [];
+        foreach ($flags as $flag) {
+            $constFetchs[] = $this->createConstFetch($flag);
+        }
+        $result = null;
+        foreach ($constFetchs as $i => $constFetch) {
+            if ($i === 1) {
+                continue;
+            }
+            if (is_null($result)) {
+                $result = new Node\Expr\BinaryOp\BitwiseOr(
+                    $constFetch,
+                    $constFetchs[$i + 1],
+                );
+            } else {
+                $result = new Node\Expr\BinaryOp\BitwiseOr(
+                    $result,
+                    $constFetch
+                );
+            }
+        }
+        return new Arg($result);
+    }
+
+    private function createConstFetch(string $name): ConstFetch
+    {
+        return new ConstFetch(new Name($name));
     }
 
     private function processJsonDecode(FuncCall $funcCall): ?FuncCall
     {
+        $flags = [];
         if (isset($funcCall->args[3])) {
-            return null;
+            $flags = $this->getFlags($funcCall->args[3]);
         }
         // set default to inter-args
         if (!isset($funcCall->args[1])) {
@@ -147,26 +220,13 @@ CODE_SAMPLE
         if (!isset($funcCall->args[2])) {
             $funcCall->args[2] = new Arg(new LNumber(512));
         }
-        $this->hasChanged = \true;
-        $funcCall->args[3] = new Arg($this->createConstFetch('JSON_UNESCAPED_UNICODE'));
+        $this->hasChanged = true;
+        $funcCall->args[3] = $this->getArgWithFlags($flags, self::FLAGS) ?? $funcCall->args[3];
         return $funcCall;
     }
 
-    private function createConstFetch(string $name): ConstFetch
+    public function provideMinPhpVersion(): int
     {
-        return new ConstFetch(new Name($name));
-    }
-
-    private function isFirstValueStringOrArray(FuncCall $funcCall): bool
-    {
-        if (!isset($funcCall->getArgs()[0])) {
-            return \false;
-        }
-        $firstArg = $funcCall->getArgs()[0];
-        $value = $this->valueResolver->getValue($firstArg->value);
-        if (\is_string($value)) {
-            return \true;
-        }
-        return \is_array($value);
+        return PhpVersionFeature::JSON_EXCEPTION;
     }
 }

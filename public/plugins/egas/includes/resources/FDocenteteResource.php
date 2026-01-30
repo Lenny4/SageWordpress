@@ -2,7 +2,6 @@
 
 namespace App\resources;
 
-use App\enum\Sage\ArticleTypeEnum;
 use App\enum\Sage\DomaineTypeEnum;
 use App\Sage;
 use App\services\GraphqlService;
@@ -126,7 +125,7 @@ class FDocenteteResource extends Resource
                 message: fn(array $fDocentete): string => __("Seuls les documents ayant ces doType peuvent être importés.", Sage::TOKEN) . ' [' . implode(',', FDocenteteUtils::DO_TYPE_MAPPABLE) . '][' . $fDocentete["doPiece"] . '][' . $fDocentete["doType"] . ']'),
         ];
         $this->import = static function (string $identifier) {
-            $data = json_decode(stripslashes($identifier), false, 512, JSON_THROW_ON_ERROR);
+            $data = json_decode(stripslashes($identifier), false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
             [$result, $errorMessage, $message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($data->doPiece, $data->doType);
             return $order->get_id();
         };

@@ -118,7 +118,7 @@ class GraphqlService
 
         curl_close($curlHandle);
         try {
-            $response = json_decode($responseString, true, 512, JSON_THROW_ON_ERROR);
+            $response = json_decode($responseString, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
             if (!is_null($response)) {
                 $this->pingApi = $response["status"] === 'Healthy';
                 if (!$this->pingApi) {
@@ -235,7 +235,7 @@ class GraphqlService
         if ($value === '') {
             return null;
         }
-        return json_encode($this->filterToGraphQlWhere(json_decode($value, true, 512, JSON_THROW_ON_ERROR)), JSON_UNESCAPED_UNICODE);
+        return json_encode($this->filterToGraphQlWhere(json_decode($value, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)), JSON_UNESCAPED_UNICODE);
     }
 
     public function filterToGraphQlWhere(array $filter): stdClass
@@ -354,79 +354,6 @@ class GraphqlService
         return $typeModel;
     }
 
-    public function getTypeModel(string $object): array|null
-    {
-        $cacheName = 'TypeModel_' . $object;
-        $cacheService = CacheService::getInstance();
-        if (!$this->pingApi) {
-            $result = $cacheService->get($cacheName, static fn(): null => null);
-            if (is_null($result)) {
-                $cacheService->delete($cacheName);
-            }
-            return [[], []];
-        }
-
-        $function = function () use ($object): array {
-            // https://graphql.org/learn/introspection/
-            $query1 = (new Query('__type'))
-                ->setArguments(['name' => $object])
-                ->setSelectionSet(
-                    [
-                        'name',
-                        (new Query('fields'))
-                            ->setSelectionSet(
-                                [
-                                    'name',
-                                    'description',
-                                    (new Query('type'))
-                                        ->setSelectionSet(
-                                            [
-                                                'name',
-                                                'kind',
-                                                (new Query('ofType'))
-                                                    ->setSelectionSet(
-                                                        [
-                                                            'name',
-                                                            'kind',
-                                                        ]
-                                                    ),
-                                            ]
-                                        ),
-                                ],
-                            ),
-                    ]
-                );
-            $rawFields = $this->runQuery($query1)?->data?->__type?->fields;
-            $fields = array_map(fn(stdClass $field) => $field->name, $rawFields);
-            $query2 = (new Query('__type'))
-                ->setArguments(['name' => $object . 'FilterInput'])
-                ->setSelectionSet(
-                    [
-                        (new Query('inputFields'))
-                            ->setSelectionSet(
-                                [
-                                    'name',
-                                ],
-                            ),
-                    ]
-                );
-            $filterFields = [];
-            foreach ($this->runQuery($query2)?->data?->__type?->inputFields ?? [] as $filterField) {
-                if (in_array($filterField->name, $fields)) {
-                    $filterFields[$filterField->name] = $filterField->name;
-                }
-            }
-            return [$rawFields, $filterFields];
-        };
-        $typeModel = $cacheService->get($cacheName, $function);
-        if (empty($typeModel)) {
-            $cacheService->delete($cacheName);
-            $typeModel = $cacheService->get($cacheName, $function);
-        }
-
-        return $typeModel;
-    }
-
     public function getPDossier(
         bool  $useCache = true,
         ?bool $getFromSage = null,
@@ -497,7 +424,7 @@ class GraphqlService
         if (!$getFromSage) {
             $entities = get_option($optionName, null);
             if (!is_null($entities)) {
-                $entities = (array)json_decode($entities, false, 512, JSON_THROW_ON_ERROR);
+                $entities = (array)json_decode($entities, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
             }
             $tryGetOption = true;
         }
@@ -550,7 +477,7 @@ class GraphqlService
                 if (!$tryGetOption) {
                     $entitiesBdd = get_option($optionName, null);
                     if ($entitiesBdd !== 'null' && $entitiesBdd !== null) {
-                        $entities = (array)json_decode($entitiesBdd, false, 512, JSON_THROW_ON_ERROR);
+                        $entities = (array)json_decode($entitiesBdd, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
                     }
                 }
             } else {
@@ -594,7 +521,7 @@ class GraphqlService
             if (array_key_exists('filter', $queryParams)) {
                 $filter = $queryParams['filter'];
                 if (is_string($filter)) {
-                    $filter = json_decode(urldecode($filter), true, 512, JSON_THROW_ON_ERROR);
+                    $filter = json_decode(urldecode($filter), true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
                 }
                 $where = $this->filterToGraphQlWhere($filter);
             }
@@ -663,7 +590,7 @@ class GraphqlService
     {
         $defaultSortValue = 'asc';
         if (array_key_exists('sort', $queryParams)) {
-            $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_THROW_ON_ERROR);
+            $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
             $sortField = array_key_first($json);
             return [$sortField, (string)$json[$sortField]];
         }
@@ -692,7 +619,7 @@ class GraphqlService
         $result = [];
         foreach ($selectionSets as $key => $value) {
             if (is_numeric($key)) {
-                if (!str_starts_with((string) $value['name'], Sage::PREFIX_META_DATA)) {
+                if (!str_starts_with((string)$value['name'], Sage::PREFIX_META_DATA)) {
                     $result[] = $value['name'];
                 }
             } else {
@@ -1311,7 +1238,7 @@ WHERE meta_key = %s
             foreach ($fDocentetes as $fDocentete) {
                 $fDocentete->wordpressIds = [];
                 foreach ($r as $wcOrdersMeta) {
-                    $data = json_decode($wcOrdersMeta->meta_value, false, 512, JSON_THROW_ON_ERROR);
+                    $data = json_decode($wcOrdersMeta->meta_value, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
                     if ($data->doPiece === $fDocentete->doPiece &&
                         $data->doType === $fDocentete->doType) {
                         $fDocentete->wordpressIds[] = (int)$wcOrdersMeta->order_id;
@@ -2041,7 +1968,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $data = [];
         if ($getData) {
             $data = json_decode(json_encode($this->searchEntities($entityName, $queryParams, $showFields)
-                , JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), true, 512, JSON_THROW_ON_ERROR);
+                , JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
             $data = SageService::getInstance()->populateMetaDatas($data, $showFields, $resource);
         }
         $hideFields = array_map(static fn(string $hideField): string|array => str_replace(Sage::PREFIX_META_DATA, '', $hideField), $hideFields);
@@ -2099,6 +2026,79 @@ WHERE {$wpdb->postmeta}.meta_key = %s
             $cacheService->delete($cacheName);
             $typeModel = $cacheService->get($cacheName, $function);
         }
+        return $typeModel;
+    }
+
+    public function getTypeModel(string $object): array|null
+    {
+        $cacheName = 'TypeModel_' . $object;
+        $cacheService = CacheService::getInstance();
+        if (!$this->pingApi) {
+            $result = $cacheService->get($cacheName, static fn(): null => null);
+            if (is_null($result)) {
+                $cacheService->delete($cacheName);
+            }
+            return [[], []];
+        }
+
+        $function = function () use ($object): array {
+            // https://graphql.org/learn/introspection/
+            $query1 = (new Query('__type'))
+                ->setArguments(['name' => $object])
+                ->setSelectionSet(
+                    [
+                        'name',
+                        (new Query('fields'))
+                            ->setSelectionSet(
+                                [
+                                    'name',
+                                    'description',
+                                    (new Query('type'))
+                                        ->setSelectionSet(
+                                            [
+                                                'name',
+                                                'kind',
+                                                (new Query('ofType'))
+                                                    ->setSelectionSet(
+                                                        [
+                                                            'name',
+                                                            'kind',
+                                                        ]
+                                                    ),
+                                            ]
+                                        ),
+                                ],
+                            ),
+                    ]
+                );
+            $rawFields = $this->runQuery($query1)?->data?->__type?->fields;
+            $fields = array_map(fn(stdClass $field) => $field->name, $rawFields);
+            $query2 = (new Query('__type'))
+                ->setArguments(['name' => $object . 'FilterInput'])
+                ->setSelectionSet(
+                    [
+                        (new Query('inputFields'))
+                            ->setSelectionSet(
+                                [
+                                    'name',
+                                ],
+                            ),
+                    ]
+                );
+            $filterFields = [];
+            foreach ($this->runQuery($query2)?->data?->__type?->inputFields ?? [] as $filterField) {
+                if (in_array($filterField->name, $fields)) {
+                    $filterFields[$filterField->name] = $filterField->name;
+                }
+            }
+            return [$rawFields, $filterFields];
+        };
+        $typeModel = $cacheService->get($cacheName, $function);
+        if (empty($typeModel)) {
+            $cacheService->delete($cacheName);
+            $typeModel = $cacheService->get($cacheName, $function);
+        }
+
         return $typeModel;
     }
 }
