@@ -206,7 +206,7 @@ class WoocommerceService
         $order->update_meta_data(FDocenteteResource::META_KEY, json_encode([
             'doPiece' => $fDocentete->doPiece,
             'doType' => $fDocentete->doType,
-        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE));
         $order->update_meta_data('_' . Sage::TOKEN . '_doPiece', $fDocentete->doPiece);
         $order->update_meta_data('_' . Sage::TOKEN . '_doType', $fDocentete->doType);
         $order->save();
@@ -401,7 +401,7 @@ class WoocommerceService
             if (is_string($responseError)) {
                 $message = $responseError;
             } elseif ($response["response"]["code"] === 201) {
-                $body = json_decode((string)$response["body"], false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                $body = json_decode((string)$response["body"], false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                 $urlArticle = str_replace('%id%', $body->id, $urlArticle);
                 $postId = $body->id;
                 if ($showSuccessMessage) {
@@ -504,7 +504,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
             if ($response["response"]["code"] !== 201 && $response["response"]["code"] !== 200) {
                 return $message2;
             }
-            $productId = json_decode((string)$response["body"], false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)->id;
+            $productId = json_decode((string)$response["body"], false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE)->id;
         }
 
         $product = wc_get_product($productId);
@@ -707,13 +707,13 @@ WHERE {$wpdb->posts}.post_type = 'product'
                     $value = $wcMetaData->get_data();
                     if ($value['key'] === $key) {
                         $found = true;
-                        $value["value"] = json_encode($fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+                        $value["value"] = json_encode($fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                         $lineItem->set_meta_data($value);
                         break;
                     }
                 }
                 if (!$found) {
-                    $lineItem->add_meta_data($key, json_encode($fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), true);
+                    $lineItem->add_meta_data($key, json_encode($fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE), true);
                 }
                 $lineItem->save_meta_data();
                 break;
@@ -904,7 +904,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
     {
         $result = $order->get_meta(FDocenteteResource::META_KEY);
         if (!empty($result)) {
-            return json_decode($result, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+            return json_decode($result, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
         }
         return null;
     }
@@ -1121,7 +1121,7 @@ WHERE {$wpdb->posts}.post_type = 'product'
         if (empty($prices)) {
             return $r;
         }
-        $prices = json_decode($prices, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        $prices = json_decode($prices, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
         foreach ($prices as $price) {
             // Catégorie comptable (nCatCompta): [Locale, Export, Métropole]
             // Catégorie tarifaire (nCatTarif): [Tarif GC, Tarif Remise, Prix public, Tarif Partenaire]

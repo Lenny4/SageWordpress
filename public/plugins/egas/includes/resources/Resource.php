@@ -96,12 +96,9 @@ abstract class Resource
      * Can be use if the Sage entity has multiple column as id
      */
     protected ?Closure $getIdentifier = null;
-
-    private Closure $canImport;
-
     protected Closure $sageEntity;
-
     protected Closure $importFromSage;
+    private Closure $canImport;
 
     protected function __construct()
     {

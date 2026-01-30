@@ -25,8 +25,8 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class JsonUnescapedUnicodeRector extends AbstractRector implements MinPhpVersionInterface
 {
+    private const FLAGS = ['JSON_UNESCAPED_UNICODE', 'JSON_THROW_ON_ERROR', 'JSON_UNESCAPED_SLASHES', 'JSON_INVALID_UTF8_SUBSTITUTE'];
     private bool $hasChanged = false;
-    private const FLAGS = ['JSON_UNESCAPED_UNICODE', 'JSON_THROW_ON_ERROR'];
 
     public function __construct(
         private readonly ValueResolver $valueResolver,
@@ -86,11 +86,6 @@ CODE_SAMPLE
         return null;
     }
 
-    public function provideMinPhpVersion(): int
-    {
-        return PhpVersionFeature::JSON_EXCEPTION;
-    }
-
     private function shouldSkipFuncCall(FuncCall $funcCall): bool
     {
         if ($funcCall->isFirstClassCallable()) {
@@ -110,47 +105,6 @@ CODE_SAMPLE
         return $this->isFirstValueStringOrArray($funcCall);
     }
 
-    private function processJsonEncode(FuncCall $funcCall): FuncCall
-    {
-        $flags = [];
-        if (isset($funcCall->args[1])) {
-            $flags = $this->getFlags($funcCall->args[1]);
-        }
-        if (!is_null($newArg = $this->getArgWithFlags($flags))) {
-            $this->hasChanged = true;
-            $funcCall->args[1] = $newArg;
-        }
-        return $funcCall;
-    }
-
-    private function processJsonDecode(FuncCall $funcCall): FuncCall
-    {
-        $flags = [];
-        if (isset($funcCall->args[3])) {
-            $flags = $this->getFlags($funcCall->args[3]);
-        }
-
-        // set default to inter-args
-        if (!isset($funcCall->args[1])) {
-            $funcCall->args[1] = new Arg($this->nodeFactory->createNull());
-        }
-
-        if (!isset($funcCall->args[2])) {
-            $funcCall->args[2] = new Arg(new LNumber(512));
-        }
-
-        if (!is_null($newArg = $this->getArgWithFlags($flags))) {
-            $this->hasChanged = true;
-            $funcCall->args[3] = $newArg;
-        }
-        return $funcCall;
-    }
-
-    private function createConstFetch(string $name): ConstFetch
-    {
-        return new ConstFetch(new Name($name));
-    }
-
     private function isFirstValueStringOrArray(FuncCall $funcCall): bool
     {
         if (!isset($funcCall->getArgs()[0])) {
@@ -162,6 +116,19 @@ CODE_SAMPLE
             return true;
         }
         return is_array($value);
+    }
+
+    private function processJsonEncode(FuncCall $funcCall): FuncCall
+    {
+        $flags = [];
+        if (isset($funcCall->args[1])) {
+            $flags = $this->getFlags($funcCall->args[1]);
+        }
+        if (!is_null($newArg = $this->getArgWithFlags($flags))) {
+            $this->hasChanged = true;
+            $funcCall->args[1] = $newArg;
+        }
+        return $funcCall;
     }
 
     /**
@@ -215,5 +182,38 @@ CODE_SAMPLE
         }
 
         return new Arg($expr);
+    }
+
+    private function createConstFetch(string $name): ConstFetch
+    {
+        return new ConstFetch(new Name($name));
+    }
+
+    private function processJsonDecode(FuncCall $funcCall): FuncCall
+    {
+        $flags = [];
+        if (isset($funcCall->args[3])) {
+            $flags = $this->getFlags($funcCall->args[3]);
+        }
+
+        // set default to inter-args
+        if (!isset($funcCall->args[1])) {
+            $funcCall->args[1] = new Arg($this->nodeFactory->createNull());
+        }
+
+        if (!isset($funcCall->args[2])) {
+            $funcCall->args[2] = new Arg(new LNumber(512));
+        }
+
+        if (!is_null($newArg = $this->getArgWithFlags($flags))) {
+            $this->hasChanged = true;
+            $funcCall->args[3] = $newArg;
+        }
+        return $funcCall;
+    }
+
+    public function provideMinPhpVersion(): int
+    {
+        return PhpVersionFeature::JSON_EXCEPTION;
     }
 }

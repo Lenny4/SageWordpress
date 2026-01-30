@@ -118,7 +118,7 @@ class GraphqlService
 
         curl_close($curlHandle);
         try {
-            $response = json_decode($responseString, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+            $response = json_decode($responseString, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
             if (!is_null($response)) {
                 $this->pingApi = $response["status"] === 'Healthy';
                 if (!$this->pingApi) {
@@ -235,7 +235,7 @@ class GraphqlService
         if ($value === '') {
             return null;
         }
-        return json_encode($this->filterToGraphQlWhere(json_decode($value, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        return json_encode($this->filterToGraphQlWhere(json_decode($value, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE)), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     public function filterToGraphQlWhere(array $filter): stdClass
@@ -289,7 +289,7 @@ class GraphqlService
                 if (method_exists($throwable, 'getErrorDetails')) {
                     $array["errorDetails"] = $throwable->getErrorDetails();
                 }
-                $message = json_encode($array, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $message = json_encode($array, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
             }
             if ($getError) {
                 return $message;
@@ -424,7 +424,7 @@ class GraphqlService
         if (!$getFromSage) {
             $entities = get_option($optionName, null);
             if (!is_null($entities)) {
-                $entities = (array)json_decode($entities, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                $entities = (array)json_decode($entities, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
             }
             $tryGetOption = true;
         }
@@ -477,7 +477,7 @@ class GraphqlService
                 if (!$tryGetOption) {
                     $entitiesBdd = get_option($optionName, null);
                     if ($entitiesBdd !== 'null' && $entitiesBdd !== null) {
-                        $entities = (array)json_decode($entitiesBdd, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                        $entities = (array)json_decode($entitiesBdd, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                     }
                 }
             } else {
@@ -486,7 +486,7 @@ class GraphqlService
             }
         }
         if ($getFromSage) {
-            update_option($optionName, json_encode($entities, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+            update_option($optionName, json_encode($entities, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE));
         }
         return $entities;
     }
@@ -521,7 +521,7 @@ class GraphqlService
             if (array_key_exists('filter', $queryParams)) {
                 $filter = $queryParams['filter'];
                 if (is_string($filter)) {
-                    $filter = json_decode(urldecode($filter), true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                    $filter = json_decode(urldecode($filter), true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                 }
                 $where = $this->filterToGraphQlWhere($filter);
             }
@@ -542,7 +542,7 @@ class GraphqlService
             $arguments['order'] = new RawObject($order);
 
             if (!is_null($where)) {
-                $arguments['where'] = new RawObject(preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($where, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)));
+                $arguments['where'] = new RawObject(preg_replace('/"([^"]+)"\s*:\s*/', '$1:', json_encode($where, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE)));
             }
 
             $query = (new Query($entityName))
@@ -589,7 +589,7 @@ class GraphqlService
     {
         $defaultSortValue = 'asc';
         if (array_key_exists('sort', $queryParams)) {
-            $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+            $json = json_decode(stripslashes((string)$queryParams['sort']), true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
             $sortField = array_key_first($json);
             return [$sortField, (string)$json[$sortField]];
         }
@@ -936,6 +936,20 @@ class GraphqlService
         ];
     }
 
+    public function _getFCatalogueSelectionSet(): array
+    {
+        return [
+            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
+                'clNo',
+                'clNoParent',
+                'clNiveau',
+            ]),
+            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
+                'clIntitule',
+            ]),
+        ];
+    }
+
     public function _getFExpeditiongrilles(): array
     {
         return [
@@ -1229,7 +1243,7 @@ class GraphqlService
             $values = array_map(static fn(stdClass $fDocentete) => json_encode([
                 'doPiece' => $fDocentete->doPiece,
                 'doType' => $fDocentete->doType,
-            ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), $fDocentetes);
+            ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE), $fDocentetes);
             global $wpdb;
             $r = $wpdb->get_results(
                 $wpdb->prepare("
@@ -1241,7 +1255,7 @@ WHERE meta_key = %s
             foreach ($fDocentetes as $fDocentete) {
                 $fDocentete->wordpressIds = [];
                 foreach ($r as $wcOrdersMeta) {
-                    $data = json_decode($wcOrdersMeta->meta_value, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                    $data = json_decode($wcOrdersMeta->meta_value, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                     if ($data->doPiece === $fDocentete->doPiece &&
                         $data->doType === $fDocentete->doType) {
                         $fDocentete->wordpressIds[] = (int)$wcOrdersMeta->order_id;
@@ -1628,20 +1642,6 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         return $this->fCatalogues;
     }
 
-    public function _getFCatalogueSelectionSet(): array
-    {
-        return [
-            ...$this->_formatOperationFilterInput("IntOperationFilterInput", [
-                'clNo',
-                'clNoParent',
-                'clNiveau',
-            ]),
-            ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
-                'clIntitule',
-            ]),
-        ];
-    }
-
     public function getCbSysLibres(
         bool  $useCache = true,
         ?bool $getFromSage = null,
@@ -1971,7 +1971,7 @@ WHERE {$wpdb->postmeta}.meta_key = %s
         $data = [];
         if ($getData) {
             $data = json_decode(json_encode($this->searchEntities($entityName, $queryParams, $showFields)
-                , JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                , JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE), true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
             $data = SageService::getInstance()->populateMetaDatas($data, $showFields, $resource);
         }
         $hideFields = array_map(static fn(string $hideField): string|array => str_replace(Sage::PREFIX_META_DATA, '', $hideField), $hideFields);

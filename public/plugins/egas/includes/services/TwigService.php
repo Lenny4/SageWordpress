@@ -30,7 +30,7 @@ class TwigService
             // https://twig.symfony.com/doc/3.x/functions/dump.html
             $this->twig->addExtension(new DebugExtension());
         }
-        $this->dir = dirname((string) Sage::getInstance()->file);
+        $this->dir = dirname((string)Sage::getInstance()->file);
 //        $this->twig->addExtension(new IntlExtension());
     }
 

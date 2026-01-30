@@ -77,44 +77,6 @@ class WordpressService
         }
     }
 
-    public function isOptionFormSubmitted(): bool
-    {
-        return
-            array_key_exists('settings-updated', $_GET) &&
-            array_key_exists('page', $_GET) &&
-            $_GET["settings-updated"] === 'true' &&
-            $_GET["page"] === Sage::TOKEN . '_settings';
-    }
-
-    // todo tester si ça marche
-    public function removeUpdateApi(): void
-    {
-        global $wpdb;
-        foreach (SageService::getInstance()->getResources() as $resource) {
-            $fields = [];
-            if (!filter_var(get_option(Sage::TOKEN . '_sage_update_' . $resource->getEntityName(), false), FILTER_VALIDATE_BOOLEAN)) {
-                $fields[] = 'updateApi';
-            }
-            foreach ($fields as $field) {
-                $args = ['_' . Sage::TOKEN . '_' . $field];
-                $where = "";
-                $join = "";
-                if (!is_null($postType = $resource->getPostType())) {
-                    $args[] = $postType;
-                    $where .= "AND {$resource->getTable()}.post_type = %s";
-                    $join .= "INNER JOIN {$resource->getTable()}
-                        ON {$resource->getTable()}.ID = {$resource->getMetaTable()}.{$resource->getMetaColumnIdentifier()}";
-                }
-                $wpdb->query($wpdb->prepare("
-                    DELETE {$resource->getMetaTable()}
-                    FROM {$resource->getMetaTable()}
-                    {$join}
-                    WHERE {$resource->getMetaTable()}.meta_key = %s {$where}
-", ...$args));
-            }
-        }
-    }
-
     public function addWebsiteSageApi(bool $force = false): bool|string
     {
         // woocommerce/includes/admin/class-wc-admin-meta-boxes.php:134 add_meta_box( 'woocommerce-product-data
@@ -128,6 +90,15 @@ class WordpressService
         $userId = get_current_user_id();
         $password = $this->getCreateApplicationPassword($userId, $force);
         return $this->createUpdateWebsite($userId, $password);
+    }
+
+    public function isOptionFormSubmitted(): bool
+    {
+        return
+            array_key_exists('settings-updated', $_GET) &&
+            array_key_exists('page', $_GET) &&
+            $_GET["settings-updated"] === 'true' &&
+            $_GET["page"] === Sage::TOKEN . '_settings';
     }
 
     /**
@@ -282,6 +253,35 @@ class WordpressService
         load_plugin_textdomain($domain, false, dirname(plugin_basename($sage->file)) . '/lang/');
     }
 
+    public function removeUpdateApi(): void
+    {
+        // todo tester si ça marche
+        global $wpdb;
+        foreach (SageService::getInstance()->getResources() as $resource) {
+            $fields = [];
+            if (!filter_var(get_option(Sage::TOKEN . '_sage_update_' . $resource->getEntityName(), false), FILTER_VALIDATE_BOOLEAN)) {
+                $fields[] = 'updateApi';
+            }
+            foreach ($fields as $field) {
+                $args = ['_' . Sage::TOKEN . '_' . $field];
+                $where = "";
+                $join = "";
+                if (!is_null($postType = $resource->getPostType())) {
+                    $args[] = $postType;
+                    $where .= "AND {$resource->getTable()}.post_type = %s";
+                    $join .= "INNER JOIN {$resource->getTable()}
+                        ON {$resource->getTable()}.ID = {$resource->getMetaTable()}.{$resource->getMetaColumnIdentifier()}";
+                }
+                $wpdb->query($wpdb->prepare("
+                    DELETE {$resource->getMetaTable()}
+                    FROM {$resource->getMetaTable()}
+                    {$join}
+                    WHERE {$resource->getMetaTable()}.meta_key = %s {$where}
+", ...$args));
+            }
+        }
+    }
+
     public function onSavePost(int $postId): void
     {
         if ($postId === 0) {
@@ -349,7 +349,7 @@ class WordpressService
                     }
                     $user = get_users([
                         'meta_key' => FComptetResource::META_KEY,
-                        'meta_value' => strtoupper((string) $_POST[FComptetResource::META_KEY])
+                        'meta_value' => strtoupper((string)$_POST[FComptetResource::META_KEY])
                     ]);
                     if (!empty($user) && $user[0]->ID !== $userId) {
                         return;
@@ -362,7 +362,7 @@ class WordpressService
         }
         foreach ($_POST as $key => $value) {
             if (str_starts_with($key, '_' . Sage::TOKEN)) {
-                $value = trim((string) preg_replace('/\s\s+/', ' ', (string) $value)); // supprimer les espaces supérieur à 2
+                $value = trim((string)preg_replace('/\s\s+/', ' ', (string)$value)); // supprimer les espaces supérieur à 2
                 if ($key === FComptetResource::META_KEY) {
                     $value = strtoupper($value);
                 }

@@ -40,7 +40,7 @@ class RestApiHook
                 foreach ($meta as $meta_key => $values) {
                     $value = maybe_unserialize($values[0]);
                     if (is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
-                        $decoded = json_decode($value, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                        $decoded = json_decode($value, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                         if (json_last_error() === JSON_ERROR_NONE) {
                             $value = $decoded;
                         }
@@ -130,18 +130,18 @@ class RestApiHook
                     );
                     if ($request->get_param('json') === '1') {
                         if ($response instanceof WP_Error) {
-                            $body = json_encode($response->get_error_messages(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+                            $body = json_encode($response->get_error_messages(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                             $code = $response->get_error_code();
                         } elseif (is_null($response) || is_int($response)) {
                             return new WP_REST_Response(json_encode([
                                 'responseError' => $responseError,
                                 'message' => $message,
-                            ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR), is_int($response) ? $response : Response::HTTP_INTERNAL_SERVER_ERROR);
+                            ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE), is_int($response) ? $response : Response::HTTP_INTERNAL_SERVER_ERROR);
                         } else {
                             $body = $response["body"];
                             $code = $response['response']['code'];
                             try {
-                                $body = json_decode($body, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                                $body = json_decode($body, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                             } catch (Throwable) {
                                 // nothing
                             }
@@ -224,7 +224,7 @@ class RestApiHook
             register_rest_route(Sage::TOKEN . '/v1', '/orders/(?P<id>\d+)/fdocentete', [
                 'methods' => 'POST',
                 'callback' => static function (WP_REST_Request $request): WP_REST_Response {
-                    $body = json_decode($request->get_body(), false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                    $body = json_decode($request->get_body(), false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                     $doPiece = $body->{Sage::TOKEN . "-fdocentete-dopiece"};
                     $doType = (int)$body->{Sage::TOKEN . "-fdocentete-dotype"};
                     [$order, $extendedFDocentetes] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, new WC_Order($request['id']));

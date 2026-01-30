@@ -222,7 +222,7 @@ WHERE user_login LIKE %s
                     foreach ($metaData as $meta) {
                         $data = $meta->get_data();
                         if ($data['key'] === '_' . Sage::TOKEN . '_fLotseriesOut') {
-                            $old->fLotseriesOut = json_decode((string)$data['value'], null, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                            $old->fLotseriesOut = json_decode((string)$data['value'], null, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                             break;
                         }
                     }
@@ -263,7 +263,7 @@ WHERE user_login LIKE %s
                     if (array_values($new->taxes) !== array_values($old->taxes)) {
                         $changes[] = OrderUtils::CHANGE_TAXES_PRODUCT_ACTION;
                     }
-                    if (json_encode($new->fLotseriesOut, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) !== json_encode($old->fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)) {
+                    if (json_encode($new->fLotseriesOut, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE) !== json_encode($old->fLotseriesOut, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE)) {
                         $changes[] = OrderUtils::CHANGE_SERIAL_PRODUCT_OUT_ACTION;
                     }
                 }
@@ -352,8 +352,8 @@ WHERE user_login LIKE %s
                 }
             }
             if (
-                json_encode($formatFunction($old), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) ===
-                json_encode($formatFunction($new), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)
+                json_encode($formatFunction($old), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE) ===
+                json_encode($formatFunction($new), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE)
                 && !$foundSimilar
             ) {
                 $foundSimilar = true;
@@ -614,14 +614,14 @@ WHERE user_login LIKE %s
                 'authorization' => "Basic " . get_option(Sage::TOKEN . '_authorization'),
             ],
             'method' => $method,
-            'body' => json_encode($body, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
+            'body' => json_encode($body, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE),
         ]);
         $responseError = null;
         if ($response instanceof WP_Error) {
             $responseError = "<div class='notice notice-error is-dismissible'>
                                 <pre>" . $response->get_error_code() . "</pre>
                                 <pre>" . $response->get_error_message() . "</pre>
-                                <pre>" . json_encode($response, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) . "</pre>
+                                <pre>" . json_encode($response, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE) . "</pre>
                                 </div>";
         } elseif (!in_array($response["response"]["code"], [Response::HTTP_OK, Response::HTTP_CREATED], true)) {
             $responseError = "<div class='notice notice-error is-dismissible'>
@@ -851,7 +851,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
             $this->websiteApiOption = get_option(Sage::TOKEN . '_website_api', null);
             if (!empty($this->websiteApiOption)) {
                 try {
-                    $this->websiteApiOption = json_decode($this->websiteApiOption, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                    $this->websiteApiOption = json_decode($this->websiteApiOption, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                 } catch (Exception) {
                     // nothing
                 }
@@ -870,7 +870,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
             return null;
         }
         $website = GraphqlService::getInstance()->getWebsite($id);
-        update_option(Sage::TOKEN . '_website_api', json_encode($website, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        update_option(Sage::TOKEN . '_website_api', json_encode($website, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE));
         return $website;
     }
 
@@ -948,7 +948,7 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
             foreach ($changeTypes as $type) {
                 foreach ($meta['changes'][$type] as $key => $value) {
                     if (is_array($value) || is_object($value)) {
-                        $meta['changes'][$type][$key] = json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                        $meta['changes'][$type][$key] = json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                     }
                 }
             }

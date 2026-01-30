@@ -407,7 +407,7 @@ class AdminController
                     $queryParams,
                 ] = GraphqlService::getInstance()->getResourceWithQuery($resource, getData: false, allFilterField: true, withMetadata: false);
                 $html .= '
-                <div data-resource-filter="' . htmlspecialchars(json_encode(self::getResourceFilter($resource, $filterFields), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '">
+                <div data-resource-filter="' . htmlspecialchars(json_encode(self::getResourceFilter($resource, $filterFields), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE), ENT_QUOTES, 'UTF-8') . '">
                     <input type="text" class="hidden" id="' . esc_attr($field['id']) . '" name="' . esc_attr($option_name) . '" value="" data-init-filter="' . esc_attr($data) . '" />
                     <input id="' . esc_attr($field['id']) . '_select" type="checkbox" ' . $checked . '/>
                     <label for="' . esc_attr($field['id']) . '"><span class="description">' . $field['description'] . '</span></label>
@@ -721,13 +721,13 @@ class AdminController
                 $optionNames[] = $optionName;
             }
             return $result . ('<form method="post" action="options.php" enctype="multipart/form-data">'
-                . $fieldsForm
-                . '<input type="hidden" name="page_options" value="' . esc_attr(implode(',', $optionNames)) . '"/>
+                    . $fieldsForm
+                    . '<input type="hidden" name="page_options" value="' . esc_attr(implode(',', $optionNames)) . '"/>
                 <input type="hidden" name="_wp_http_referer" value="' . esc_attr($_SERVER["REQUEST_URI"]) . '">
                 <input type="hidden" name="action" value="update">
                 <input type="hidden" name="option_page" value="options"/>'
-                . wp_nonce_field('options-options', '_wpnonce', true, false)
-                . '<p class="submit">
+                    . wp_nonce_field('options-options', '_wpnonce', true, false)
+                    . '<p class="submit">
                 <input name="Update" type="submit" class="button-primary" value="' . esc_attr(__('Mettre à jour', Sage::TOKEN)) . '">
                 </p>
                 </form>

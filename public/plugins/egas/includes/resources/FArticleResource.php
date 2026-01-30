@@ -47,7 +47,7 @@ class FArticleResource extends Resource
             // todo
 //            $websiteApi = SageService::getInstance()->getWebsiteOption();
             $initFilter = self::getDefaultResourceFilter();
-            $initFilterJson = json_encode($initFilter, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+            $initFilterJson = json_encode($initFilter, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
             return [
                 [
                     'id' => 'sage_create_new_' . self::ENTITY_NAME,
@@ -92,7 +92,7 @@ class FArticleResource extends Resource
                                 'value' => '2000-01-01'
                             ]
                         ]
-                    ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
+                    ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE),
                     'default' => '',
                 ],
                 [
@@ -108,8 +108,8 @@ class FArticleResource extends Resource
         $this->metadata = function (?stdClass $obj = null): array {
             $result = [
                 ...$this->getMandatoryMetadata(),
-                new SageEntityMetadata(field: '_prices', value: static fn(StdClass $fArticle) => json_encode($fArticle->prices, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)),
-                new SageEntityMetadata(field: '_max_price', value: static fn(StdClass $fArticle) => json_encode(WoocommerceService::getInstance()->getMaxPrice($fArticle->prices), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)),
+                new SageEntityMetadata(field: '_prices', value: static fn(StdClass $fArticle) => json_encode($fArticle->prices, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE)),
+                new SageEntityMetadata(field: '_max_price', value: static fn(StdClass $fArticle) => json_encode(WoocommerceService::getInstance()->getMaxPrice($fArticle->prices), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE)),
                 new SageEntityMetadata(field: '_canEditArSuiviStock', value: static fn(StdClass $fArticle) => $fArticle->canEditArSuiviStock),
             ];
             return SageService::getInstance()->addSelectionSetAsMetadata(GraphqlService::getInstance()->_getFArticleSelectionSet(), $result, $obj);
