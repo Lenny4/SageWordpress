@@ -26,7 +26,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class JsonUnescapedUnicodeRector extends AbstractRector implements MinPhpVersionInterface
 {
     private bool $hasChanged = false;
-    private const FLAGS = ['JSON_UNESCAPED_UNICODE'];
+    private const FLAGS = ['JSON_UNESCAPED_UNICODE', 'JSON_THROW_ON_ERROR'];
 
     public function __construct(
         private readonly ValueResolver $valueResolver,
