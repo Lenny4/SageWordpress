@@ -6,6 +6,7 @@ namespace Utils\Rector\Rector;
 
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Identifier;
@@ -167,7 +168,7 @@ CODE_SAMPLE
      * @param string[] $flags
      * @return string[]
      */
-    private function getFlags(Arg|Node\Expr\BinaryOp\BitwiseOr|ConstFetch $arg, array $flags = []): array
+    private function getFlags(Expr|Arg $arg, array $flags = []): array
     {
         // Unwrap Arg
         if ($arg instanceof Arg) {
@@ -176,9 +177,7 @@ CODE_SAMPLE
 
         // Single flag: SOME_CONST
         if ($arg instanceof ConstFetch) {
-            $flags[] = $arg->name instanceof Name
-                ? $arg->name->getFirst()
-                : '';
+            $flags[] = $arg->name->getFirst();
             return $flags;
         }
 
