@@ -235,7 +235,7 @@ class GraphqlService
         if ($value === '') {
             return null;
         }
-        return json_encode($this->filterToGraphQlWhere(json_decode($value, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)), JSON_UNESCAPED_UNICODE);
+        return json_encode($this->filterToGraphQlWhere(json_decode($value, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 
     public function filterToGraphQlWhere(array $filter): stdClass

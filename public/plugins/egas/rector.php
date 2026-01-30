@@ -23,6 +23,5 @@ return RectorConfig::configure()
     )
     ->withPhpSets(php82: true)
     ->withRules([
-        JsonThrowOnErrorRector::class,
         JsonUnescapedUnicodeRector::class,
     ]);

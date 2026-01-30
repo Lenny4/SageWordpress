@@ -40,7 +40,7 @@ class RestApiHook
                 foreach ($meta as $meta_key => $values) {
                     $value = maybe_unserialize($values[0]);
                     if (is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
-                        $decoded = json_decode($value, true, 512, JSON_UNESCAPED_UNICODE);
+                        $decoded = json_decode($value, true, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
                         if (json_last_error() === JSON_ERROR_NONE) {
                             $value = $decoded;
                         }
@@ -136,7 +136,7 @@ class RestApiHook
                             return new WP_REST_Response(json_encode([
                                 'responseError' => $responseError,
                                 'message' => $message,
-                            ], JSON_UNESCAPED_UNICODE), is_int($response) ? $response : Response::HTTP_INTERNAL_SERVER_ERROR);
+                            ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR), is_int($response) ? $response : Response::HTTP_INTERNAL_SERVER_ERROR);
                         } else {
                             $body = $response["body"];
                             $code = $response['response']['code'];
