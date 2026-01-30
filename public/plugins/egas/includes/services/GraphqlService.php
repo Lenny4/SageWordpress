@@ -312,7 +312,7 @@ class GraphqlService
                 ['Api-Key' => get_option(Sage::TOKEN . '_api_key')],
                 [
                     'verify' => filter_var(get_option(Sage::TOKEN . '_activate_https_verification_graphql', false), FILTER_VALIDATE_BOOLEAN),
-                    'timeout' => 10, // vendor/guzzlehttp/guzzle/src/Handler/CurlFactory.php
+                    'timeout' => 30, // vendor/guzzlehttp/guzzle/src/Handler/CurlFactory.php
                 ]
             );
         }

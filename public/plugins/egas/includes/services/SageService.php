@@ -744,12 +744,8 @@ WHERE user_login LIKE %s
     public function addSelectionSetAsMetadata(array $selectionSets, array &$sageEntityMetadatas, ?stdClass $obj, string $prefix = ''): array
     {
         foreach ($selectionSets as $subEntity => $selectionSet) {
-            if (is_array($selectionSet)) {
-                if (array_key_exists('name', $selectionSet)) {
-                    $sageEntityMetadatas[] = new SageEntityMetadata(field: '_' . $prefix . $selectionSet['name'], value: static fn(StdClass $entity) => PathUtils::getByPath($entity, $prefix)->{$selectionSet['name']});
-                } else {
-                    $t = 0;
-                }
+            if (is_array($selectionSet) && array_key_exists('name', $selectionSet)) {
+                $sageEntityMetadatas[] = new SageEntityMetadata(field: '_' . $prefix . $selectionSet['name'], value: static fn(StdClass $entity) => PathUtils::getByPath($entity, $prefix)->{$selectionSet['name']});
             } elseif (!is_null($obj) && $selectionSet instanceof ArgumentSelectionSetDto) {
                 foreach ($obj->{$subEntity} as $subObject) {
                     $this->addSelectionSetAsMetadata(
