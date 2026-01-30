@@ -70,6 +70,7 @@ class WoocommerceController
             $tasksSynchronizeOrder = $woocommerceService->getTasksSynchronizeOrder($order, $extendedFDocentetes);
             if (filter_var(get_option(Sage::TOKEN . '_website_update_' . FDocenteteResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
                 $woocommerceService->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);
+                $tasksSynchronizeOrder = $woocommerceService->getTasksSynchronizeOrder($order, $extendedFDocentetes);
             }
         }
         // original WC_Meta_Box_Order_Data::output

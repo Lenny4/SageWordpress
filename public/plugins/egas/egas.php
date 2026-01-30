@@ -33,7 +33,9 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 
 if (WP_DEBUG) {
     set_error_handler(function ($errno, $errstr, $errfile, $errline) {
-        throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+        if (is_string($errline) && str_contains($errline, Sage::TOKEN)) {
+            throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+        }
     });
 }
 
