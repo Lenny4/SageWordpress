@@ -946,6 +946,7 @@ class GraphqlService
             ]),
             ...$this->_formatOperationFilterInput("StringOperationFilterInput", [
                 'clIntitule',
+                'clCode',
             ]),
         ];
     }

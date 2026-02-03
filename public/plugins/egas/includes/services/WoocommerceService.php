@@ -26,6 +26,7 @@ use WC_Product;
 use WC_Product_Simple;
 use WC_Shipping_Rate;
 use WC_Tax;
+use WP_Term;
 use WP_User;
 
 class WoocommerceService
@@ -421,6 +422,10 @@ class WoocommerceService
                     delete_post_meta($articlePostId, $key);
                 }
             }
+            /** @var WC_Product $wcProduct */
+            $wcProduct = wc_get_product($articlePostId);
+            $wcProduct->set_category_ids($article["categories"]);
+            $wcProduct->save();
             foreach ($article["meta_data"] as $meta) {
                 update_post_meta($articlePostId, $meta['key'], $meta['value']);
             }
@@ -466,8 +471,16 @@ WHERE {$wpdb->posts}.post_type = 'product'
 
     public function convertSageArticleToWoocommerce(StdClass $fArticle, Resource $resource, ?int $postId): array
     {
+        $fCatalogues = $this->createCategories(array_map(
+            fn($i) => $fArticle->{'clNo' . $i . 'Navigation'},
+            range(1, 4)
+        ));
+        // https://woocommerce.github.io/woocommerce-rest-api-docs/#product-properties
         $result = [
             'name' => $fArticle->arDesign,
+            'categories' => array_map(function (stdClass $fCatalogue) {
+                return $fCatalogue->websiteId;
+            }, $fCatalogues),
             'meta_data' => [],
         ];
         foreach ($resource->getMetadata()($fArticle) as $metadata) {
@@ -490,6 +503,49 @@ WHERE {$wpdb->posts}.post_type = 'product'
             ];
         }
         return $result;
+    }
+
+    private function createCategories(array $fCatalogues): array
+    {
+        $fCatalogues = array_filter($fCatalogues);
+        $prevFCatalogue = null;
+        foreach ($fCatalogues as $fCatalogue) {
+            $terms = get_terms([
+                'taxonomy' => 'product_cat', // taxonomie WooCommerce
+                'hide_empty' => false,         // inclure les catégories sans produits
+                'meta_query' => [
+                    [
+                        'key' => '_' . Sage::TOKEN . '_clNo',
+                        'value' => $fCatalogue->clNo,
+                        'compare' => '=',
+                        'type' => 'NUMERIC',
+                    ]
+                ]
+            ]);
+            if (empty($terms)) {
+                $args = [];
+                if (!is_null($prevFCatalogue)) {
+                    $args['parent'] = $prevFCatalogue->websiteId;
+                }
+                $termId = wp_insert_term($fCatalogue->clIntitule, 'product_cat', $args)['term_id'];
+                add_term_meta($termId, '_' . Sage::TOKEN . '_clNo', $fCatalogue->clNo, true);
+            } else {
+                /** @var WP_Term $wpTerm */
+                $wpTerm = $terms[0];
+                $termId = $wpTerm->term_id;
+                if ($wpTerm->name !== $fCatalogue->clIntitule) {
+                    $args = ['name' => $fCatalogue->clIntitule];
+                    if ($wpTerm->count === 0) {
+                        $args['slug'] = sanitize_title($fCatalogue->clIntitule);
+                    }
+                    wp_update_term($termId, 'product_cat', $args);
+                }
+            }
+            $fCatalogue->websiteId = $termId;
+            $prevFCatalogue = $fCatalogue;
+        }
+
+        return $fCatalogues;
     }
 
     private function addProductToOrder(WC_Order $order, ?int $productId, int $quantity, stdClass $new, array &$alreadyAddedTaxes): string

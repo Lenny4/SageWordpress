@@ -268,7 +268,7 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
 
         // region add column to product list
         add_filter('manage_edit-product_columns', function (array $columns) { // https://stackoverflow.com/a/44702012/6824121
-            $columns[Sage::TOKEN] = __('Egas', Sage::TOKEN);
+            $columns[Sage::TOKEN] = __('Sage', Sage::TOKEN);
             return $columns;
         }, 10, 1);
 
@@ -296,6 +296,27 @@ WHERE method_id NOT LIKE '" . Sage::TOKEN . "%'
             }
             return $value;
         }, accepted_args: 3);
+
+        add_filter('manage_edit-product_cat_columns', function ($columns) {
+            // Ajouter la colonne 'Egas' après le nom
+            $columns[Sage::TOKEN] = __("Sage", Sage::TOKEN);
+            return $columns;
+        });
+        add_action('manage_product_cat_custom_column', function ($content, $column_name, $term_id) {
+            if (Sage::TOKEN === $column_name) {
+                $clNo = get_term_meta($term_id, '_' . Sage::TOKEN . '_clNo', true);
+                echo $clNo ?
+                    '
+<div style="display: inline-block;" data-tippy-content="<div>
+<strong>fCatalogue: ' . $clNo . '</strong>
+</div>">
+  <span class="dashicons dashicons-yes" style="color: green"></span>
+</div>
+'
+                    :
+                    '<span class="dashicons dashicons-no" style="color: red"></span>';
+            }
+        }, 10, 3);
         add_filter('woocommerce_order_item_get_formatted_meta_data', fn(array $metaDatas): array => array_filter($metaDatas, fn(stdClass $metaData): bool => $metaData->value !== 'null'));
     }
 }
