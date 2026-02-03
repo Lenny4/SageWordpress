@@ -1,8 +1,6 @@
 // vérifier que toutes les syncro marchent
 // ne pas relancer le cron sur les taskJob en erreur et permettre dans le site de les relancer manuellement
-// mettre le catalogue en catégorie, quand on créer un nouveau produit si aucune catégorie mettre la catégorie du dernier produit qui a une catégorie différente du nom de la famille
 // faire les paiements
-// remove not CreatedResources
 // voir comment ça se comporte quand on crée une commande avec un article qui n'est pas dans Sage
 // on updateWebsite reset TaskJobHistory
 //remove all FArticle ne doit pas supprimer tous les article mais on doit faire un update si on trouve la ligne correspondante
