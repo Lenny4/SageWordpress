@@ -167,7 +167,7 @@ class RestApiHook
                     $orderId = $request->get_param('orderId');
                     [$response, $responseError, $message, $order] = WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, new WC_Order($orderId), $request->get_param('origin'));
                     return new WP_REST_Response([
-                        'id' => $order->get_id(),
+                        'id' => is_int($order) ? $order : $order->get_id(),
                         'message' => $message,
                     ], is_int($response) ? $response : Response::HTTP_OK);
                 },

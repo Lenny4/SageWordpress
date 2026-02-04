@@ -422,10 +422,6 @@ class WoocommerceService
                     delete_post_meta($articlePostId, $key);
                 }
             }
-            /** @var WC_Product $wcProduct */
-            $wcProduct = wc_get_product($articlePostId);
-            $wcProduct->set_category_ids($article["categories"]);
-            $wcProduct->save();
             foreach ($article["meta_data"] as $meta) {
                 update_post_meta($articlePostId, $meta['key'], $meta['value']);
             }
@@ -447,6 +443,11 @@ class WoocommerceService
                             </div>";
             }
         }
+        /** @var WC_Product $wcProduct */
+        $wcProduct = wc_get_product($articlePostId);
+        $wcProduct->set_category_ids($article["categories"]);
+        $wcProduct->set_sku($arRef); // for woocommerce to able to search the product
+        $wcProduct->save();
         return [$response, $responseError, $message, $postId];
     }
 

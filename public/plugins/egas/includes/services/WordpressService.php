@@ -313,9 +313,6 @@ class WordpressService
                     update_post_meta($postId, $key, $value);
                 }
             }
-            $product = wc_get_product($postId);
-            $product->set_sku($arRef); // for woocommerce to able to search the product
-            $product->save();
             if (filter_var(get_option(Sage::TOKEN . '_sage_update_' . FArticleResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
                 update_post_meta($postId, '_' . Sage::TOKEN . '_updateApi', (new DateTime())->format('Y-m-d H:i:s'));
             }
