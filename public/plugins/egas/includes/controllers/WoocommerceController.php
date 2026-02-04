@@ -67,6 +67,9 @@ class WoocommerceController
             if (is_string($extendedFDocentetes)) {
                 $message .= $extendedFDocentetes;
             }
+            // pour l'instant on appelle manuellement applyTasksSynchronizeOrder
+            // $sageService = SageService::getInstance();
+            // $sageService->importFromSageIfUpdateApi($sageService->getResource(FDocenteteResource::ENTITY_NAME), $order->get_id());
             $tasksSynchronizeOrder = $woocommerceService->getTasksSynchronizeOrder($order, $extendedFDocentetes);
             if (filter_var(get_option(Sage::TOKEN . '_website_update_' . FDocenteteResource::ENTITY_NAME, false), FILTER_VALIDATE_BOOLEAN)) {
                 $woocommerceService->applyTasksSynchronizeOrder($order, $tasksSynchronizeOrder);

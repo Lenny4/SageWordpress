@@ -10,6 +10,7 @@ use App\services\WoocommerceService;
 use App\utils\FDocenteteUtils;
 use App\utils\SageTranslationUtils;
 use stdClass;
+use WC_Meta_Data;
 use WC_Order;
 
 class FDocenteteResource extends Resource
@@ -103,10 +104,26 @@ class FDocenteteResource extends Resource
             if ($clearCache) {
                 $order->init_meta_data();
             }
-            return $order->get_meta_data();
+            $result = [];
+            /** @var WC_Meta_Data $item */
+            foreach ($order->get_meta_data() as $item) {
+                $data = $item->get_data();
+                $result[$data["key"]] = $data["value"];
+            }
+            return $result;
         };
-        $this->sageEntity = fn(?string $doPiece, ?int $doType): StdClass|null => GraphqlService::getInstance()->getFDocentetes($doPiece, [$doType]);
-        $this->importFromSage = fn(?string $identifier, stdClass|string|null $fDocentete = null, $showSuccessMessage = true): array|string => WoocommerceService::getInstance()->importFDocenteteFromSage($doPiece, $doType, showSuccessMessage: $showSuccessMessage);
+        $this->sageEntity = function (?string $identifier): StdClass|null {
+            $data = json_decode($identifier, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+            $results = GraphqlService::getInstance()->getFDocentetes($data->doPiece, [$data->doType]);
+            if (empty($results)) {
+                return null;
+            }
+            return $results[0];
+        };
+        $this->importFromSage = function (?string $identifier, stdClass|string|null $fDocentete = null, $showSuccessMessage = true): array|string {
+            $data = json_decode($identifier, false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+            return WoocommerceService::getInstance()->importFDocenteteFromSage($data->doPiece, $data->doType);
+        };
         $this->metaKeyIdentifier = self::META_KEY;
         $this->table = $wpdb->posts;
         $this->metaTable = $wpdb->prefix . 'wc_orders_meta';
