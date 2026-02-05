@@ -388,20 +388,23 @@ class WoocommerceService
             // woocommerce/includes/rest-api/Controllers/Version3/class-wc-rest-crud-controller.php : public function create_item( $request )
             // which extends
             // woocommerce/includes/rest-api/Controllers/Version3/class-wc-rest-products-controller.php
+            $postArticle = $article;
+            $postArticle["categories"] = array_map(function (int $categoryId) {
+                return ['id' => $categoryId];
+            }, $postArticle["categories"]);
             [$response, $responseError] = SageService::getInstance()->createResource(
                 '/wc/v3/products',
                 'POST',
-                $article,
+                $postArticle,
                 FArticleResource::META_KEY,
                 $arRef,
             );
-            $postId = null;
             if (is_string($responseError)) {
                 $message = $responseError;
             } elseif ($response["response"]["code"] === 201) {
                 $body = json_decode((string)$response["body"], false, 512, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
                 $urlArticle = str_replace('%id%', $body->id, $urlArticle);
-                $postId = $body->id;
+                $articlePostId = $body->id;
                 if ($showSuccessMessage) {
                     $message = "<div class='notice notice-success is-dismissible'>
                     <p>" . __('Article créé: ' . $body->name, Sage::TOKEN) . "</p>" . $urlArticle . "
@@ -432,7 +435,6 @@ class WoocommerceService
             ];
             $responseError = null;
             $urlArticle = str_replace('%id%', $articlePostId, $urlArticle);
-            $postId = $articlePostId;
             if ($showSuccessMessage) {
                 $message = "<div class='notice notice-success is-dismissible'>
                     <p>" . __('Article mis à jour: ' . $article["name"], Sage::TOKEN) . "</p>" . $urlArticle . "
@@ -440,12 +442,14 @@ class WoocommerceService
                             </div>";
             }
         }
-        /** @var WC_Product $wcProduct */
-        $wcProduct = wc_get_product($articlePostId);
-        $wcProduct->set_category_ids($article["categories"]);
-        $wcProduct->set_sku($arRef); // for woocommerce to able to search the product
-        $wcProduct->save();
-        return [$response, $responseError, $message, $postId];
+        if (!empty($articlePostId)) {
+            /** @var WC_Product $wcProduct */
+            $wcProduct = wc_get_product($articlePostId);
+            $wcProduct->set_category_ids($article["categories"]);
+            $wcProduct->set_sku($arRef); // for woocommerce to able to search the product
+            $wcProduct->save();
+        }
+        return [$response, $responseError, $message, $articlePostId];
     }
 
     public function getWooCommerceIdArticle(string $arRef): int|null
