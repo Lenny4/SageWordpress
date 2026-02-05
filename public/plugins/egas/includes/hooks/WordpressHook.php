@@ -32,7 +32,7 @@ class WordpressHook
         });
         add_action('admin_init', static function (): void {
             $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
-            if (str_contains($accept, 'application/json')) {
+            if (str_contains($accept, 'application/json') || wp_doing_ajax()) {
                 return;
             }
             $wordpressService = WordpressService::getInstance();
