@@ -653,7 +653,8 @@ WHERE user_login LIKE %s
                     " . __("Le compte Sage n'a pas pu être importé", Sage::TOKEN) . "
                             </div>", 0];
         }
-        $resource = SageService::getInstance()->getResource(FComptetResource::ENTITY_NAME);
+        $sageService = SageService::getInstance();
+        $resource = $sageService->getResource(FComptetResource::ENTITY_NAME);
         $canImportFComptet = $resource->getCanImport()($fComptet);
         if (!empty($canImportFComptet)) {
             return [null, null, "<div class='error'>
@@ -680,7 +681,7 @@ WHERE user_login LIKE %s
                                 </div>", $userId];
         }
         $wpUser = new WP_User($userId);
-        $wpUser->user_email = $fComptet->ctEmail;
+        $wpUser->user_email = $sageService->getEmailFromFComptet($fComptet);
         wp_update_user($wpUser);
         foreach ($metadata as $key => $value) {
             update_user_meta($userId, $key, $value);
@@ -975,5 +976,14 @@ ORDER BY {$metaTable2}.meta_key = '{$metaKeyIdentifier}' DESC
             $hasChanges,
             $changeTypes
         ];
+    }
+
+    public function getEmailFromFComptet(stdClass $fComptet): string
+    {
+        $email = explode(';', $fComptet->ctEmail ?? '')[0];
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $email = $fComptet->ctNum . '@nomail.com';
+        }
+        return strtolower($email);
     }
 }

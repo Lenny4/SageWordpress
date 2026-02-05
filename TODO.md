@@ -14,4 +14,3 @@
 //si on importe un utilisateur sans email et qu'on importe ensuite un fComptet ça ne doit pas update le mail si pas un vrai mail
 //corriger erreur
 // vérifier que toutes les commandes ont le bon prix
-// comment/pourquoi ça a pu créer des utilisateurs dans mails

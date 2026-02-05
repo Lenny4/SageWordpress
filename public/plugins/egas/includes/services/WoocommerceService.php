@@ -43,10 +43,8 @@ class WoocommerceService
         ?int     $userId = null,
     ): array
     {
-        $email = explode(';', $fComptet->ctEmail)[0];
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $email = $fComptet->ctNum . '@nomail.com';
-        }
+        $sageService = SageService::getInstance();
+        $email = $sageService->getEmailFromFComptet($fComptet);
         $i = 1;
         $newEmail = $email;
         while (email_exists($newEmail)) {
@@ -55,7 +53,6 @@ class WoocommerceService
             $newEmail = implode('@', $emailArray);
         }
         $email = $newEmail;
-        $sageService = SageService::getInstance();
         $fComptetAddress = $sageService->createAddressWithFComptet($fComptet);
         $address = [];
         $fPays = GraphqlService::getInstance()->getFPays(false);
