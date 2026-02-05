@@ -57,6 +57,9 @@ class WoocommerceHook
             WoocommerceService::getInstance()->afterCreateOrEditOrder($order, true);
         }, accepted_args: 2);
         // endregion
+        // todo woocommerce_payment_complete
+//        add_action('woocommerce_payment_complete', function ($null, $transactionId): void {
+//        }, accepted_args: 2);
         add_filter('woocommerce_orders_table_query_sql', function (string $sql, OrdersTableQuery $table, array $args) {
             return preg_replace(
                 "/IN\s*\(\s*('_billing_address_index'\s*,\s*'_shipping_address_index')\s*\)/",
